@@ -560,11 +560,15 @@ typedef struct {                     /* one placement of a script        */
      * its element test (0x3f256-0x3f29f, PR-244). NOT the ask's
      * candidate filter (that is +0x60, PR-247). nrect = 0 when
      * the entry authors none; the third authored line (`30,50`)
-     * is the [obj+0xc5] block = (x, y-0x50, x, y) plus a
-     * (width+1)-element container - consumed and COUNTED (npair),
-     * not modelled. */
+     * is the raw pair, stored ABSOLUTE as apx = x + a, apy = y + b
+     * the way 0x3f187-0x3f1a7 makes the engine's [obj+0xc5] block
+     * absolute; npair = 1 when the entry authors one. The engine's
+     * edge block for such an object is the band x apx +/- trunc(n/2)
+     * (n = (arx1-arx0)+1, the widening of 0x4a050), y apy-0x50..apy
+     * (PR-270); the port builds it in ladder_answer_for. */
     unsigned char nrect, npair;
     short arx0, arx1, ary0, ary1;
+    short apx, apy;
     unsigned char atc;
     unsigned char atc_hit;          /* PR-90: this object's window has    *
                                      * already landed its one hit (mirror  *
@@ -4624,7 +4628,12 @@ int ll_mov_selftest(void)
            " object - the `x0,y0;x1,y1` line its own placement text"
            " authors, made absolute by the record verb 0x3f0f0 at"
            " 0x3f124-0x3f14b, with the 70%% probe inside it and the"
-           " inclusive corners legged - and the model-default 1x1"
+           " inclusive corners legged - PR-270 the EDGE BAND from"
+           " the same entry's `a,b` line - 0x3f16a-0x3f175, the"
+           " 0x4a050 widening at trunc(n/2) and the 0x3f187-"
+           "0x3f1a7 absolute store, ZARIA.01's (195,480)-(225,560)"
+           " legged with its inclusive corners and P1's priority"
+           " inside the column - and the model-default 1x1"
            " blocks only where NOTHING is authored, and PR-217 a"
            " row's `Wait <signal>`"
            " tail captured as the engine's own signal clause - one"
@@ -5135,10 +5144,11 @@ static int clash_suppressed(const play_ctx *pl, int lx, int ox)
  * fallback: the object's current art bbox, or the ctor-shaped
  * 1x1 at the object with no art. That fallback is a COUNTED
  * boundary, not the model. The edge block (the [self+0xc5]
- * role, P1's q) is still NOT modelled from its authored line:
- * the port keeps a 1x1 at the object and the (195,480)-(225,560)
- * band this record names is the next PR's; P1's priority (edge
- * answer beats the rung answer) is a separate leg.
+ * role, P1's q) is the band from the pair line - built by
+ * 0x3f16a-0x3f175 and widened by 0x4a050 as above (PR-270,
+ * legs L12) - and an object with NO authored pair keeps the
+ * 1x1 default, also counted. P1's priority over the rung
+ * answer is a separate leg.
  * CLASS SCOPE, COUNTED: only DRABINKA answers here. Its chain is
  * the one anchored end to end (PR-141: factory 0x1f8ac -> class
  * table 0x97cdc, +0x78 = 0x3f1c0). LINA's constructor chain is
@@ -5377,12 +5387,42 @@ static unsigned long long ladder_answer_for(const lvl_obj *o,
         rung.x0 = rung.x1 = o->x;      /* the ctor-shaped 1x1 default */
         rung.y0 = rung.y1 = o->y;
     }
-    edge.x0 = edge.x1 = o->x;          /* MODEL CHOICE, see the note: a
-                                        * 1x1 at the object (the ctor
-                                        * zeroes +0xc9..+0xd1 and NEVER
-                                        * stores +0xc5; no authored
-                                        * source exists) */
-    edge.y0 = edge.y1 = o->y;
+    if (o->npair && o->nrect) {
+        /* PR-270, the edge band, from the record verb's own
+         * instructions: 0x3f16a-0x3f175 builds [obj+0xc5] as
+         * x0 = x1 = a, y0 = b-0x50, y1 = b; 0x3f178-0x3f17d
+         * computes n = ([rect].x1 - [rect].x0) + 1 and calls
+         * 0x4a050, which at 0x4a058-0x4a074 sets d = ([+8] -
+         * [+0]) - n, half = d/2 truncated toward zero, [+0] +=
+         * half, [+8] -= half - with x0 = x1 the span is 0, so
+         * the band is x = a +/- trunc(n/2); 0x3f187-0x3f1a7
+         * makes all four absolute. The port stores the absolute
+         * pair point (apx, apy, place_pair), so the band is
+         * x apx +/- trunc(n/2), y apy-0x50..apy. ZARIA.01's
+         * `30,50` with n = 31: x 195..225, y 480..560 - the
+         * top 80 px of the authored ladder, where its lion
+         * script's `A_PODCIAG(1)=AC_EDGE,K_UP` asks. A pair
+         * with NO authored rectangle keeps the 1x1 default:
+         * the engine's n there comes from the unwritten
+         * [obj+0xb1] fields - neither the ctor 0x531f0 nor
+         * its base 0x52860, as read, stores +0xb1..0xbd
+         * before the scanf - UNMEASURED, so the port models
+         * nothing there. */
+        int half = (o->arx1 - o->arx0 + 1) / 2;
+        edge.x0 = o->apx - half;
+        edge.x1 = o->apx + half;
+        edge.y0 = o->apy - 0x50;
+        edge.y1 = o->apy;
+    } else {
+        edge.x0 = edge.x1 = o->x;      /* MODEL CHOICE, see the note:
+                                        * no authored pair, no band -
+                                        * a 1x1 at the object, the
+                                        * old default, kept as the
+                                        * counted fallback (a synthetic
+                                        * object, or a placement that
+                                        * authors no pair line) */
+        edge.y0 = edge.y1 = o->y;
+    }
     return ladder_answer_core(state, &edge, &rung, &p);
 }
 
@@ -6746,6 +6786,128 @@ static int ladder_answer_selftest(void)
         }
         if (place_points_selftest())      /* L9 (PR-243), with the reader */
             return 1;
+        {   /* L12 (PR-270, the other half of the OI-117 law): the
+             * EDGE block is the FOURTH authored line, read through
+             * 0x4a0b0 (the format at 0x91d0f is `%d,%d`, the tail at
+             * 0x91d15 is ` , `), and the record verb builds it at
+             * 0x3f16a-0x3f175 as x0 = x1 = a, y0 = b-0x50, y1 = b,
+             * WIDENS the x pair at 0x4a050 - called at 0x3f182 with
+             * n = ([rect].x1 - [rect].x0) + 1 (0x3f178-0x3f17d) -
+             * and makes all four fields absolute at
+             * 0x3f187-0x3f1a7. 0x4a050 itself (0x4a058-0x4a074):
+             * d = ([+8] - [+0]) - n, half = d/2 with C truncation
+             * toward zero, [+0] += half, [+8] -= half. For the pair
+             * x0 = x1 the span is 0, so half = -trunc(n/2) and the
+             * band is x a_abs +/- trunc(n/2), y b_abs-0x50..b_abs.
+             * ZARIA.01 authors `30,50` with n = 31: the band is
+             * x 195..225, y 480..560 - 80 px at the TOP of the
+             * ladder, where its lion script's
+             * `A_PODCIAG(1)=AC_EDGE,K_UP` asks. The fields here
+             * are exactly what place_pair (PR-270) stores: the raw
+             * authored pair made absolute with the placement. */
+            static const char DRAB_L12[] =
+                "A_UP\nA_DOWN\nA_DROP\n\n[A_UP]\ncontrol=BY_TIME\n"
+                "A_DROP(1)=K_GEN1\nseq=drab\n1,0,WAIT K_GEN1\n\n[A_DROP]\n"
+                "control=BY_TIME\nA_DOWN(1)=AC_BREAK_NEXT\nseq=drab\n"
+                "2,500\n3,400\n\n[A_DOWN]\ncontrol=BY_TIME\nseq=drab\n"
+                "11,0,WAIT K_NEVER\n";
+            static const struct { int r[4], a, b, ax, ay;
+                                 unsigned long long want;
+                                 const char *what; } pa[] = {
+                { { 203, 540, 233, 670 }, 30, 50, 195, 480,
+                  1ull << LL_SIG_AC_EDGE,
+                  "the near corner of the band, exactly ON it: the\n"
+                  "0x23e00 bounds are jl/jg, so inclusive" },
+                { { 203, 540, 233, 670 }, 30, 50, 225, 560,
+                  1ull << LL_SIG_AC_EDGE,
+                  "the far corner AND inside the column and its 70%\n"
+                  "middle at once: P1 answers first, AC_EDGE alone" },
+                { { 203, 540, 233, 670 }, 30, 50, 226, 560,
+                  (1ull << LL_SIG_AC_DRAB) |
+                  (1ull << LL_SIG_AC_DRAB_CATCH),
+                  "1 px past the band's x: P1 false, and the point\n"
+                  "is inside the column AND its middle 207..229" },
+                { { 203, 540, 233, 670 }, 30, 50, 194, 560, 0ull,
+                  "1 px left of the band AND left of the column:\n"
+                  "the inert exit, no answer at all" },
+                { { 203, 540, 233, 670 }, 30, 50, 210, 479, 0ull,
+                  "1 px above the band's top (b-0x50 = 480): P1\n"
+                  "false, and the column starts at y 540" },
+                { { 203, 540, 233, 670 }, 30, 50, 180, 510, 0ull,
+                  "the object pixel itself: its x 180 is OUTSIDE\n"
+                  "the band 195..225, so not even the object's own\n"
+                  "anchor answers - the authored band replaced the\n"
+                  "1x1 default there" },
+                { { 203, 540, 232, 670 }, 30, 50, 225, 480,
+                  1ull << LL_SIG_AC_EDGE,
+                  "an EVEN element count n = 30: 0x4a050's half is\n"
+                  "trunc(-30/2) = -15, the SAME band x 195..225" },
+                { { 203, 540, 232, 670 }, 30, 50, 226, 545,
+                  (1ull << LL_SIG_AC_DRAB) |
+                  (1ull << LL_SIG_AC_DRAB_CATCH),
+                  "same even rect, 1 px past the band (y 545 IS in\n"
+                  "the column 540..670): and 0x49fb0 narrows\n"
+                  "w = 29 to inset 29*70/100 = 20, half (29-20)/2\n"
+                  "= 4, so the middle is x 207..228 and 226 is\n"
+                  "inside it" },
+            };
+
+            for (unsigned g = 0; g < sizeof pa / sizeof pa[0]; g++) {
+                ll_mov_t *m2 = calloc(1, sizeof *m2);
+                obj_script sc2;
+                lvl_obj o6;
+                ll_player asker3;
+                unsigned long long got6;
+
+                if (!m2) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " out of memory (L12)\n");
+                    return 1;
+                }
+                ll_mov_parse(DRAB_L12, m2);
+                memset(&sc2, 0, sizeof sc2);
+                strcpy(sc2.leaf, "DRABINKA");
+                sc2.mov = m2;
+                memset(&o6, 0, sizeof o6);
+                o6.sc = &sc2;
+                o6.x = 180;
+                o6.y = 510;
+                o6.nrect = 1;
+                o6.npair = 1;
+                o6.arx0 = (short)pa[g].r[0];
+                o6.ary0 = (short)pa[g].r[1];
+                o6.arx1 = (short)pa[g].r[2];
+                o6.ary1 = (short)pa[g].r[3];
+                o6.apx = (short)(o6.x + pa[g].a);
+                o6.apy = (short)(o6.y + pa[g].b);
+                for (int q = 0; q < m2->nst; q++)
+                    if (m2->st[q].decl_idx == 2)
+                        o6.sti = q;
+                if (m2->st[o6.sti].decl_idx != 2) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " L12: the fixture has no state with"
+                                    " the engine's index 2\n");
+                    free(m2);
+                    return 1;
+                }
+                memset(&asker3, 0, sizeof asker3);
+                asker3.x = pa[g].ax;
+                asker3.y = pa[g].ay;
+                got6 = ladder_answer_for(&o6, &asker3);
+                if (got6 != pa[g].want) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " L12 case %u (%s): ask %d,%d band a"
+                                    " %d b %d rect (%d,%d)-(%d,%d)"
+                                    " got %llx want %llx\n", g,
+                            pa[g].what, pa[g].ax, pa[g].ay, pa[g].a,
+                            pa[g].b, pa[g].r[0], pa[g].r[1],
+                            pa[g].r[2], pa[g].r[3], got6, pa[g].want);
+                    free(m2);
+                    return 1;
+                }
+                free(m2);
+            }
+        }
     }
     return 0;
 }
@@ -8835,11 +8997,16 @@ static const char *place_rect(const char *p, const char *end,
     return eol;
 }
 
-/* PR-246: the third authored line, a bare `x,y` pair. Read and
- * counted, not modelled: the engine's element ctor path
- * (0x49920/0x498f0, whose format slots 0x91d0f/0x91d15 are
- * empty) builds it into the [obj+0xc5] set; its consumers are
- * open (OI-078). */
+/* PR-246/PR-270: the third authored line, a bare `x,y` pair. The
+ * record verb reads it through 0x4a0b0 - the scanf helper 0x49920
+ * with the format at 0x91d0f (`%d,%d`), then 0x498f0 with the
+ * tail at 0x91d15 (` , `) - and stores the pair ABSOLUTE at load:
+ * 0x3f16a-0x3f175 builds (x0 = x1 = a, y0 = b-0x50, y1 = b),
+ * 0x4a050 widens the x pair (see ladder_answer_for), and
+ * 0x3f187-0x3f1a7 adds the placement to all four fields. The port
+ * stores the same absolute pair point (apx, apy) that its
+ * consumers re-derive that block from; the modelled consumer is
+ * the edge block of the ladder/rope answer verb (PR-270, OI-078). */
 static const char *place_pair(const char *p, const char *end,
                               lvl_obj *o, obj_stats *st)
 {
@@ -8865,6 +9032,8 @@ static const char *place_pair(const char *p, const char *end,
         s3++;
     if (s3 != e)
         return p;
+    o->apx = (short)(o->x + vx);       /* absolute, once, at load: */
+    o->apy = (short)(o->y + vy);       /* 0x3f187-0x3f1a7 */
     o->npair = 1;
     st->pair_lines++;
     return eol;
@@ -8933,7 +9102,9 @@ static int place_points_selftest(void)
             { "53,160;23,30\n", 1, { 203, 540, 233, 670 },
               "a reversed rect: sorted, counted model choice" },
             { "23,30;53,160\n", 2, { 0 }, "rect parsed, pair refused" },
-            { "30,50\n", 2, { 0, 0 }, "the third authored pair" },
+            { "30,50\n", 2, { 210, 560 }, "the third authored pair"
+              " (180,510 + 30,50): stored ABSOLUTE, as 0x3f187-"
+              "0x3f1a7 makes [obj+0xc5] absolute at load" },
             { "23,30;53,160 junk\n", 0, { 0 }, "trailing text: refused" },
             { "23,30\n", 1, { 0 }, "a bare pair is NOT a rect:"
                                     " refused, and it is consumed as"
@@ -8998,6 +9169,15 @@ static int place_points_selftest(void)
                         fprintf(stderr, "contact-point parse selftest:"
                                         " FAILED the pair parse of %s\n",
                                 rl[q].what);
+                        return 1;
+                    }
+                    if (rl[q].v[1] &&
+                        (o4.apx != rl[q].v[0] || o4.apy != rl[q].v[1])) {
+                        fprintf(stderr, "contact-point parse selftest:"
+                                        " FAILED the pair VALUES of"
+                                        " %s: got (%d,%d) want"
+                                        " (%d,%d)\n", rl[q].what,
+                                o4.apx, o4.apy, rl[q].v[0], rl[q].v[1]);
                         return 1;
                     }
                 }

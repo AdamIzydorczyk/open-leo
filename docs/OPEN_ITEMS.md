@@ -1615,17 +1615,24 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     with P3 the middle 70% of it. PR-269 feeds that column to
     `ladder_answer_core` (leg L11 pins the merged pair, the lone
     AC_DRAB in the outer band, the inclusive corner and the 1 px
-    beyond); the EDGE band is still the port's 1x1 default, so
-    the `30,50` line and the 0x4a050 widening are one step
-    away. THIRD lead, and the one that decides whether any of
-    this shows in play: in this port the answer is reached only
+    beyond), and PR-270 feeds it the EDGE BAND from the `30,50`
+    line - x apx +/- trunc(n/2), y apy-0x50..apy; leg L12 pins
+    the inclusive corners, P1's priority INSIDE the column, the
+    n = 30 / n = 31 parity of 0x4a050's truncation, and that
+    with both lines authored the object's OWN pixel answers
+    NOTHING (the band covers neither the art anchor nor the
+    ground under it). Both answer rectangles now come from the
+    authored text. What is left before any of this shows in
+    play is the THIRD lead, and it decides whether any of
+    this port's ladder geometry is reachable at all: in this
+    port the answer is reached only
     at a shape meet with the ladder (the two `ladder_answer_for`
     sites in play_collide), while the engine's candidate walk
     0x4b500 asks the +0x78 entry with no shape test at all
     (PR-249); ZARIA.01's ladder art hangs at (180,510) and no
     lion ever meets it, which is why no in-game leg moved for
-    PR-269. Model the ask channel, then the band, and the
-    climb's `A_PODCIAG(1)=AC_EDGE,K_UP` becomes reachable.
+    PR-269 or PR-270. Model the ask channel and the climb's
+    `A_PODCIAG(1)=AC_EDGE,K_UP` becomes reachable.
     Second lead: the same level places two LINA ropes whose
     verb 0x3f390 raises AC_LINA and AC_LINA_CATCH (bits 21, 22)
     at 0x3f4ac/0x3f525, which the lion's script asks for by name
@@ -2717,7 +2724,11 @@ OI-117: the answer verb's two rectangles - where the engine
     are pinned `-> no` and print the 0x44ec0 contact-point
     test, not this verb. FOLLOW-UP, not a reopen: PR-269 feeds
     the column (o->arx0/ary0/arx1/ary1) to P2/P3 - leg L11 -
-    and the edge band from the `a,b` line is still open.
+    and PR-270 models the edge band from the `a,b` line too
+    (place_pair stores the absolute pair, ladder_answer_for
+    widens it per 0x4a050, leg L12) - the follow-up is done;
+    only the pair-without-rectangle n (unwritten [obj+0xb1])
+    stays unmeasured, noted in OI-078's next record.
 OI-118: 0x523f0 raises signals through a SECOND object: the
   per-step pass calls [[obj+0x00]+8]+0xac and +0xa8
   (0x52416/0x52423), and no constructor in the image installs

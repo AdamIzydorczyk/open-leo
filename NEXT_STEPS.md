@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-270.
+> at PR-271.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -37430,6 +37430,97 @@ table slot
 0x91d00 - and the port already parses it. PR-268's OPENS (i)
 named this half of the fix; the band half is
 still open.
+GATE: make 0 warnings; verify-all fixtures rc=0 67 (ok);
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
+line is the cmake-windows parity check, which names its own
+reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
+in this tree)
+```
+
+## PR-270 — THE LADDER'S EDGE BAND IS THE AUTHORED `a,b`
+## LINE, WIDENED BY 0x4a050 TO THE COLUMN WIDTH: P1 NOW
+## TESTS (195,480)-(225,560), NOT A 1x1 AT THE ART ANCHOR
+```
+KIND: port
+SUBSYSTEM: the edge-block source of this port's ladder/rope
+answer verb (P1's q) - from the placement's own pair line
+through the record verb's build-and-widen law; place_pair
+stores the absolute pair instead of only counting it.
+ADDRESSES: 0x3f0f0, 0x3f149, 0x3f154, 0x3f159, 0x3f16a,
+0x3f175, 0x3f178, 0x3f17d, 0x3f182, 0x3f187, 0x3f1a7,
+0x4a050, 0x4a058, 0x4a074, 0x4a080, 0x4a0b0, 0x49920,
+0x498f0, 0x91d00, 0x91d0f, 0x91d15, 0x49fb0, 0x531f0,
+0x52860
+NAMES: OI-078, OI-117, DRABINKA, AC_EDGE, AC_DRAB,
+AC_DRAB_CATCH, the edge band, the pair line,
+ladder_answer_for, ladder_answer_core, place_pair, apx, apy,
+leg L12, drab.MOV, ANI2.DES, PR-246, PR-268, PR-269
+CODE: yes: lvl_obj (ll_level.c) gains `apx/apy`, and
+place_pair stores them absolute (placement + authored pair,
+the 0x3f187-0x3f1a7 way); ladder_answer_for builds `edge`
+as x apx +/- trunc(n/2), y apy-0x50..apy when the entry
+authors BOTH the rectangle and the pair (n = arx1-arx0+1),
+and keeps the 1x1 default as the counted fallback otherwise.
+The mov-selftest summary string now names both authored
+rectangles.
+HOOKS: red first, at HEAD: `contact-point parse selftest:
+FAILED the pair VALUES ... got (0,0) want (210,560)` and
+`ladder answer selftest: FAILED L12 case 0 ... got 0 want
+100` (AC_EDGE). Every L12 expectation is arithmetic on the
+record verb's OWN instructions, quoted in the leg's comment -
+the 0x3f16a-0x3f175 build, the n of 0x3f178-0x3f17d,
+0x4a050's truncating d/2 at 0x4a058-0x4a074, the absolute
+store at 0x3f187-0x3f1a7 - and no case was read off a run.
+One DRAFT case of mine was wrong, not the model: it asked at
+y 520, outside the authored column's own y range; corrected
+from that range (ask (226,545)) before the green run.
+GREEN: --mov-selftest and --play-selftest rc=0.
+MEASURED: (a) THE RECORD VERB'S EDGE HALF, 0x3f154-0x3f1a7:
+0x4a0b0 is the scanf helper 0x49920 with the format at
+0x91d0f (`%d,%d`) plus 0x498f0 with the tail at 0x91d15
+(` , `), and its out-params are the record verb's own stack
+slots (eax = esp at 0x3f149) - PR-246 had called those
+format slots empty; 0x3f16a-0x3f175 then builds x0 = x1 = a,
+y0 = b-0x50, y1 = b; 0x3f178-0x3f17d takes n =
+([rect].x1-[rect].x0)+1 from the ALREADY-ABSOLUTE rect
+fields, translation-invariant; 0x4a050 widens only the x
+pair - its y sibling 0x4a080 is never called here; and
+0x3f187-0x3f1a7 makes all four fields absolute. (b) 0x4a050
+divides d = 0-n by 2 WITH C TRUNCATION TOWARD ZERO (the
+sar-0x1f/sub/sar trio), so n = 31 and n = 30 both give half
+15 - both parities legged. (c) ZARIA.01's band is
+(195,480)-(225,560); an ask at the object's own pixel
+(180,510) now answers NOTHING - the band covers neither the
+art anchor (180 < 195) nor the ground; PR-269's
+object-pixel-answers-AC_EDGE leg keeps its meaning as the
+npair = 0 fallback boundary, which is why the L11 harness
+authors no pair. (d) THE PLACE CONTRACT: the grammar leg now
+pins the pair VALUES as the absolute (210,560). (e) Neither
+the ctor 0x531f0 nor its base 0x52860, as read, stores
++0xb1..0xbd before the rect scanf - a pair authored WITHOUT
+a rectangle leaves the engine's n in fields nothing wrote;
+UNMEASURED, so the port keeps its 1x1 fallback for that
+case and says so in the code and in OPENS (iii).
+OPENS: in order: (i) the ask channel: the engine's
+requester walk 0x4b500 asks the +0x78 entry with NO shape
+test (PR-249) while this port reaches the verb only at a
+shape meet (PR-269's (c)) - the lead that decides whether
+ANY of the PR-269/270 geometry can show in play; (ii)
+whether the authored blocks are absolute-once (0x3f124 and
+0x3f187 run at load - what, if anything, re-derives them
+for a class that moves); (iii) the pair-without-rectangle n
+from (e); (iv) OI-118, unchanged; (v) whether ZARIA.01's
+lion ever reaches x 195..225, y 480..560 in a modelled
+play run once (i) lands; (vi) OI-116; (vii) OI-115 (b);
+(viii) the AC_LINA twins and the rest of the OI-078 list.
+CLOSES: none.
+CORRECTS: PR-246's place_pair note, which called the format
+slots 0x91d0f/0x91d15 "empty" and the pair line unmodelled:
+they are `%d,%d` and ` , `, and the pair line is the
+authored SOURCE of the answer verb's edge block - PR-268
+found the verb, this PR feeds it. Also PR-150's model note
+("no authored source exists" for [obj+0xc5]), which PR-268
+had already half-corrected.
 GATE: make 0 warnings; verify-all fixtures rc=0 67 (ok);
 GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
 line is the cmake-windows parity check, which names its own
