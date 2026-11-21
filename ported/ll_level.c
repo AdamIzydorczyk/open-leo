@@ -4619,9 +4619,14 @@ int ll_mov_selftest(void)
            " predicate with the merged CATCH+DRAB and lone-DRAB"
            " tails and the inclusive bounds, the probe's truncating"
            " symmetric law at every w I pinned by hand, the edge"
-           " block's priority, the DRABINKA-only class scope, and"
-           " the model-default 1x1 blocks when the port has no"
-           " authored rectangle, and PR-217 a row's `Wait <signal>`"
+           " block's priority, the DRABINKA-only class scope, PR-269"
+           " the AUTHORED COLUMN as the P2/P3 rectangle for a placed"
+           " object - the `x0,y0;x1,y1` line its own placement text"
+           " authors, made absolute by the record verb 0x3f0f0 at"
+           " 0x3f124-0x3f14b, with the 70%% probe inside it and the"
+           " inclusive corners legged - and the model-default 1x1"
+           " blocks only where NOTHING is authored, and PR-217 a"
+           " row's `Wait <signal>`"
            " tail captured as the engine's own signal clause - one"
            " token in 254 of the 255 shipped tails, `!` in 22,"
            " K_NEVER/K_ANY kept as the no-bit specials, `WAIT ;`"
@@ -5094,28 +5099,45 @@ static int clash_suppressed(const play_ctx *pl, int lx, int ox)
  * pair [p]/[p+8] - the SAME pair 0x23e00 bounds-tests at
  * 0x23e03/0x23e07 (`p[0] in [q[0], q[8]]`, `p[4] in [q[4],
  * q[0xc]]`, signed jl/jg, INCLUSIVE) - which pins which words
- * carry the x-span but still not the layout of the other pair
- * (PR-149's open item 3 = our item 1, unchanged: the engine's
- * author-side writer of [obj+0xb1..0xbd] has never been found;
- * a DESCENDING-x block would make even P2 unsatisfiable under
+ * carry the x-span but not yet the layout of the other pair (a
+ * DESCENDING-x block would make even P2 unsatisfiable under
  * 0x23e00's bounds test, a fact pinned in a leg; and the ctor
  * never stores [obj+0xc5] itself, PR-149, so even the engine's
  * default EDGE block value is un-read - the port's 1x1 is a
  * MODEL CHOICE, pinned by legs, never a read fact).
- * THE PORT'S SOURCES, NAMED MODELS (PR-149's open item 3 - the
- * engine's authored writer of [obj+0xb1..0xbd] and the filler of
- * [obj+0xc5..0xd1] - stays OPEN): the ladder's ANSWER block (the
- * [self+0xb1] role, P2/P3's q) is the object's own current art
- * bbox in object-local coordinates - the same authored shape
- * obj_draw/obj_contact/play_collide use, the one rectangle every
- * authored ladder provably has (ZARIA.01: DRAB.SEQ 42x48 at
- * 180,510); an object with no art shape gets the ctor-shaped 1x1
- * at the object position. The EDGE block (the [self+0xc5] role,
- * P1's q) has NO authored source; the port defaults it to a 1x1
- * at the object too - note the image fact: malloc'd 0xd9 bytes,
- * the ctor NEVER stores [obj+0xc5] itself (PR-149 F2), so even
- * the engine's default value at +0xc5 is un-read; the port's 1x1
- * is a MODEL CHOICE, pinned by legs, and P1's priority (edge
+ * WHERE THE ENGINE GETS BOTH RECTANGLES (found by PR-268; this
+ * paragraph replaces PR-149's open item 3 and PR-150's "no
+ * authored source" wording): the class table's slot +0x18 is the
+ * RECORD VERB, the only slot in any of the 197 named tables that
+ * calls the scanf helper 0x49920, and for this class it is
+ * 0x3f0f0. It reads the object's own placement text: 0x49f90
+ * with the format at 0x91d00 (`%d,%d;%d,%d , `) fills
+ * [obj+0xb1..0xbd] as x0,y0,x1,y1 and 0x3f124-0x3f14b adds the
+ * placement x,y, so the column is ABSOLUTE from load and never
+ * follows the object; the next line, a bare `a,b`, goes through
+ * 0x4a0b0 into [obj+0xc5..0xd1] as x0 = x1 = a, y0 = b-0x50,
+ * y1 = b, and 0x4a050 widens it to the authored column's own
+ * width centred on a, again made absolute (0x3f187-0x3f1a7).
+ * ZARIA.01's own text authors `23,30;53,160` and `30,50` after
+ * `DRABINKA,drab.ani,drab.mov,180,510`, i.e. the column
+ * (203,540)-(233,670) and the band (195,480)-(225,560) - 80 px
+ * at the TOP of the ladder, which is what its lion script's
+ * `A_PODCIAG(1)=AC_EDGE,K_UP` asks for.
+ * THE PORT'S SOURCES: the rung block (the [self+0xb1] role,
+ * P2/P3's q) is that AUTHORED column when the object's own
+ * placement entry authors one - place_rect (PR-246) parses the
+ * same four numbers and makes them absolute the same way, and
+ * the loader prints them ("authors an authored rectangle:
+ * absolute ..."); leg L11 pins the answer with them. An object
+ * with NO authored rectangle - a synthetic object, or a class
+ * whose record verb fills those fields from another parameter
+ * (the ` bounds = %d, %d` family, 0x3b500) - keeps the old
+ * fallback: the object's current art bbox, or the ctor-shaped
+ * 1x1 at the object with no art. That fallback is a COUNTED
+ * boundary, not the model. The edge block (the [self+0xc5]
+ * role, P1's q) is still NOT modelled from its authored line:
+ * the port keeps a 1x1 at the object and the (195,480)-(225,560)
+ * band this record names is the next PR's; P1's priority (edge
  * answer beats the rung answer) is a separate leg.
  * CLASS SCOPE, COUNTED: only DRABINKA answers here. Its chain is
  * the one anchored end to end (PR-141: factory 0x1f8ac -> class
@@ -5335,7 +5357,23 @@ static unsigned long long ladder_answer_for(const lvl_obj *o,
                                         * which is also the engine's
                                         * not-declared value (0x53440
                                         * falls through to 0x53471) */
-    if (!blk_of_obj(o, &rung)) {
+    if (o->nrect) {
+        /* PR-269, the OI-117 law PR-268 measured: for a PLACED object
+         * the engine's rung rectangle is the column the placement text
+         * itself authors. 0x3f0f0 (the record verb, table slot +0x18)
+         * reads `x0,y0;x1,y1` through 0x49f90 - the format at 0x91d00
+         * is `%d,%d;%d,%d , ` - into [obj+0xb1..0xbd], and
+         * 0x3f124-0x3f14b adds the placement x,y, so the block is
+         * ABSOLUTE from load and never follows the object. The port's
+         * place_rect already parses and makes absolute exactly those
+         * four numbers (PR-246), which is what its loader prints as
+         * "authors an authored rectangle". This is the rectangle P2
+         * and the 70% probe P3 are tested against - not the art box. */
+        rung.x0 = o->arx0;
+        rung.y0 = o->ary0;
+        rung.x1 = o->arx1;
+        rung.y1 = o->ary1;
+    } else if (!blk_of_obj(o, &rung)) {
         rung.x0 = rung.x1 = o->x;      /* the ctor-shaped 1x1 default */
         rung.y0 = rung.y1 = o->y;
     }
@@ -6592,6 +6630,118 @@ static int ladder_answer_selftest(void)
                                 g, q, ab[q], bx[g].want[q], bx[g].sign);
                         return 1;
                     }
+            }
+        }
+        {   /* L11 (PR-269, the OI-117 law PR-268 measured): the rung
+             * rectangle is the AUTHORED COLUMN, not the art box.
+             * ZARIA.01's own placement text (hd_files/ETAPY, the
+             * ANI2.DES block, read as bytes) authors
+             *   DRABINKA,drab.ani,drab.mov,180,510
+             *   1 33,-3
+             *   23,30;53,160
+             *   30,50
+             * and the record verb 0x3f0f0 puts that THIRD line into
+             * [obj+0xb1..0xbd] through 0x49f90 (the format at 0x91d00
+             * is `%d,%d;%d,%d , `) and adds the placement x,y at
+             * 0x3f124-0x3f14b, so the column is x 203..233, y
+             * 540..670: the authored ladder from its top to its foot.
+             * P2 (0x3f256, 0x3f29f) is 0x23e00 against that block,
+             * inclusive on both axes; P3 (0x3f283-0x3f2b1) is the
+             * same verb against the copy 0x49fb0 narrows to 70 per
+             * cent - w = 233-203 = 30, inset = 30*70/100 = 21, half
+             * = (30-21)/2 = 4, so x 207..229, y unchanged. The EDGE
+             * block is the FOURTH line and its own step, so these
+             * legs keep the port's default there: that is what makes
+             * the ask at the object pixel answer AC_EDGE and nothing
+             * else, and it is counted, not hidden. */
+            static const char DRAB_L11[] =
+                "A_UP\nA_DOWN\nA_DROP\n\n[A_UP]\ncontrol=BY_TIME\n"
+                "A_DROP(1)=K_GEN1\nseq=drab\n1,0,WAIT K_GEN1\n\n[A_DROP]\n"
+                "control=BY_TIME\nA_DOWN(1)=AC_BREAK_NEXT\nseq=drab\n"
+                "2,500\n3,400\n\n[A_DOWN]\ncontrol=BY_TIME\nseq=drab\n"
+                "11,0,WAIT K_NEVER\n";
+            static const struct { int nrect, r[4], ax, ay;
+                                 unsigned long long want;
+                                 const char *what; } au[] = {
+                { 1, { 203, 540, 233, 670 }, 210, 561,
+                  (1ull << LL_SIG_AC_DRAB) |
+                  (1ull << LL_SIG_AC_DRAB_CATCH),
+                  "the authored column, inside its middle 70%: the"
+                  " merged pair (this is the ask point the ly_zask leg"
+                  " prints, 9 px below the authored top)" },
+                { 1, { 203, 540, 233, 670 }, 204, 600,
+                  1ull << LL_SIG_AC_DRAB,
+                  "inside the column, outside its middle 70%: AC_DRAB"
+                  " alone (0x3f355), 3 px left of the inset" },
+                { 1, { 203, 540, 233, 670 }, 233, 670,
+                  1ull << LL_SIG_AC_DRAB,
+                  "the far corner of the column, exactly ON it:"
+                  " 0x23e00 bounds with jl/jg, so inclusive" },
+                { 1, { 203, 540, 233, 670 }, 234, 600, 0ull,
+                  "1 px beyond the authored right edge: P2 false is"
+                  " the inert exit 0x3f364, no answer at all" },
+                { 1, { 203, 540, 233, 670 }, 180, 510,
+                  1ull << LL_SIG_AC_EDGE,
+                  "the object pixel, OUTSIDE the column: P1 runs"
+                  " first and the default edge block answers, so the"
+                  " order is edge-then-column" },
+                { 0, { 0, 0, 0, 0 }, 210, 561, 0ull,
+                  "NO authored column (a synthetic object): the port's"
+                  " art-box fallback, counted as a model boundary" },
+            };
+
+            for (unsigned g = 0; g < sizeof au / sizeof au[0]; g++) {
+                ll_mov_t *m2 = calloc(1, sizeof *m2);
+                obj_script sc2;
+                lvl_obj o5;
+                ll_player asker2;
+                unsigned long long got5;
+
+                if (!m2) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " out of memory (L11)\n");
+                    return 1;
+                }
+                ll_mov_parse(DRAB_L11, m2);
+                memset(&sc2, 0, sizeof sc2);
+                strcpy(sc2.leaf, "DRABINKA");
+                sc2.mov = m2;
+                memset(&o5, 0, sizeof o5);
+                o5.sc = &sc2;
+                o5.x = 180;
+                o5.y = 510;
+                o5.nrect = (unsigned char)au[g].nrect;
+                o5.arx0 = (short)au[g].r[0];
+                o5.ary0 = (short)au[g].r[1];
+                o5.arx1 = (short)au[g].r[2];
+                o5.ary1 = (short)au[g].r[3];
+                for (int q = 0; q < m2->nst; q++)
+                    if (m2->st[q].decl_idx == 2)
+                        o5.sti = q;
+                if (m2->st[o5.sti].decl_idx != 2) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " L11: the fixture has no state with"
+                                    " the engine's index 2\n");
+                    free(m2);
+                    return 1;
+                }
+                memset(&asker2, 0, sizeof asker2);
+                asker2.x = au[g].ax;
+                asker2.y = au[g].ay;
+                got5 = ladder_answer_for(&o5, &asker2);
+                if (got5 != au[g].want) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " L11 case %u (%s): state %d ask"
+                                    " %d,%d authored %d (%d,%d)-(%d,%d)"
+                                    " got %llx want %llx\n", g,
+                            au[g].what, m2->st[o5.sti].decl_idx,
+                            au[g].ax, au[g].ay, au[g].nrect,
+                            au[g].r[0], au[g].r[1], au[g].r[2],
+                            au[g].r[3], got5, au[g].want);
+                    free(m2);
+                    return 1;
+                }
+                free(m2);
             }
         }
         if (place_points_selftest())      /* L9 (PR-243), with the reader */

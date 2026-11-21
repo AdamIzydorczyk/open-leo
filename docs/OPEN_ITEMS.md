@@ -1612,19 +1612,24 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     for `DRABINKA,...,180,510` plus the bare pair `30,50`
     that band is x 195..225, y 480..560, the top of the
     authored ladder, and its P2 column is (203,540)-(233,670)
-    with P3 the middle 70% of it. This port answers from
-    `blk_of_obj`, the object's current art box, in both roles
-    - a 42x48 DRAB.SEQ box against the engine's 80 px band and
-    130 px column, different rectangles on both axes, so an
-    ask at a given position can answer either way. That is the
-    exact shape of `ladder_answer_core`, so the fix is the
-    rectangle source, not the predicate. The two pinned legs
-    are unaffected: they print the 0x44ec0 contact-point test
-    against the asker's box, not this verb. Second lead: the
-    same level places two LINA ropes whose verb 0x3f390 raises
-    AC_LINA and AC_LINA_CATCH (bits 21, 22) at 0x3f4ac/
-    0x3f525, which the lion's script asks for by name and this
-    port does not model.
+    with P3 the middle 70% of it. PR-269 feeds that column to
+    `ladder_answer_core` (leg L11 pins the merged pair, the lone
+    AC_DRAB in the outer band, the inclusive corner and the 1 px
+    beyond); the EDGE band is still the port's 1x1 default, so
+    the `30,50` line and the 0x4a050 widening are one step
+    away. THIRD lead, and the one that decides whether any of
+    this shows in play: in this port the answer is reached only
+    at a shape meet with the ladder (the two `ladder_answer_for`
+    sites in play_collide), while the engine's candidate walk
+    0x4b500 asks the +0x78 entry with no shape test at all
+    (PR-249); ZARIA.01's ladder art hangs at (180,510) and no
+    lion ever meets it, which is why no in-game leg moved for
+    PR-269. Model the ask channel, then the band, and the
+    climb's `A_PODCIAG(1)=AC_EDGE,K_UP` becomes reachable.
+    Second lead: the same level places two LINA ropes whose
+    verb 0x3f390 raises AC_LINA and AC_LINA_CATCH (bits 21, 22)
+    at 0x3f4ac/0x3f525, which the lion's script asks for by name
+    and this port does not model.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -2710,7 +2715,9 @@ OI-117: the answer verb's two rectangles - where the engine
     :5204). The consequence is in OI-078. Nothing in the suite
     moved while this row was open or closed: both in-game asks
     are pinned `-> no` and print the 0x44ec0 contact-point
-    test, not this verb.
+    test, not this verb. FOLLOW-UP, not a reopen: PR-269 feeds
+    the column (o->arx0/ary0/arx1/ary1) to P2/P3 - leg L11 -
+    and the edge band from the `a,b` line is still open.
 OI-118: 0x523f0 raises signals through a SECOND object: the
   per-step pass calls [[obj+0x00]+8]+0xac and +0xa8
   (0x52416/0x52423), and no constructor in the image installs

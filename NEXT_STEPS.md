@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-269.
+> at PR-270.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -37336,4 +37336,103 @@ has" and calls the edge block's authoring un-read: it is
 authored, in the placement text, three lines below the
 placement line.
 GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-269 — THE LADDER'S RUNG RECTANGLE IS THE AUTHORED
+## COLUMN: `ladder_answer_for` READS THE PLACEMENT'S OWN
+## `x0,y0;x1,y1`, NOT ITS ART BOX
+```
+KIND: port
+SUBSYSTEM: the rectangle sources of this port's ladder/rope
+answer verb - the P2/P3 block (`rung`) moves from
+`blk_of_obj`'s art bbox to the column the object's own
+placement entry authors; the art-box path stays as the counted
+fallback for objects nothing authors.
+ADDRESSES: 0x23140, 0x23e00, 0x3b500, 0x49fb0, 0x49f90,
+0x4a050, 0x4a0b0, 0x4b970, 0x91d00, 0x97cdc, 0x98274,
+0x98278, 0xa1dfc, 0x3f0f0, 0x3f11f, 0x3f124, 0x3f14b,
+0x3f154, 0x3f159, 0x3f178, 0x3f182, 0x3f187, 0x3f1a7,
+0x3f256, 0x3f283, 0x3f29f, 0x3f2b1, 0x3f355, 0x3f364
+NAMES: OI-078, OI-117, DRABINKA, LINA, AC_DRAB,
+AC_DRAB_CATCH, AC_EDGE, the authored column, the 70% probe,
+the middle band, ladder_answer_for, ladder_answer_core,
+ladder_flag_raise, blk_of_obj, obj_shape_elem, place_rect,
+pt_in_blk, blk_probe70, leg L11, drab.MOV, ANI2.DES,
+PR-149, PR-150, PR-244, PR-246, PR-247, PR-257, PR-268
+CODE: yes: `ladder_answer_for` (ll_level.c) now takes `rung`
+from `o->arx0/ary0/arx1/ary1` when `o->nrect` is set - the
+authored column, made absolute by the loader PR-246 shipped -
+and keeps `blk_of_obj`, and through it the ctor-shaped 1x1,
+only when the placement authors nothing. The model note that
+had the art bbox as "the one rectangle every authored ladder
+provably has" is replaced by the record verb's law.
+HOOKS: red first, at HEAD: leg L11 of `ladder_answer_selftest`
+printed `FAILED L11 case 0 ... state 2 ask 210,561 authored 1
+(203,540)-(233,670) got 0 want 1400` (0x1400 = AC_DRAB |
+AC_DRAB_CATCH). Its expectations are arithmetic on the shipped
+placement text plus the verb's own instructions, not this
+code's output: the numbers, the inclusive bounds test 0x23e00
+and the symmetric 70% inset of 0x49fb0 are quoted in the leg's
+comment, and no case was read off a run. GREEN:
+`--mov-selftest rc=0`, and no other leg of the suite changed.
+MEASURED: (a) THE FIXTURE'S OWN WORDS. The ANI2.DES block of
+ZARIA.01, read as bytes from hd_files/ETAPY, authors
+`DRABINKA,drab.ani,drab.mov,180,510` then `1 33,-3`,
+`23,30;53,160`, `30,50`; PR-246's `place_rect` already parses
+that second line into the absolute column (203,540)-(233,670)
+and the loader prints it. (b) THE EXPECTED ANSWERS, from
+0x3f256-0x3f2b1: the ask point against the column (0x23e00,
+`jl`/`jg` so INCLUSIVE on all four edges) - true at (233,670),
+false at (234,600); and the same test against the stack copy
+0x49fb0 narrows to 70 per cent of the x-span - w = 233-203 =
+30, inset = 30*70/100 = 21, half = (30-21)/2 = 4, so the
+middle is x 207..229: (210,561) is inside it (the merged pair,
+0x3f2dc-0x3f313), (204,600) is not (AC_DRAB alone, 0x3f355).
+With the port's own edge block still the 1x1 default, an ask
+at the object pixel answers AC_EDGE through P1 although it is
+outside the column - that case pins the P1-first order against
+the new geometry. (c) WHY NO IN-GAME LEG MOVES, and it is not
+that the change is inert: in this port the answer verb is only
+reached where a shape meet with the ladder happens (the two
+`ladder_answer_for` calls in play_collide), and ZARIA.01's
+ladder art at (180,510) never meets a lion on the ground line
+under it - the Makefile's own PR-254 comment counts that
+(1754). The engine asks through the requester walk 0x4b500
+with NO shape test (PR-249), so it answers there and this port
+never asked. The ask channel is now the lead that gates every
+further ladder result; it is OI-078's object-asked-answers
+item and it is the next PR. (d) THE FALLBACK, COUNTED: an
+object with no authored rectangle keeps the art-box path
+(`blk_of_obj`, then the 1x1), and its answer is unchanged -
+that is the boundary the last L11 case pins, and it covers the
+synthetic objects of the earlier legs.
+OPENS: in order: (i) the edge band: [obj+0xc5..0xd1] from the
+`30,50` line - 0x4a0b0 reads the pair, 0x3f159-0x3f175 makes
+it x0 = x1 = a, y0 = b-0x50, y1 = b, and 0x4a050 widens it to
+the authored column's width centred on a, all of it made
+absolute by
+0x3f187-0x3f1a7: for ZARIA.01 the band is (195,480)-(225,560);
+(ii) the ask channel (0x4b500) in place of the shape meet, as
+in (c); (iii) OI-118 unchanged; (iv) whether the authored
+blocks are absolute-once or followed by a moving object
+(0x3f124 runs once, at load - nothing measured says what
+re-derives them for a class that moves); (v) OI-116,
+unchanged; (vi) OI-115 (b), unchanged; (vii) the AC_LINA
+twins and the rest of the OI-078 list, unchanged.
+CLOSES: none. OI-117 stays closed by PR-268, with this
+port-side follow-up noted on it.
+CORRECTS: PR-149's and PR-150's model note (ll_level.c:5100
+region), which made the art bbox the answer block and said the
+edge block "has NO authored source". The authored
+source is the placement text itself, read by the record verb at
+table slot
++0x18 - 0x3f0f0 at 0x3f11f through 0x49f90 with the format at
+0x91d00 - and the port already parses it. PR-268's OPENS (i)
+named this half of the fix; the band half is
+still open.
+GATE: make 0 warnings; verify-all fixtures rc=0 67 (ok);
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
+line is the cmake-windows parity check, which names its own
+reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
+in this tree)
 ```
