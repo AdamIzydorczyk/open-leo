@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-273.
+> at PR-274.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -37749,4 +37749,142 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
 line is the cmake-windows parity check, which names its own
 reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
 in this tree)
+```
+
+## PR-273 — THE ROW-DIRECTIVE GRAMMAR DECODED: WHAT `lock`,
+## `rdir`, `ldir`, `lock2` AND `ground_on` COMPILE TO, AND
+## WHERE THEIR BITS LIVE: +0xb6 IS THE GROUND/LOCK FLAG BYTE
+```
+KIND: read
+SUBSYSTEM: the engine's row-directive layer - the third field
+of a .MOV row line (`1,300,lock`, `7,500,rdir`) - what it
+compiles to, which instruction executes it, and which object
+words the directives write. This is OI-073's named
+row-directive chain (PR-272 OPENS (i)) and the A_PODCIAG
+lift lead from PR-273's exploration runs.
+ADDRESSES: 0x91901, 0x91906, 0x9190c, 0x91913, 0x9191b,
+0x91925, 0x91930, 0x91936, 0x9193b (the keyword pool);
+0x4640b, 0x4645b, 0x464af, 0x464fc, 0x46550, 0x465a7,
+0x465fb, 0x46643, 0x4668b (the handler chain, all reached
+through the handler list 0x961fc walked at 0x45df0); 0xa10d8,
+0xa10c0, 0xa10a8, 0xa0f40, 0xa0f58, 0xa0f70 (the command
+vtables); 0x45c20, 0x45c50, 0x45c80, 0x45cb0, 0x459f0,
+0x45a10, 0x45a50 (the executors); 0x41d3f (the runner that
+calls slot +0x1c over three command lists); 0x54f40, 0x54f90,
+0x54fe0, 0x55020, 0x5500e, 0x55057 (the ground/unground
+methods); 0x23860, 0x23870, 0x23aa0, 0x53e40 (accessors);
+0x5426c, 0x54c14, 0x54c30, 0x54d0c, 0x5525d-0x55267,
+0x50f09, 0x50fee, 0x550cf (the bit tests); 0x54ea2, 0x5266c,
+0x52665 (the mask/clear sites); 0x52070 (rdir's target),
+0x76a69 (the case-insensitive compare used for directives).
+NAMES: lock, unlock, lock2, unlock2, ground_on, ground_off,
+chdir, ldir, rdir, +0xb6, bit5, bit0, bit1, [obj+0x6d],
+[obj+0x9d], [obj+0xa9], window bit, A_PODCIAG, A_DEAD,
+A_SCIAG, A_ATAK, ZARIA_A.PLT, OI-073, OI-078, PR-97, PR-110,
+PR-135, PR-252, PR-259, PR-263, PR-272
+CODE: no: no line of `ported/` changes.
+HOOKS: no red leg: nothing in `ported/` moved and no new
+expectation is pinned; the runs quoted below are observations
+of the CURRENT build (PR-272's) that motivated the read.
+MEASURED: (a) THE GRAMMAR. The keyword pool at 0x91901-
+0x91945 reads `atc_on atc_off lock lock2 unlock unlock2
+ground_on ground_off chdir ldir rdir pos goto gotorel
+goto_rel I F IC FC M` - one handler per keyword in the chain
+at 0x4640b ff., each reached through a handler-list walk at
+0x45df0. A row's third field compiles to a 12-byte command
+object {+0x4 = vtable, +0x8 = value}: lock=0xa10d8 val 1,
+unlock=0xa10d8 val 0, lock2=0xa10c0 val 1, unlock2=0xa10c0
+val 0, ground_on=0xa10a8 val 1, ground_off=0xa10a8 val 0;
+chdir/ldir/rdir build 8-byte objects with vtables 0xa0f40/
+0xa0f58/0xa0f70. Keyword compare is case-insensitive
+(0x76a69 lowercases both sides - TUNGA2.12's `9,500,RDIR`
+parses). The runner 0x41d3f ff. walks three command lists
+off a record (+0x4/+0x8/+0xc, the block sits misaligned in
+the listing and its exact role is an open item) and calls
+each item's vtable slot +0x1c with ebx=2; every command
+method opens with the shared `call 0x457e0`.
+(b) THE WRITES. lock/unlock executor 0x45c20:
+[inner+0xb6] := ([inner+0xb6] AND ~0x20) OR (val<<5) -
+bit5 (0x20) IS the lock flag. lock2/unlock2 executor
+0x45c50: val!=0 -> 0x54f40 (ground: if [obj.vt+0xbc] or
+bit0 already -> `or BYTE [obj+0xb6],1`; else read x via
+[vt+0x48] (lion 0x23aa0) and y via [vt+0x50] (0x53e40),
+call [[x+0x33]+4], then set bit0); val==0 -> 0x54f90
+(`and 0xfe`, clear bit0). ground_on/ground_off executor
+0x45c80/0x45cb0: dispatch the TARGET's vtable +0xc0/+0xc4
+- the lion's are 0x54fe0/0x55020, which set bits0+1
+(`or 3` at 0x5500e) or clear them (`and 0xfc` at 0x55057),
+reading position first the same way. chdir 0x459f0:
+[obj+0x6d] := -1; ldir 0x45a10: [obj+0x6d] := +1 - +0x6d
+is the direction multiplier of the x force at 0x542be, the
+word PR-135 named "that unread word". rdir 0x45a50 ->
+0x52070: [obj+0x9d] := 0 and the command's own word pair
+at +0xc.
+(c) THE READERS. bits0/1 (the ground pair) gate: the
+0x5426c T-raise inside the velocity step 0x54250 (the
+gate is PR-252's raised T: [obj.vt+0xbc] != 0 AND bit1
+clear; the lion's +0xbc = 0x23870 tests [obj+0xa9] != 0 -
+an embedded list head, zeroed at 0x1f8e9/0x54e6a, list
+ops at 0x2b721-0x2b846); the 0x54c00/0x54d0c contact-and-
+draw pass (PR-259's path through the lion's +0x74); the
+0x541f2 family. bit5 has a getter, 0x23860 = ((x<<26)>>31)
+of [obj+0xb6] = bit5, installed at vtable slot +0x40 in
+EVERY lion-class table (0x96874+0x40, 0x96960+0x40, ...);
+its call sites 0x50f09/0x50fee (Answer-A's gate, PR-263's
+"window bit ... 0x50ff1") and 0x55262 (PR-263's answer-C
+"window bit" gate 0x5525d-0x55267) and 0x550cf ARE those
+named gates: the animal answer's "window" is the lock bit,
+raised by the animal's OWN attack rows - 12 A_ATAK states
+among the shipped texts author `,lock` (e.g.
+ENA.03_PIRANIA.MOV line 95 `-1,200,lock,I -150,0`).
+Clearing sites: object cleanup 0x52665 (0x54f90 then
+`and BYTE [eax+0xb6],0xdf` then 0x523e0) and the reset
+0x54e60-0x54ea5 (zeroes +0xa9 and masks +0xb6 with 0xc0,
+dropping bits0-5).
+(d) THE TEXTS. Census over all 777 .MOV texts (third field
+of row lines): lock 73, unlock 48, rdir 24, ldir 15,
+lock2 10, unlock2 10; ground_on/ground_off/chdir: ZERO uses.
+By state: A_DEAD 33 (33 uses of `,lock` in death states -
+the freeze during dying), A_PODCIAG 15, A_WALKOUTIGLO 12,
+A_ATAK 12, A_START 10, A_SCIAG 10, A_DOSTAL 9, A_RUN 8,
+A_JUMP 8, A_WPAD 6. ZARIA.01's LEW authors `,lock` in
+A_DEAD, A_ODLOT, A_WPAD, A_WYJSCIE (+ a following `,ldir`),
+A_SCIAG (row 8), A_PODCIAG (row 1), A_KILOF (row 1 is
+`,rdir`); its A_PODCIAG is `1,300,lock ... 7,500,rdir ...
+8,300,unlock` (TUNGA.11 identical) - the whole lift runs
+with bit5 raised, and it clears it exactly one row before
+the state's own AC_BREAK_NEXT exit.
+(e) THE PORT models NONE of this: no read or write of
++0xb6's family exists in `ported/` (no lock/ground/
+direction-word model). The PR-273 exploration run shows
+what that costs: with the whole authored climb chain now
+running (PR-272's fix put the lion on the ladder: A_WALK
+-> A_TURN_BACK at x 210 with the ladder's AC_DRAB_CATCH,
+-> A_WSP climbing 1 px/t 652 -> 560, -> AC_EDGE band +
+K_UP -> A_PODCIAG at 266), A_PODCIAG has no lift: the
+lion drifts DOWN 568 -> 608 and A_DRAP lands him back on
+the main ground at 212,654 instead of the top platform
+(ZARIA_A.PLT line `5 98,514;288,520;...` reads y 518 at
+x 212 - the top he should end on).
+OPENS: in order: (i) the source of A_PODCIAG's UPWARD
+motion: the rows author NO motion verb, so it is either the
+SEQ step-motion word +0xea/+0xe2 (PR-110's "move-over-N-
+iterations" verb) driven by the `lift` .SEQ art, or the
+contact pass with bit5 raised; not yet read; (ii) the
+runner's three command lists (record +0x4/+0x8/+0xc) -
+which is row-enter, per-row and row-exit; (iii) bit2/bit3
+(written `or 4`/`or 8` at 0x545c6/0x545d2, tested at
+0x54200/0x5426c/0x54c14) and bits6/7 (the only bits the
+reset keeps); (iv) what list [obj+0xa9] is (the lion's
++0xbc flag); (v) the rdir word-pair form when arguments
+follow the word; (vi) then the model: raise a lock flag
+over A_PODCIAG rows 1-7 and land the pull on the top
+platform - the FOCUS-1 finish leg.
+CLOSES: PR-263's unnamed "window bit": it is +0xb6 bit5,
+the `lock` directive bit, raised by the animal's own
+attack rows. PR-135's FC-pair direction word [obj+0x6d]
+has its WRITERS: the ldir/chdir directives (and the
+0x54ea2 reset family clears them out).
+CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok);
 ```

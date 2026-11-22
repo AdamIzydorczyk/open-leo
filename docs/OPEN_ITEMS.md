@@ -616,6 +616,22 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     0x54f40-0x55057), and whether the engine's contact tests
     a whole box or a point (PR-135 item 11 - only the
     continuity half is modelled).
+    PR-273 DECODES the [obj+0xb6] family's directive layer
+    (its record carries the instruction map): bit5 IS the
+    row-directive `lock`/`unlock` flag (0x45c20 writes it);
+    bits0/1 are the ground pair written by `lock2`/`unlock2`
+    (0x54f40/0x54f90) and `ground_on`/`ground_off` (the
+    target's vtable +0xc0/+0xc4, lion 0x54fe0/0x55020);
+    `chdir`/`ldir` write the direction word [obj+0x6d]. The
+    bit0/1 pair gates the 0x5426c T-raise and the
+    0x54c00/0x54d0c contact-and-draw pass; bit5's getter
+    0x23860 (vtable +0x40) is PR-263's "window bit" in both
+    answer gates. What stays open narrows to: the grounded-y
+    instruction INSIDE the 0x54c00/0x54d0c pass ([obj+0xb5]
+    is passed to [vt+0x50] there - unread), the A_PODCIAG
+    lift-motion source (SEQ step-motion vs the contact pass,
+    PR-273 OPENS (i)), the [obj+0xa9] list, and the
+    bit2/3/6/7 semantics.
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -1687,6 +1703,24 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     is the CATCH timing (position point x 207..229 at the
     ask tick) and then the A_TURN_BACK -> A_WSP -> A_PODCIAG
     leg.
+    PR-273'S EXPLORATION RUNS WALK THAT LEG END TO END:
+    `1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP` raises the
+    K_GEN1 bus (the JUMP), settles the ladder to A_DOWN,
+    walks the position point into x 207..229 (x 210) and
+    holds UP: A_WALK -> A_TURN_BACK (150, the CATCH answer)
+    -> A_WSP (climbs 652 -> 560 at 1 px/t) -> AC_EDGE band
+    + K_UP -> A_PODCIAG (266) -> A_DRAP (290) - the whole
+    authored chain the port had never run. ONE gap stays
+    before the level is climbable: A_PODCIAG's LIFT is not
+    modelled - the lion drifts down (568 -> 608) and lands
+    back on the ground (212,654) instead of the top platform
+    (the .plt line `5 98,514;288,520;...`, y 518 at x 212).
+    PR-273 reads the directive layer the lift runs on:
+    `1,300,lock ... 7,500,rdir ... 8,300,unlock` = +0xb6
+    bit5 raised over rows 1-7 (its record maps the bits and
+    their readers); the lift's UPWARD motion source is the
+    open question (SEQ step-motion word +0xea vs the
+    contact pass). That is the FOCUS-1 finish lead now.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
