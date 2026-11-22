@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-281.
+> at PR-282.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38508,5 +38508,103 @@ CORRECTS: PR-275 - "gap <= 0 means a one-shot snap UP" is
 refined: acceptance is the two-point crossing test of
 MEASURED (c), and PR-279's 0x4b600/0x4b660 function split
 is withdrawn per HOOKS.
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-281 — THE APPLICATION LAW DECODED WHOLE: THE POSITION STEP
+## ADDS VELOCITY+GAP AND CLEARS BOTH, [obj+0xa9] IS THE LINKED
+## TABLE (ATTACH/DETACH AT 0x5477B-0x547FB), AND THE ACCEPTED
+## ORDER IS CURRENT-THEN-PREDICTED - WHICH PUTS THE POSITION
+## POINT EXACTLY ON THE LINE IT LANDS ON
+```
+KIND: read
+SUBSYSTEM: the position-step tail 0x5477b-0x54854 (snap
+application, table link/detach, velocity consumption) and
+the output-flag bits it sets. No `ported/` change.
+ADDRESSES: 0x5477b, 0x54785, 0x5478e, 0x54798, 0x5479f,
+0x547b3, 0x547bc, 0x547c8, 0x547d1, 0x547d7, 0x547e8,
+0x547fa, 0x54804, 0x5481b, 0x54827, 0x54829, 0x5483c,
+0x5484a, 0x45230, 0x39d00, 0x542cd, 0x98278
+NAMES: OI-073, OI-078, A_PODCIAG, A_WSP, ly_climb, link,
+attach, detach, one-shot, PR-110, PR-121, PR-122, PR-259,
+PR-274, PR-275, PR-280, PR-97, step-motion word
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: PR-275 OPENS (iv) (the [obj+0xa9] slot's two roles)
+is ANSWERED: [obj+0xa9] is the CURRENTLY LINKED surface
+table; the pair of calls 0x45230 (table vtable +0x0) and
+0x39d00 (+0x4) are the table's ATTACH-object and
+DETACH-object methods - the engine detaches the old table
+before relinking a new one (0x547a7-0x547c6) and detaches
+and NULLs at 0x547d7-0x547fb when nothing is linked and
+the object carries one. PR-273 OPENS (i) is NOT closed:
+this record only sharpens what the lift would have to
+defeat (MEASURED (d)).
+MEASURED: (a) THE APPLICATION, exact: after the attach
+block, 0x54804: ecx=[obj+0xea]; the SAME step zeroes
+[obj+0xea] at 0x5481b (the one-shot is the engine's, not
+a port convention); x += [obj+0xca]; y += [obj+0xce] +
+[obj+0xea] (0x54827-0x54829). Then 0x5483c/0x5484a
+SUBTRACT [obj+0xca] from [obj+0xca] and [obj+0xce] from
+[obj+0xce] - the velocity words are CONSUMED by the step:
+pos += vel, vel := 0, rebuilt each iteration by the
+0x54250/0x542cd pass (PR-122/PR-259). So [obj+0xca]/
+[obj+0xce] carry nothing but the per-iteration delta -
+no contact term lives there.
+(b) THE LINK: when the attach produced a table ([obj+0xe6]
+non-null at 0x54788): if the actor has no current link
+([obj+0xa9]==0) it ORs bit 0x10 into the output byte and
+links: [obj+0xa9] = [obj+0xe6], call table vtable +0x0
+(0x45230) with edx=object (attach). If a DIFFERENT table
+is already linked it calls the old one's +0x4 (0x39d00,
+detach) then links and attaches the new (0x547af-0x547c6).
+When no attach is live and the actor still holds a table,
+0x547d7-0x547fb detaches it and writes [obj+0xa9]=0.
+The byte bits: [edi]|0x10 on fresh link, [edi+1]|0x20 when
+[obj+0xe2] (the stored kind) is non-zero, [edi+2]|0x04 on
+detach - the output flags PR-121 read as the grounded/
+surface report.
+(c) THE ACCEPTED ORDER IS CURRENT-THEN-PREDICTED. With
+evaluation1 rejected when negative and evaluation2 required
+non-positive (PR-280 MEASURED (c)), a fall landing on the
+main ground is the only sign combination that passes:
+current above the line (gap1 = line - pos > 0), predicted
+below (gap2 = line - pos - vy < 0), store gap2; and the
+application then gives y_new = pos + vy + (line - pos -
+vy) = line EXACTLY: the position point lands ON the line.
+The algebra is closed-form and confirms PR-280: a rising
+crossing (current below, predicted above) fails the first
+gate, so this channel cannot lift anything.
+(d) CONSEQUENCE, STATED HONESTLY: with pos landing on the
+line, the engine's main-ground position point is at the
+line (682 at x 214), while the port's convention puts it
+at line-minus-art-contact (654, PR-97) and draws art
+offset up - the two agree on screen (feet on ground) and
+differ only in where the origin sits. Every port-pinned
+grounded y (ly_climb's 654, ly_cdown's 651) is the port
+convention, not an engine-internal number; nothing here
+invalidates a leg, since the legs pin what the port draws.
+(e) THE LIFT SEARCH NARROWS BY EXCLUSION: the authored
+A_PODCIAG words (F=0,0 T=100,100 G=0,0, no row motion
+verbs) feed the 0x542cd force law NO pair - the same law
+that PR-259 measured for A_WSP's T=(160,50) one px/t
+climb produces nothing for A_PODCIAG, and BY_TIME's feed
+is the 100-per-iteration clock (PR-100). The lift is
+therefore NOT the T channel, NOT the snap channel, and not
+in the row verbs; the unread places are the contact/draw
+pass 0x54c00/0x54d0c with the lock bit5 set (PR-273's
+other branch, the grounded-y instruction via [obj+0xb5]
+into [vt+0x50]) and what raises or carries the pair at
+[reader+0xb1]/[+0xb5] that 0x1e630 reads.
+OPENS: in order: (i) the contact/draw pass 0x54c00/
+0x54d0c and the [obj+0xb5] -> [vt+0x50] grounded-y
+instruction (the last unread branch for the lift); (ii)
+0x45230/0x39d00 bodies (the link lists they maintain);
+(iii) the output-flag bits' consumers; (iv) carried: 0x4b430
+/0x4b7f0, 0x45250, state-record field +4.
+CLOSES: none.
+CORRECTS: PR-275 OPENS (iv) is answered per HOOKS, and
+PR-110's name "move-over-N-iterations verb" for the +0xe2
+/+0xe6/+0xea triple is retired: the triple is the snap
+link + gap of PR-280, applied once (MEASURED (a)).
 GATE: light: verify-index verify-docs rc=0 (ok);
 ```

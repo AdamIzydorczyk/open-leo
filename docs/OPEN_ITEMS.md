@@ -190,7 +190,10 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     0x54337). 0x54358-0x54372 write [obj+0xca]/[obj+0xce] =
     idiv(v,100) and 0x54827-0x54829 add those WHOLE numbers -
     the idiv remainder is DROPPED, and [obj+0xe2/0xe6/0xea] is
-    the SEQ step-motion verb, not a sub-pixel carry.
+    not a sub-pixel carry. PR-281 CORRECTS that row's NAME for
+    the triple: it is the surface snap link + gap (PR-280/
+    PR-281), applied once at 0x54829 and zeroed in the same
+    step - not a SEQ step-motion verb.
     Consequences measured on real data and NOT fitted: the
     A_JUMP apex is exactly 100 px; ZARIA's walk settles at
     register 250 = 2 px an iteration (3 iterations per 6-unit
@@ -649,6 +652,18 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     The A_PODCIAG lift lead narrows to the snap law (its
     gap is <= 0 = UP only); which provider holds the top
     platform line is PR-275 OPENS (i).
+    PR-279 ANSWERS THAT PROVIDER (the .plt lines on the
+    level manager, loaded by the wiring parser's platformy=
+    branch); PR-280 DECIDES THE LAW (the 0x45400 rule is a
+    two-point LINE-CROSSING landing test, so a line above
+    both points is never chosen - this channel cannot lift);
+    PR-281 DECODES THE APPLICATION (pos += vel + gap with
+    the gap consumed same-step, [obj+0xa9] = the linked
+    table with attach/detach at 0x45230/0x39d00, and the
+    accepted order puts the position point exactly ON the
+    line). The lift lead that remains is the contact/draw
+    pass 0x54c00/0x54d0c under the lock bit and the
+    [reader+0xb1]/[+0xb5] grounded-y pair.
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -1738,6 +1753,15 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     their readers); the lift's UPWARD motion source is the
     open question (SEQ step-motion word +0xea vs the
     contact pass). That is the FOCUS-1 finish lead now.
+    PR-281 ELIMINATES BOTH HALVES OF THAT ALTERNATIVE: the
+    step-motion word is the snap link (PR-280/PR-281), and
+    the A_PODCIAG words F=0,0 T=100,100 G=0,0 feed the
+    0x542cd force law NO pair, so the T channel produces
+    no lift either. The FOCUS-1 lead is now the contact/
+    draw pass 0x54c00/0x54d0c with the lock bit set (PR-
+    273's other branch: the grounded-y instruction through
+    [obj+0xb5]) and what raises or carries the pair at
+    [reader+0xb1]/[+0xb5].
     PR-274 PINS THAT CHAIN as a leg (ly_climb, its record
     derives every tick from the fixture's own arithmetic):
     the whole chain runs deterministically and the leg also
