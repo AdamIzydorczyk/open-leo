@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-274.
+> at PR-275.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -37887,4 +37887,76 @@ has its WRITERS: the ldir/chdir directives (and the
 0x54ea2 reset family clears them out).
 CORRECTS: none.
 GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-274 — THE AUTHORED LADDER CLIMB NOW RUNS END TO END IN
+## A REAL RUN: A NEW LEG PINS THE WHOLE CHAIN, AND PINS THE
+## ONE FINISH THAT IS STILL UNMODELLED
+```
+KIND: gate
+SUBSYSTEM: the Makefile play-leg cluster - a new ZARIA.01 leg
+(ly_climb) walking the whole ladder climb: jump for the
+K_GEN1 bus, the CATCH ask inside the authored middle 70%,
+A_TURN_BACK, the A_WSP climb, the AC_EDGE band, A_PODCIAG's
+own clock, and the unmodelled lift at the end. No engine
+reading and no `ported/` change.
+ADDRESSES: 0x54170, 0x4b500, 0x3f1c0, 0x287a0 (all read and
+recorded by PR-250..PR-257/PR-263/PR-269/PR-270; this leg
+exercises them, it reads nothing new).
+NAMES: OI-078, A_WALK, A_TURN_BACK, A_LOOKUP, A_WSP,
+A_PODCIAG, A_DRAP, AC_DRAB, AC_DRAB_CATCH, AC_EDGE, K_GEN1,
+K_UP, ZARIA_A.PLT, ly_climb, FWD,UP, middle 70%, edge band,
+PR-83, PR-257, PR-259, PR-269, PR-270, PR-271, PR-272,
+PR-273
+CODE: yes: the Makefile leg block only; no line of `ported/`
+changes, so there is no behaviour for a red leg to catch.
+HOOKS: no red leg: the leg pins the behaviour PR-272 shipped
+and PR-273's runs observed; every pinned number is derived
+from the fixture's own arithmetic BEFORE being grepped (the
+1500-unit A_TURN_BACK list = 15 iterations, PR-83's units;
+the middle 70% x 207..229, PR-269 - the leg's own run shows
+x 204 answering `set 400` alone and x 208 answering `set
+1400`; the 1 px/t A_WSP terminal of F-pair+T=160,50,
+PR-259 - 652 at 170 to 560 at 262, exactly 1 px a tick; the
+P1 lower edge y 560, PR-270; A_PODCIAG's row times
+300x3+200x3+500+300+200+100 = 2700 units = 27 iterations,
+the transition inside 262's step + 27 = 289; the main-ground
+.plt line at x 212 = 682 and
+the idle contact 28, PR-97 - feet 654+28=682), and the run
+reproduces each.
+MEASURED: (a) THE FIRST leg run confirms the whole chain in
+one deterministic run: tick 98 JUMP -> bus 104 (PR-257), the
+ladder at state 2 from then on, AC_DRAB contact raise at 128
+(the landing tick, the PR-235 channel); 146: `set 400`
+outside the middle, 148: `set 1400` inside it; 150:
+A_TURN_BACK with A_LOOKUP never appearing (0 occurrences -
+the CATCH row really precedes it in both states' lists);
+165: A_WSP; 170-262 the 1 px/t climb at x 212; 262 `set
+100` at the band edge; 263 A_PODCIAG; 289 its own
+AC_BREAK_NEXT -> A_DRAP; 294 grounded 1 at 212,654 on the
+main ground. (b) THE UNMODELLED FINISH is pinned too: the
+port drifts A_PODCIAG down 2 px/t (562 at 263 to 612 at
+288, A_DRAP entering at 616) and the lion lands on the main
+ground, not the top platform (y 518 at x 212) - the PR-273
+OPENS (i) question, now with a leg to fix against.
+OPENS: in order: (i) the lift model itself (PR-273 OPENS
+(i): the +0xea SEQ step-motion vs the contact-pass question,
+and the rdir/[obj+0x9d] read) - when it lands, the two
+end-pins of this leg (290's state, 294's 654-grounded) are
+the ones that move and the leg's comment says so; (ii) the
+A_WSP exit `A_TURN_BACK(1)=AC_DUP,K_DOWN` (releasing UP
+mid-climb falls back) is authored and untested; (iii)
+A_WSP's `A_FALL_DOWN(1)=!AC_DRAB` (walking off the column
+mid-climb) likewise; (iv) OI-078's remaining leads (AC_LINA
+twins, pair-without-rect n, absolute-once vs followed
+blocks).
+CLOSES: none - this leg is the net, not the fix.
+CORRECTS: none.
+GATE: make 0 warnings; verify-all fixtures rc=0 66 (ok);
+the verify-cmake parity and the verify-win/verify-mod legs
+are excluded per the owner's 2026-11-22 request;
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
+line is the cmake-windows parity check, which names its own
+reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
+in this tree)
 ```

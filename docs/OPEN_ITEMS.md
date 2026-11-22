@@ -1721,6 +1721,13 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     their readers); the lift's UPWARD motion source is the
     open question (SEQ step-motion word +0xea vs the
     contact pass). That is the FOCUS-1 finish lead now.
+    PR-274 PINS THAT CHAIN as a leg (ly_climb, its record
+    derives every tick from the fixture's own arithmetic):
+    the whole chain runs deterministically and the leg also
+    pins the wrong finish - A_PODCIAG's drift down and the
+    682-ground landing - so the lift fix has a net to land
+    on. The two end-pins (289's exit, 294's grounded 654)
+    are the ones that move when the lift is modelled.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

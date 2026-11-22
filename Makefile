@@ -1960,6 +1960,64 @@ ifeq ($(PX_DATA),1)
 	  && echo "play fight (PR-87): K_FIRE,K_F1 comma group ANDs - FIRE,F1 enters the authored A_FIGHT with its punch frames on the cam anchor, FIRE alone never fights (ok)" \
 	  || { echo "play ZARIA fire-alone negative leg FAILED (A_FIGHT appeared)"; \
 	    grep A_FIGHT /tmp/opencode/ly_zfire.log; exit 1; }
+# PR-274, FOCUS 1 / OI-078: THE WHOLE AUTHORED LADDER-CLIMB
+# CHAIN, end-to-end regression net. PR-272 closed the fall that
+# tunneled the main ground, and this leg's script now walks the
+# whole authored chain for the first time: walk to the ladder,
+# JUMP (the K_GEN1 bus, PR-257's row chain: press at 98, bus at
+# 104, the ladder settles - every probe line from then reads the
+# ladder at state 2), land beside it, walk into the column and
+# hold FWD,UP with the position point inside the authored middle
+# 70%, x 207..229 (PR-269): the ladder ANSWERS CATCH - `set
+# 1400` = AC_DRAB|AC_DRAB_CATCH - first at 148, x 208, where
+# x 204 two ticks earlier had answered only `set 400` = AC_DRAB,
+# exactly the 70% split; and the .MOV's own
+# `A_TURN_BACK(1)=K_UP,AC_DRAB_CATCH` row, which precedes both
+# the walk's `A_WALK(x)=K_FWD` and the idle's `A_LOOKUP(1)=K_UP`
+# (PR-271), takes it at 150: A_WALK -> A_TURN_BACK, A_LOOKUP
+# never runs. Its 1500-unit rows run 15 iterations (PR-83's
+# units) -> A_WSP at 165; A_WSP's BY_TY F pair with `T=160,50`
+# climbs exactly 1 px an iteration (PR-259's closed form): 652
+# at 170 down to 560 at 262, x pinned at 212; at the band's
+# lower edge - y 560 of PR-270's P1 (195,480)-(225,560) - the
+# ladder answers `set 100` = AC_EDGE (262) and with K_UP still
+# held comes A_PODCIAG (263), whose BY_TIME rows
+# (300x3+200x3+500+300+200+100 = 2700 units = 27 iterations)
+# close at 289 through its own `A_DRAP(1)=AC_BREAK_NEXT`
+# (the transition ran inside 262's step; 262+27 = 289).
+# The chain's END is NOT the top of the ladder: A_PODCIAG's
+# LIFT is unmodelled - PR-273 read the directive layer it runs
+# on (`1,300,lock ... 7,500,rdir ... 8,300,unlock` = +0xb6
+# bit5) and named the motion source open (its OPENS (i)) - so
+# the port drifts 2 px a tick and lands back on the main
+# ground: feet 654 + the 28 contact = 682, the .plt line at
+# x 212, instead of sitting on the top platform (the .plt line
+# `5 98,514;288,520;...` reads y 518 there). When the lift is
+# modelled those last two pins are the ones that move; every
+# other number above is the fixture's own arithmetic.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
+	  LEO_PLAY_SCRIPT="1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP 275:NONE" \
+	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_climb.ppm \
+	  LEO_LEVEL_PPM_TICK=318 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_climb.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play ZARIA climb chain FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_climb.log; exit 1; fi
+	@grep -q 'play: A_WALK -> A_TURN_BACK' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play: A_TURN_BACK -> A_WSP' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play: A_WSP -> A_PODCIAG' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play: A_PODCIAG -> A_DRAP' /tmp/opencode/ly_climb.log \
+	  && ! grep -q 'state A_LOOKUP' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 146: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 400' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 148: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 1400' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 150: state A_TURN_BACK' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 262: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 100' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 294: state A_DRAP seq idle frame 1 pos 212,654 grounded 1' /tmp/opencode/ly_climb.log \
+	  && echo "play climb chain (PR-274): the authored ladder climb runs end to end - CATCH only inside the middle 70%, A_TURN_BACK at 150 (A_LOOKUP never), A_WSP 1 px/t, AC_EDGE at the band edge, A_PODCIAG's own 2700-unit clock exits to A_DRAP; the lift's TOP landing stays unmodelled and the leg pins that too (ok)" \
+	  || { echo "play ZARIA climb chain grep FAILED"; \
+	       grep -E 'play: A_|ANSWERS|state A_(TURN_BACK|WSP|PODCIAG|DRAP) ' \
+	         /tmp/opencode/ly_climb.log | tail -12; exit 1; }
 # PR-83: the KEYUP half of the input contract. No backend ever translated
 # SDL_KEYUP, so through the REAL backend every key stuck down forever: the
 # reported "controls press themselves in a loop". The live loop (NO
