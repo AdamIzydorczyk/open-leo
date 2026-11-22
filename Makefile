@@ -2076,6 +2076,66 @@ ifeq ($(PX_DATA),1)
 	  || { echo "play ZARIA ladder-jump grep FAILED"; \
 	       grep -E 'play: A_|state A_(WSP|PRE_JUMP|JUMP|WALK|TURN_BACK) ' \
 	         /tmp/opencode/ly_cjump.log | tail -12; exit 1; }
+# PR-278, FOCUS 1 / OI-078: THE AUTHORED DOWN-DESCEND CHAIN. At
+# 223 the airborne lion's position point (217,548) sits inside
+# the edge band (PR-270's P1, (195,480)-(225,560)), so the ask
+# answers `set 100` = AC_EDGE, and A_WALK's authored
+# `A_SCIAG(1)=AC_EDGE,K_DOWN` (row at .MOV line 123) takes it
+# at 224 - K_UP was released at 223, so A_TURN_BACK's CATCH
+# row is NOT re-crossed: the leg pins A_WALK -> A_TURN_BACK
+# appearing exactly once in the whole run (at 150). A_SCIAG's
+# descent is its authored `m 0,1` pairs - the M pairs apply
+# once per ROW ADMIT (PR-2xx: `p->y += fr.dy` on the admit);
+# with BY_TIME's row clock at the 100-per-iteration feed
+# (PR-100's one-row-per-step law) the ten rows 100/200/300/
+# 500/200/200/200/300/300/300 admit at 224,225,227,232,234,
+# 236,238,241,244,247, and the six M rows walk y 548 -> 554:
+# the leg pins 553 at 243 (five admits) and 554 at 247 (all
+# six). The completed list arms AC_BREAK_NEXT (PR-83's arming)
+# and the state's own `A_WSP(1)=AC_BREAK_NEXT` re-enters the
+# climb at 250 - but with the position point INSIDE the edge
+# band the ladder's answer never carries AC_DRAB (P1
+# precedence, PR-270's measured order), so A_WSP's own
+# `A_FALL_DOWN(1)=!AC_DRAB` takes it on its first step:
+# A_FALL_DOWN at 251. The fall lands grounded 1 at 214,651 at
+# 270 - feet 651 + the 31 px fall_dn art contact (PR-97's
+# max-over-the-state-art rule) = 682, the .plt main-ground
+# line at x 214. Every tick above is the fixture's own
+# arithmetic; the chain is exactly what the authored rows
+# order, and this is the descend half of the ladder.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
+	  LEO_PLAY_SCRIPT="1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP \
+200:FWD,UP,JUMP 201:FWD,UP 223:FWD,DOWN" \
+	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_cdown.ppm \
+	  LEO_LEVEL_PPM_TICK=318 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_cdown.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play ZARIA ladder-descend FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_cdown.log; exit 1; fi
+	@grep -q 'play: A_WSP -> A_PRE_JUMP' /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play: A_JUMP -> A_WALK' /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play: A_WALK -> A_SCIAG' /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play: A_SCIAG -> A_WSP' /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play: A_WSP -> A_FALL_DOWN' /tmp/opencode/ly_cdown.log \
+	  && test "$$(grep -c 'play: A_WALK -> A_TURN_BACK' \
+	       /tmp/opencode/ly_cdown.log)" -eq 1 \
+	  && grep -q 'play tick 199: state A_WSP seq climb frame 7 pos 212,623 grounded 0' \
+	       /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 223: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 100' \
+	       /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 224: state A_SCIAG seq lift frame 9 pos 217,548 grounded 0' \
+	       /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 243: state A_SCIAG seq lift frame 2 pos 217,553 grounded 0' \
+	       /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 251: state A_FALL_DOWN seq fall_dn frame 8 pos 217,555 grounded 0' \
+	       /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 270: state A_FALL_DOWN seq fall_dn frame 8 pos 214,651 grounded 1' \
+	       /tmp/opencode/ly_cdown.log \
+	  && echo "play ladder-descend (PR-278): mid-air AC_EDGE + K_DOWN takes A_WALK's own A_SCIAG row, the m 0,1 rows descend one px an admit at the PR-100 row clock, the list's AC_BREAK_NEXT re-enters A_WSP which its own !AC_DRAB row leaves inside the edge band (PR-270's precedence), and the fall lands on the .plt ground (ok)" \
+	  || { echo "play ZARIA ladder-descend grep FAILED"; \
+	       grep -E 'play: A_|state A_(WSP|SCIAG|FALL_DOWN|WALK) ' \
+	         /tmp/opencode/ly_cdown.log | tail -12; exit 1; }
 # PR-83: the KEYUP half of the input contract. No backend ever translated
 # SDL_KEYUP, so through the REAL backend every key stuck down forever: the
 # reported "controls press themselves in a loop". The live loop (NO

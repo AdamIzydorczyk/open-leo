@@ -38259,3 +38259,59 @@ line is the cmake-windows parity check, which names its own
 reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
 in this tree)
 ```
+
+## PR-278 — THE AUTHORED DOWN-DESCEND CHAIN: A THIRD ZARIA.01 LEG
+## PINS A_SCIAG (M-ROW DESCENT), THE BREAK-NEXT RE-ENTRY, AND THE
+## `!AC_DRAB` FALL INSIDE THE EDGE BAND
+```
+KIND: gate
+SUBSYSTEM: the Makefile play-leg cluster - a new ZARIA.01 leg
+(ly_cdown) walking the authored mid-air DOWN entry and the
+descend-then-fall chain. No engine reading and no `ported/`
+change: the chain already works in the current build.
+ADDRESSES: 0x44ec0, 0x3df00, 0x53725, 0x3f1c0 (all read by
+PR-23x/PR-270; the leg exercises them, it reads nothing new)
+NAMES: OI-078, A_SCIAG, A_WSP, A_FALL_DOWN, A_WALK, AC_EDGE,
+K_DOWN, AC_DRAB, AC_BREAK_NEXT, m 0,1, ly_cdown, edge band,
+ZARIA_A.PLT, PR-83, PR-97, PR-100, PR-270, PR-277
+CODE: no: the Makefile leg block only; no line of `ported/`
+changes, so there is no behaviour for a red leg to catch.
+HOOKS: PR-277 OPENS (ii) - `A_FALL_DOWN(1)=!AC_DRAB` untested
+- is TAKEN here: the leg pins exactly that row firing. The
+other PR-277 named exit (AC_DUP) stays open below.
+MEASURED: (a) the leg's chain, every number derived from the
+fixture's own arithmetic BEFORE being grepped: at 223 the
+airborne lion's position point (217,548) sits inside PR-270's
+P1 edge band, so the ask answers `set 100` = AC_EDGE, and
+A_WALK's authored `A_SCIAG(1)=AC_EDGE,K_DOWN` takes it at
+224 - K_UP was released at 223, so A_WALK -> A_TURN_BACK is
+pinned to appear exactly ONCE in the whole run (at 150).
+(b) A_SCIAG's descent is its authored `m 0,1` pairs applied
+once per ROW ADMIT, and with PR-100's one-row-per-step law at
+the 100-per-iteration feed the ten rows 100/200/300/500/200/
+200/200/300/300/300 admit at 224,225,227,232,234,236,238,
+241,244,247: y walks 548 -> 554 one px an admit, pinned at
+553 (five admits) and 554 (all six M rows). (c) the completed
+list arms AC_BREAK_NEXT (PR-83's arming) and the state's own
+`A_WSP(1)=AC_BREAK_NEXT` re-enters the climb at 250; inside
+the edge band the ladder's answer never carries AC_DRAB
+(PR-270's P1 precedence), so A_WSP's `A_FALL_DOWN(1)=!AC_DRAB`
+fires on its first step: A_FALL_DOWN at 251. The fall lands
+grounded 1 at 214,651 at 270: 651 + the 31 px fall_dn art
+contact (PR-97's max-over-the-state-art rule) = 682, the
+.plt main-ground line at x 214.
+OPENS: in order: (i) the lift (PR-275/PR-276 OPENS (i))
+stands; (ii) the AC_DUP producer (carried from PR-277);
+(iii) A_WSP grounding/walking as a model question (the
+release-keys probe of PR-277).
+CLOSES: none.
+CORRECTS: none.
+GATE: make 0 warnings; verify-all fixtures rc=0 68 (ok);
+the verify-cmake parity and the verify-win/verify-mod legs
+are excluded per the owner's 2026-11-22 request;
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
+line is the cmake-windows parity check, which names its own
+reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
+in this tree)
+```
+

@@ -1781,6 +1781,15 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     records that releasing keys mid-climb today lands the
     climber back inside A_WSP - A_WSP grounding/walking is
     a model question, not a leg pin.
+    PR-278 PINS THE DOWN-DESCEND CHAIN as a third leg
+    (ly_cdown): mid-air AC_EDGE + K_DOWN enters A_SCIAG, its
+    `m 0,1` rows descend one px an admit at PR-100's row
+    clock, the completed list's AC_BREAK_NEXT re-enters
+    A_WSP, and A_WSP's own `A_FALL_DOWN(1)=!AC_DRAB` takes
+    it inside the edge band (PR-270's P1 precedence) into a
+    .plt-grounded fall. The ladder chain is now pinned
+    three ways; the ONE thing ZARIA.01 still lacks is the
+    lift itself.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
