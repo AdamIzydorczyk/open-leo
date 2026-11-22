@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-283.
+> at PR-284.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38735,5 +38735,94 @@ phase byte (MEASURED (d)); PR-279 OPENS (iii)'s [obj+0xa9]
 duality gains its second half: [obj+0xa5] IS the placed
 object's authored point-list header for this family
 (MEASURED (b)), not only a surface-table slot.
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-283 — THE LIFT IS EXCLUDED IN FIVE MORE CHANNELS; WHAT
+## REMAINS IS THE CARRY LAW (0x54EB0: pos = arg + snapshot -
+## attach) AND THE [obj+0xb6] BIT GATES THAT SKIP THE ATTACH
+## WHOLESALE - THE LAST UNREAD LAWS TOUCHING THESE STATES
+```
+KIND: read
+SUBSYSTEM: the pair-contact verb 0x3df00 and its attach tail
+0x45320; the [vt+0xd8] slot samples; the ZAR.BLK block
+census; the lion-class snapshot/attach/carry trio
+0x55070/0x54dfd/0x54eb0; the block file's authored rows.
+No `ported/` change.
+ADDRESSES: 0x3df00, 0x45320, 0x45400, 0x52a00, 0x52a50,
+0x507e0, 0x54eb0, 0x54dfd, 0x55070, 0x541f0, 0x552e0,
+0x55360, 0x524e0, 0x9686c, 0x96960, 0x97cdc, 0xcef40,
+0x394, 0x546ac, 0x54eb9, 0x54c14, 0x4db50, 0x98278,
+0x3ee28, 0x3ee2d
+NAMES: OI-073, OI-078, ZAR.BLK, DRABINKA, TLewZaria,
+pair-contact, carry, snapshot, attach, snapshot-off,
+anchor-off, WINDA, MOVEPLAT, A_PODCIAG, A_WSP, ly_climb,
+PR-270, PR-273, PR-280, PR-282, kind cap, crossing law
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: PR-282 OPENS (i) - "the writer that moves the rider
+up the column" - is narrowed hard here: no pair/carry/
+block/attach code moves a rider on a FIXED ladder, and the
+remaining named laws are the [obj+0xb6] gates (MEASURED (d))
+and PR-273's bit5 answer window over exactly these states.
+MEASURED: (a) THE BLOCKS ARE NOT AT THE WALL: ZAR.BLK is
+`6` then the six authored rows (0,0,700), (2240,0,700),
+(1299,341,118), (1462,244,28), (1540,194,27), (1620,0,200)
+- the level bounds plus five structures east of x=1200.
+Nothing near x 212: PR-282's exclusion of the block channel
+is now confirmed BY DATA, not by absence.
+(b) THE PAIR-CONTACT VERB (base kind-table +0x18 = 0x3df00):
+if the other object is not self AND its [vt+0xd8] answers
+non-zero, 0x45320 runs on the TABLE at [self+0xee] for the
+OTHER actor with kind cap ebx=2; 0x552e0(self,other) always
+runs. 0x45320 is an R-builder: it writes pos +
+[obj+0xca]/[obj+0xce] into its stack triple and TAIL-CALLS
+0x45400 - the same crossing law of PR-280, so this channel
+lands things and cannot lift them either. The [vt+0xd8]
+slot is a per-class question verb, NOT a table getter:
+DRABINKA's (0x97cdc+0xd8) is 0x52a00, a pure |dx|+|dy|
+between the two [mgr ds:0xcef40+0x394] getters (and its
++0x24 sibling 0x52a50 computes ((|x1-x2|+255)>>1) - pair
+contact widths); the LION's is 0x507e0, a switch over 12
+game-event counters (ds:0xa94f0 family).
+(c) THE CARRY LAW - the ONLY position-writing code in the
+whole TLewZaria method set (a function-window census over
+all 33 lion-class vtable entries found exactly one [obj]/
+[obj+4] store): 0x54eb0 (lion kind-table +0x58) SETS
+pos = arg - ([obj+0xd6],[obj+0xda]) + ([obj+0x89],
+[obj+0x8d]) - new position = caller's position plus the
+deltas saved since attach. Its partners: 0x55070 (+0x5c)
+SAVES the current position twice, through [vt+0xb0] into
+[obj+0xd6/0xda] (the attach anchor) and through 0x541f0
+into [obj+0x89/0x8d] (the snapshot); 0x54dfd attaches an
+anchor point straight into [obj+0xd6/0xda] and resets the
+whole snap + motion block (0xe2, a5, ba..ce, a9, d2, e6 to
+0; defaults [0xad]=0x64, [0xb1]=0x16; clears [obj+0xb6]
+bits 6-7). That is the ride-a-moving-object law - WINDA/
+MOVEPLAT class material. The ZARIA ladder is static, so it
+carries nothing either; the law is recorded because it is
+the engine's only rider-position writer and the port will
+need it for real elevator levels.
+(d) THE BIT GATES AT THE ATTACH ARE THE LAST LAWS OVER
+ THESE STATES: 0x546ac (the position-step head, PR-280) and
+ 0x54eb9 (the carry setter's own head) and 0x54c14 (the
+ draw path) all test BYTE [obj+0xb6],2 and SKIP their whole
+ channel when bit1 is set; 0x54c07/0x54eef also test bit0
+ behind a [vt+0xbc] miss. The attach skip explains why
+ nothing snaps for a state whose rows raise the bit - and
+ PR-273 measured `lock` raising +0xb6 BIT5 over rows 1-7 of
+ A_PODCIAG itself. Bit5's answer-window semantics
+ (PR-263's getter 0x23860 gates both answer paths) over
+ exactly this state is the one authored mechanism still
+ untraced against the climb - the lift search continues
+ THERE, not in any position channel.
+OPENS: in order: (i) the [obj+0xb6] bit1 WRITERS - which
+states raise the attach-skip, and A_PODCIAG's rows against
+them; (ii) PR-273's bit5 window re-read against the
+A_WSP/A_PODCIAG answer sequence (with `rdir`/`unlock` rows
+8-9); (iii) 0x552e0 (the pair-verb tail, always called);
+(iv) the [vt+0xb0]/[vt+0x98]/[vt+0xbc] getter identities;
+(v) carried: state-record field +4.
+CLOSES: none.
+CORRECTS: none.
 GATE: light: verify-index verify-docs rc=0 (ok);
 ```

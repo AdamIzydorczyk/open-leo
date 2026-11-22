@@ -1785,6 +1785,17 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     writer that moves the rider up the column - the rest of
     the ladder answer 0x3f1c0 (P3+ at 0x3f2a4.., the AC_LINA
     twins) and its caller 0x3ee2d.
+    PR-283 EXCLUDES FOUR MORE CHANNELS BY MEASUREMENT - the
+    pair-contact verb 0x3df00 (its 0x45320 tail is the same
+    crossing law, cap 2), the block set (ZAR.BLK's six rows
+    are nowhere near the wall), and the ONLY position-writer
+    in the lion class: the carry law 0x54eb0 (pos = arg +
+    snapshot - attach, with the save/attach trio 0x55070/
+    0x54dfd) - a static ladder carries nothing. What remains
+    over exactly these states: the [obj+0xb6] bit1 attach-
+    skip gate (0x546ac/0x54eb9/0x54c14) and PR-273's bit5
+    `lock` answer window, authored INTO A_PODCIAG's own
+    rows - the lift hunt is now at the answer-window law.
     PR-274 PINS THAT CHAIN as a leg (ly_climb, its record
     derives every tick from the fixture's own arithmetic):
     the whole chain runs deterministically and the leg also
