@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-271.
+> at PR-272.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -37526,4 +37526,134 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
 line is the cmake-windows parity check, which names its own
 reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
 in this tree)
+```
+
+## PR-271 — THE AUTHORED ZARIA.01 CLIMB CHAIN MAPPED, AND
+## ITS ASK CHANNEL MEASURED LIVE: THE LADDER ANSWERS ON THE
+## AUTHORED RECTANGLES IN A REAL RUN AND THE LION REACHES
+## A_DRAP/A_LOOKUP; ONE MEASURED BLOCKER STAYS (OI-073)
+```
+KIND: read
+SUBSYSTEM: the whole ZARIA.01 climb end to end - which pool
+a placed object belongs to, the state chain the two authored
+.MOV texts actually author for the climb, and this port's
+ask channel measured against them in a real play run. No
+image reading beyond re-verification of sites PR-245/PR-249
+already recorded.
+ADDRESSES: 0x51b49, 0x51b58, 0x51c73, 0x9216e, 0x921c6,
+0x92202 (control-word chain and name table, re-verified to
+the OI-113 record); 0x4b500, 0x3f1c0 (the ask walk and the
+answer verb, re-verified); 0x54c00, 0x42a70, 0x42de0 (the
+engine's ground-contact / shape-box hit-test / push-out
+family named by PR-97/PR-58, still unread where it decides
+grounded-y: OI-073).
+NAMES: OI-078, OI-073, ZARIA1.DES, ANI2.DES, ZARIA_A.PLT,
+DRABINKA, A_WALK, A_DRAP, A_LOOKUP, A_TURN_BACK, A_WSP,
+A_PODCIAG, A_DOWN, A_DROP, AC_TIME, AC_EDGE, AC_DRAB,
+AC_DRAB_CATCH, AC_ONAIR, K_UP, K_FWD, first match wins,
+LL_PLAY_STEP, LEW.ZAR_LEW.MOV, DRAB.MOV, PR-83, PR-110,
+PR-254, PR-257, PR-258, PR-269, PR-270
+CODE: no: no line of `ported/` changes. Everything below is
+a measurement of the CURRENT build (play runs on the
+deterministic LEO_LEVEL_PPM grid with the PR-254 ask probe)
+plus the authored texts quoted from the containers.
+HOOKS: no red leg: nothing in `ported/` moved and no new
+expectation is pinned; the runs are observations, logged
+under /tmp/opencode (pr271_up2.log, pr271_walk2.log,
+pr271_cl2.log, pr271_cl3.log).
+MEASURED: (a) POOL MEMBERSHIP IS THE PLACEMENT SOURCE.
+ZARIA1.DES (LEVELDES, dir=zaria.01) authors the three pool
+records - `zwierzaki=none,zwierz2.des,zwierz1.des`,
+`ani_plat=none,anipl2.des,none`,
+`animacje=ani3.des,ani2.des,ani1.des` - and the ladder is
+PLACED by the animacje pool's second record, ETAPY/ZARIA.01/
+ANI2.DES: `DRABINKA,drab.ani,drab.mov,180,510`. So DRABINKA
+sits in the ANI group: an asker reaches it through the
+CHECK_ANI channel, and every ZARIA.01 lion state spells
+CHECK_ALL, which the engine's own 0x51c73 word-or 0x1c0
+expands to ANI|ZW|LN (re-verified byte for byte against the
+name table 0x9216e.., and the port's ctrl_flag ll_play.c:338
+matches it exactly). The port's `o->src` category is this
+same membership law. (b) THE AUTHORED CHAIN, from the two
+texts. Entry: the A_WALK list raises AC_TIME by NAME
+(`3,6,GEN AC_TIME` x5 rows) and the state line is
+`A_DRAP(1)=AC_TIME` - A_DRAP IS the idle hub (`seq=idle`).
+Held FWD keeps A_WALK because `A_WALK(x)=K_FWD` precedes it
+in the list (first match wins); releasing the key lets the
+carry-off distance close rows until one of those GEN rows
+closes, and the lion hangs. From A_DRAP, UP with
+AC_DRAB_CATCH live takes `A_TURN_BACK(1)=K_UP,AC_DRAB_CATCH`
+(which precedes `A_LOOKUP(1)=K_UP`); CATCH means the answer
+took the merged branch, i.e. the position point is inside the
+column's middle 70% (x 207..229 in this level). A_TURN_BACK
+holds UP (`A_DRAP(1)=!K_UP`) through its 1500-unit list and
+exits `A_WSP(1)=AC_BREAK_NEXT,AC_DRAB` - AC_DRAB re-raises
+from the ladder's answer every step (PR-239). A_WSP is
+BY_TY with F=0,100 T=160,50 (PR-259's y force), and its
+first list line is `A_PODCIAG(1)=AC_EDGE,K_UP` - AC_EDGE
+arrives when the position point enters the PR-270 band
+(195,480)-(225,560), where the answer verb's P1 wins; if
+the point leaves BOTH rectangles `A_FALL_DOWN(1)=!AC_DRAB`
+drops him. A_PODCIAG's list ends `A_DRAP(1)=AC_BREAK_NEXT`
+- on top. No row of this chain reads AC_ONAIR: PR-258 (e)
+confirmed independently. (c) PR-110's open question -
+"whether AC_TIME has another source in the engine, or those
+five ZARIA rows are vestigial" - CLOSED: they are the idle-
+hub entry and they fire on THIS port in play: 300 ticks of
+held FWD entered A_DRAP zero times, while releasing the key
+reached it 1-8 ticks later in two runs (walk2 tick 156,
+cl2 tick 136) - exactly the BY_X distance-feed + first-match
+law the PR-110 leg already pins. (d) THE ASK CHANNEL IS LIVE
+IN PLAY, and the ladder answers on the AUTHORED rectangles.
+On the PPM grid: the jump's own K_GEN1 bus at tick 106
+(PR-257) moves DRABINKA to A_DROP at 106 and to A_DOWN at
+107 - settled state 2 ONE tick later, no long WAIT-meter
+lead (this closes PR-257's timing lead: `11,0,WAIT
+K_NEVER`'s zero-threshold row closes on entry). From then
+the ask probe reads state 2 every tick; answers print
+exactly when the position point enters the authored
+geometry: AC_EDGE (`set 100`) at the jump apex inside the
+band, then AC_DRAB alone (`set 400`) on the ground at x
+202-205 - outside the 207..229 middle, precisely the L11
+expectation - and the same runs carry the lion's own
+A_WALK -> A_DRAP -> A_LOOKUP through the modelled channel.
+(Only the PPM grid is a measured path: non-PPM play runs are
+wall-clock and do not reproduce the chain.)
+PR-269/PR-270's OPENS (i)/(v) - "does the ask channel exist
+to reach ANY of this geometry" - are settled YES. (e) THE
+MEASURED BLOCKER, with numbers: a fast fall TUNNELS through
+the ground. ZARIA_A.PLT's second line (extracted from
+ETAPY/ZARIA.01 by the llrs reader) is
+`1 -50,680!408,684;` - one segment, solid main ground under
+the whole ladder column; the walk stands on it. In two runs
+a lion falling at ~25-33 px/tick crossed y 682 at x 171 and
+at x 204 WITHOUT landing, fell to the death line and
+respawned (up2 ticks 120-139, cl3 ticks 117-129). The port
+tests one point per iteration and its landing search starts
+only LL_PLAY_STEP above THIS iteration's contact line, so a
+body already 16+ px below a line is never caught. The
+engine's terrain-side geometry is the shape-box hit test
+0x42a70 and the push-out 0x42de0 (PR-97, modelled for
+objects by PR-58); the instruction that turns the shape
+bottom into grounded-y for a falling body is still unread -
+that is OI-073, and this is its first measured symptom on
+the FOCUS 1 path. PR-135's counted item 11 (one point vs
+the shape box) is the same open thread.
+OPENS: in order: (i) OI-073's landing law is now on the
+FOCUS 1 critical path, with the numbers above; (ii) the
+climb leg's timing: CATCH needs the position point inside
+x 207..229 at the ask tick - reachable by script timing, and
+the full chain A_TURN_BACK -> A_WSP -> A_PODCIAG is then the
+leg to write; (iii) the +0x60 predicate's [obj+0x2c] flag
+and the 0x44ec0 child-ANY vector stay unmodelled (PR-249/
+PR-241 counted); (iv) the AC_LINA twins at 0x3f4ac/0x3f525
+(LINA); (v) OI-118; (vi) OI-116; (vii) OI-115 (b); (viii)
+the rest of the OI-078 list (pair-without-rect n,
+absolute-once vs followed blocks).
+CLOSES: PR-110's vestigial-rows question (c); PR-257's
+A_DOWN settling-timing lead (d); and PR-269/PR-270's ask-
+channel reachability leads (i)/(v) - the channel is modelled
+and the authored rectangles answer in real runs.
+CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok);
 ```

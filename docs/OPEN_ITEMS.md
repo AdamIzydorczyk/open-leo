@@ -594,6 +594,15 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
   `pos = line - contact` is an inference
   status: OPEN
   origin: PR-97 item 12.1
+  notes: PR-271 measures the first FOCUS-1 symptom: a lion
+    falling at ~25-33 px/tick crosses the ZARIA.01 main ground
+    (`1 -50,680!408,684;` in ZARIA_A.PLT) at x 171 and x 204
+    WITHOUT landing - the port's landing search starts only
+    LL_PLAY_STEP above this iteration's contact line - falls
+    to the death line and respawns. The engine's terrain-side
+    geometry is the shape-box hit test 0x42a70 / push-out
+    0x42de0 (PR-97; modelled for OBJECTS by PR-58): read the
+    falling-body path there and re-derive the landing law.
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -1637,6 +1646,22 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     verb 0x3f390 raises AC_LINA and AC_LINA_CATCH (bits 21, 22)
     at 0x3f4ac/0x3f525, which the lion's script asks for by name
     and this port does not model.
+    PR-271 MEASURES the ask channel LIVE in play and maps the
+    authored chain end to end (its record carries the state
+    lines): the ladder settles into A_DOWN one tick after the
+    lion's own K_GEN1 bus and answers on the PR-269/270
+    rectangles in real runs (AC_EDGE at the apex band, the
+    lone AC_DRAB on the ground outside the middle 70%); the
+    lion's A_WALK -> A_DRAP -> A_LOOKUP already runs. The
+    chain to the top is A_DRAP -(K_UP + the merged AC_DRAB_
+    CATCH, position point in x 207..229)-> A_TURN_BACK ->
+    (list end + AC_DRAB)-> A_WSP -> (AC_EDGE band + K_UP) ->
+    A_PODCIAG -> A_DRAP on top. FIRST BLOCKER, measured: a
+    fast fall (~25-33 px/tick) tunnels through the .plt main
+    ground without landing (x 171 and 204, y 682; respawn at
+    spawn) - that is OI-073's unread grounded-y law, now on
+    this row's critical path. Second lead stays the CATCH
+    timing (position point inside x 207..229 at the ask tick).
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
