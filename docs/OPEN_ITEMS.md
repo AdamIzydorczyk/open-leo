@@ -633,9 +633,12 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     PR-273 OPENS (i)), the [obj+0xa9] list, and the
     bit2/3/6/7 semantics.
     PR-275 READS the layer behind [obj+0xa9]: 0x45120 parses
-    a `<count>`+separator text into 13-byte polyline points
-    {x,y,kind} in the pool at ds:0xa0c64 and stores the
-    table AT [obj+0xa9] (via the obj+0xa5 slot), 0x45200
+    a polyline text (`<segments> x,y<sep>x,y...`, coordinates
+    read by 0x4a0b0's `%d,%d`, each point's kind byte from
+    its prefix char ';'->1 '#'->2 else 0 - PR-276 replayed
+    the grammar over the fixture's own lines) into 13-byte
+    records in the pool at ds:0xa0c64 and stores the table
+    AT [obj+0xa9] (via the obj+0xa5 slot), 0x45200
     localizes it, 0x45380 brackets a point by x, and 0x45320
     attaches a one-shot snap-to-line for the predicted
     position (0x541f0 + [obj+0xca]/[obj+0xce]) through the
@@ -1755,6 +1758,16 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     table holds the ZARIA.01 polylines, is PR-275 OPENS (i)
     - the port's landing search only looks DOWNWARD, so no
     current leg can even see a top-platform snap.
+    PR-276 NARROWS (i) FURTHER: the table text is exactly
+    the placement-file polyline line (KATAPULT/PALMA author
+    seat lines this way; DRABINKA/LINA author one-point
+    lists that can never bracket = non-surfaces), but NO
+    ZARIA.01 placement line carries the top-platform
+    polyline, and none of the five 0x45120 call sites is a
+    ground-file loader - the loader that splits ZARIA_A.PLT
+    and the object that holds its lines remain the named
+    missing pieces before the lift can be ported from law
+    rather than modelled as a choice.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-276.
+> at PR-277.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38089,5 +38089,103 @@ vertical push - yes, up-to-a-line only) and PR-122 OPENS 1
 read) are answered here, but their residual questions sit
 in OPENS (i)-(v), so those rows stay open.
 CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-276 — THE TABLE-TEXT GRAMMAR IS THE PLACEMENT/.PLT POLYLINE
+## GRAMMAR, AND PR-275'S "NEVER PARSES COORDINATES" IS WRONG:
+## 0x4a0b0 IS THE `%d,%d` COORDINATE READER THE 0x45120 LOOP CALLS
+```
+KIND: read
+SUBSYSTEM: the 0x45120 table-text grammar (0x4a0b0, the
+scanner helpers 0x49920/0x498f0), the engine's `platformy`
+wiring read, and the localization call 0x1e512 - a correction
+to PR-275 (its CORRECTS field). No `ported/` change.
+ADDRESSES: 0x4a0b0, 0x45120, 0x1e512, 0x1e5c0, 0x4cf64,
+0x49920, 0x498f0, 0x76d20, 0x76a64, 0x76bb7, 0x45200
+NAMES: platformy, OI-073, OI-078, ANI2.DES, ANIPL2.DES,
+ZARIA_A.PLT, DRABINKA, LINA, KATAPULT, PALMA, KAMIEN,
+pr276_gram.py, kind byte, PR-242, PR-243, PR-246, PR-247,
+PR-275, PR-102, PR-270, PR-274
+CODE: no: no `ported/` or Makefile line changes; a reading
+and a grammar replay, no behaviour to catch red.
+HOOKS: PR-275 MEASURED (a) said the 0x45120 loop "never
+parses coordinates" and its OPENS (ii) asked who fills the
+record x/y fields. That is answered and withdrawn: the two
+0x4a0b0 calls INSIDE 0x45120 (0x45169 before the loop,
+0x45198 in it) do exactly that.
+MEASURED: (a) 0x4a0b0(rec, str) is the coordinate reader:
+0x49920(str, '%d,%d' at 0x91d0f, rec+0, rec+4) then the
+cursor move 0x498f0(str, ' , ' at 0x91d15). With it, one
+0x45120 call parses a whole polyline: the `%d` header is the
+SEGMENT count, the FIRST point is parsed BEFORE the loop
+into rec[0], and each of the count loop passes reads one
+prefix char (' %c': ';' -> kind 1, '#' -> kind 2, anything
+else 0 at rec_i+0xc) and then that point. The allocation
+(count+1)*13+4 at 0x45149-0x45152 is exactly one leading
+point plus count points.
+(b) GRAMMAR REPLAY against the fixture's own lines
+(emulator /tmp/opencode/pr276_gram.py, log
+/tmp/opencode/pr276_gram.log, labelled as the disassembled
+scanner replayed in python, not machine output): ZARIA.01's
+placement polylines parse cleanly under it - KATAPULT
+`1 7,45;40,45 ...` -> segment (7,45)-(40,45), PALMA
+`1 -80,45;-18,45` -> (-80,45)-(-18,45), and ZARIA_A.PLT's
+own lines too: `1 -50,680!408,684;` -> 1 segment with the
+'!' point carrying kind 0, and the top-platform line
+`5 98,514;...;589,566;` -> 5 segments, 6 points, all kind
+1. So the count field equals points-minus-one, the grammar
+is ONE LINE at a time, and the .plt file's first line
+("45") is the line COUNT for a line-splitting loader, not a
+table header.
+(c) THE SAME GRAMMAR AS THE PLACEMENT VECTORS: ZARIA.01
+ANI2.DES (dumped with tools/re/llrs_cat1) authors
+`DRABINKA,drab.ani,drab.mov,180,510` then `1 33,-3`,
+`23,30;53,160`, `30,50` - the point list, rectangle and
+pair the port already models through PR-242/PR-243/PR-246/
+PR-270 (abs 213,507 / column (203,540)-(233,670) / pair
+(210,560) - all reproduce). The replay of `1 33,-3` yields
+one real point plus an EMPTY second slot: a one-point table
+can never be bracketed (0x45380 needs rec[i].x <= R.x with
+i < count), so single-contact-point objects are exactly the
+non-surface cases. LINA authors `1 0,200` the same way.
+(d) THE ENGINE READS `platformy` FOR REAL: the string sits
+at 0x91e1e; 0x4cf69/0x4cf6c compares the current wiring key
+through 0x76d20 and 0x4cf7d reads the value with ' %s'
+(0x91e28) - the machine-side anchor of the port's
+platformy= wiring model (ll_level.c's 10774 block), which
+was fixture-derived.
+(e) LOCALIZE AT LOAD, SHIFT PER STEP: 0x1e512-0x1e52a parses
+the [obj+0xa5] slot from text and calls 0x45200 with the
+object's live x,y - the table becomes ABSOLUTE at load, the
+same law PR-242 measured for the point vectors. A family of
+eight 0x45200 sites (0x1e5f8, 0x1e64c, 0x1e6ce, 0x1e733,
+0x1e798, 0x1e803, 0x1e896, plus 0x3dccd/0x3deb2) instead
+translates a table by pure offsets; 0x1e5c0-0x1e5f8 is read
+in full: it takes the CURRENT state record's field +4 and
+shifts the [obj+0xa5] table by (0, +1) when that field is
+below 7, (0, -1) otherwise. Field +4 is NOT the control
+mode word (PR-102: BY_X 0..BY_TY 4 - both this gate and
+PR-275's 0x1e585 gate at 13 exceed it), so it is a second,
+unread word of the state record.
+OPENS: in order: (i) which loader splits the ground .plt
+into lines and WHOSE object slot receives each table -
+none of the five 0x45120 sites is a level-file loader, so
+the ZARIA.01 top-platform provider is still unnamed (this
+is still the FOCUS-1 lift question); (ii) the state-record
+field +4 identity (gates 7 at 0x1e5dd and 13 at 0x1e585);
+(iii) the 0x1e5c0-family (0, +/-1) per-step shift: which
+objects run those eight slots and what walks 1 px a step;
+(iv) carried from PR-275: the [vt+0x6c] index responder and
+the [vt+0x3c]/[vt+0xd8] tests, [obj+0xa9]'s two writers,
+the 0x54759 guard's answer-word compare.
+CLOSES: none. PR-275 OPENS (ii) is ANSWERED by (a) but the
+answer lives here, so PR-275's row keeps its remaining
+items.
+CORRECTS: PR-275 - MEASURED (a) "It never parses
+coordinates" and OPENS (ii) "who fills the record x/y
+fields" are withdrawn: 0x4a0b0, called by 0x45120 itself,
+reads them (MEASURED (a) here); the count field is the
+segment count, not the raw record count.
 GATE: light: verify-index verify-docs rc=0 (ok);
 ```
