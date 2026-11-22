@@ -664,6 +664,15 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     line). The lift lead that remains is the contact/draw
     pass 0x54c00/0x54d0c under the lock bit and the
     [reader+0xb1]/[+0xb5] grounded-y pair.
+    PR-282 MEASURES THAT PAIR AWAY: 0x54c00 is the DRAW
+    path (world->screen blit-variant choice), [obj+0xb5] is
+    a BLINK phase byte (the directive words [obj+0x11a]/
+    [+0x11e] toggle it), and [vt+0x50] - 0x53e40 for lion
+    AND ladder - IGNORES the argument and returns the draw
+    flip sign. No grounded-y instruction exists there; the
+    OI's remaining grounded-y question rides the ladder
+    column of PR-282 (below) and the PR-281 application
+    law.
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -1762,6 +1771,20 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     273's other branch: the grounded-y instruction through
     [obj+0xb5]) and what raises or carries the pair at
     [reader+0xb1]/[+0xb5].
+    PR-282 MEASURES THE DRAW-PATH HALF AWAY (blink/draw,
+    OI-073 notes) AND FINDS THE LIFT AUTHORED: the level's
+    ANI2.DES places a real DRABINKA at 180,510 whose record
+    verb 0x3f0f0 builds an edge band {203,540,233,670} (the
+    port's tested band, PR-270 - confirmed) and a CLIMB
+    COLUMN x 210 +/- 15, y 480..560 - bottom 560 is exactly
+    where today's A_WSP hands off to A_PODCIAG, top 480 is
+    9 px above the platform-grounded position 489 of
+    PR-279/PR-281: the engine's finish is "carry the rider
+    to the column top, then let the platform's crossing-snap
+    land it on 489". The missing piece has ONE name: the
+    writer that moves the rider up the column - the rest of
+    the ladder answer 0x3f1c0 (P3+ at 0x3f2a4.., the AC_LINA
+    twins) and its caller 0x3ee2d.
     PR-274 PINS THAT CHAIN as a leg (ly_climb, its record
     derives every tick from the fixture's own arithmetic):
     the whole chain runs deterministically and the leg also

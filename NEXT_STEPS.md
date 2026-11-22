@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-282.
+> at PR-283.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38606,5 +38606,134 @@ CORRECTS: PR-275 OPENS (iv) is answered per HOOKS, and
 PR-110's name "move-over-N-iterations verb" for the +0xe2
 /+0xe6/+0xea triple is retired: the triple is the snap
 link + gap of PR-280, applied once (MEASURED (a)).
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-282 — THE LADDER IS A PLACED OBJECT WITH AUTHORED LIFT
+## GEOMETRY (ETAPY's ZARIA.01 BLOCK HOLDS THE .des PLACEMENT
+## FILES; DRABINKA AT 180,510 AUTHORS ITS TOP POINT, EDGE
+## RECTANGLE AND A 480..560 CLIMB COLUMN), AND THE DRAW-PATH
+## LEAD FROM PR-281 IS MEASURED AWAY - [obj+0xb5] IS A BLINK
+## PHASE, [vt+0x50] A DRAW-FLIP GETTER
+```
+KIND: read
+SUBSYSTEM: the HD ETAPY level-block records (the .des
+placement files the wiring keys name), the placed-object
+record verb 0x3f0f0 that parses an entry's continuation
+lines into the [obj+0xa5]/[obj+0xb1]/[obj+0xc5] blocks,
+the contact-verb dispatch 0x53480 -> [vt+0x88], and the
+draw path 0x54c00 + blink-directive writers of [obj+0xb5].
+No `ported/` change.
+ADDRESSES: 0x3f0f0, 0x44f10, 0x44e90, 0x49f90, 0x4a0b0,
+0x98278, 0x4a050, 0x3f1c0, 0x53440, 0x53480, 0x534ab,
+0x3ee2d, 0x97cdc, 0x97cd4, 0x906ff, 0x4e840, 0x9200a,
+0xa1dfc, 0x1f8ac, 0x98274, 0x54c00, 0x54c07, 0x54c39,
+0x54c46, 0x54ca2, 0x53e40, 0x508b2, 0x50a13, 0x50a27,
+0x11a, 0x11e, 0x57530, 0x57500, 0x42620, 0x3df00
+NAMES: OI-073, OI-078, ANI2.DES, ZWIERZ1.DES, ZARIA_A.PLT,
+DRABINKA, DRAB.MOV, LINA, TABLICA, ETAPY, edge band, climb
+column, AC_EDGE, A_WSP, A_PODCIAG, K_GEN1, blink, PR-68,
+PR-208, PR-240, PR-243, PR-246, PR-247, PR-268, PR-270,
+PR-277, PR-281, ladder_answer_for
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: PR-281 OPENS (i) - the [obj+0xb5] grounded-y
+instruction - is CLOSED as a NON-LEAD (MEASURED (d)), and
+PR-281's name "contact/draw pass ... grounded-y instruction"
+is withdrawn per CORRECTS. PR-280 OPENS (iv) - how the
+climb finishes - is NARROWED to one named place: the ladder
+answer channel carries authored lift geometry; the block
+queries 0x4b430/0x4b7f0 are out (nothing about the lift
+lives there). The port's PR-243/PR-246/PR-247/PR-270 model
+of the three blocks is CONFIRMED number-for-number by
+MEASURED (b)/(c) - no port change; the port's edge band and
+this engine record are the same rectangle.
+MEASURED: (a) THE PLACEMENT FILES ARE RECORDS OF THE LEVEL
+BLOCK: the HD ETAPY container's ZARIA.01 block (id=2, 5200
+bytes, count 33) holds ZWIERZ1.DES/ZWIERZ2.DES (841/123),
+ANI1/2/3.DES (557/1294/71), SAMPLE.DES, NONE.DES ("0"),
+BELKA.DES, ZAR.BLK, ZAR.PAL, ZARIA_A.PLT (1102 - the same
+bytes as /tmp/opencode/zaria_a.plt.txt) and the .MNU menu
+records; the wiring keys name these records exactly. ZARIA.01
+places a real ladder: ANI2.DES entry `DRABINKA,drab.ani,
+drab.mov,180,510` followed by THREE continuation lines
+`1 33,-3`, `23,30;53,160`, `30,50`; two LINA rope entries
+carry the same three-line shape (`1 0,200`, `23,30;31,200`,
+`25,49` at 125,292). DRAB.MOV sits in the ANIMACJE block's
+DRABINKA leaf and is the ladder's own A_UP/A_DROP/A_DOWN
+machine (K_GEN1 trigger, rows with `smpauto`, sample 6 =
+drab.wav) - as PR-23x's selftest fixture already models.
+(b) THE RECORD VERB 0x3f0f0 (kind-table +0x18) parses those
+continuation lines end to end: 0x44f10 on [obj+0xa5] (the
+`N dx,dy` point list, then 0x44e90 absolutizes every point
+with the placement - (33,-3)+(180,510) = (213,507), exactly
+PR-270's ladder contact point); 0x49f90 reads FOUR numbers
+into [obj+0xb1..0xbf] and 0x3f124-0x3f14b adds the place-
+ment x,y to each corner - (23,30;53,160) becomes the
+absolute rectangle {203,540,233,670} = the port's tested
+answer band; then 0x4a0b0 (edx = the next line, separator
+table 0x98278) reads the `30,50` pair and 0x3f16a-0x3f175
+writes [obj+0xc5]=v1, [obj+0xc9]=v2-0x50, [obj+0xcd]=v1,
+[obj+0xd1]=v2, absolutized at 0x3f187-0x3f1a7 to x=210,
+y 480..560; 0x4a050 sizes an array by (the point-list
+rectangle's x-span + 1) - the +/-trunc(n/2) widening PR-270
+derived. The constructor 0x1f8ac defaults [obj+0xb1] to
+{1,1,1,1} and the port's reading of [obj+0xad]=0x97f50 and
+vtables 0x97cdc/0x97cd4 holds.
+(c) THE AUTHORED LIFT GEOMETRY, exactly: the climb column is
+x = 210 +/- 15, y 480..560. The port's ladder climb ALREADY
+reacts to this block - its A_WSP climb stops at y 560 (the
+block's bottom, PR-277) and A_PODCIAG(1)=AC_EDGE,K_UP fires
+there. What is missing in the port is that the block's TOP
+edge 480 is where the engine carries the rider: 480 sits 9
+px above the platform-grounded position point 489 derived in
+PR-279 - pull the rider to the column top and the platform
+line's own crossing-snap (PR-280/PR-281: pos += vel + gap,
+applied once) finishes the landing on 517.6-28 = 489. That
+is the whole FOCUS-1 finish in authored numbers; the WRITER
+that moves the rider up the column is not yet identified
+(OPENS (i)).
+(d) THE DRAW PATH AND THE BLINK: 0x54c00 is not a contact
+pass: with [obj+0xb5] == 0 it goes to the plain draw at
+0x54d0c; with it non-zero it takes blit variants (0x42620/
+0x425b0/0x425f0/0x42580 with world->screen transforms
+0x57530/0x57500 through the manager at ds:0xcef40+0x390).
+Its argument call `push movsx([obj+0xb5]); call [vt+0x50]`
+passes the byte but the implementation IGNORES it: for the
+lion and for DRABINKA [vt+0x50] is the SAME 0x53e40, which
+returns +/-1 from the state record's CH_DIR flag bit and
+the direction word [obj+0x6d] == -1 - a draw-FLIP getter.
+The writers of [obj+0xb5] are the blink directives (the
+mode/countdown words [obj+0x11a]/[obj+0x11e] at 0x50870-
+0x50a72 toggle the byte every 5 countdown steps); the
+readers 0x54c07/0x54c39/0x54ca2 only choose blit variants.
+So OI-073's "[obj+0xb5] is passed to [vt+0x50] there" is
+fully explained and is NOT a grounded-y channel. 0x534ab
+sits in 0x53480, a contact-verb pass: [obj vt+0x84] then
+[obj vt+0x88] (= 0x3f1c0 for DRABINKA), and 0x53440 is the
+state-name lookup into the declared-state vector [obj+0x3c]
+that the port already models (ll_play.c's mov parser note).
+(e) THE BLOCK FAMILY IS CLASS-SHARED: the TABLICA ctor
+0x4e840 (vtables 0xa1dfc/0xa1df4) initializes the identical
++0xa5/+0xb1/+0xc5..0xd5 blocks with the identical defaults
+and its kind-table +0x20 slot is 0x3f0f0 too - these are
+the placed-object geometry family (DRABINKA/LINA/TRASA/
+TABLICA), separate from the surface-table family of PR-279.
+OPENS: in order: (i) the lift WRITER: the rest of 0x3f1c0
+past 0x3f2a4 (PR-270's P3+ chain, the AC_LINA twins at
+0x3f4ac/0x3f525, the 0x49f90/0x74a9a list builders) and
+the 0x3ee2d [vt+0x88] caller - find what moves the rider
+toward the column top; (ii) what consumes the nested TOP
+POINT (213,507) beyond the 0x44ec0 ANY-test (PR-240/241);
+(iii) why the pair grammar stores v2-0x50 (the 80 px edge
+height constant at 0x3f16f) - is 0x50 also the A_PODCIAG
+travel?; (iv) carried: state-record field +4.
+CLOSES: none.
+CORRECTS: PR-281 - "the contact/draw pass 0x54c00/0x54d0c
+with the grounded-y instruction through [obj+0xb5]" is
+withdrawn: that pass is draw-only and [obj+0xb5] is a blink
+phase byte (MEASURED (d)); PR-279 OPENS (iii)'s [obj+0xa9]
+duality gains its second half: [obj+0xa5] IS the placed
+object's authored point-list header for this family
+(MEASURED (b)), not only a surface-table slot.
 GATE: light: verify-index verify-docs rc=0 (ok);
 ```
