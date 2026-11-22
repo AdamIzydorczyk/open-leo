@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-280.
+> at PR-281.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38422,5 +38422,91 @@ and the [esp+0x18] the second reads); (iv) 0x45250 and
 0x4b500 identities; (v) carried: the state-record field +4.
 CLOSES: none.
 CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-280 — THE GAP ARITHMETIC IS FULLY DECODED: THE SNAP IS A
+## LINE-CROSSING LANDING, AND ITS FOREIGN-TABLE GATE MAKES AN
+## UPWARD LIFT FROM THIS CHANNEL IMPOSSIBLE - THE LIFT LEAD
+## MOVES ON
+```
+KIND: read
+SUBSYSTEM: the surface-table evaluation arithmetic (0x455a0,
+the two-pass rule inside 0x45400), the position-step caller
+0x546a0 and its state-flag gates, and the single 0x4b600
+function PR-279 split in two. No `ported/` change.
+ADDRESSES: 0x455a0, 0x45400, 0x453d0, 0x45250, 0x4b600,
+0x4b660, 0x546a0, 0x546ac, 0x546c5, 0x54706, 0x54759,
+0x54804, 0x4b430, 0x4b7f0, 0x541f0, 0x2c1ec
+NAMES: OI-073, OI-078, CHECK_LN, CHECK_ALL, SOLID, flag
+word, edge band, A_PODCIAG, A_WSP, ly_climb, PR-97, PR-270,
+PR-273, PR-274, PR-275, PR-279, gap, kind cap
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: PR-279 OPENS (i) and (iii) are answered together
+here; PR-279's "0x4b600 and 0x4b660" are ONE function
+(0x4b600-0x4b6cb), not two - the loop body is its tail.
+MEASURED: (a) 0x455a0(lo, hi, &point) is the gap
+calculator, exactly: quotient = (point.x - lo.x) *
+(hi.y - lo.y) / (hi.x - lo.x); returns lo.y + quotient -
+point.y = line_y(point.x) - point.y. It is pure: no clamp,
+no contact term.
+(b) THE CALLER IS THE POSITION STEP. 0x546a0 (the method
+PR-275 read around): `test byte [obj+0xb6],2` set - jump
+straight to the position update at 0x54804, skipping the
+attach entirely. Otherwise it reads the state record's flag
+word at [rec+0x12] (PR-59/PR-60's word): bit 0x4000 ->
+0x4b600 with the kind cap ecx=0, then 0x4b430 (the
+blokady= array query); else bit 0x100 - CHECK_LN, a member
+of the game's CHECK_ALL = 0x1c0 - -> 0x4b600 with cap 2,
+then 0x4b430; both then 0x4b7f0. 0x54759 then guards the
+application (PR-275's kind-2 guard, confirmed).
+(c) INSIDE 0x45400 THE TWO PASSES ARE A CROSSING TEST. The
+first 0x455a0 pass is against one point and its result is
+REJECTED when negative (0x4547d `jl skip`) unless the table
+IS the actor's own [actor+0xa9] table (0x45479 `je`); the
+second pass is against the other point (one of the two is
+the position 0x541f0 returns, the other position +
+[obj+0xca]/[obj+0xce] - 0x4b600 builds both in one stack
+buffer, MEASURED earlier) and must return <= 0, keeping the
+MAXIMUM (closest to zero) such gap (0x4549a). So a foreign
+ground line is accepted exactly when it is non-negative
+against one point and non-positive against the other: the
+point crosses the line between the two evaluations, and the
+stored [obj+0xea] lands the point ON the line at the
+position update. That is a LANDING law, not a general
+snap-up: a line ABOVE both points (gap < 0 twice) never
+passes the first gate, and a line below both never passes
+the second.
+(d) CONSEQUENCE FOR THE LIFT (named for PR-274's wrong
+finish): during A_PODCIAG the position point sits ABOVE the
+top-platform line for the whole state (pos.y 559..654, line
+517.6 is above him in screen terms: line_y < pos.y means
+gap < 0 twice), so the platform line fails the first gate
+every tick and this channel cannot lift him. The port's
+ly_climb finish (drift to grounded 654 on main ground at
+294) is exactly what this law produces; the earlier "lift
+missing, expect 489" framing is withdrawn as the mechanism.
+Where the climb-to-the-top law lives instead is the open
+question: the ladder's own answer channel (its contact
+point 213,507, the `lock` window and the 0x3df00/[+0xd8]
+verb path) and the 0x4b430/0x4b7f0 block queries are the
+next named places to read.
+OPENS: in order: (i) where the feet-contact term enters:
+neither [obj+0xca]/[obj+0xce] as read nor 0x455a0 carries
+28, yet PR-274's landing arithmetic is right - so the
+contact comes in through the point 0x541f0 itself or
+[obj+0xce] is velocity-plus-contact; read 0x541f0 and the
+player's velocity word writers; (ii) which of the two
+evaluations is current vs predicted (0x4b600's buffer order
+names them, the call sites do not re-label them); (iii)
+0x45250 (the table method +0x8, called once per attach -
+likely the [obj+0xe6/ea] reset), 0x4b430 and 0x4b7f0;
+(iv) how ZARIA.01's climb actually finishes in the engine:
+ladder answer channel vs block queries.
+CLOSES: none.
+CORRECTS: PR-275 - "gap <= 0 means a one-shot snap UP" is
+refined: acceptance is the two-point crossing test of
+MEASURED (c), and PR-279's 0x4b600/0x4b660 function split
+is withdrawn per HOOKS.
 GATE: light: verify-index verify-docs rc=0 (ok);
 ```

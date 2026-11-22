@@ -1781,6 +1781,16 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     contact term enters the snap point, and the state gate
     that keeps A_WSP (feet below the line for 90 ticks) out
     of the attach.
+    PR-280 RESOLVES BOTH AND MOVES THE LEAD: the snap
+    channel is a LINE-CROSSING LANDING law - a ground line
+    is accepted only when the two evaluation points (pos,
+    pos+velocity) sit on OPPOSITE sides of it - so a line
+    above both (the top platform, all of A_PODCIAG) can
+    never be chosen. The port's ly_climb finish (grounded
+    654 at 294) is what the engine's law produces; the
+    "expected 489" framing is withdrawn. The climb-to-the-
+    top law lives elsewhere: the ladder answer channel or
+    the block queries (0x4b430/0x4b7f0) are next.
     PR-277 PINS THE MID-CLIMB JUMP CHAIN as a second leg
     (ly_cjump): K_JUMP at 200 takes A_WSP's own row, the
     I 250,-1100 launch, the mid-air re-CATCH at 228, the
