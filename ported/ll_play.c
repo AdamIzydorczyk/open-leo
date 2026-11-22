@@ -1780,15 +1780,33 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
              * the continuation line (real RAN.PLT: shelf 126..302@314 ->
              * 323..485@313 across a 20 px gap) steps back UP onto it -
              * symmetric with the step-down tolerance in the grounded
-             * branch. A fall from higher up is unaffected: its surface
-             * is below the contact line either way. */
+             * branch. "A fall from higher up is unaffected: its surface
+             * is below the contact line either way" - the claim this
+             * comment carried until PR-272 - was measured FALSE: fast
+             * falls CROSS a line unseen; the sweep is the PR-272
+             * paragraph below. */
             ll_xy hit;
             /* the old code truncated away from zero here (one px lower
              * than the grounded branch's nearest rounding for a negative
              * y); keeping that difference, only the tested point moved */
             int start = (int)(ground_y >= 0 ? ground_y : ground_y - 1.0);
+            /* PR-272: the sweep top is the contact line the PREVIOUS
+             * iteration ended on, never lower. Below the line the
+             * LL_PLAY_STEP reach is the old one, so the step-up case the
+             * comment above names keeps its exact behaviour; what changes
+             * is that a fall which CROSSED a line during this iteration
+             * is seen on the iteration it crossed. The old top was this
+             * iteration's line alone, and PR-271 measured the hole: the
+             * ZARIA.01 main ground at y 682 was crossed UNSEEN at
+             * ~25-33 px/tick (up2 120-139, cl3 117-129, red run
+             * 124-151), the lion falling to the death line and
+             * respawning. The engine cannot do that: its terrain side is
+             * the shape-box contact of PR-97 (hit test 0x42a70,
+             * push-out 0x42de0), and a box overlapping the line IS the
+             * contact. */
+            int from = start < p->prev_line ? start : p->prev_line;
             if (p->vy >= 0 && ll_plt_first_below(ground, xi,
-                                                 start - LL_PLAY_STEP, &hit) &&
+                                                 from - LL_PLAY_STEP, &hit) &&
                 ground_y >= (double)hit.y - 1.0) {
                 p->y = (double)hit.y - (double)cont;
                 p->vy = 0;
@@ -1977,6 +1995,14 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
                 apply_row_pull(p, st, p->fi);
             }
         }
+    }
+    /* PR-272: record the contact line THIS iteration ended on (see
+     * ll_player.prev_line, the landing sweep). Recomputed from the final
+     * position, not reusing gyi: the ground pass may have snapped p->y,
+     * and section 7's `M` delta moved it again after that. */
+    {
+        double gl = p->y + (double)cont;
+        p->prev_line = (int)(gl >= 0 ? gl + 0.5 : gl - 0.5);
     }
     return ev;
 }

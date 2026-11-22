@@ -603,6 +603,19 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     geometry is the shape-box hit test 0x42a70 / push-out
     0x42de0 (PR-97; modelled for OBJECTS by PR-58): read the
     falling-body path there and re-derive the landing law.
+    PR-272 MODELS the continuity half of that law: the landing
+    search top is the contact line the PREVIOUS iteration ended
+    on (ll_player.prev_line), which is what the shape-box
+    contact forces - a body cannot cross a line between two
+    position steps without meeting it. The measured fast-fall
+    tunnel above is CLOSED (the same runs land and stay).
+    Still open in this row: the exact instruction that turns
+    the shape bottom into the grounded y, the [obj+0xb6] bit
+    semantics (row-directive writers 0x45c2d-0x45c45, physics
+    tests 0x54200/0x54218/0x5426c, the pair/set/clear family
+    0x54f40-0x55057), and whether the engine's contact tests
+    a whole box or a point (PR-135 item 11 - only the
+    continuity half is modelled).
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -1662,6 +1675,18 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     spawn) - that is OI-073's unread grounded-y law, now on
     this row's critical path. Second lead stays the CATCH
     timing (position point inside x 207..229 at the ask tick).
+    PR-272 REMOVES the first blocker: the landing search is
+    now SWEPT from the contact line the previous iteration
+    ended on (ll_player.prev_line), the continuity the
+    engine's shape-box contact (0x42a70/0x42de0) forces.
+    Measured on the very runs that tunneled: the lion lands
+    (195,654 grounded 1) and STAYS; the cam-y leg's pins are
+    re-derived from the law, not fit (grass at x 128 is 681,
+    the feet seat at 653 + the idle shape's 28 contact, x
+    drifts only by the LICHA SEMI push-out). The next lead
+    is the CATCH timing (position point x 207..229 at the
+    ask tick) and then the A_TURN_BACK -> A_WSP -> A_PODCIAG
+    leg.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

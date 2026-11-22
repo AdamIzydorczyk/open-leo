@@ -947,6 +947,19 @@ typedef struct {
                                  * (cutscene walkers: RAN A_GO_TO_BALON_*
                                  * walks on K_GEN1 with no key held)     */
     double air_from;            /* position-point y when ground was lost  */
+    int prev_line;              /* PR-272: the contact line (y + contact)
+                                 * this body's LAST iteration ended on,
+                                 * rounded - the top of the landing sweep.
+                                 * The engine's terrain side is a shape-
+                                 * box CONTACT (PR-97: hit test 0x42a70,
+                                 * push-out 0x42de0): a body cannot pass
+                                 * a line that lies between where its
+                                 * contact line was and where it is now.
+                                 * A point test can model that only by
+                                 * sweeping the step: PR-271 measured
+                                 * ~25-33 px/tick ZARIA.01 falls crossing
+                                 * the main ground (y 682) unseen through
+                                 * a 16 px window. */
     int jumping;                /* a row `F`/`I` pair put the lion in the
                                  * air (PR-253's name for that verb) */
     int support;                /* a solid object holds the feet up (set by

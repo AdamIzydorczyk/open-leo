@@ -1674,20 +1674,23 @@ ifeq ($(PX_DATA),1)
 # A_WALK's own header `G=30,350` (line 119 of ZARIA.01 - the state's
 # own fall rate, added on the airborne path) takes him down; his rows
 # close on the travelled distance, and the `GEN AC_TIME` row reaches
-# A_DRAP at 70 while he is still falling. And there the port loses him:
-# A_DRAP's header is `G=0,250` with `T_y=15` (line 453-454), whose
-# terminal register is idiv(250*100,15) = 1666 = 16 px an iteration, so
-# the y steps stay 17-20 px and the port's terrain query only looks at
-# the position it is standing on THIS iteration - it never sees the line
-# it stepped over (668 at 70 -> 688 at 71, the grass at x=127 is at
-# 681). The second run of this script therefore ends airborne at tick 82
-# (126,885) and the grounded-idle canvas the earlier pins measured is
-# gone. That is a real defect, not a re-pin: the engine's ground answer
-# is the shape-box test (FUN_00042a70 / the push-out 0x42de0), which a
-# one-point-per-iteration query cannot reproduce, and PR-256 names it at
-# OI-015 rather than quietly re-fitting the fall. The airborne canvas is
-# not measured either way: the view's ease toward the anchor belongs to
-# the follow model, not to this leg.
+# A_DRAP at 70 while he is still falling - and the ground catches him
+# THERE (PR-272). Until PR-272 this leg PINNED the port losing him:
+# A_DRAP's `G=0,250 T_y=15` walks the y steps out to 17-20 px, the
+# landing search started only LL_PLAY_STEP above THIS iteration's line,
+# and the 681 px grass at x 128 was stepped over UNSEEN (668 at 70 ->
+# 688 at 71); PR-256 named that a real defect, not a re-pin, in the
+# engine's shape-box ground law (FUN_00042a70 / push-out 0x42de0, the
+# OI-073 row). PR-272 models the continuity that law forces: the
+# landing sweep now starts at the contact line the PREVIOUS iteration
+# ended on, so a line crossed during an iteration is seen on that
+# iteration. The pins below re-derive from that: the main ground
+# (`-50,680!408,684`) at x 128 reads 681; the feet land ON it (653 +
+# the idle shape's 28 px contact = 681, PR-97's `pos = line -
+# contact`), and he STAYS: grounded 1 from 70 on, x drifting 128 ->
+# 122 only by the LICHA SEMI push-out, the y pinned at 653. The
+# airborne canvas is not measured either way: the view's ease toward
+# the anchor belongs to the follow model, not to this leg.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=4 \
 	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 52:NONE" \
@@ -1721,13 +1724,13 @@ ifeq ($(PX_DATA),1)
 	@python3 tools/jump_law_measure.py /tmp/opencode/ly_zjump.log 649 1200 55 1
 	@grep -q 'play tick 63: state A_WALK seq walk frame 4 pos 124,556 grounded 0' \
 	    /tmp/opencode/ly_zjump.log \
-	  && grep -q 'play tick 70: state A_DRAP seq idle frame 1 pos 127,668 grounded 0' \
+	  && grep -q 'play tick 70: state A_DRAP seq idle frame 1 pos 128,653 grounded 1' \
 	      /tmp/opencode/ly_zland.log \
-	  && grep -q 'play tick 71: state A_DRAP seq idle frame 1 pos 126,688 grounded 0' \
+	  && grep -q 'play tick 71: state A_DRAP seq idle frame 1 pos 128,653 grounded 1' \
 	      /tmp/opencode/ly_zland.log \
-	  && grep -q 'play tick 82: state A_DRAP seq idle frame 1 pos 126,885 grounded 0' \
+	  && grep -q 'play tick 82: state A_DRAP seq idle frame 1 pos 122,653 grounded 1' \
 	      /tmp/opencode/ly_zland.log \
-	  && ! grep -qE 'tick (7[0-9]|8[0-2]): .* A_DRAP .* grounded 1' /tmp/opencode/ly_zland.log \
+	  && grep -qE 'tick (7[1-9]|8[0-2]): .* A_DRAP .* grounded 1' /tmp/opencode/ly_zland.log \
 	  && echo "play jump (PR-86 + PR-253/256): the (N) token is the target's" \
 	       "START ROW on real rotated data (authored frame 4 at the exit)," \
 	       "the row list runs its own 22-row clock through the whole" \
@@ -1736,11 +1739,12 @@ ifeq ($(PX_DATA),1)
 	       "(the arc is the closed form of the authored words, not a" \
 	       "fit); the state's own G=30,350 brings him down, the walked" \
 	       "rows' GEN AC_TIME line reaches A_DRAP while he is still" \
-	       "falling, and then his own G=0,250 carries him THROUGH the" \
-	       "grass: the point-per-iteration terrain query never sees a 17" \
-	       "px step over the line, so he is still falling at 82 - the" \
-	       "engine's shape-box ground test (FUN_00042a70/0x42de0) is the" \
-	       "named gap, OI-015 (ok)" \
+	       "falling, and the ground CATCHES him there (PR-272): the" \
+	       "landing sweep starts at the previous iteration's contact" \
+	       "line, so the 17 px step over the 681 grass is seen, the" \
+	       "feet seat on the line (653 + the idle shape's 28 contact)" \
+	       "and he stays grounded - x drifts only by the LICHA SEMI" \
+	       "push-out (ok)" \
 	  || { echo "play ZARIA jump cam-y grep FAILED"; \
 	       grep -E 'tick (62|63|69|70|82):' /tmp/opencode/ly_zjump.log \
 	         /tmp/opencode/ly_zland.log; exit 1; }

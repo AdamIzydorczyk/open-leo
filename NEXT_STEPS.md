@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-272.
+> at PR-273.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -37656,4 +37656,97 @@ channel reachability leads (i)/(v) - the channel is modelled
 and the authored rectangles answer in real runs.
 CORRECTS: none.
 GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-272 — FAST FALLS LAND, THEY DO NOT TUNNEL: THE LANDING
+## SEARCH IS SWEPT FROM THE PREVIOUS ITERATION'S CONTACT LINE
+```
+KIND: port
+SUBSYSTEM: the player's ground logic in ll_player_step's
+physics pass - the airborne landing-search window.
+ADDRESSES: 0x54800-0x5482d (the position step: `x +=
+[obj+0xca]`, `y += [obj+0xce] + [obj+0xea]`, read to locate
+the step and its size); 0x42a70, 0x42de0 (PR-97's shape-box
+hit test and push-out, the law this sweep stands on; not
+re-read here).
+NAMES: OI-073, OI-078, prev_line, LL_PLAY_STEP,
+ll_plt_first_below, ZARIA_A.PLT, LICHA, A_DRAP, A_JUMP,
+A_WALK, cam-y leg, PR-58, PR-97, PR-135, PR-256, PR-271,
+shape-box, push-out
+CODE: yes: ll_play.h's ll_player prev_line field; ll_play.c
+- the landing-search top (`from = min(start, prev_line)`,
+the old LL_PLAY_STEP step-up reach kept below the line) and
+the prev_line record at the end of every player_iterate;
+the Makefile cam-y leg's pins.
+HOOKS: red first, from the owner rule that every behaviour
+change ships a failing test: the cam-y leg's NEW pins (the
+(c) paragraph below derives them) were written against HEAD
+with the code change stashed - "play ZARIA jump cam-y grep
+FAILED" - and turn green with the change restored. No new
+probe was needed: PR-256 left this exact defect named IN
+the leg, so the leg itself is the red leg.
+MEASURED: (a) THE TUNNEL at HEAD, third measurement: the
+PR-257-leg script run (FWD at 1, JUMP at 100) falls
+565 -> 987 unbroken (A_WALK 124-128, A_DRAP 132-151, y
+steps 17-31 px), exits at the death line and respawns at
+50,648. PR-271 measured the same crossing at x 171 and 204
+through the y 682 line; PR-256 measured 668 -> 688 across
+the 681 grass at x 127-128.
+(b) THE LAW: the engine's ground answer is a shape-box
+CONTACT - PR-97's hit test 0x42a70 and push-out 0x42de0,
+reached through the element vtable +0x48/+0x50 slots. A
+body whose box overlaps a terrain line IS in contact with
+it; the engine cannot have a body stand below a line its
+box overlapped on the previous position step. The port
+queries one point per iteration (PR-135 item 11); at one
+point the content of that law is CONTINUITY: the lines
+crossed between two iterations are exactly those between
+the previous contact line and this one. So the search top
+moves from `start - LL_PLAY_STEP` to
+`min(start, prev_line) - LL_PLAY_STEP`, where prev_line is
+the rounded y + contact recorded at the end of the LAST
+iteration (recomputed from the final position: the ground
+pass may have snapped y and section 7's `M` delta moved it
+again). Below the line the old reach is untouched, so the
+RAN-shelf step-up case the old comment names keeps its
+exact behaviour.
+(c) THE re-pinned cam-y values, derived not fit: the main
+ground (`1 -50,680!408,684;`) at x 128 reads 681 by the
+polyline's own interpolation (680 + 4*(178/458)); PR-97's
+`pos = line - contact` with the A_DRAP idle shape's 28 px
+contact gives pos y 653; grounded 1 from 70 on; x 122 at
+82 is the LICHA SEMI push-out drift, the push-out law
+itself unchanged. The negative "no grounded A_DRAP at
+70-82" pin becomes positive: grounded 1 across the range.
+(d) FOCUS-1 EFFECT, measured: the (a) run now lands at
+195,654 grounded 1 by tick 131 and stays - 654 + 28 = 682,
+the main-ground line at x 195 interpolated the same way.
+No death, no respawn: PR-271's named first blocker is gone.
+OPENS: in order: (i) OI-073 word-for-word stays open: the [obj+0xb6]
+bit semantics (row-directive writers 0x45c2d-0x45c45,
+physics tests 0x54200/0x54218/0x5426c, the test/set/clear
+family 0x54f40-0x55057) and whether the engine's contact
+tests a whole box or a point - only the continuity half is
+modelled now; (ii) an airborne spawn has prev_line = 0 for
+its first iteration (no prior contact line exists, so the
+sweep starts from the top of the column) - no fixture
+spawn airborne, no leg distinguishes it yet; (iii) OI-078's
+next lead, the CATCH timing (position point inside x
+207..229 at the ask tick), and then the A_TURN_BACK ->
+A_WSP -> A_PODCIAG climb leg.
+CLOSES: OI-073's fast-fall tunnel numbers assigned by
+PR-271, and PR-256's cam-y defect observation - named
+there as "a real defect, not a re-pin", now re-pinned to
+the law instead.
+CORRECTS: PR-256's "which a one-point-per-iteration query
+cannot reproduce" - it CAN reproduce the crossing/tunnelling
+half: the sweep restores exactly the continuity the
+shape-box test enforces at a point.
+GATE: make 0 warnings; verify-all fixtures rc=0 65 (ok);
+the verify-cmake parity and the verify-win/verify-mod legs
+are excluded per the owner's 2026-11-22 request;
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
+line is the cmake-windows parity check, which names its own
+reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
+in this tree)
 ```
