@@ -2018,6 +2018,64 @@ ifeq ($(PX_DATA),1)
 	  || { echo "play ZARIA climb chain grep FAILED"; \
 	       grep -E 'play: A_|ANSWERS|state A_(TURN_BACK|WSP|PODCIAG|DRAP) ' \
 	         /tmp/opencode/ly_climb.log | tail -12; exit 1; }
+# PR-277, FOCUS 1 / OI-078: JUMPING OFF THE LADDER AND RE-CATCHING
+# IT - the authored mid-climb exit chain, end to end. A_WSP's own
+# row `A_PRE_JUMP(1)=K_JUMP` is key-only, so pressing JUMP at 200
+# mid-climb takes it: A_WSP -> A_PRE_JUMP at 200. A_PRE_JUMP's
+# third row `2,75,I 250,-1100` is the launch: the I pair applies
+# ONCE at row entry (PR-253's one-shot), and the -1100 y pair at
+# PR-83's units is -11.00 px/t upward - the recorded apex path
+# (623 at 202, rising 8.5, 8, 7... a tick, top 541 at 217) is
+# that impulse decaying under PR-259's gravity. A_JUMP's apex at
+# y 541 is 23 px BELOW the top platform's line (518 at x 217,
+# ZARIA_A.PLT line 5): the leap does not reach the platform, and
+# K_UP is still held, so the fall passes the middle of the column
+# and A_WALK's authored `A_TURN_BACK(1)=K_UP,AC_DRAB_CATCH` row
+# (PR-271's order, PR-269's middle-70% split: x 218 sits inside
+# 207..229, so the ask at 218,602 answers `set 1400`) takes the
+# CATCH mid-air at 228. A_TURN_BACK lands on the main ground by
+# the PR-97/PR-274 contact arithmetic (feet 652+30 = 682, the
+# .plt line at x 218), and its authored `A_WSP(1)=AC_BREAK_NEXT,
+# AC_DRAB` row re-enters the climb at 243 - the 1 px/t climb
+# (PR-259's closed form) resumes: 652 at 246, 649 at 249. Every
+# tick above is the fixture's own arithmetic: the 1 px/t climb
+# (623 at 199 = 652 - 29), K_JUMP at 200, the I-pair launch,
+# the CATCH row at 228, 682-30 = 652 at 234, 649 at 249 =
+# 652 - 3. The chain also names a lead: A_PRE_JUMP's
+# `A_JUMP(11)=AC_DUP` row shows AC_DUP raised by a surface ask
+# (0x3df00 -> the asked's +0xd8 verb -> 0x45320 with
+# [asked+0xee], PR-23x/PR-275), the same word A_WSP's
+# `A_TURN_BACK(1)=AC_DUP,K_DOWN` row needs - still unmodelled.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
+	  LEO_PLAY_SCRIPT="1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP \
+200:FWD,UP,JUMP 201:FWD,UP" \
+	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_cjump.ppm \
+	  LEO_LEVEL_PPM_TICK=318 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_cjump.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play ZARIA ladder-jump FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_cjump.log; exit 1; fi
+	@grep -q 'play: A_WSP -> A_PRE_JUMP' /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play: A_PRE_JUMP -> A_JUMP' /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play: A_JUMP -> A_WALK' /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play: A_WALK -> A_TURN_BACK' /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play: A_TURN_BACK -> A_WSP' /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 199: state A_WSP seq climb frame 7 pos 212,623 grounded 0' \
+	       /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 200: state A_PRE_JUMP' /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 203: state A_JUMP seq jump frame 3 pos 215,604 grounded 0' \
+	       /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 228: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 1400' \
+	       /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 234: state A_TURN_BACK seq turn_bk frame 4 pos 218,652 grounded 1' \
+	       /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 249: state A_WSP seq climb frame 5 pos 218,649 grounded 0' \
+	       /tmp/opencode/ly_cjump.log \
+	  && echo "play ladder-jump (PR-277): K_JUMP mid-climb takes A_PRE_JUMP's own row, its I 250,-1100 launches the leap, the fall re-takes the authored CATCH row at 228, the landing uses the .plt line and the contact of PR-274's arithmetic, and the 1 px/t climb resumes (ok)" \
+	  || { echo "play ZARIA ladder-jump grep FAILED"; \
+	       grep -E 'play: A_|state A_(WSP|PRE_JUMP|JUMP|WALK|TURN_BACK) ' \
+	         /tmp/opencode/ly_cjump.log | tail -12; exit 1; }
 # PR-83: the KEYUP half of the input contract. No backend ever translated
 # SDL_KEYUP, so through the REAL backend every key stuck down forever: the
 # reported "controls press themselves in a loop". The live loop (NO

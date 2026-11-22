@@ -1768,6 +1768,19 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     and the object that holds its lines remain the named
     missing pieces before the lift can be ported from law
     rather than modelled as a choice.
+    PR-277 PINS THE MID-CLIMB JUMP CHAIN as a second leg
+    (ly_cjump): K_JUMP at 200 takes A_WSP's own row, the
+    I 250,-1100 launch, the mid-air re-CATCH at 228, the
+    652 landing, the climb resuming - all derived, all
+    green. It also names AC_DUP as a producer gap: two
+    ZARIA.01 lion rows (`A_PRE_JUMP(11)=AC_DUP`, A_WSP's
+    `A_TURN_BACK(1)=AC_DUP,K_DOWN`) wait on a bit nothing
+    in the model raises; the PR-23x channel 0x3df00 ->
+    [asked+0xd8] -> 0x45320 with [asked+0xee] is the
+    measured shape of that raise, producer unnamed. And it
+    records that releasing keys mid-climb today lands the
+    climber back inside A_WSP - A_WSP grounding/walking is
+    a model question, not a leg pin.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

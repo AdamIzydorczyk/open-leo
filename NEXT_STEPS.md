@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-277.
+> at PR-278.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38188,4 +38188,74 @@ fields" are withdrawn: 0x4a0b0, called by 0x45120 itself,
 reads them (MEASURED (a) here); the count field is the
 segment count, not the raw record count.
 GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-277 — JUMPING OFF THE LADDER WORKS END TO END: A NEW LEG
+## PINS A_WSP -> A_PRE_JUMP ON K_JUMP, THE I 250,-1100 LAUNCH,
+## THE MID-AIR RE-CATCH, THE LANDING, AND THE CLIMB RESUMING
+```
+KIND: gate
+SUBSYSTEM: the Makefile play-leg cluster - a new ZARIA.01 leg
+(ly_cjump) walking the authored mid-climb JUMP exit and the
+re-catch back onto the ladder. No engine reading and no
+`ported/` change.
+ADDRESSES: 0x54170, 0x4b500, 0x3f1c0, 0x44ec0, 0x3df00,
+0x53725, 0x52000 (all read and recorded by PR-23x/PR-250..
+PR-275; this leg exercises them, it reads nothing new)
+NAMES: OI-078, A_WSP, A_PRE_JUMP, A_JUMP, A_WALK,
+A_TURN_BACK, A_DRAP, AC_DRAB, AC_DRAB_CATCH, AC_DUP, K_JUMP,
+K_UP, ly_cjump, I 250,-1100, FWD,UP,JUMP, ZARIA_A.PLT,
+PR-253, PR-257, PR-259, PR-269, PR-271, PR-274, middle 70%
+CODE: no: the Makefile leg block only; no line of `ported/`
+changes, so there is no behaviour for a red leg to catch.
+HOOKS: PR-274 OPENS (ii)/(iii) named A_WSP's authored exits
+as untested. This leg takes the key-only one
+(`A_PRE_JUMP(1)=K_JUMP`); the AC_DUP operand of its
+`A_TURN_BACK(1)=AC_DUP,K_DOWN` exit is named open here.
+MEASURED: (a) THE LEG RUN confirms the whole chain in one
+deterministic run, and every pinned number was derived from
+the fixture's own arithmetic BEFORE being grepped: the climb
+line 623 at 199 = 652 at 170 minus 29 px at 1 px/tick
+(PR-259's closed form, the same law ly_climb pins); the
+A_PRE_JUMP entry at 200, the tick JUMP is pressed; the
+launch at 203 - the row `2,75,I 250,-1100` applies its I
+pair once at row entry (PR-253), and -1100 at PR-83 units
+is -11.00 px/t upward, the recorded apex path (623 at 202
+-> 541 at 217) decaying under PR-259's gravity; the apex
+541 is 23 px below the platform line (518 at x 217) so the
+leap cannot land on top; the CATCH at 228 - K_UP held and
+x 218 inside PR-269's middle 70%, the leg pins the ask
+answering `set 1400` on that very tick and A_WALK's CATCH
+row taking it mid-air at 218,602; the landing 652 at 234 =
+the .plt line 682 at x 218 minus the 30 A_TURN_BACK contact
+(PR-97/PR-274's arithmetic); the re-climb 649 at 249 = 652
+at 246 minus 3 px, entered through A_TURN_BACK's own
+`A_WSP(1)=AC_BREAK_NEXT,AC_DRAB` row at 243. (b) A NEW
+LEAD surfaces: A_PRE_JUMP authors `A_JUMP(11)=AC_DUP` -
+ZARIA.01 names AC_DUP in TWO lion rows (this one and
+A_WSP's DOWN exit), and the PR-23x reading shows the only
+measured channel of that shape: the base answer verb 0x3df00
+calls the asked's +0xd8 test and on true runs 0x45320 with
+[asked+0xee]. Which asked object raises AC_DUP, and where
+its [obj+0xee] table comes from, is the open producer.
+OPENS: in order: (i) the AC_DUP producer (the +0xd8/+0xee
+pair of one class, unmodelled - with it, DOWN mid-climb
+returns to A_TURN_BACK and a surface ask mid-jump cuts
+A_PRE_JUMP short, both authored, neither reachable); (ii)
+A_WSP `A_FALL_DOWN(1)=!AC_DRAB` is STILL untested, and the
+release-keys probe showed why: the current build lands the
+released climber back on the ground at 212,648 INSIDE
+A_WSP, then walks it left out of the column near 270 (the
+transition happens only there); A_WSP grounding and walking
+at all is a model question worth its own reading; (iii) the
+lift of PR-275/PR-276 (OPENS (i) there) stands unchanged.
+CLOSES: none.
+CORRECTS: none.
+GATE: make 0 warnings; verify-all fixtures rc=0 67 (ok);
+the verify-cmake parity and the verify-win/verify-mod legs
+are excluded per the owner's 2026-11-22 request;
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
+line is the cmake-windows parity check, which names its own
+reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
+in this tree)
 ```
