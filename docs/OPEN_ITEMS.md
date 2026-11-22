@@ -632,6 +632,20 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     lift-motion source (SEQ step-motion vs the contact pass,
     PR-273 OPENS (i)), the [obj+0xa9] list, and the
     bit2/3/6/7 semantics.
+    PR-275 READS the layer behind [obj+0xa9]: 0x45120 parses
+    a `<count>`+separator text into 13-byte polyline points
+    {x,y,kind} in the pool at ds:0xa0c64 and stores the
+    table AT [obj+0xa9] (via the obj+0xa5 slot), 0x45200
+    localizes it, 0x45380 brackets a point by x, and 0x45320
+    attaches a one-shot snap-to-line for the predicted
+    position (0x541f0 + [obj+0xca]/[obj+0xce]) through the
+    [obj+0xe6]/[obj+0xea] pair PR-121/PR-122 read; the
+    0x5478e link store and the 0x45479 compare make
+    [obj+0xa9] BOTH the object's own table and the current
+    link - the one slot's two roles are PR-275 OPENS (iv).
+    The A_PODCIAG lift lead narrows to the snap law (its
+    gap is <= 0 = UP only); which provider holds the top
+    platform line is PR-275 OPENS (i).
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -1728,6 +1742,19 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     682-ground landing - so the lift fix has a net to land
     on. The two end-pins (289's exit, 294's grounded 654)
     are the ones that move when the lift is modelled.
+    PR-275 NARROWS THAT MODELLING: the only engine path
+    found that moves a body UP to a line exactly is the
+    surface-table snap - a provider object holding a
+    polyline table (0x45120/0x45200) is attached to a
+    target, whose PREDICTED position (pos + [obj+0xca]/
+    [obj+0xce]) is measured against the bracketed segment
+    line (0x45380, 0x455a0) and, when at or below it, is
+    snapped exactly onto the line by the one-shot
+    [obj+0xea] in the position step. Which provider is
+    attached to the lion during the `lock` window, and what
+    table holds the ZARIA.01 polylines, is PR-275 OPENS (i)
+    - the port's landing search only looks DOWNWARD, so no
+    current leg can even see a top-platform snap.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

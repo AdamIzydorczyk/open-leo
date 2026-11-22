@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-275.
+> at PR-276.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -37959,4 +37959,135 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named (the 23rd SKIP
 line is the cmake-windows parity check, which names its own
 reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
 in this tree)
+```
+
+## PR-275 — THE SURFACE-TABLE LAYER BEHIND THE ONE-SHOT [obj+0xea]
+## SNAP IS READ: 0x45120 PARSES A COUNT+SEPARATOR TABLE TEXT,
+## 0x45200 LOCALIZES IT, 0x45380 BRACKETS A POINT BY x, AND
+## 0x45320 ATTACHES A PREDICTED-POSITION SNAP TO A TARGET
+```
+KIND: read
+SUBSYSTEM: the engine's surface-provider family 0x45120 /
+0x45200 / 0x45380 / 0x45320 - the producer side of the
+[obj+0xe6]/[obj+0xea] channel PR-110 found written, PR-121
+found applied in the position step and PR-122 decoded the
+gap arithmetic of. Continues PR-121 items 2-3 and PR-122
+OPENS 1-2. No `ported/` change.
+ADDRESSES: 0x45120, 0x45200, 0x45320, 0x45380, 0x453d0,
+0x45400, 0x455a0, 0x541f0, 0x54759, 0x54804, 0x288d0,
+0x288e2, 0x380d0, 0x1e512, 0x1e570, 0x1e970, 0x3dd60,
+0x76a64, 0x76bb7, 0x49920, 0x4a0b0
+NAMES: OI-073, OI-078, A_PODCIAG, A_FG_PACKA_UP,
+A_FG_PACKA, [obj+0xa5], [obj+0xa9], [obj+0xee], [obj+0xca],
+[obj+0xce], [obj+0xe2], [obj+0xe6], [obj+0xea], kind byte,
+surface provider, polyline, snap, ZARIA_A.PLT, PR-110,
+PR-121, PR-122, PR-235, PR-272, PR-273, PR-274, ZARIA.01,
+ly_climb
+CODE: no: no line of `ported/` or of the Makefile changes,
+so there is no behaviour for a red leg to catch.
+HOOKS: PR-122 OPENS 1 asked "what the 13-byte records are
+and which class answers with an index" (0x45380 unread);
+PR-121 item 2 asked whether [obj+0xea] is a one-shot
+vertical push; PR-274 OPENS (i) asked which mechanism lifts
+the lion in A_PODCIAG. This PR reads the producer side and
+answers the shape questions; the provider identity for the
+climb window stays open and is OPENS (i) here.
+MEASURED: (a) 0x45120(table slot, text) is a parser:
+`%d` (0x9182d) reads a COUNT into [slot+8]; (count+1)*13+4
+bytes come from the pool whose cursor is ds:0xa0c64
+(0x76a64/0x76bb7); [slot+4] = the records; per record
+i=1..count it parses `' %c'` (0x91830): separator ';'
+stores kind byte 1, '#' stores 2, anything else 0, at
+record+0xc (0x4519d-0x451be). It never parses coordinates.
+(b) THE RECORDS ARE POLYLINE POINTS: {dword x@0, dword y@4,
+byte kind@0xc}, stride 13 - the 13 the four `imul ...,0xd`
+scale (PR-122) and exactly what 0x455a0 reads (its two
+point pairs use +0/+4 only, PR-122's closed form). 0x45200
+(slot, dx, dy) adds (dx,dy) to EVERY point (0x45214-0x45225)
+- localization; 0x1e521-0x1e52a parses the [obj+0xa5] slot
+for an object and immediately localizes its table by that
+object's live x,y.
+(c) 0x45380(slot, R) is the bracket finder: count 0 -> 0;
+R.x outside [rec[0].x, rec[count-1].x] -> 0 (0x45391-
+0x453a1); otherwise the index i with rec[i].x <= R.x <
+rec[i+1].x (0x453a3-0x453bd). The polyline must be x-
+sorted - the bounds test and the walk both assume it.
+(d) 0x45320(provider slot, target, kind): 0x541f0(target,
+&stack) writes the target's live [obj+0]/[obj+4] to the
+stack pair (its continuation tests [obj+0xb6] bit1 and
+[vt+0xbc], unread); then R = (x+[target+0xca], y+[target+
+0xce]) - the position PREDICTED from this step's deltas,
+the same pair the position step 0x54827/0x54829 adds - and
+0x45400 runs with that R. So the snap is computed against
+WHERE THE BODY IS ABOUT TO BE, not where it is.
+(e) 0x45400 EXTENDS PR-122: before the index it rejects
+when the provider's FIRST record kind byte exceeds the
+kind argument (0x4540f-0x45419); every observed site
+passes kind 2 from ebx (0x1e58a, 0x288fe, 0x380f6), so
+only unparsed/garbage tables fail that test. The segment
+index comes from the TARGET's [vt+0x6c] (0x45434/0x45439),
+not from 0x45380 - 0x45380 instead feeds the direct probe
+0x453d0, which returns the gap, or 0x7fffffff when the
+point is outside the polyline (0x453db-0x453f5; no direct
+caller found - the entry lists index it as a slot).
+(f) THE STORE AND THE APPLY JOIN: PR-122's stores
+([target+0xe6]=provider, [target+0xea]=the <=0 gap,
+skipped when the provider equals the target's own
+[obj+0xa9] table pointer) and PR-121's apply in the
+position step (y += [obj+0xce]+[obj+0xea], then +0xea=0,
+0x54804-0x5482d). Since the gap is line-y minus R.y and
+is stored only when <= 0, THE LAW IS A ONE-SHOT SNAP UP TO
+THE LINE for a body that would come to rest at or below it;
+a body above the line is never moved. The 0x54759 guard
+block skips the snap when the stored kind is 2 and the
+answer word [obj+0xc6] >= 0x58c, and where [obj+0xa9] is 0
+it sets flag byte bit 0x10, stores the link there and runs
+two virtual calls (0x54785-0x547f0) before applying.
+(g) THE GATES AT THE CALL SITES: 0x1e570 requires
+[[obj+0x50]+[obj+0x5c]*4]+4 < 0xd - [obj+0x50] is the
+state-record list and [obj+0x5c] the CURRENT STATE INDEX
+(new; the same pair reads at 0x380e9); 0x380d0 requires the
+target's [vt+0x3c] true AND [target+0x5c] in {0x1f,0x20} =
+ZARIA.01 LEW.MOV block indexes 31/32 zero-based =
+A_FG_PACKA_UP / A_FG_PACKA (PR-235's order convention),
+provider = [obj+0x44]; 0x288e2 sits in the contact region
+next to 0x287a0 and gates on the self's [vt+0xd8](other)
+before running the snap against the self's own [obj+0xee]
+table (0x288d0 parses that slot). Per-class provider slots:
+[obj+0xa5] (generic), [obj+0xee], [obj+0x44].
+(h) WHAT THIS SAYS ABOUT THE LIFT (INTERPRETATION, flagged
+as such): FOCUS-1's A_PODCIAG question - PR-274 pinned the
+lion drifting 2 px/t DOWN through the top platform's line
+(.plt line `5 98,514;288,520;...` = y 518 at x 212) and
+landing on the main ground. Mechanically (f) is the only
+engine path found that moves a body UP to a line exactly,
+and it needs a provider whose table holds that polyline to
+be ATTACHED to the lion while the `lock` window (PR-273's
+bit5, rows 1-7) runs. The port has no counterpart: its
+landing search only looks DOWNWARD (ll_plt_first_below,
+PR-272's sweep), which is why the drift passes 518 and
+lands at 682. The provider identity for the climb window is
+the question that stands between this reading and a port.
+OPENS: in order: (i) which object's table holds the
+ZARIA.01 polylines - the ZARIA_A.PLT load path was not
+found among the 0x45120 sites, and [obj+0xa5]'s text source
+is unread; (ii) who fills the record x/y fields (0x45120
+parses count+separators only; 0x3dd60 shows text of the
+shape `<count>...` followed by ` F = %d, %d` (0x91446) -
+the row F-pair grammar - copying the FIRST point to
+[rec+0xfa]/[rec+0xfe], a row/surface link worth reading);
+(iii) which classes answer [vt+0x6c] with a segment index
+and what [vt+0x3c]/[vt+0xd8] test; (iv) [obj+0xa9]'s two
+writers - 0x45120 stores the object's own table there (via
+obj+0xa5) while 0x5478e stores the linked provider there -
+one slot, two roles, which needs settling before any port
+uses it; (v) 0x541f0's continuation and the 0x54759 guard's
+answer-word comparison ([obj+0xc6] vs 0x58c).
+CLOSES: none. PR-121 item 2 (is [obj+0xea] a one-shot
+vertical push - yes, up-to-a-line only) and PR-122 OPENS 1
+(the records ARE polyline points with kind bytes; 0x45380
+read) are answered here, but their residual questions sit
+in OPENS (i)-(v), so those rows stay open.
+CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok);
 ```
