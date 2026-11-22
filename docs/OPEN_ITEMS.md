@@ -1768,6 +1768,19 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     and the object that holds its lines remain the named
     missing pieces before the lift can be ported from law
     rather than modelled as a choice.
+    PR-279 ANSWERS IT: the wiring parser itself loads
+    platformy= (0x4dc00 - header %d, one 12-byte surface-
+    table object per line on a manager array, each parsed by
+    the element method 0x45120), and the position step
+    attaches every actor against EVERY ground line
+    (0x4b600/0x4b660 at 0x546d7/0x54719, closest non-positive
+    gap wins at 0x454a2). The lion carries no table - its
+    lew.des names only the carried-coconut child - so the
+    provider is the .plt lines themselves. What remains named
+    before the lift is ported from law: where the feet-
+    contact term enters the snap point, and the state gate
+    that keeps A_WSP (feet below the line for 90 ticks) out
+    of the attach.
     PR-277 PINS THE MID-CLIMB JUMP CHAIN as a second leg
     (ly_cjump): K_JUMP at 200 takes A_WSP's own row, the
     I 250,-1100 launch, the mid-air re-CATCH at 228, the

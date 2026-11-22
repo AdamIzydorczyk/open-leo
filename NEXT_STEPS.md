@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-278.
+> at PR-280.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38315,3 +38315,112 @@ reason: no vendor/SDL2-2.32.10/x86_64-w64-mingw32 prefix
 in this tree)
 ```
 
+
+## PR-279 — THE GROUND POLYLINES ARE LOADED BY THE LEVEL WIRING
+## ITSELF (platformy= IS REAL ENGINE CODE), THE TABLES LIVE ON A
+## MANAGER ARRAY THE POSITION STEP QUERIES, AND THE LION CARRIES
+## NO TABLE: THE PROVIDER-IDENTITY QUESTION DISSOLVES
+```
+KIND: read
+SUBSYSTEM: the level-wiring loader (platformy= / blokady=), the
+12-byte surface-table object and its 0xa0cc0 method family, the
+snap-attach path 0x4b600/0x4b660 called from the position step,
+and the two nearest-line queries. No `ported/` change.
+ADDRESSES: 0x4cf8a, 0x4d466, 0x4a910, 0x4dc00, 0x49820,
+0x44fe0, 0x76a64, 0x76bb7, 0x9a0cc0 - as 0xa0c78, 0xa0c64,
+0xa0cc0, 0x45250, 0x452d0, 0x453d0, 0x45320, 0x45400,
+0x45380, 0x455a0, 0x4b600, 0x4b660, 0x4b6d0, 0x4b760,
+0x2c204, 0x2c22b, 0x541f0, 0x546d7, 0x54719, 0x4db50,
+0x455e0, 0x1fef4, 0x96960, 0x9686c, 0x1e630, 0x288d0,
+0x454a2, 0x4547d, 0x1f802
+NAMES: platformy, blokady, ZARIA_A.PLT, LEVELDES, LEW.DES,
+LEWRAN.DES, TLewZaria, TLewZariaB, OI-073, OI-078, PR-94,
+PR-97, PR-243, PR-274, PR-275, PR-276, pr279_factory.log,
+K_FWD, K_UP, ground_on, mgr, kind byte, POZYTEF
+CODE: no: no `ported/` or Makefile line changes; a reading of
+the loader and the attach path, no behaviour to catch red.
+HOOKS: PR-276 OPENS (i) - "the loader that splits ZARIA_A.PLT
+and the object that holds its lines" - is ANSWERED here:
+MEASURED (a)/(b), and the provider it asked for is not an
+object: the position step itself queries the manager's array
+(MEASURED (c)). PR-275 OPENS (i) closes with it. PR-276's
+claim that none of the five 0x45120 sites is a level loader
+STANDS - the .plt lines reach 0x45120 through a sixth,
+vtable-dispatched call (element method +0x20), not a direct
+call site, which is why the direct-call census missed it.
+MEASURED: (a) THE LOADER: the wiring parser keeps the
+platformy= value (the ' %s' read at 0x4cf8a) and after the
+line loop calls 0x4a910 (record by file name) then 0x4dc00.
+0x4dc00: 0x49820 (sep block 0x961fc) splits the record into
+lines; '%d' (0x91f27) is read as the header into [mgr+0x80];
+count*12+4 is allocated from the 12-byte pool ds:0xa0c78
+into [mgr+0x74]; 0x76bb7 constructs each element through
+0x44fe0, which writes vptr ds:0xa0cc0, array=0, count=0;
+then per line the element's method +0x20 - which IS 0x45120
+- is called with edx = that line. The fixture confirms its
+own header: ZARIA_A.PLT line 1 is `45` and the file has
+exactly 46 lines. The sibling key blokady= (0x91e2c) rides
+0x4db50: 20-byte elements into [mgr+0x70], line parser
+0x455e0 (which calls the 0x4a0b0 pair reader at 0x455ec).
+(b) THE TABLE OBJECT vtable ds:0xa0cc0 is the surface family:
++0x14 0x453d0 (bracket then interpolate: no bracket returns
+0x7fffffff), +0x18 0x45320, +0x1c 0x45400, +0x20 0x45120.
+The base-object vtable at 0x9686c (written by the shared
+ctors, referenced from 16 code sites) carries the same
+family - the inline [obj+0xa5] headers PR-275 read and these
+heap headers are the same structure. A class-name factory
+census (0x1f802 onward, name strcmp 0x76a69 + 0x5c320
+allocs) was extracted to /tmp/opencode/pr279_factory.log:
+261 branches including PLATF, MOVEPLAT, KATPLAT, WINDA, the
+SCHODY family and TLewZaria/TLewZariaB (0x1fef4, 0x12e,
+vptr 0x96960).
+(c) THE ATTACH: 0x4b600 (ebx = actor) asks 0x541f0 for the
+position, forms R = pos + [actor+0xca]/[actor+0xce], and if
+[actor+0xa9] is non-null evaluates the actor's OWN table at
+0x45400 first (ecx=2 = the kind cap: 0x45417 `cmp kind,ecx
+jg skip`); 0x4b660 then calls element +0x8 (0x45250) and
++0x1c (0x45400) for EVERY table on [mgr+0x74]/[mgr+0x80].
+0x546d7 and 0x54719 call 0x4b600 from the position-step
+region - so every actor is attached against every ground
+line, every step. Inside 0x45400: bracket R (0x45380,
+rec[0].x <= R.x <= rec[count-1].x), call the actor's
+vt+0x6c (return value unused), y_at via 0x455a0 on the
+bracket pair; a FOREIGN table must pass gap1 >= 0 first
+(0x4547d, skipped when the table IS [actor+0xa9]), then a
+second 0x455a0 pass must give gap2 <= 0 with gap2 greater
+than the stored [actor+0xea] - the MAXIMUM (closest)
+non-positive gap wins - and 0x454a2-0x454ba stores
+[actor+0xe6]=table, [actor+0xea]=gap, [actor+0xe2]=the
+bracket point's kind byte. Application stays as PR-275 read
+it at 0x54804-0x5482d. (d) TWO nearest-line queries over
+the same array: 0x4b6d0 takes the closest line ABOVE (max
+negative y_at), 0x4b760 the closest BELOW (min positive);
+their only callers, 0x2c204/0x2c22b, gate on [obj+0x64]
+bits 5/6 - signal words K_FWD(37)/K_UP(38) - and accept
+only |gap| <= 5: a 5 px step assist, NOT the lift. (e) THE
+LION CARRIES NO TABLE: the CD LEVELDES authors
+`lew=TLewZaria,Lew.zar,lew.mov,lew.des`; the fourth field
+names a child .des INSIDE the art leaf - ZARIA.01's ANIMACJE
+LEW.ZAR/LEW.DES is `POCISK,kokos.ani,kokos.mov,0,0` (the
+carried coconut, the PR-94 zero-zero child grammar) and
+RAN.01's LEWRAN.DES is a balloon child. Nothing feeds
+[lion+0xa5/a9] a table, so the ZARIA.01 lift provider can
+only be the manager's ground lines - the top-platform line
+is on [mgr+0x74] from the first step.
+OPENS: in order: (i) where the feet-contact arithmetic
+(PR-97/PR-274) enters the snap point: R = pos +
+[obj+0xca]/[obj+0xce] carries no contact term as read, so
+either those words include it for the player or vt+0x6c
+supplies it - decide from the 0x541f0/0x54250 words before
+porting the number; (ii) the state gate that keeps A_WSP -
+whose feet sit BELOW the platform line for 90 climb ticks
+without snapping - out of the attach: the callers 0x546d7/
+0x54719 (method 0x546a0, the 0x54759 kind guard) are
+unread; (iii) what the TWO 0x455a0 passes in 0x45400
+evaluate differently (0x4543c-0x45468 vs 0x45481-0x45491,
+and the [esp+0x18] the second reads); (iv) 0x45250 and
+0x4b500 identities; (v) carried: the state-record field +4.
+CLOSES: none.
+CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
