@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-284.
+> at PR-285.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38824,5 +38824,108 @@ A_WSP/A_PODCIAG answer sequence (with `rdir`/`unlock` rows
 (v) carried: state-record field +4.
 CLOSES: none.
 CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-284 — THE LIFT HAS NO WRITER BECAUSE THE ENGINE AUTHORS
+## NONE: A_PODCIAG IS A ZERO-MOTION STATE (T=100 CONSUMES THE
+## REGISTER IN ONE ITERATION, G=0,0 ADDS NOTHING, NO ROW MOVES)
+## - AND THE DESCENT STATE A_SCIAG DOES AUTHOR ITS MOTION
+```
+KIND: read
+SUBSYSTEM: the class-table answer slots (+0x78/+0x88) and
+their call sites; the rdir executor 0x52070; the authored
+A_PODCIAG/A_SCIAG/A_DRAP blocks' physics words; LIFT.SEQ's
+frame anchors; the y-gap add at 0x54804-0x54829. No
+`ported/` change.
+ADDRESSES: 0x9686c, 0x96960, 0x97cdc, 0x3f1c0, 0x3f390,
+0x534c0, 0x55360, 0x5c320, 0x4b5be, 0x4bda9, 0x4be09,
+0x55421, 0x4bd30, 0x4bd61, 0x4bd8c, 0x534a0, 0x534ab,
+0x52070, 0x45a50, 0x457e0, 0x52660, 0x52665, 0x54250,
+0x54292, 0x542a7, 0x54311, 0x54804, 0x5481b, 0x54825,
+0x54829, 0x749a0
+NAMES: A_PODCIAG, A_SCIAG, A_WSP, A_DRAP, m, M, lock,
+unlock, rdir, LIFT.SEQ, seq=lift, AC_EDGE, AC_DUP,
+AC_BREAK_NEXT, A_JUMP_S, LL_PLAY_GRAVITY, DRABINKA, TLewZaria,
+answer verb, contact record, OI-073, OI-078, ly_climb,
+PR-263, PR-270, PR-278, PR-281, PR-282, PR-283
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: PR-283 OPENS (i)/(ii) - the bit5 window over the
+climb - are narrowed: the answer verbs and the lock window
+raise SIGNALS, and the signals drive TRANSITIONS, not
+motion; no code moves the rider because the authored state
+authoring asks for none.
+MEASURED: (a) THE ANSWER SLOT IS +0x78, NOT +0x88. The
+DRABINKA table (base 0x97cdc, confirmed by slot agreement
+with the LION's 0x96960: both carry the 0x23e00 hit test at
++0x8, the 0x23a20 live-rect getter at +0x4c, the 0x23b80
+position getter at +0x60) holds 0x3f1c0 at +0x78, and the
+LION's +0x78 is 0x50f80 - the class's answer verb. [vt+0x88]
+is a DIFFERENT verb: the LION's is 0x55360, the ladder's
+0x534c0, both `call 0x5c320` operator-new (0x60 / 0x48
+bytes) record creators; 0x534a0 calls ladder [vt+0x88] and
+stores the result into [[obj+0x50]+i*4] - the contact-record
+list. PR-282's "[vt+0x88]=0x3f1c0" is corrected here.
+(b) THE ANSWER CALLERS. 0x4b5be/0x4bda9/0x4be09/0x55421 are
+the only [t+0x78] call sites. 0x4bd30 (0x4bda9's function)
+walks a list from [arg+0x64] by [node+0x34] links (0x4bd61/
+0x4bd71), skips nodes whose [obj+0x24] differs from the
+caller's (0x4bd8c - an owner/level identity word), calls the
+node's [vt+0x60] (0x4bd81) as a gate and then its answer
+verb with edx = a stack triple, and copies the 9 bytes and
+then 12 bytes the verb returns (rep movs 0x4bdb3/0x4bde1) -
+an answer-RECORD fetch, which matches 0x3f1c0's tails
+(0x3f24d/0x3f355/0x3f375: it clears [asked+0xc], builds a
+0xc-byte 0x749a0 object and ORs bits into [asked+0x1]).
+(c) RDIR IS A RANDOMIZER, NOT MOTION: 0x45a50 -> 0x52070
+sets [obj+0x9d] = 0 and writes [cmd+0xc] = 0x76bcc-drawn
+random in the pair [cmd+0x8]..[cmd+0xa] (or the single
+word when the second is 0). A_PODCIAG row 7's rdir and
+A_KILOF row 1's rdir raise nothing and move nothing.
+(d) LIFT.SEQ (ZARIA.01/LEW.ZAR, 10871 B, 9 elements, all
+w0 = 0x0f) has anchors f2 = 43,43,41,36,35,22,13,26,38 -
+the pull-up art rises 30 px and returns; all of it is
+anchor-relative, art law, not position law.
+(e) THE AUTHORED PHYSICS. A_PODCIAG and A_SCIAG both carry
+T=100,100: the drag terms of 0x54292-0x542a7 are
+idiv(100*v,100) = v, and 0x54311 subtracts them from the
+post-add register - ANY carried velocity is consumed in the
+FIRST iteration. F=0,0 adds no intent force, G=0,0 adds
+nothing. Under the port's own PR-256 law (the authored
+words are the adds) A_PODCIAG's position is FROZEN at its
+entry. A_SCIAG, the descent, authors its motion where
+A_PODCIAG authors none: rows 2..7 carry the word-pair
+directive `m 0,1` (keyword pool M; A_KAMIEN authors
+`M -5,0`, A_KILOF `m 9,-40`); the y+1 per iteration for
+1700 ms IS the slide down. A_PODCIAG authors no m row. The
+port's A_PODCIAG fall (drift +2 px/t, grounded 654 at 294 -
+the ly_climb end pins) is ENTIRELY the project-route
+LL_PLAY_GRAVITY fallback (ll_play.h names it "not an
+authored route") firing on a state that authored G = 0,0.
+(f) THE GAMEPLAY READING (DERIVED, flagged as such): the
+band's top (480) sits 9 px above the platform-grounded 489,
+so a lion STANDING on the platform is inside AC_EDGE and
+asks A_SCIAG with K_DOWN (0x4bd../ladder P1) - descent
+begins on the platform; and the hang A_DRAP at ~559 authors
+A_JUMP_S(1)=K_JUMP with the platform line 72 px of feet-
+clearance below - the FOCUS-1 finish is climb -> frozen
+pull-up -> hang -> jump -> land on 489 through the port's
+EXISTING CHECK_LN ground path. No lift law is missing; the
+port's A_PODCIAG gravity stand-in is the defect.
+OPENS: in order: (i) the LL_PLAY_GRAVITY inventory - which
+legs fire the fallback, and a mutation run for "an authored
+G word, zero or not, is the add: the fallback does not
+replace an authored zero"; (ii) the M-directive handler and
+executor (where the pair compiles and what consumes it) vs
+what mechanism PR-278's A_SCIAG descent actually modelled;
+(iii) the [obj+0x64] list and the [obj+0x24] identity word;
+(iv) the LION answer verb 0x50f80 vs PR-263's Answer-A
+0x50f09 gate; (v) 0x3f390's slot and owning table.
+CLOSES: PR-282 OPENS (i) / PR-283's lift-writer hunt: the
+engine has no rider-lift writer for this ladder because the
+authored state asks for no motion; the pull-up is art plus
+a hang, and the platform is reached by the hang's own jump.
+CORRECTS: PR-282 ([vt+0x88] is the contact-record creator;
+0x3f1c0 is [vt+0x78]).
 GATE: light: verify-index verify-docs rc=0 (ok);
 ```

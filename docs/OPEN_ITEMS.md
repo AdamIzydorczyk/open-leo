@@ -1796,6 +1796,18 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     skip gate (0x546ac/0x54eb9/0x54c14) and PR-273's bit5
     `lock` answer window, authored INTO A_PODCIAG's own
     rows - the lift hunt is now at the answer-window law.
+    PR-284 ENDS THE HUNT: the answer verbs (slot +0x78,
+    corrected from PR-282's +0x88 label) raise SIGNALS for
+    TRANSITIONS, never motion; rdir is a randomizer (0x52070);
+    and the authored block says it - A_PODCIAG's T=100,100
+    consumes any carried velocity in ONE iteration with
+    F=0,0/G=0,0 and NO moving row, so its position is frozen
+    by the port's own PR-256 law, while A_SCIAG (the
+    descent) authors `m 0,1` rows for its slide. The port's
+    A_PODCIAG fall is the LL_PLAY_GRAVITY stand-in replacing
+    an authored zero; the FOCUS-1 finish is climb -> frozen
+    pull-up -> hang -> the hang's own K_JUMP hop onto 489
+    through the EXISTING ground path.
     PR-274 PINS THAT CHAIN as a leg (ly_climb, its record
     derives every tick from the fixture's own arithmetic):
     the whole chain runs deterministically and the leg also
