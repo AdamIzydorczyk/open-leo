@@ -2400,8 +2400,26 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     the position as target - [obj+0xd6] + [obj+0x89]/[obj+0x8d]
     (0x54f18/0x54f20), so an authored move is measured from the
     stored point, and the frame step's +0x54 verb 0x55070 hands
-    the point's address to the class's +0xb0 verb. What is left
-    here is when that +0x1c verb runs.
+    the point's address to the class's +0xb0 verb.
+    PR-307 ANSWERS THAT LAST HALF: +0x1c IS A NOTIFY/SELECT
+    VERB, NOT A CTOR. 108 class tables hold the base reset
+    0x54e00 directly (the lion base 0x96874 at 0x96890); the
+    fourteen per-level lion classes hold a wrapper 0x50380
+    instead (TLewZaria's cell 0x9697c), which first copies the
+    position to [obj+0x14]/[obj+0x18] and then calls it; 0x3dd20
+    (30 tables) chains it and clears the walk-state words from
+    [obj+0x112]; 0x1ee00 (one cell, 0x96ff4) clears [obj+0x128].
+    The caller found is the layer-selection helper 0x564a0: it
+    asks the layer's +0x08 verb for a count, walks [[layer]+0x40]
+    comparing each object's +0x08 result, and notifies the
+    winner through +0x1c (0x564f0). The two calls that sit near
+    a state change (0x535ea, before the [obj+0x5c] write at
+    0x535ed, and 0x539fb) are the RECORD class's verb at
+    [rec+0x44], not the object's. So the point is refreshed on
+    a notify/select and by nothing else, and this port samples
+    the live position instead - the divergence is bounded and
+    measurable, and the next named question is who calls
+    0x564a0 and whether the ZARIA.01 climb ever does.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

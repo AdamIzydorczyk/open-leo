@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-307.
+> at PR-308.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -41951,4 +41951,88 @@ red leg by the rule PR-245 states, and no suite run. The last
 full no-Windows suite run is PR-298's, rc=0 with 69 green
 verdict lines; since then only comments in ported/ have changed
 (PR-304, PR-305).
+```
+
+## PR-307 — THE +0x1c SLOT IS A NOTIFY VERB, NOT A CTOR: WHAT THE
+## LION FAMILY DOES WHEN IT IS NOTIFIED, AND THE THREE WRAPPERS
+## THAT RUN THE POINT SYNC
+```
+KIND: read
+SUBSYSTEM: who calls the class verb +0x1c (the writer of the ask
+point found by PR-306), which table holds which variant, and
+what each variant resets.
+ADDRESSES: 0x54e00, 0x96890, 0x50380, 0x9697c, 0x50385, 0x5038c,
+0x50392, 0x3dd20, 0x3dd28, 0x1ee00, 0x1ee08, 0x96ff4, 0x52c70,
+0x564a0, 0x564b8, 0x564e0, 0x564f0, 0x566df, 0x535e1, 0x535ea,
+0x535ed, 0x539f6, 0x539fb, 0x41d5c, 0x42610, 0x4b697, 0x96960,
+0x96874, 0x97a98, 0x98f34, 0x9b4d4, 0x97cdc
+NAMES: notify verb, point accessor, contact point, walk state,
+record class, state write, object array, select helper, OI-078,
+PR-303, PR-306, pt_of
+CODE: no: image reading; no behaviour changed, so no red leg.
+HOOKS: PR-306 named the writer of [obj+0xd6]/[obj+0xda] as
+"the class's +0x1c verb 0x54e00" and left WHEN it runs as this
+row's first open; OI-078 repeats that open ("what is left here
+is when that +0x1c verb runs").
+MEASURED: (a) THREE WRAPPERS RUN THE BASE RESET, PER FAMILY.
+108 class tables hold 0x54e00 directly (the lion base 0x96874
+at its cell 0x96890 among them). Fourteen hold a wrapper at
++0x1c: 0x50380, whose cells include 0x9697c = 0x96960+0x1c
+(TLewZaria) and 0x97ab4 = 0x97a98+0x1c - the per-level lion
+classes of PR-303. That wrapper first copies the position aside
+(`mov ecx,[obj]; mov [obj+0x14],ecx; mov ecx,[obj+4]; mov
+[obj+0x18],ecx` at 0x50385-0x5038f), then calls 0x54e00
+(0x50392). A second wrapper, 0x3dd20, is held by 30 tables and
+does the same base call and then zeroes the walk-state words
+[obj+0x112] onward (0x3dd28). A third, 0x1ee00, is held by one
+table (the cell 0x96ff4) and clears [obj+0x128] after it
+(0x1ee08). The ladder family's +0x1c is a different verb
+altogether (0x52c70 at 0x97cdc+0x1c), so a DRABINKA never runs
+the point sync.
+(b) +0x1c IS A NOTIFY SLOT, NOT A CONSTRUCTOR. A scan finds 38
+`call DWORD PTR [x+0x1c]` sites, 36 of them in code (the other
+two are decoded data), and most belong to other families: the
+menu/message ones pass a message kind in ebx (0x2, 0x80, 0x300
+at 0x41d5c, 0x44af1, 0x44c92). The object-
+family caller found is 0x564a0: it asks the layer's +0x08 verb
+for a count, walks that layer's object array [[layer]+0x40]
+comparing each object's +0x08 verb result (0x564b8, 0x564e0),
+and on the winner calls its +0x1c verb (0x564f0) with edx = the
+layer, then writes the winner's index to the caller. A second
+such call sits at 0x566df.
+(c) THE TWO CALLS NEAR A STATE CHANGE ARE THE RECORD CLASS'S.
+At 0x535e1-0x535ea the transition pass takes the CURRENT record
+[[obj+0x50] + [obj+0x5c]*4], reads its class word [rec+0x44]
+and calls THAT +0x1c verb, and only then writes the state index
+at 0x535ed; 0x539f6-0x539fb does the same at record-creation
+time with edx = 0. Those are record-class tables, not the
+object's own, so they are not a route to 0x54e00's reset.
+(d) CONSEQUENCE. The ask point is refreshed when the object is
+NOTIFIED OR SELECTED (0x564a0's path) or when a family wrapper
+is called, and by nothing else; the lions keep a second position
+shadow at [obj+0x14]/[obj+0x18] as part of the same call. This
+port has neither field: ladder_answer_for samples the live
+position through pt_of. So the difference is bounded and
+testable: the two agree exactly between the last notify/select
+and the next position change, and diverge otherwise.
+OPENS: in order: (i) who calls 0x564a0 - which layer selects
+whom, and whether the ZARIA.01 climb ever does; (ii) the +0x08
+verb it compares (the sort key of a layer's objects); (iii)
+what writes [obj+0x14]/[obj+0x18] elsewhere; (iv) the
+record-class +0x1c verb at [rec+0x44]; (v) PR-306's other
+opens stand.
+CLOSES: PR-306's OPENS (i) in the sense it asked: the +0x1c
+slot is a notify/select verb, called through the vtable by the
+layer-selection helper 0x564a0 and by three per-family wrappers
+that chain into the base reset 0x54e00; it is NOT the object
+ctor, and the two apparent near-state-change calls belong to
+the record class.
+CORRECTS: none. PR-306's (b) named 0x54e00 as "the class's
++0x1c verb"; this leg adds which classes hold it directly and
+which reach it through a wrapper, and adds the callers.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run. The
+last full no-Windows suite run is PR-298's, rc=0 with 69 green
+verdict lines; since then only comments in ported/ have
+changed (PR-304, PR-305).
 ```
