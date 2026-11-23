@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-289.
+> at PR-290.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -39474,6 +39474,139 @@ item (c)) - the walk composes a POINT, not a key; and PR-219
 hedged its role as "a generic", OI-118 found it embedded at
 [obj+0xde], and PR-288 (b) reads its verbs as the point
 class). The two OI-111 sentences are corrected in place.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-289 — A RECORD'S `control=` FLAGS COMPOSE ITS WORLD-QUERY
+## SET: 0x52790 FILLS A CALLER BUFFER FROM CHECK_LEW / CHECK_ANI
+## / CHECK_ZW, AND THE WALK'S "POINT" WAS THAT SET BEING BUILT
+```
+KIND: read
+SUBSYSTEM: the movement record's world query - the composition
+verb 0x52790 (the record class table 0x97ca8's +0x28), the
+three scene queries it calls, and the control-word bits that
+gate them; the path PR-288 OPENS (iii) named unread, and the
+stack buffer PR-288 read as a point.
+ADDRESSES: 0x52790, 0x52799, 0x527a2, 0x527ae, 0x527b3,
+0x527b9, 0x527bb, 0x527c0, 0x527cb, 0x527d0, 0x527d6,
+0x527db, 0x527e1, 0x527e5, 0x527f5, 0x52800, 0x52805,
+0x5280b, 0x5281f, 0x5282a, 0x5282f, 0x52833, 0x52840,
+0x52849, 0x52853, 0x5285e, 0x4bd30, 0x4b890, 0x4b870,
+0x49580, 0x749a0, 0xcef40, 0x97ca8, 0x98278, 0x23ea0,
+0x520c0, 0x520e4, 0x520f2, 0x520f6, 0x52100, 0x52103,
+0x5210f, 0x521f0, 0x52360, 0x4fef0, 0x52570, 0x52090,
+0x51b0d, 0x9216e, 0x92202, 0x9223b, 0xa92d4, 0x54e0a
+NAMES: CHECK_LEW, CHECK_ANI, CHECK_ZW, CHECK_ALL,
+CHECK_ALL_PLANE, BY_X, BY_TIME, BY_TY, world-query set,
+control=, TEventSet, movrec, ll_mov_row_gate, OI-111, OI-118,
+PR-99, PR-102, PR-147, PR-220, PR-261, PR-288
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: PR-288 left "(iii) which row bits, which table at
+0xcef40, and which signals a row gets from its own flags" and
+"(i) the row step's own caller argument". PR-99 mapped every
+`control=` keyword and its bit - the mode field 0..4 (BY_X
+writes NOTHING), FRAME_REV 0x8, SEQ_REV_X 0x10, SEQ_REV_Y
+0x20, CHECK_ANI 0x40, CHECK_ZW 0x80 in byte [rec+0x12], the
+CHECK_*/SOLID/CH_DIR/INV_V/DANGER family in +0x13,
+ANTI_SOLID/ANTI_POCISK in +0x14, the compound CHECK_ALL 0x1c0
+= CHECK_ANI|CHECK_ZW|CHECK_LN, SOLID2 0x20400 and SEMI_SOLID
+0x40400 - and no PR had read a CONSUMER of any of those bits.
+MEASURED: (a) THE TABLE AT 0x97ca8 IS THE MOVEMENT RECORD'S:
++0x00 = the row step 0x521f0 (PR-217/PR-287), +0x0c = the row
+walk 0x520c0 (PR-135/PR-261), +0x10 = the ENTER 0x4fef0 that
+PR-172 found zeroes the clock, +0x28 = 0x52790. The walk's
+call at 0x52100 - `mov ebx,[rec+0x44]` (the record's own class
+word, PR-261), `mov edx,esp`, `mov eax,esi`, `call [ebx+0x28]`
+- reaches that last one, so the buffer the walk built at 0x520e6
+is its argument. (b) THE BUFFER IS A SET UNDER CONSTRUCTION.
+0x520f2 stores the word 0x98278 at [esp+8] and 0x520f6 calls
+its +0x04 verb 0x23ea0, which writes two dwords taken from
+[[rec+0]] - PR-288 read those as x,y, and that reading of the
+RESULT is corrected below - so the walk has a 12-byte buffer
+plus a mode byte, the shape of the clause sets and of
+[obj+0x60]. (c) WHAT 0x52790 DOES: it keeps that buffer
+(0x52799 stores the incoming edx at its own [esp+0x40]), builds
+a set of its own with the EventSet ctor 0x749a0 (ecx = 0xc) at
+[esp+0x30], and then composes it from the record's flags. 0x527b3
+`test BYTE [rec+0x13],0x2` = CHECK_LEW → 0x527bb `mov eax,
+ds:0xcef40` (a pointer: the level's query object), `ecx =
+[rec+0x12] & 0x8000` = CHECK_ALL_PLANE, `ebx = [rec]`, edx = a
+scratch buffer, `call 0x4bd30`, and 0x527d0-0x527d6 OR the
+returned set in with 0x49580. 0x527db `test BYTE
+[rec+0x12],0x40` = CHECK_ANI → the same shape through 0x4b890
+(0x527e5-0x527f5), OR at 0x52800. 0x52805 `test BYTE
+[rec+0x12],0x80` = CHECK_ZW → 0x4b870, OR at 0x5282a. Then
+0x5282f-0x52853 write the finished twelve bytes into the
+CALLER's buffer, its mode byte at [arg+0xc], and 0x52853 return
+that buffer in eax. Three `control=` names, three scene queries
+- about the lion (CHECK_LEW), about animated things
+(CHECK_ANI), about creatures (CHECK_ZW) - each widened or
+narrowed by CHECK_ALL_PLANE, and CHECK_ALL turns on the ANI and
+ZW two. Nothing in the verb is a behaviour switch: the authored
+keywords say WHICH WORLD the row is matched against. (d) AND
+THE WALK USES THE ANSWER: back at 0x52103-0x5210f it reads the
+set's first two dwords out of the buffer (`mov edx,[esp]`,
+`mov ebx,[esp+4]`) and calls `[[[rec]]+8]+0x04` - the table the
+record points at through [rec+0x00], which PR-118/OI-118 noted
+nothing installs - with those two dwords. The same [rec+0x00]
+appears in 0x527ed/0x52817 as ebx for the queries. (e) THE
+CENSUS CLOSES THE KEYWORD LIST: the 775 shipped files with a
+`control=` line use exactly 22 keywords - BY_TIME 2121,
+FRAME_REV 818, CH_DIR 556, CHECK_LEW 535, DANGER 385, CHECK_ALL
+360, CHECK_LN 340, CHECK_ANI 168, SOLID2 152, SOLID 141,
+ANTI_POCISK 121, BY_X 105, SEMI_SOLID 92, ANTI_SOLID 87,
+CHECK_ALL_PLANE 62, CHECK_ZW 47, SEQ_REV_Y 22, BY_Y 13, BY_TY
+12, CHECK_BASE_LN 8, SEQ_REV_X 7, INV_V 3 - and all 22 are in
+the parser's own table (0x9216e..0x9222f), so its "Bledny
+control %s w pliku %s." diagnostic at 0x9223b never fires on
+shipped data. Of the 535 CHECK_LEW and 168 CHECK_ANI users this
+port models none of the query; the ask/answer and contact rules
+it ships (PR-150's counted pair contact, PR-241's ladder ask)
+are its own stand-ins for this verb. (f) THE PORT'S OWN BITS:
+ll_play.h lines 136-151 define LL_CTRL_* as its own encoding,
+not the engine's; the two modes it acts on are the ones fed
+through the jump table 0x52090 (mode 0 = BY_X, mode 2 =
+BY_TIME - the distance-fed / wall-fed split PR-110/PR-114
+measured), and BY_Y / BY_TX / BY_TY have no model here (12
+files ask for BY_TY, 13 for BY_Y).
+OPENS: in order: (i) 0x4bd30 / 0x4b890 / 0x4b870 and the query
+object whose pointer is at 0xcef40: which signals they return,
+and with what geometry - that is the engine's world query, and
+the honest home of the port's pair-contact and ladder-ask
+models; (ii) whether the set this verb fills is the very buffer
+the row step later matches a `Wait` clause against (0x521f0's
+[esp+0x68]): it is the only set built in the record path and
+the row step is the only set consumer, but no call site of
+0x521f0 is visible (PR-288: no immediate in the image names
+0x97ca8), so the link is inferred, not seen; (iii) [rec+0x00]:
+the walk reads its table twice and 0x5210f calls a verb of that
+class - OI-118's question, now inside a path that runs every
+record step; (iv) the other four entries of the mode table
+0x52090 (0x52030, 0x52570, 0x52660, 0x52680), the modes
+BY_Y/BY_TX/BY_TY included; (v) what the remaining flags do -
+SOLID / SEMI_SOLID / SOLID2 / ANTI_SOLID / ANTI_POCISK /
+CH_DIR / INV_V / DANGER / SEQ_REV_* / FRAME_REV - and whether
+any of them reach a query like the (c) three.
+CLOSES: PR-288 OPENS (iii): the bits are CHECK_LEW, CHECK_ANI
+and CHECK_ZW, the composer is the record class's +0x28 verb
+0x52790, the object it asks is the one at [0xcef40], and
+CHECK_ALL_PLANE is the modifier; and the keyword question is
+closed by the census (e) - the shipped texts use only names the
+engine knows, so the port's keyword list is complete.
+CORRECTS: PR-288's framing of the same six instructions - the
+walk does not compose a position: the buffer the class-0x98278
+setter initialises is the caller-side buffer of the set that
+0x52790 fills, and the two dwords taken from [[rec+0]] are an
+initialisation that 0x5282f-0x52849 overwrites; PR-288's
+conclusion that the row walk composes NO signal is therefore
+wrong in its second half (it composes a set, just not a
+level-wide one and not at 0x98278). Also PR-220's "BY_X = 1
+(0x51b6f), BY_Y = 2" and PR-147's same pairing: PR-99's map is
+right - BY_X matches at 0x51b49 and the arm jumps to the next
+token with the word clear at 0x51b2e, so BY_X is mode 0 and
+0x51b6f's 0x1 belongs to BY_Y. No port code stands on those
+two sentences.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```

@@ -2655,6 +2655,13 @@ OI-111: which row-step path the port's row clock models -
     except the contact ask of PR-241. What is open is the
     argument, not a bus: 0x521f0 has no direct caller and the
     image names no reference to its class table 0x97ca8.
+    PR-289 found the only set built in that path - the record
+    class's +0x28 verb 0x52790 fills a caller buffer from the
+    record's CHECK_LEW / CHECK_ANI / CHECK_ZW keywords through
+    the scene queries 0x4bd30 / 0x4b890 / 0x4b870 on the object
+    at [0xcef40] - so the argument is most likely that set, but
+    the call into 0x521f0 is still not seen and the link stays
+    inferred.
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port
@@ -3140,15 +3147,18 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
     code loads the table through [obj+0x00], the only such
     dereference in the step path, and no factory or ctor in
     the image ever writes [obj+0x00]: [PR-288: it is NOT the
-    only such dereference - the row walk 0x520c0 does the
-    same thing at 0x520e4-0x520ef, `mov ebx,[esi]` then
-    `mov edx,[ebx]` / `mov ebx,[ebx+4]`, and hands those two
-    dwords to the shared POINT class 0x98278's setter 0x23ea0
-    as x and y. Read together with OI-118's own finding that
-    0x54e0a refreshes the embedded point's x,y from
-    [obj+0]/[obj+4], the natural reading is that [obj+0]
-    points at the object's own coordinates; what installs it
-    is still unfound.] the three base ctors
+    only such dereference - the row walk 0x520c0 reads the
+    same field at 0x520e4-0x520ef (`mov ebx,[esi]`,
+    `mov edx,[ebx]`, `mov ebx,[ebx+4]`) and its 0x52103-
+    0x5210f call goes through that table's +0x08 verb with two
+    dwords in edx/ebx. PR-288 called the buffer those dwords
+    land in a position; PR-289 corrected that - the buffer is
+    the caller-side buffer of the world-query SET that the
+    record class's +0x28 verb 0x52790 fills, and 0x5282f-
+    0x52849 overwrite those two dwords wholesale. So the field
+    is read twice in the path that runs every record step, and
+    passed as ebx to the three scene queries 0x4bd30/0x4b890/
+    0x4b870; what installs it is still unfound.] the three base ctors
     (0x52860, 0x531f0, 0x53ff0) and all 218 named classes
     leave it alone. Either every object self-points through a
     path this read did not find, or the +0xa8/+0xac verbs run
