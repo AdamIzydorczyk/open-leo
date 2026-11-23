@@ -2017,6 +2017,31 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     contact record of kind 0x19, one at |Δx| < 150. The next
     reading is the test itself: what value 0x3f0f0 passes and
     what a zone element's +0x08 verb answers.
+    PR-292 ANSWERS BOTH AND CHANGES WHAT THIS ROW SHOULD ASK.
+    The ENTER verb's argument is `[obj+0x60]` itself - the
+    object's own signal set, merged a moment earlier by the
+    frame step 0x536f0 through two 0x49580 OR-s (its +0x8c
+    verb's set at 0x5370c and OI-118's 0x523f0 at 0x53725) -
+    carried from 0x53705 to 0x535f0. And the measured
+    behaviour in the shipped ly_climb probe is that the CONTACT
+    TEST NEVER FIRES for this object: every tick reads `asked
+    ladder DRABINKA/drab.mov at state 1: its authored contact
+    point 213,507 tested against the asker's live box ... ->
+    no (0x4b500 -> 0x3f1c0 -> 0x44ec0)`, while the lift does
+    start - `play tick 104: DRABINKA/drab.mov takes its own
+    K_GEN1 line: state A_DROP` - through the lion's GEN rows
+    of PR-257's chain, which PR-287's gate now holds until
+    then. So the row's question is no longer "who raises
+    K_GEN1 on the lift" (measured answer: the PR-257 route)
+    but whether the port's PR-243/PR-255 `live_box` is the box
+    the engine tests with: 0x3f0f0 builds its own from the
+    object's authored rectangle ([obj+0xb1] normalised by
+    0x49f90, and a degenerate {x, y-0x50, x, y} box at
+    [obj+0xc5] through 0x4a050), not the asker's art box.
+    Authored data, read by the port's own tool: ANI2.DES
+    places DRABINKA/drab.mov at (180,510) with the rect
+    (203,540)-(233,670) and exactly one contact point,
+    absolute (213,507).
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -3209,7 +3234,15 @@ OI-117: the answer verb's two rectangles - where the engine
 OI-118: 0x523f0 raises signals through a SECOND object: the
   per-step pass calls [[obj+0x00]+8]+0xac and +0xa8
   (0x52416/0x52423), and no constructor in the image installs
-  a behavior table at [obj+0x00]
+  a behavior table at [obj+0x00]. PR-292 locates a CALL SITE
+  of this row's 0x523f0: the per-object frame step 0x536f0
+  calls it at 0x5371c with the current record instance
+  `[[obj+0x50]+[obj+0x5c]*4]` and a stack set, and OR-s the
+  answer into [obj+0x60] at 0x53725 - one of two such OR-s in
+  that step, the other being its +0x8c verb's set at 0x5370c.
+  The raise belongs to every object's frame step, before the
+  transition pass 0x53520 clears the set (PR-262) and calls
+  the ENTER verb named in OI-078.
   status: OPEN
   origin: PR-268 (walking the class factory and the +0xa8
     verb owners)

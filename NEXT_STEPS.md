@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-292.
+> at PR-293.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -39897,6 +39897,136 @@ byte at [self+0x66] sets bit 54 of the set at [self+0x60],
 which is K_GEN1 in the engine's own name table, exactly the
 signal the same row waits for. Nothing in ported/ stands on
 that sentence, so no code changes.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-292 — THE OBJECT'S FRAME STEP ORS TWO QUERIED SETS INTO
+## ITS OWN BEFORE THE TRANSITION PASS, AND WHAT IT HANDS THE
+## ENTER VERB IS ITS OWN SET - SO THE PORT'S REAL K_GEN1 ROUTE
+## FOR THE LIFT IS THE GEN ROUTE, NOT THE CONTACT TEST
+```
+KIND: read
+SUBSYSTEM: the per-object signal-collection step 0x536f0 and
+the transition pass 0x53520 as the caller chain of the ENTER
+verb 0x3f1c0 that PR-291 read; the authored placement data of
+the ZARIA.01 DRABINKA; and what the port's own probe measures
+for the lift's K_GEN1.
+ADDRESSES: 0x536f0, 0x536fb, 0x53705, 0x5370c, 0x53711,
+0x5371c, 0x53725, 0x5372f, 0x5373c, 0x53741, 0x53520,
+0x53531, 0x5353b, 0x5355a, 0x5356b, 0x53570, 0x5357d,
+0x53583, 0x5358e, 0x535c0, 0x535db, 0x535ed, 0x535f0,
+0x535f7, 0x53616, 0x53620, 0x523f0, 0x52000, 0x49580,
+0x749a0, 0x23ba0, 0x23ea0, 0x4a0b0, 0x44e90, 0x44f10,
+0x49f90, 0x4a050, 0x45120, 0x45200, 0x1e510, 0x1e51c,
+0x1e52a, 0x3f0f0, 0x3f104, 0x3f110, 0x3f13a, 0x3f14e,
+0x3f159, 0x3f16f, 0x3f180, 0x3f1e9, 0x91828, 0x91852,
+0x91856, 0x9185d, 0x91862, 0x91869, 0x97ca8, 0xa0c64
+NAMES: DRABINKA, contact point, authored rectangle, K_GEN1,
+ENTER verb, signal clear, frame step, platformy=, OI-078,
+OI-111, OI-118, PR-216, PR-241, PR-243, PR-255, PR-257,
+PR-262, PR-287, PR-290, PR-291, ladder_flag_raise, live_box
+CODE: no: a reading plus a measurement against the port's own
+probe output; no behaviour changed, so no red leg.
+HOOKS: PR-291 stopped at "the index-1 arm calls +0x4c and
++0x44ec0 and then raises bit 54" and left the argument's
+identity open ((iv) in its OPENS); OI-118's row is exactly
+0x523f0, which this leg finds being called from inside the
+frame step. The port's own implementation of that whole shape
+is ladder_flag_raise + live_box (PR-241/PR-243/PR-255).
+MEASURED: (a) THE CALLER CHAIN, END TO END. 0x536f0 is the
+per-object step: `call [[obj+0x08]+0x8c]` into a stack set
+(0x536fb), OR the answer into [obj+0x60] with 0x49580
+(0x5370c); then `eax = [[obj+0x50] + [obj+0x5c]*4]` - the
+CURRENT record instance - with a second stack set, `call
+0x523f0` (OI-118's second-object raise) and OR its answer
+into [obj+0x60] too (0x5371c-0x53725); then `call
+[[obj+0x08]+0x54]` with a scratch (0x53733); then `call
+0x53520` - the transition pass - with eax = the object,
+edx = a stack scratch and ebx = [obj+0x60], the object's own
+signal set (0x53705). 0x53520 saves those 12 bytes plus the
+mode byte at [obj+0x6c] onto the stack (0x53531-0x53557),
+calls the row matcher 0x52000 with the current record and that
+saved copy (0x53566-0x5356b), calls the class's +0x90 verb
+(0x5357d), restores ebx (0x53570), rebuilds an EMPTY set
+through the EventSet ctor 0x749a0 with ecx = 0xc, edx = 0
+(0x53583-0x5358e) - the signal clear PR-262 named - and after
+the state write at 0x535ed calls `[[obj+0x08]+0xac]` with
+edx = ebx = that set (0x535f0-0x535f7). (b) SO THE ENTER
+VERB'S ARGUMENT IS THE OBJECT'S OWN SET, not an asker, not a
+point and not a string: PR-291's "(iv)" half is answered, and
+its phrase "edx = the transition argument" is sharpened here.
+0x3f0f0 does pass that pointer to 0x4a0b0, the same call the
+`platformy=`-style element parser 0x45120 uses to pull numbers
+out of a text line (its format strings are at 0x91828-0x91840
+and its attribute words are rev 0x91852, zero_v 0x91856, zero
+0x9185d, zero_t 0x91862, vol_music 0x91869, element stride
+0xd into the table 0xa0c64) - what a set-word stream means to
+that reader is open. (c) THE OTHER CALLS 0x3f0f0 MAKES,
+NAMED: it sorts the [obj+0xa5] list through 0x44f10 (sort key
+"%d" at 0x91828), turns its elements ABSOLUTE by adding
+[obj+0x00]/[obj+0x04] through 0x44e90 (0x3f10b-0x3f110) - the
+same 12-byte-stride offset loop the port already cites for
+load time - normalises the [obj+0xb1] rectangle through
+0x49f90 (min/max of four words), builds a base-class object of
+0x98278 on the stack through 0x4a0b0, stores a degenerate box
+at [obj+0xc5] = {x, y-0x50, x, y} (0x3f159-0x3f175), and
+normalises and offsets that through 0x4a050 and the object's
+own coordinates (0x3f180-0x3f1a4). The parser 0x1e510-0x1e52a
+fills the SAME [obj+0xa5] field through 0x45120 and then
+offsets every element by the object's x,y through 0x45200, so
+an object's list is authored in local coordinates and made
+absolute at load. (d) THE AUTHORED DATA FOR THE LIFT, read
+out of the shipped files by the port's own tool (`ll_level
+…/LEO ZARIA.01` with the HD stage): placement ANI2.DES places
+DRABINKA/drab.mov at (180,510) with art DRAB.SEQ and 3 states,
+authors the rectangle (203,540)-(233,670) - the broad-phase box
+0x4b970 tests against each layer's active window - and authors
+EXACTLY ONE contact point, absolute (213,507). (e) WHAT THE
+PORT ACTUALLY DOES WITH IT (measured, the shipped ly_climb
+probe of PR-274, unchanged code): the ask runs every tick and
+its test NEVER succeeds - every line reads `asked ladder
+DRABINKA/drab.mov at state 1: its authored contact point
+213,507 tested against the asker's live box 33,617..65,681 ->
+no (0x4b500 -> 0x3f1c0 -> 0x44ec0)` and the boxes stay far
+below y 507 until the climber is at 170,570..208,634, still
+"no". The lift changes state by the OTHER route: at tick 104
+the probe prints `play tick 104: DRABINKA/drab.mov takes its
+own K_GEN1 line: state A_DROP`, i.e. the K_GEN1 that starts
+the lift arrives through the lion's own GEN rows of PR-257's
+chain, exactly as PR-290's (e) left it, and the row gate of
+PR-287 then holds A_UP until that bit is live. The PR-241
+contact test is therefore a second, currently inert route in
+this port, and OI-078's question "which code asks the lift"
+has a measured answer for the probe: nothing does.
+OPENS: in order: (i) why the contact test never passes: the
+port's live_box of PR-243/PR-255 is the ASKER's art box, while
+0x3f0f0's box is built from the object's own [obj+0xb1]
+rectangle plus [obj+0xc5] = {x, y-80, x, y} - whether the
+engine's 0x44ec0 test uses the latter is the decisive unread,
+and it is a model-choice question the port can answer with a
+measurement, not a reading; (ii) what 0x4a0b0 reads out of a
+signal-set pointer; (iii) the +0x8c and +0x54 verbs of the
+frame step (0x536fb/0x53733) and the +0x90 verb of the
+transition pass (0x5357d) - three slots in the 0x97ca8 block
+no PR has opened; (iv) whether 0x536f0 is the level pump's
+per-object step and where it is called from (PR-241's note
+says the pump calls every slot +0x14 once per frame; this leg
+found the frame step itself, not its caller); (v) OI-118's
+0x523f0 raise, now seen in the frame step at 0x5371c, still
+unread inside.
+CLOSES: PR-291 OPENS (iv)'s first half - the ENTER verb's
+argument is [obj+0x60] as just merged by 0x536f0, measured at
+0x53705/0x535f0 - and OI-078's "which code asks the lift" for
+the shipped probe: the contact-ask route never fires there, the
+GEN route does.
+CORRECTS: PR-291's (a) "with eax = the object and edx = the
+transition argument" for 0x535f7, and the OI-078 item that leg
+added when it wrote "PR-241's ask is the only writer found" as
+the surviving route: the argument is the object's own signal
+set, and in the shipped probe the raise arrives through the
+lion's GEN rows of PR-257, not through the contact test. The
+reading of the index-1 arm itself (PR-291 (c)) stands.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```
