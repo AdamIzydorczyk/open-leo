@@ -3458,6 +3458,19 @@ OI-111: which row-step path the port's row clock models -
     (0xa0f88/0x45a50/0x52070 - the verb PR-320 mis-called a
     goto apply) actually zeroes, [obj+0x9d] and the
     [rec+8]/[+0xa]/[+0xc] ramp, stays unread here.
+    PR-323 MODELS the answer-6 cursor jump on the PLAYER path:
+    ll_mov_fr carries gotocmd/gotoval, the arms parse the three
+    names (`goto` storing the 0-based number, the -1 folded in
+    at parse exactly like 0x46777), and the row-close branch
+    steps fi to the authored target (or adds the delta) INSTEAD
+    of the +1/wrap - no list bit on that close, the 0x52140
+    skip. The port's own additions are named, not read: the
+    [0, nfr-1] clamp (the engine reads the heap around the row
+    table), and re-entry through a jump counts as an admit for
+    the PR-253 one-shot pull (no shipped row distinguishes).
+    The object row clock (ll_level.c's o->fi/o->row_t) has NO
+    such branch yet, and the SEQ_REV reverse step stays
+    unmodelled.
   origin: PR-217 record; rewritten from the PR-218 record; the
     ladder chain stays OI-078
     PR-220 names the control bits that switch picks between:

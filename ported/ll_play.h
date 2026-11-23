@@ -317,6 +317,14 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                  int has_pos, posx, posy;   /* PR-317 row `pos x,y` tail   */
                  signed char lockcmd, dircmd; /* PR-321 row `lock`/`unlock`
                                                * and `ldir`/`rdir` words */
+                 signed char gotocmd;  /* PR-323: the `goto` family tail.
+                                        * 0 none, 1 absolute (gotoval is the
+                                        * 0-based row index: the engine's
+                                        * parse arm 0x46777-0x46780 stores
+                                        * the authored number minus one),
+                                        * 2 relative (gotoval is the verbatim
+                                        * delta - 0x467dd/0x467ee dec-inc). */
+                 short gotoval;
                  short gsig_id; short gneg; short gop; } ll_mov_fr;
                  /* has_i: `I ix,iy` row pull pair (PR-98/PR-250: with the
                   * `F` pair it forms the one-shot 0x54170 target applied

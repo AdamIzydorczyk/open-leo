@@ -43892,3 +43892,91 @@ CORRECTS: PR-224's descriptor attribution for the answer-6
 GATE: light: verify-index verify-docs rc=0 (ok); no code changed
   (the diff is .md only), no Windows legs (rule 8).
 ```
+
+## PR-323 — THE ANSWER-6 PROTOCOL IS MODELLED ON THE PLAYER PATH:
+## `goto N` / `GOTO_REL n` REWRITE THE ROW CURSOR AT THE ROW CLOSE AND
+## SUPPRESS THE +1/WRAP STEP AND ITS LIST BIT FOR THAT ROW
+```
+KIND: port
+SUBSYSTEM: the player's row-directive parser (the goto family arms),
+  ll_mov_fr (gotocmd/gotoval), the row-close cursor step in
+  ll_player_step (the answer-6 branch before the +1/wrap), and the
+  parser census block in ll_play.c.
+ADDRESSES: 0x46739, 0x4679c, 0x4680c, 0x46777, 0x467dd, 0x49920,
+  0x91952, 0xa1018, 0xa1030, 0x45d90, 0x45dc0, 0x520c0, 0x52135,
+  0x52140, 0x521b6, 0x52195, 0x54170
+NAMES: goto, gotorel, goto_rel, GOTO, GOTO_REL, GOTOREL, goto,
+  gotocmd, gotoval, answer-6, A_DEAD, A_KILOF, A_END, A_G1, A_G2,
+  gotocmd, apply_row_pull, LL_SIG_AC_BREAK_NEXT
+CODE: yes: two fields in ll_mov_fr (gotocmd/gotoval), one parser
+  arm covering the three names, the answer-6 branch at the row
+  close in ll_player_step, and the census-comment move from counted
+  to modeled; no new tools.
+HOOKS: none
+MEASURED: (a) THE MODEL. Parse: one arm matches goto/gotorel/
+  goto_rel case-insensitively (the corpus carries GOTO 64, goto
+  25, GOTO_REL 35, GOTOREL 11 - PR-322's census) and reads '%d';
+  `goto` stores gotocmd=1 with gotoval = authored minus one,
+  mirroring 0x46777-0x46780, gotorel/goto_rel store gotocmd=2
+  with the verbatim delta, mirroring the dec-inc pair at
+  0x467dd/0x467ea-0x467ee. Row close (the same point where
+  pos/lock/ldir apply, i.e. PR-322's 0x520c0 +0x04 pass): when
+  the closing row carries the word, the cursor step of 0x45d90/
+  0x45dc0 runs instead of the normal step - fi = gotoval, or
+  fi += gotoval - and the +1/wrap branch is skipped ENTIRELY,
+  exactly the 0x52140 answer-6 skip: no wrap, and no AC_BREAK_
+  NEXT. The row entering through the jump has its one-shot I/F
+  pull applied through the existing PR-253 admit path. The
+  engine writes the cursor without clamping (PR-322); the port
+  clamps to [0, nfr-1] as a NAMED safety net for the engine's
+  undefined out-of-table read - no shipped PLAYER row reaches
+  it (the only one, KADMAR2_SCHODY's `1,0,GOTOREL -1`, is an
+  object state). (b) THE LEGS, red first (4 failures before the
+  arms). G1: row 0 `goto 4` with an `I 100,0` row as the
+  fourth - the parse stores 3, closing row 0 on iteration 0
+  puts the cursor there, and that row's pull is in force from
+  iteration 1: x walks 301, 302, 303 while the word-less
+  control fixture stands at 300 through its iteration 1 (the
+  pull row only reaches it there at iteration 3); the v
+  register is asserted at 100. G2 is the A_DEAD shape: the
+  last row `GOTO_REL -3` re-enters row 2, and the state's
+  declared `A_END(1)=AC_BREAK_NEXT` transition NEVER runs -
+  an unmodelled word wraps on iteration 4 and enters A_END on
+  5 (PR-83/PR-86 timing) - while the x line drifts -1 a step
+  through the seam (300,299,...,294), row 2's `I -100,0`
+  re-applied at every re-entry. MUTATIONS, each against the
+  full leg set: parse arm off - 4 failures (both parse blocks,
+  G1's x line, G2's transition suppression); the row-close
+  branch off - exactly 2 (G1's x line, G2's transition);
+  dropping the parse-time minus-one - exactly 1, G1's parse
+  check (the stored 4 would be clamped back to 3 at runtime,
+  so the parse check is what pins 0x46777's arithmetic).
+  All pre-existing legs, PR-321's LK/D legs included, stayed
+  green: the goto branch is inert for word-less rows.
+OPENS: the scene-object row clock (ll_level.c's o->fi/o->row_t,
+  PR-110/PR-172) has NO answer-6 branch, so the object states
+  that use the words - RYBA, KAMIEN, SEP, SPLYW, ANIBACK_*,
+  KADMAR2_SCHODY and the rest of PR-322's 102 - still walk
+  their lists the plain way; the SEQ_REV reverse step
+  (PR-322's XOR law) is still unmodelled; whether a jump into
+  the row that is CURRENT (delta 0, KADMAR2_LEW's `gotorel
+  0`) re-applies the admit pull in the engine's [obj+0x95]
+  gate or not (the port re-applies at every goto entry, which
+  no shipped row exercises with a pull pair on the same row);
+  and the out-of-range cursor clamp, a port safety net, not an
+  engine reading.
+CLOSES: the player half of F2b as HANDOFF section 8 T5 named it
+  (the cursor jump for the lion's own states - A_DEAD's death
+  loop, A_KILOF, A_LOOKUP, A_FIGHT, A_FIGHT_DOWN, A_DRAP,
+  A_BORRING, the FG_PACKA pair); the object half and the
+  reverse step stay open there.
+CORRECTS: none
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; red first (4 failures), then green,
+  with the three mutations above reported in MEASURED (b); no
+  Windows legs (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-321's pair, with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope.
+```

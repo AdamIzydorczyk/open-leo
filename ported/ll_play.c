@@ -606,6 +606,7 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                         mf->has_fc = mf->fcx = mf->fcy = 0;
                         mf->has_pos = mf->posx = mf->posy = 0;
                         mf->lockcmd = mf->dircmd = 0;  /* PR-321 words */
+                        mf->gotocmd = mf->gotoval = 0; /* PR-323 words */
                         mf->endlv = 0;
                         mf->gsig_id = -1;   /* PR-217: no `Wait` tail */
                         mf->gneg = 0;
@@ -619,8 +620,8 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                          * raise are the 0x919ec block) and ATC_ON/ATC_OFF
                          * (PR-89, the attack-connect window).
                          * Everything else the table names (ground_on/off,
-                         * chdir, goto/gotorel/goto_rel, the `lock2`/
-                         * `unlock2` pair,
+                         * chdir, the `lock2`/
+                         * `unlock2` pair, the `zero`/`zero_t` word,
                          * F/IC, MOVE, the smp and vol sound
                          * words, inline F=) is counted -
                          * measured 1568 such lines before this PR took
@@ -635,7 +636,15 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                          * census over the 777 texts is lock 126
                          * (3 LOCK), unlock 73, ldir 18 (1 LDIR), rdir 58
                          * (9 RDIR), and ZARIA.01 brackets BOTH of its
-                         * exit states with them. `end_level`
+                         * exit states with them. `goto N`/`gotorel
+                         * N`/`goto_rel N` joined it in PR-323 (kept in
+                         * ll_mov_fr.gotocmd/gotoval): the arms
+                         * 0x46739/0x4679c/0x4680c and the advance verbs
+                         * 0x45d90/0x45dc0 are PR-322's read, the census
+                         * is 135 lines (89 goto, 35 GOTO_REL family, 11
+                         * GOTOREL) in 102 states, and the verbs act at
+                         * the ROW CLOSE by rewriting the cursor - the
+                         * one thing the engine never clamps. `end_level`
                          * joined the modeled set in PR-199 once PR-198
                          * had read its apply: it is 26 lines in the
                          * whole shipped set (three LEW.MOV members), so
@@ -831,6 +840,43 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                                         (word[0] == 'l' || word[0] == 'L')
                                         ? -1 : 1;
                                     continue;
+                                }
+                                if (strcasecmp(word, "goto") == 0 ||
+                                    strcasecmp(word, "gotorel") == 0 ||
+                                    strcasecmp(word, "goto_rel") == 0) {
+                                    /* PR-323: the cursor-jump tails. The
+                                     * engine's arms 0x46739/0x4679c/0x4680c
+                                     * read '%d' (0x91952) into [node+8]
+                                     * through 0x49920: `goto` DECREASES the
+                                     * stored number (0x46777-0x46780) - the
+                                     * authored row number is 1-based, the
+                                     * cursor [rec+4] is 0-based - while
+                                     * gotorel and goto_rel dec-inc it back
+                                     * (0x467dd, 0x467ea-0x467ee), so the
+                                     * delta is kept verbatim and the two
+                                     * names are aliases. The verbs
+                                     * 0x45d90/0x45dc0 act ONLY at the row
+                                     * advance (PR-322); the census: 135
+                                     * lines, GOTO 64 / goto 25 / GOTO_REL
+                                     * 29+2 / goto_rel 6 / GOTOREL 10+1 -
+                                     * case twins again, so match like the
+                                     * other words here. */
+                                    int gv;
+                                    while (*q == ' ')
+                                        q++;
+                                    if (sscanf(q, "%d", &gv) == 1) {
+                                        if (strcasecmp(word, "goto") == 0) {
+                                            mf->gotocmd = 1;   /* absolute */
+                                            mf->gotoval =
+                                                (short)(gv - 1);
+                                        } else {
+                                            mf->gotocmd = 2;   /* relative */
+                                            mf->gotoval = (short)gv;
+                                        }
+                                        while (*q && *q != ' ' && *q != ',')
+                                            q++;    /* tail of the number  */
+                                        continue;
+                                    }
                                 }
                                 if (strcasecmp(word, "GEN") == 0) {
                                     /* PR-69: `GEN <signal>` = the frame raises
@@ -2223,7 +2269,35 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
                 p->lock = 0;
             if (st->fr[p->fi].dircmd)
                 p->dirword = st->fr[p->fi].dircmd;
-            if (p->fi + 1 >= st->nfr) {
+            /* PR-323: the cursor step. The engine's advance
+             * verb 0x520c0 walks the row chain's +0x10 verbs
+             * (ebx = &[rec+4], dl = 6) BEFORE stepping, and a
+             * `goto`/`GOTO_REL` node answers 6 there
+             * (0x45d90 writes the cursor outright, 0x45dc0
+             * adds the delta) so 0x52140 skips the whole
+             * normal step for that row's close: no +1, no
+             * wrap, no list bit. The row entering through the
+             * jump has its one-shot I/F pull applied at its
+             * entry like any other admit (PR-253's gate law,
+             * [obj+0x95]). The engine NEVER clamps the
+             * written cursor - a negative or past-end cursor
+             * reads the heap around the row table, an
+             * undefined read this port does not reproduce:
+             * the clamp below is a named port safety net, and
+             * no shipped PLAYER row leaves the range (the
+             * only out-of-range row, KADMAR2_SCHODY's
+             * `1,0,GOTOREL -1`, is an object state). */
+            if (st->fr[p->fi].gotocmd) {
+                int nf = st->fr[p->fi].gotocmd == 1
+                       ? (int)st->fr[p->fi].gotoval
+                       : p->fi + (int)st->fr[p->fi].gotoval;
+                if (nf < 0)
+                    nf = 0;                          /* port safety net  */
+                if (nf >= st->nfr)
+                    nf = st->nfr - 1;                /* ... and here too */
+                p->fi = nf;
+                apply_row_pull(p, st, p->fi);
+            } else if (p->fi + 1 >= st->nfr) {
                 p->fi = 0;
                 p->broke = 1;
             } else {
@@ -4968,6 +5042,106 @@ int ll_play_selftest(void)
         CHECK(x2[3] == 298 && x2[4] == 299);         /* the state entry    */
                                                      /* rewrote the word  */
         free(d2);
+    }
+
+    /* PR-323: the answer-6 protocol of PR-322 - `goto N` /
+     * `GOTO_REL n` rewrite the ROW CURSOR at the row's close
+     * (0x45d90 writes [rec+4] = the stored 0-based number,
+     * 0x45dc0 adds the verbatim delta, and 0x52140 skips the
+     * whole +1/wrap step when the chain walk answers 6). Both
+     * legs are derived on the same 100-a-iteration row clock:
+     * a row of T=100 closes on EVERY iteration. */
+    {
+        /* LEG G1 - the absolute jump. Row 0 carries `goto 4`:
+         * the engine's parse stores 3 (0x46777's dec), so
+         * closing row 0 at the END of iteration 0 puts the
+         * cursor on the FOURTH row, and that row's `I 100,0`
+         * - applied once when the row becomes CURRENT
+         * (PR-253's admit law) - moves the body: iteration 1
+         * walks to 301. Without the jump the I row only
+         * becomes current at the end of iteration 2 and the
+         * first step is iteration 3; the control fixture, the
+         * same rows minus the word, must therefore still stand
+         * at 300 through iteration 1. Iteration 1's close is
+         * the normal last-row step (the cursor IS the last
+         * row): wrap to 0 with the list bit - the jump does
+         * not suppress THAT, only the step of the row that
+         * carries the word. */
+        static const char G1[] =
+            "[A_G1]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100,goto 4\n2,100\n3,100\n4,100,I 100,0\n";
+        static const char G1C[] =
+            "[A_G1]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100\n2,100\n3,100\n4,100,I 100,0\n";
+        ll_mov_t *g1 = calloc(1, sizeof *g1), *gc = calloc(1, sizeof *gc);
+        ll_player gp, cp;
+        ll_play_keys gk = { 0 };
+        double gx[4], cx[4];
+        CHECK(g1 && gc);
+        CHECK(ll_mov_parse(G1, g1) == 1 && ll_mov_parse(G1C, gc) == 1);
+        CHECK(g1->st[0].fr[0].gotocmd == 1 &&        /* the word, stored  */
+              g1->st[0].fr[0].gotoval == 3 &&        /* 0-based, and ONLY */
+              g1->st[0].fr[1].gotocmd == 0 &&        /* on its own row    */
+              g1->st[0].fr[3].gotocmd == 0);
+        ll_player_start(&gp, g1, 300, 100, 0);
+        for (int t = 0; t < 4; t++) {
+            ll_player_step(&gp, NULL, &gk, 0, 2000, LL_ITER_MS);
+            gx[t] = gp.x;
+        }
+        CHECK(gp.fi == 0);                           /* 0 -> 3 -> wrap    */
+        CHECK(ll_play_v_raw(gp.vx) == 100);          /* the jumped-to     */
+                                                     /* row's pull ran    */
+        CHECK(gx[1] == 301 && gx[2] == 302 && gx[3] == 303);
+        ll_player_start(&cp, gc, 300, 100, 0);
+        for (int t = 0; t < 4; t++) {
+            ll_player_step(&cp, NULL, &gk, 0, 2000, LL_ITER_MS);
+            cx[t] = cp.x;
+        }
+        CHECK(cx[0] == 300 && cx[1] == 300 && cx[2] == 300);
+        free(g1);
+        free(gc);
+    }
+    {
+        /* LEG G2 - the relative loop, the lion's A_DEAD shape
+         * (`27,400,GOTO_REL -3`): row 5 is the list's last one
+         * and adds -3, so closing it on iteration 4 puts the
+         * cursor back on row 2 and the NORMAL step - the wrap,
+         * the AC_BREAK_NEXT raise, everything - is SKIPPED
+         * (0x52140). The state therefore never reaches its
+         * declared AC_BREAK_NEXT transition: an unmodelled
+         * word wraps on iteration 4 and the transition runs on
+         * iteration 5 (PR-83/PR-86's mechanism, D2's timing).
+         * The x line confirms the loop: row 2's `I -100,0` is
+         * re-applied at the re-entry (admit law), holding the
+         * register at -100 - a steady one-pixel-a-step drift
+         * with no gap anywhere. */
+        static const char G2[] =
+            "A_G2\nA_END\n\n[A_G2]\ncontrol=BY_TIME\nF=0,0\nT=0,0\n"
+            "G=0,0\nA_END(1)=AC_BREAK_NEXT\nseq=a\n"
+            "1,100\n2,100,I -100,0\n3,100\n4,100\n5,100,GOTO_REL -3\n"
+            "\n[A_END]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100\n";
+        ll_mov_t *g2 = calloc(1, sizeof *g2);
+        ll_player kp;
+        ll_play_keys kk = { 0 };
+        double kx[7];
+        CHECK(g2);
+        CHECK(ll_mov_parse(G2, g2) == 2);
+        CHECK(g2->st[0].fr[4].gotocmd == 2 &&        /* the delta, kept   */
+              g2->st[0].fr[4].gotoval == -3 &&       /* verbatim          */
+              g2->st[0].fr[0].gotocmd == 0);
+        ll_player_start(&kp, g2, 300, 100, 0);
+        for (int t = 0; t < 7; t++) {
+            ll_player_step(&kp, NULL, &kk, 0, 2000, LL_ITER_MS);
+            kx[t] = kp.x;
+        }
+        CHECK(kp.sti == 0);                          /* never wrapped:    */
+                                                     /* no BREAK_NEXT     */
+        CHECK(kx[0] == 300 && kx[1] == 299 && kx[2] == 298 &&
+              kx[3] == 297 && kx[4] == 296);         /* the first pass    */
+        CHECK(kx[5] == 295 && kx[6] == 294);         /* and the looped    */
+                                                     /* one, seamless     */
+        free(g2);
     }
 
     return rc;
