@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-302.
+> at PR-303.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -41206,6 +41206,151 @@ placed through real class words, where (d) puts them. Its
 measurements of the collision loop (its item (a)) and of the
 +0x80 call sites (its item (e)) are unaffected, and the
 ds:0xa94ec facts of OI-031 stand.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run. The
+last full no-Windows suite run (PR-298's, unchanged tree
+since) is rc=0 with 69 green verdict lines.
+```
+
+## PR-302 — THE LEVEL RECORD'S OWN KEYS, THE 31 CLASS NAMES THE
+## LOADER COMPARES, AND WHAT ZARIA.01 ACTUALLY DECLARES: NO
+## LIFT CLASS, BUT AN `ani_plat` SET ON ITS MIDDLE LAYER - THE
+## SAME POOL THE PAIR-ANSWER VERB TESTS
+```
+KIND: read
+SUBSYSTEM: the level record's section keys as the engine names
+them, the class-name list the loader compares before it builds
+an object, and what those two say about the ZARIA.01 ladder.
+ADDRESSES: 0x91dba, 0x91dbe, 0x91dc8, 0x91dd1, 0x91ded,
+0x91e1e, 0x91e2c, 0x91e38, 0x91f3d, 0x91f44, 0x91f4a,
+0x91f52, 0x91f5b, 0x91f63, 0x91f6c, 0x91f75, 0x91f7a,
+0x91f80, 0x91f87, 0x91f8f, 0x91f98, 0x91fa1, 0x91fa8,
+0x91fae, 0x91fb3, 0x91fba, 0x91fc3, 0x91fc9, 0x91fd2,
+0x91fd8, 0x91fdd, 0x91fe4, 0x91fed, 0x91ff1, 0x91ff8,
+0x91ffe, 0x92005, 0x9200a, 0x92012, 0x4df15, 0x4df50,
+0x4df7d, 0x4dfcd, 0x4e008, 0x4e035, 0x4e0cc, 0x4e0f9,
+0x4e15c, 0x4e1bf, 0x4e222, 0x4e2d7, 0x4e312, 0x4e362,
+0x4e3ff, 0x4e448, 0x4e48a, 0x4e4bc, 0x4e4ee, 0x4e537,
+0x4e564, 0x4e591, 0x4e5f4, 0x4e62f, 0x4e6aa, 0x4e6e5,
+0x4e720, 0x4e788, 0x4e81d, 0x4e8e4, 0x4e934, 0x76a69,
+0x4cda6, 0x4cda9, 0x4cdae, 0xa94ec, 0x287a6, 0x287ac,
+0x287af, 0x287b1, 0x287bc, 0x287c1, 0x287c7, 0x287ca,
+0x28412, 0x2844b, 0x3d8c0, 0x96874, 0x29090, 0x981e8
+NAMES: level record, section keys, ani_plat, animation
+platforms, animacje, platformy, class names, class factory,
+name compare, DZWIGNIA, MOVEPLAT, LINA, KATAPULT, PIANA,
+PAJAK, SPLYW, ANITAB, DRABINKA, OI-031, OI-072, OI-078,
+PR-136, PR-138, PR-299, PR-300, names2class.py
+CODE: no: image and shipped-data reading; no behaviour
+changed, so no red leg.
+HOOKS: OI-072 has said since PR-136 that the port loads ground
+from `platformy=` only and never parses the `ani_plat=` local
+ground lines (ANIPL2: KATAPULT/PALMA), with the engine-side
+MOVEPLAT-chain provider unread; PR-300 item (f) found the
+global ds:0xa94ec written under a name compare to 'ani_plat'
+but could not say what that pool is; PR-299 described
+0x287a0's ebx as "ANOTHER object".
+MEASURED: (a) THE SECTION KEYS ARE PLAIN STRINGS. 0x91dba
+'tlo', 0x91dbe 'zwierzaki', 0x91dc8 'animacje', 0x91dd1 and
+0x91ded 'ani_plat', 0x91e1e 'platformy', 0x91e2c 'blokady',
+0x91e38 'sufity', and the same block also holds 'speed',
+'danger_power', 'muzyka', 'sample', 'lew', 'main_back',
+'back_rect', 'demolist', 'belka', 'paleta', 'pozycja',
+'plany', 'dir', 'intro', 'lew_rect', 'maski' with the scan
+formats ' %[^=\r\n]=' and ' %[^, \r\n\t]' beside them. That
+is the engine's level-record parser, key for key.
+(b) THE SHIPPED RECORD FOR ZARIA.01, VERBATIM, at LEVELDES
++0x19b9c5c6: `dir=zaria.01`, `lew=TLewZaria,Lew.zar,lew.mov,
+lew.des`, `lew_rect=0,0;1000,1000`, `sufity=none.des`,
+`tlo=plan3.pcx,plan2.pcm,plan1.pcm`, `main_back=2`,
+`speed=39,40;85,66;100,100`, `plany=T|TA|TALAB`,
+`muzyka=zaria.mod`, `sample=sample.des`,
+`platformy=zaria_a.plt`, `blokady=zar.blk`, `paleta=zar.pal`,
+`zwierzaki=none,zwierz2.des,zwierz1.des`,
+`ani_plat=none,anipl2.des,none`,
+`animacje=ani3.des,ani2.des,ani1.des`, `belka=belka.des`. So
+ZARIA.01 carries an animation-platform set (anipl2.des) on one
+of its three layers - the file OI-072 says the port never
+parses - while other levels carry none (`junction` has
+`ani_plat=none,...,none`) and kadmar.07 has two.
+(c) THE CLASS NAMES THE LOADER COMPARES, WITH THEIR SITES. The
+list runs 0x91f3d..0x92012: ANITAB 0x91f3d, PLANT 0x91f44,
+GRABOBJ 0x91f4a, DEMOTEXT 0x91f52, ANIBACK 0x91f5b, MOVEPLAT
+0x91f63, MOVERECT 0x91f6c, RECT 0x91f75, DRECT 0x91f7a,
+DRECT2 0x91f80, KATPLAT 0x91f87, DZWIGNIA 0x91f8f, WODOSPAD
+0x91f98, ZWIERZ 0x91fa1, GRUPA 0x91fa8, PICT 0x91fae, POCISK
+0x91fb3, IDPOCISK 0x91fba, GRABG 0x91fc3, GWIAZDKI 0x91fc9,
+NIESP 0x91fd2, ZONE 0x91fd8, KORONA 0x91fdd, SURPRISE 0x91fe4,
+BAL 0x91fed, DNGANI 0x91ff1, TRASA 0x91ff8, TRASA2 0x91ffe,
+LINA 0x92005, TABLICA 0x9200a, BERLO 0x92012 - 31 names. Each
+is loaded by one site in a single straight chain, 0x4df15
+through 0x4e934 (ANITAB at 0x4df50, DZWIGNIA at 0x4e312, LINA
+at 0x4e8e4 and so on), and every compare goes through the same
+helper 0x76a69. So an object's class is chosen by a NAME in
+the level text, not by a numeric kind and not by a dispatch
+table: a scan for tables of constructor addresses found only
+one run holding three of them, which is why the kind-to-ctor
+search came up empty. A first attempt to pair each name with
+the constructor its branch calls lands on the shared base
+constructors 0x3d8c0 (installs the class word 0x96874) and
+0x29090 (installs 0x981e8) - the branch structure, not the
+order in the chain, picks the class, so the map is open.
+(d) WHAT ZARIA.01 DECLARES, MEASURED THROUGH THE PORT'S OWN
+WIRING DUMP: ZWIERZ x9, LINA x6, POCISK, PICT, KORONA, BAL,
+ANITAB and ANIBACK x2 each - and NO DZWIGNIA (Polish "the
+lift") and no MOVEPLAT anywhere in the level. The ANIMACJE
+container does hold DZWIGNIA art sets (3) and MOVEPLAT (3) for
+other levels, and its index block for this family lists the
+animated objects by name - ANIBACK, PIANA, KATAPULT, PAJAK,
+SPLYW, ANITAB, DRABINKA, NOSOROG, GRABOBJ at 0x3c300..0x3ca80
+- so the ladder is an animated object named DRABINKA ("little
+ladder"), not an instance of the lift class. Whatever raises
+the signals for the ZARIA.01 lift therefore cannot come from a
+DZWIGNIA object: the candidates are the animated object itself
+and the level's `ani_plat` set on the middle layer.
+(e) AND THE POOL THE PAIR VERBS TEST IS THAT `ani_plat` SET.
+0x4cda6-0x4cda9 stores `[esi+0x40]` into the global ds:0xa94ec
+in the branch that 0x4cdae sets up with the string 'ani_plat'
+(0x91ded) - the section key of (b). Re-reading 0x287a6-0x287ca
+register by register with that in hand: it keeps eax (itself)
+in ecx, saves the caller's edx, and then calls the GATE and
+the +0x6c accessor ON THAT POOL (0x287ac `mov edx,
+[ebx+0x08]`, 0x287af `mov eax,ebx`, 0x287b1 `call [edx+0x3c]`;
+again at 0x287bc-0x287c1 for +0x6c) and tests what comes back
+against `&[ecx+0x3c]` - the SELF object's own block (0x287c7).
+So the AC_DRAB answer means: the animation-platform pool says
+yes, one of its +0x6c objects lies inside my [self+0x3c]
+block, and entry 1 of my container's object array stands at
+row 6. That is a "a platform object is on me" test, in the
+level that declares a platform set.
+OPENS: in order: (i) read ZARIA.01's anipl2.des - where it is
+stored in the shipped containers, what objects it declares and
+whether it authors a ground line at the platform line 518 that
+FOCUS 1 needs (this is OI-072's unread half and now the most
+direct FOCUS-1 step); (ii) the name-to-constructor branch map
+for the 31 names, which would put PR-301's fourteen askable
+classes against names; (iii) which class the `animacje`
+entries use, since the animated object named DRABINKA is not
+any of the 31 names; (iv) 0x34850 and the [obj+0x48]/[obj+
+0x4c] entity-record chain OI-072 names as the engine side of
+this; (v) 0x76a69, the compare helper, and whether the name
+compares are case-folded or length-prefixed.
+CLOSES: OI-031's provenance question for the two load sites at
+0x28412/0x2844b: the global they load is the level's
+`ani_plat` pool, named by the section key at 0x91ded. It also
+closes PR-301's open (i) half: the class is named in the level
+text, so the "kind to constructor" step does not exist as a
+table to find.
+CORRECTS: PR-299's description of 0x287a0's arguments - "ebx =
+ANOTHER object" as one of the caller's own choices. At the two
+measured +0x80 call sites ebx is the global ds:0xa94ec, which
+is the level's `ani_plat` pool, and the gate, the +0x6c call
+and the point test all run against THAT object, with the
+rectangle being the answering object's own [self+0x3c] block.
+PR-299's instruction-level record stands; only the roles were
+mislabelled. It also updates OI-072's wording: ZARIA.01 does
+carry an `ani_plat=` value (`none,anipl2.des,none`), so the
+port's missing parse is not limited to other levels.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run. The
 last full no-Windows suite run (PR-298's, unchanged tree

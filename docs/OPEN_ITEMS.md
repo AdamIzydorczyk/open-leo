@@ -343,6 +343,12 @@ OI-031: the ds:0xa94ec load-sites' per-consumer semantics
   i.e. the "other object" of the pair answer. What the pool
   actually holds is still not established - only that it comes
   from an +0x40 field of something named 'ani_plat'.
+  PR-302 CLOSES THE PROVENANCE. 'ani_plat' (0x91dd1/0x91ded)
+  is the level record's own section key - ZARIA.01's record
+  carries `ani_plat=none,anipl2.des,none` for its three
+  layers - so ds:0xa94ec is that section's pool: the level's
+  animation-platform objects. What is still open is which
+  entries it holds per level and layer.
 
 OI-032: level-meta remainders: the 0x43fb0 result stored to
   [level+0x398] (7 readers, none individually read), the 0x5df2b
@@ -618,6 +624,21 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   MOVEPLAT-chain provider are unread
   status: OPEN
   origin: PR-136/138/140
+  PR-302 SHARPENS THIS INTO A CONCRETE FILE. The engine names
+  the section key: 'ani_plat' at 0x91dd1 and 0x91ded, in the
+  same string block as 'tlo' (0x91dba), 'zwierzaki' (0x91dbe),
+  'animacje' (0x91dc8), 'platformy' (0x91e1e), 'blokady'
+  (0x91e2c) and 'sufity' (0x91e38) - its level-record parser.
+  And ZARIA.01 DOES carry one: its shipped record (LEVELDES
+  +0x19b9c5c6) says `plany=T|TA|TALAB` with
+  `ani_plat=none,anipl2.des,none` and
+  `platformy=zaria_a.plt`, so an animated-platform set exists
+  on the middle layer of the FOCUS-1 level, and the port reads
+  none of it. The engine side is now anchored too: the value
+  that same key produces is the global ds:0xa94ec (written at
+  0x4cda6-0x4cda9 in the branch that loads the 'ani_plat'
+  string), and that pool is the object the pair-answer verb
+  0x287a0 asks.
 
 OI-073: the engine's grounded-y bookkeeping: the instruction that
   turns the shape bottom into the grounded y is unread; the port's
@@ -2236,6 +2257,23 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     constructor mapping: with that, the ZARIA.01 DRABINKA's
     class word is computable and its answer path is either in
     the list or provably not.
+    PR-302 TAKES THE NAME STEP HALF-WAY AND REMOVES A
+    WRONG TURN. Classes are chosen by NAME: the loader compares
+    31 names (ANITAB, PLANT, GRABOBJ, DEMOTEXT, ANIBACK,
+    MOVEPLAT, MOVERECT, RECT, DRECT, DRECT2, KATPLAT, DZWIGNIA,
+    WODOSPAD, ZWIERZ, GRUPA, PICT, POCISK, IDPOCISK, GRABG,
+    GWIAZDKI, NIESP, ZONE, KORONA, SURPRISE, BAL, DNGANI,
+    TRASA, TRASA2, LINA, TABLICA, BERLO, at 0x91f3d..0x92012)
+    in one chain at 0x4df15..0x4e934, so there is no kind-to-
+    constructor table to find. Measured through the port's own
+    wiring dump, ZARIA.01 places ZWIERZ x9, LINA x6 and
+    POCISK/PICT/KORONA/BAL/ANITAB/ANIBACK x2 - and no DZWIGNIA
+    ("the lift") and no MOVEPLAT anywhere: the lift is the
+    animated object named DRABINKA, so no lift-class object can
+    be the signal source. The remaining candidates are that
+    animated object itself and the level's `ani_plat` set
+    (anipl2.des) on the middle layer - and the pair-answer
+    verb 0x287a0 turns out to test exactly that pool.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
