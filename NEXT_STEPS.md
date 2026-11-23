@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-294.
+> at PR-295.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -40125,6 +40125,143 @@ composer exists, it calls the walk with its buffer, and its
 result is what reaches [obj+0x60]; and PR-292 OPENS (v)'s
 outer half - 0x523f0's interior is read.
 CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-294 — THE LADDER'S ART CARRIES PER-FRAME SHAPE GEOMETRY:
+## ITS TOP EDGE IS INVARIANT AT pos_y+2 AND ITS HEIGHT GROWS
+## 48 TO 168, SO THE FRAME WALK OF A_DROP IS THE LADDER BEING
+## LET DOWN TO THE GROUND
+```
+KIND: read
+SUBSYSTEM: the collision geometry of the ZARIA.01 DRABINKA -
+the shape margin lists of its 11 animation frames, measured
+out of the shipped ANIMACJE container - against the port's own
+ladder answer model (ladder_answer_core) and the authored
+blocks it tests (the PR-270 edge band, the PR-269 rung rect).
+ADDRESSES: 0x3f0f0, 0x3f124, 0x3f14b, 0x3f16a, 0x3f175,
+0x3f178, 0x3f17d, 0x3f187, 0x3f1a7, 0x49f90, 0x4a050,
+0x4a058, 0x420b0, 0x42a70, 0x42de0, 0x531f0, 0x52860,
+0x91d00
+NAMES: DRABINKA, DRAB.SEQ, LIFT.SEQ, shape margins, shape
+box, edge band, rung rectangle, A_UP, A_DOWN, A_DROP, AC_EDGE,
+AC_DRAB, OI-078, PR-269, PR-270, PR-282, PR-283, PR-286,
+ladder_answer_core, ladder_answer_for, obj_shape_elem,
+seq_geom, blk_of_obj, ANIMACJE, shape_geom.py, llrs_block
+CODE: no: a data measurement through the repo's own verified
+readers; no behaviour changed, so no red leg.
+HOOKS: PR-286 closed the authored-parameter hunt ("No state
+in the family rises 71 px") and PR-283 closed the carry law
+("a static ladder carries nothing"); both left the LADDER'S
+OWN GEOMETRY unmeasured - no PR had read one byte of
+DRAB.SEQ. PR-292 had just found 0x3f0f0's [obj+0xc5] band and
+PR-270/PR-282 had already measured that band as the thing the
+port tests for AC_EDGE, so the geometry is the last input to
+that answer that was never measured.
+MEASURED: (a) THE CONTAINER PATH, EXACT. ANIMACJE carries a
+level block ZARIA.01 with used=25 leaf records (ANIBACK,
+PIANA, KATAPULT, PAJAK, SPLYW, ANITAB, DRABINKA, NOSOROG,
+SEP, GRABOBJ, BAL, SURPRISE, PICT, POCISK, KORONA, KAMIEN,
+LINA, WODA, ZARROW, STRUMIEN, LEW.ZAR, LICHA, RYBA, GWIAZDKI,
+PALMA). The DRABINKA leaf carries used=1, and its one record
+is DRAB.SEQ, id=1, 18428 bytes. A nested block's slots are
+26-byte records whose data offsets are ABSOLUTE in the
+container (ported/llrs.c llrs_block, 0x00 = a u32 USED count
+then a sparse free-table) - reproduced in Python before the
+numbers below were taken. (b) THE ART IS 11 FRAMES AND EVERY
+ONE CARRIES SHAPE MARGINS. `ll_seq_parse` of that payload:
+count 11, `shapes 11` - no frame is art-only, no frame has an
+empty margin pair (shape_empty 0 in every row). The three
+states of drab.mov reference exactly those 11 frame numbers
+and no others: A_UP `1,0,WAIT K_GEN1`, A_DROP `2,500 3,400
+4,400 5,300 6,300 7,200 8,200 9,200 10,200`, A_DOWN
+`11,0,WAIT K_NEVER`, and ll_mov_frame_ref maps frame n to
+element n-1, so the row walk IS the element walk. (c) THE
+SHAPE BOX OF EACH FRAME, relative to the object's position
+point, by tools/shape_geom.py bbox() = the port's
+ll_seq_shape_bbox = 0x420b0, statement for statement: el0..el3
+tw 42 rows 47 box (10, 2, 43, 48); el4 tw 42 rows 73 box
+(10, 2, 43, 74); el5 tw 42 rows 89 box (10, 2, 43, 90); el6
+tw 44 rows 104 box (10, 2, 43, 105); el7 tw 44 rows 118 box
+(10, 2, 43, 119); el8 tw 42 rows 133 box (12, 2, 43, 134);
+el9 tw 42 rows 148 box (12, 2, 43, 149); el10 tw 44 rows 167
+box (12, 2, 43, 168). x is +10 or +12, width 43, y IS +2 IN
+ALL ELEVEN, shape_empty 0 in all eleven. (d) WHAT THAT SHAPE
+MEANS. At the ANI2.DES placement (180,510) the box spans
+x 190..233 and y 512..560 at frames 1-4, and x 192..235,
+y 512..680 at frame 11. THE TOP EDGE NEVER MOVES; only the
+bottom does, from 560 to 680. So A_UP (frame 1) is the ladder
+STOWED - its solid column ends at 560, 94 px above the ground
+line the lion stands on at 654 - and the A_DROP walk of frames
+2..10 is the ladder being let DOWN to the ground, with A_DOWN
+(frame 11) holding it there forever, which is exactly what
+PR-286 read in the script ("only state 2 = A_DOWN, the
+LOWERED ladder, answers") without ever seeing the geometry.
+The authored rung rectangle of PR-269, ANI2.DES's
+(203,540)-(233,670), has its RIGHT EDGE at x 233 = the shape
+box's right edge at frames 1-4 exactly, and its lower part
+inside the frame-11 box - the placement text and the art
+describe the same column. (e) AND THE EDGE BAND. PR-270's
+band, built by 0x3f16a-0x3f1a7 from the pair point (210,560)
+as x apx +/- trunc(n/2), y apy-0x50..apy with n = 31, is
+x 195..225, y 480..560: its lower edge 560 is exactly the
+bottom of the STOWED ladder's solid column, and it contains
+the invariant top edge 512. The port's ladder_answer_core
+tests P1 (that band) BEFORE P2/P3, so a rider whose ask point
+crosses y 560 is handed AC_EDGE at the instant it touches the
+bottom of the stowed ladder - and PR-286 measured the result:
+"A_WSP's first row leaves itself the moment AC_EDGE is true",
+the climb stops at 212,560. (f) THE PORT ALREADY READS
+PER-FRAME GEOMETRY FOR OBJECTS, and prints only the first
+frame's. obj_shape_elem resolves the object's CURRENT row
+(o->fi through ll_mov_frame_ref) and blk_of_obj turns that
+element's margins into a positioned block, so the growing box
+is available to the port at every frame. What is NOT: the
+whole-animation pass seq_geom keeps a single `sidx0` = the
+FIRST element with margins, which is why the wiring line for
+this object prints one number, "art DRAB.SEQ, 3 state(s),
+bbox 42x48 at (180,510)" - frame 1's 48-tall box - for all
+three states, and no ladder contact in the port uses any shape
+data at all: ladder_answer_for tests only the authored
+rectangle and the band. (g) THE GEOGRAPHY OF THE FOCUS-1
+TARGET, from these numbers and PR-286's: the ladder's solid
+column is 43 px wide and its top edge is y 512; PR-286
+measured the platform line at 518 and a lion standing on it at
+489. The art says the climbable ends 6 px below that platform
+line: the top of the ladder and the platform the target
+position sits on are the same height, so the finish PR-286
+looked for in a state's position law is a body standing on the
+fixed top edge of the ladder's own art, at 489.
+OPENS: in order: (i) whether the engine's ladder contact uses
+this geometry at all: the port's answer model reads only the
+authored rectangle and band, while the shape path 0x42a70/
+0x42de0 would treat the ladder as a solid 43-wide column - the
+decisive unread is whether 0x44ec0's element test or the
+answer path P1..P3 ever consults the margins; (ii) which point
+the engine asks with (PR-290's 0x4b500 chain resolves a
+candidate, not a point): the port asks with the rider's
+position point, and the stop at 560 is a direct consequence;
+(iii) whether a rider standing on the lowered ladder is held
+by the shape ground path (the port's mov_state_contact /
+obj_contact_solid rule) or only by AC_DRAB; (iv) the widths:
+tw alternates 42/44 and x shifts +10 to +12 at el8 while the
+reported width stays 43 - unexplained, and harmless to the
+conclusion; (v) the 120 px of growth itself: which law moves
+a rider when the column it is attached to grows downward.
+CLOSES: nothing. It bounds FOCUS 1: PR-286's "no state in the
+family rises 71 px" is confirmed as a statement about .MOV
+parameters, and the question that sentence was meant to answer
+has a measured answer in a channel no PR had opened - the
+object's collision geometry changes by 120 px across its
+frames without any state writing a position.
+CORRECTS: PR-286's framing as it was applied to FOCUS 1 (the
+search for an authored state that rises the rider): the
+DRABINKA's own art carries the geometry the target height sits
+on, so the search was in the wrong field. Its measurements -
+the 27 px K_JUMP arc, the platform line 518, the grounded 489,
+the state walk of the ladder script - are unchanged and are
+used as-is above.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```

@@ -2042,6 +2042,43 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     places DRABINKA/drab.mov at (180,510) with the rect
     (203,540)-(233,670) and exactly one contact point,
     absolute (213,507).
+    PR-294 OPENS THE ONE CHANNEL THIS ROW HAD NEVER MEASURED -
+    THE LADDER'S OWN COLLISION GEOMETRY - AND IT CHANGES WHERE
+    THE FINISH IS LOOKED FOR. ANIMACJE/ZARIA.01/DRABINKA holds
+    exactly one record, DRAB.SEQ, id=1, 18428 B; it parses to
+    11 elements and ALL 11 carry shape margin lists, matched
+    1:1 by the script's own frame numbers (A_UP 1, A_DROP
+    2..10, A_DOWN 11). Measured boxes relative to the position
+    point, by the port's own 0x420b0: el0-3 (10,2,43,48), el4
+    (10,2,43,74), el5 (10,2,43,90), el6 (10,2,43,105), el7
+    (10,2,43,119), el8 (12,2,43,134), el9 (12,2,43,149), el10
+    (12,2,43,168) - x +10/+12, width 43, and y = +2 IN ALL
+    ELEVEN. At (180,510) that is a 43-px column whose TOP EDGE
+    IS INVARIANT AT y 512 while its bottom moves 560 -> 680:
+    A_UP is the ladder stowed (its solid column ending 94 px
+    above the ground the lion stands on), the A_DROP walk is
+    the ladder being let DOWN, and A_DOWN holds it at the
+    ground - PR-286's "the LOWERED ladder" now has its
+    geometry. Cross-checks: ANI2.DES's authored rectangle ends
+    at x 233 = the shape box's right edge at frames 1-4
+    exactly, and PR-270's AC_EDGE band x 195..225, y 480..560
+    has its lower edge at the bottom of the STOWED column - so
+    the port stops the climb (PR-286: "A_WSP's first row
+    leaves itself the moment AC_EDGE is true") exactly at the
+    stowed ladder's foot. And the invariant top 512 is 6 px
+    below PR-286's platform line 518: the target 489 is a body
+    standing on the fixed top edge of the ladder's art. What
+    the port does NOT do with any of this: seq_geom keeps one
+    `sidx0` = the first element with margins (hence the wiring
+    line's single "bbox 42x48" for all three states) and
+    ladder_answer_for consults only the authored rectangle and
+    band - obj_shape_elem would resolve the current frame's
+    element, but no ladder path calls the shape geometry. The
+    two named unreads are then (i) whether the engine's ladder
+    answer or 0x44ec0 test ever consults the margins, and (ii)
+    which point the ask is made with: the port asks with the
+    rider's position point and its stop at 212,560 follows
+    directly from that.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
