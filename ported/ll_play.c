@@ -604,6 +604,7 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                         mf->has_i = 0;
                         mf->has_f = mf->fx = mf->fy = 0;   /* PR-253 tails */
                         mf->has_fc = mf->fcx = mf->fcy = 0;
+                        mf->has_pos = mf->posx = mf->posy = 0;
                         mf->endlv = 0;
                         mf->gsig_id = -1;   /* PR-217: no `Wait` tail */
                         mf->gneg = 0;
@@ -617,7 +618,7 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                          * raise are the 0x919ec block) and ATC_ON/ATC_OFF
                          * (PR-89, the attack-connect window).
                          * Everything else the table names (ground_on/off,
-                         * lock/unlock, chdir, ldir/rdir, pos, goto/gotorel,
+                         * lock/unlock, chdir, ldir/rdir, goto/gotorel,
                          * F/IC, MOVE, the smp and vol sound
                          * words, inline F=) is counted -
                          * measured 1568 such lines before this PR took
@@ -635,7 +636,16 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                          * entry) 0x54170 pull pair and `FC` into the same
                          * pair UNGATED, every iteration the row stays
                          * current. `IC` (id 3, the force pair) stays
-                         * counted but unmodeled.
+                         * counted but unmodeled. `pos x,y` joined the modeled
+                         * set in PR-317 (kept in ll_mov_fr.has_pos/posx/posy and
+                         * applied as an absolute set at the row admit): its parse
+                         * arm 0x466d6 and its apply 0x45a30 -> the object's class
+                         * +0x4 verb 0x23850 were read in PR-316, and it is 4 rows
+                         * in 3 files - BOTH spellings are shipped: `pos 1020,692`
+                         * in ZAR_LEW and ZAR_LEWPL [A_WYJSCIE] (the level's own
+                         * exit, PR-309) and `POS 220,140` / `POS 200,140` in
+                         * RAN.01 [A_DEAD] and [A_DEAD1] - so this parser meets it
+                         * in those three only.
                          * `Wait`/`WAIT <signal>` joined the CAPTURED set
                          * in PR-217 (255 tails in 133 files): the clause
                          * is kept in ll_mov_fr.gsig_id/gneg and NO model
@@ -723,6 +733,53 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                                         mf->fcy = cy;
                                         while (*q && *q != ' ' && *q != ',')
                                             q++;    /* tail of the FC pair */
+                                        continue;
+                                    }
+                                }
+                                if (strcasecmp(word, "pos") == 0) {
+                                    /* PR-317: `pos x,y` - an ABSOLUTE
+                                     * position set on the object that owns
+                                     * the row. The engine's parse arm
+                                     * 0x466d6-0x46718 allocates 0x10 bytes,
+                                     * writes the class word 0xa11b0 at
+                                     * [node+0x4] and reads the pair through
+                                     * the format at 0x91944 into [node+0x8]
+                                     * and [node+0xc]; its apply 0x45a30
+                                     * takes the object out of the context
+                                     * argument ([[ctx]+0x8] is its class
+                                     * word) and calls that verb with
+                                     * edx = [node+0x8], ebx = [node+0xc],
+                                     * which for the lion classes
+                                     * 0x96874/0x96960 is 0x23850: write
+                                     * [obj+0x0] and [obj+0x4] (the position
+                                     * the physics step and the ask protocol
+                                     * both read) then call [class+0x54],
+                                     * which recomputes the presented point
+                                     * at [obj+0xd6] through the class +0xb0
+                                     * provider. No carry, no clearance, no
+                                     * signal: it bypasses 0x546a0. Measured
+                                     * census of the 777 extracted texts: 4
+                                     * rows in 3 files, and BOTH spellings
+                                     * are shipped - `pos 1020,692` in
+                                     * ZAR_LEW and ZAR_LEWPL `[A_WYJSCIE]`
+                                     * (PR-309: the level's own exit) and
+                                     * `POS 200,140` / `POS 220,140` in
+                                     * RAN.01 `[A_DEAD1]`/`[A_DEAD]`, so the
+                                     * name match is case-insensitive like
+                                     * the other word arms here. */
+                                    int px, py;
+                                    while (*q == ' ')
+                                        q++;
+                                    if (sscanf(q, "%d,%d", &px, &py) == 2) {
+                                        mf->has_pos = 1;
+                                        mf->posx = px;
+                                        mf->posy = py;
+                                        while (*q && *q != ' ' && *q != ',')
+                                            q++;   /* tail of the pos pair */
+                                        while (*q == ',')
+                                            q++;
+                                        while (*q && *q != ' ' && *q != ',')
+                                            q++;
                                         continue;
                                     }
                                 }
@@ -2034,6 +2091,27 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
              * iteration, so the end lands one boundary after this admit. */
             if (st->fr[p->fi].endlv)
                 p->exit_word = st->fr[p->fi].endlv;
+            /* PR-317: a row that carries `pos x,y` is the engine's apply
+             * 0x45a30 running on that node: it calls the OWNING object's
+             * class +0x4 verb, 0x23850 for the lion, whose whole body is
+             * `mov [eax],edx; mov [eax+0x4],ebx; call [class+0x54]`. An
+             * ABSOLUTE set of the position, nothing else: no velocity term
+             * (the register is untouched), no clearance, no signal, and it
+             * does not go through the physics step at all. The engine runs
+             * the row's directive chain in authored order, and `M dx,dy`
+             * is a node of that same chain, so an `M`+`pos` row would have
+             * an order - no shipped row carries both (4 rows in 3 files,
+             * none with an M), so applying it after this frame's delta is
+             * not a choice the data can contradict. The +0x54 refresh that
+             * follows the set recomputes the object's presented point at
+             * [obj+0xd6] with the class +0xb0 provider; this port
+             * recomputes its ask line from the final position at the end
+             * of every iteration (see prev_line below), so the refresh is
+             * already there. */
+            if (st->fr[p->fi].has_pos) {
+                p->x = (double)st->fr[p->fi].posx;
+                p->y = (double)st->fr[p->fi].posy;
+            }
             if (p->fi + 1 >= st->nfr) {
                 p->fi = 0;
                 p->broke = 1;
@@ -4487,6 +4565,90 @@ int ll_play_selftest(void)
                                                   /* left A_WALK         */
         ll_plt_free(&ep);
         free(em);
+    }
+
+    /* PR-317: the `pos x,y` row tail, end to end inside the player.
+     * The engine side is PR-316's read: the parse arm 0x466d6-0x46718
+     * allocates a 0x10-byte node, writes the class word 0xa11b0 at
+     * [node+0x4] and reads the pair through the format at 0x91944 into
+     * [node+0x8] and [node+0xc]; the apply 0x45a30 takes the object out
+     * of its context argument and calls ITS class +0x4 verb with
+     * edx = x, ebx = y, which for the lion classes 0x96874/0x96960 is
+     * 0x23850: `mov [eax],edx; mov [eax+0x4],ebx; call [class+0x54]` -
+     * write [obj+0x0]/[obj+0x4] (the position the physics step and the
+     * ask protocol both read) and then refresh the object through the
+     * +0x54 verb, which recomputes the presented point at [obj+0xd6]
+     * with the class +0xb0 provider. NO carry, NO clearance and NO
+     * signal: it bypasses the physics step of PR-312 entirely. Both
+     * shipped rows are A_WYJSCIE's `0,0,pos 1020,692` in ZAR_LEW and
+     * ZAR_LEWPL (PR-309), and the port is what makes that level's
+     * authored exit reachable, so the tail is modelled as the engine's
+     * apply is: an absolute set at the moment its row is admitted.
+     * The fixture's ground line is placed at 692 + the contact offset,
+     * so the authored point is an exactly-grounded point: the ground
+     * pass neither adds nor removes anything there and the assertion
+     * isolates the set. */
+    {
+        static const char PP[] =
+            "A_WPAD\n\n[A_WPAD]\ncontrol=BY_TIME\nF=0,0\n"
+            "T=0,0\nG=0,0\nseq=a\n1,250,POS 220,140,GEN K_GEN1\n"
+            "2,100,pos 1020,692\n3,100\n";
+        static const char PPL[] = "1\n1 0,720;2000,720;\n";
+        ll_mov_t *pm = calloc(1, sizeof *pm);
+        ll_plt pp;
+        ll_player pq;
+        ll_play_keys qk = { 0 };
+        int qk2, at = -1;
+        double stay_x = 0, stay_y = 0, wrap_x = 0, wrap_y = 0;
+
+        CHECK(pm && ll_plt_parse(PPL, &pp) == 0);
+        CHECK(ll_mov_parse(PP, pm) == 1);
+        CHECK(pm->st[0].nfr == 3);
+        CHECK(pm->st[0].fr[2].has_pos == 0);
+        CHECK(pm->st[0].fr[0].has_pos == 1 &&
+              pm->st[0].fr[1].has_pos == 1 &&          /* the authored pair, */
+              pm->st[0].fr[1].posx == 1020 &&          /* as DATA, and ONLY  */
+              pm->st[0].fr[1].posy == 692 &&
+              pm->st[0].fr[2].has_pos == 0);           /* on its own row     */
+        /* the shipped RAN.01 [A_DEAD] shape: the UPPER-CASE spelling and
+         * another tail right after the pair, so the tail scan must land on
+         * `GEN` and not eat it. */
+        CHECK(pm->st[0].fr[0].frame == 1 && pm->st[0].fr[0].thresh == 250 &&
+              pm->st[0].fr[0].has_pos && pm->st[0].fr[0].posx == 220 &&
+              pm->st[0].fr[0].posy == 140 &&
+              (pm->st[0].fr[0].gsig & (1ull << LL_SIG_K_GEN1)));
+        ll_player_start(&pq, pm, 300, 100, 1);
+        for (qk2 = 0; qk2 < 8; qk2++) {
+            ll_player_step(&pq, &pp, &qk, 0, 2000, LL_ITER_MS);
+            if (at < 0 && pq.x == 1020 && pq.y == 692)
+                at = qk2;
+            if (qk2 == 4)                 /* a row with no `pos`: the  */
+                stay_x = pq.x, stay_y = pq.y;   /* set must NOT drift or */
+                                               /* accumulate             */
+            if (qk2 == 6)                 /* the list wrapped and row 0  */
+                wrap_x = pq.x, wrap_y = pq.y;   /* was admitted again: its */
+                                               /* own pair re-applies    */
+        }
+        /* The derived moment. PR-110 pins the row clock as 100 units a
+         * feed, so row 0 (250 units) is closed by the THIRD feed, which
+         * is where ITS `POS 220,140` runs - iteration 2 - and row 1
+         * (100 units) is closed one feed later: the authored pair must
+         * appear on iteration 3 and nowhere earlier. */
+        CHECK(at == 3);                    /* the set lands on the  */
+                                          /* iteration its row is  */
+                                          /* admitted, not before  */
+        CHECK(stay_x == 1020 && stay_y == 692);   /* a row with no `pos`  */
+                                                  /* moves nothing: it is  */
+                                                  /* a set, not a delta   */
+        CHECK(wrap_x == 220 && wrap_y == 140);    /* and the set runs  */
+                                                 /* AGAIN on the row's  */
+                                                 /* next admit, the list  */
+                                                 /* wrap included: the  */
+                                                 /* engine re-runs the  */
+                                                 /* row's directive chain  */
+                                                 /* every time it runs it */
+        ll_plt_free(&pp);
+        free(pm);
     }
 
     return rc;

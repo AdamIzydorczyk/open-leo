@@ -2624,6 +2624,36 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     writes [obj+0x6d] = 1. So a port step exists that needs no
     physics at all: apply the authored `pos 1020,692` of
     A_WYJSCIE.
+    PR-317 SHIPS THAT APPLY. `pos x,y` is parsed into
+    ll_mov_fr.has_pos/posx/posy and applied at the row admit as an
+    ABSOLUTE set of p->x/p->y - no velocity term, no clearance, no
+    signal, no ground query: the engine's setter 0x23850 for the
+    lion classes is four instructions and then the +0x54 refresh,
+    0x55070, which re-derives the presented point [obj+0xd6]
+    through the class +0xb0 provider, the ask path of PR-313. The
+    shipped census is 4 rows in 3 files and BOTH spellings: the
+    authored exit pair (`pos`, lowercase, in ZAR_LEW and ZAR_LEWPL
+    `[A_WYJSCIE]` row 3) and RAN.01's death teleports (`POS
+    220,140` in `[A_DEAD]`, `POS 200,140` in `[A_DEAD1]`). Red
+    first inside `--play-selftest`, with two mutation controls
+    (parse off = 5 checks fail, apply off = the 3 runtime ones),
+    and the timing derived from PR-110's row clock: a 250-unit row
+    holds three feeds, so the set lands on the fourth iteration and
+    re-applies on every later admit, the list wrap included. The
+    chain convention is also corrected against PR-316: 0x457e0
+    walks the node's [node+0x0] PARENT link into ITS +0x4 verb,
+    and the acted-on object always arrives as the second argument
+    ([[ctx]+0x0] = the object, its [0x8] = the class word). And
+    the exit is now read as DATA: `zaria_a.plt` runs
+    (953,654)(994,644)(1007,646)(1051,633) and then NOTHING until
+    (1115,662), so the authored `pos 1020,692` is 39-59 px BELOW
+    the terrain, inside a 64 px hole, with only the catch-all line
+    (-100,1500)-(3000,1500) under it. The chain is still not
+    walkable: A_WYJSCIE needs AC_BREAK_NEXT from A_WPAD and
+    A_WPAD needs AC_ONAIR,AC_DRECT from A_PRE_JUMP, and AC_DRECT
+    has no raiser (F4, and OI-018); both exit states also author
+    `lock`/`unlock` on their first and last rows, so the walk-off
+    needs PR-316's pair too.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

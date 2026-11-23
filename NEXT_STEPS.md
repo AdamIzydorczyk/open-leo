@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-317.
+> at PR-318.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42937,4 +42937,133 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
 red leg by the rule PR-245 states, and no suite run. The last full
 no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
 since then only comments in ported/ have changed.
+```
+
+## PR-317 — `pos x,y` IS AN ABSOLUTE POSITION SET THAT
+## BYPASSES THE PHYSICS STEP: THE PORT NOW APPLIES THE LEVEL'S OWN
+## EXIT DIRECTIVE, AND THE AUTHORED EXIT SITS IN A HOLE IN THE
+## GROUND POLYLINE
+```
+KIND: port
+SUBSYSTEM: the `.MOV` row directive `pos x,y` - the parse arm, the
+frame field and the row-admit apply in this port's player; the
+[PORT] half of plan step F2/F6 (the exit chain PR-309 named).
+ADDRESSES: 0x466d6, 0x46718, 0x45770, 0x49920, 0x91944, 0xa11b0,
+0x45a30, 0x457e0, 0x45870, 0x23850, 0x23ea0, 0x55070, 0x541f0,
+0x546a0, 0x749a0, 0x91940, 0x96874, 0x96960, 0x97cdc, 0x91936,
+0x52303, 0x4d, 0x50, 0x6d, 0x89, 0x98, 0xb0, 0xd6
+NAMES: pos, POS, A_WYJSCIE, A_DEAD, A_DEAD1, A_WPAD, ZAR_LEW,
+ZAR_LEWPL, RAN_LEW, has_pos, posx, posy, position setter,
+presented point, zaria_a.plt, exit hole, ly_trv, FOCUS 1, OI-078,
+PR-309, PR-312, PR-316, ll_mov_parse, player_iterate, F4
+CODE: yes: three fields in ll_mov_fr (has_pos/posx/posy), a parse
+arm in ll_mov_parse, the apply at the row admit in
+player_iterate, the field's evidence note in ll_play.h, the census
+sentence in ll_level.c that named `pos` unmodelled, and a leg
+inside the existing `--play-selftest`.
+HOOKS: plan step F6 ("one [port] PR for what the reading supports,
+failing test first") on the reading plan step F2 shipped a turn ago
+(PR-316); FOCUS 1, whose authored end is the A_WYJSCIE walk-off
+that opens with this directive.
+MEASURED: (a) THE CENSUS, RE-MEASURED HERE. Over the 777 extracted
+`.MOV` texts the word appears in EXACTLY 4 rows in 3 files, and
+BOTH spellings are shipped: `0,0,pos 1020,692` as the third row of
+`[A_WYJSCIE]` in ZARIA.01_LEW.ZAR_LEW.MOV and in
+ZARIA.01_LEW.ZAR_LEWPL.MOV, `1,250,POS 220,140,GEN K_GEN1` in
+RAN.01_LEW.RAN_LEW.MOV `[A_DEAD]` and `15,300,POS 200,140` in its
+`[A_DEAD1]`. No shipped row carries an `M` tail beside a `pos`.
+(b) THE NODE. The parse arm 0x466d6-0x46718 asks for 0x10 bytes,
+runs the node ctor 0x45770, writes the class word 0xa11b0 at
+[node+0x4] and reads the pair through 0x49920 with the format at
+0x91944 into [node+0x8] (x) and [node+0xc] (y).
+(c) THE APPLY AND ITS ARGUMENT CONVENTION. 0x45a30 saves the node
+in ebx and the second argument in ecx, calls the shared prologue
+0x457e0, then takes the object from that argument: `mov eax,[ecx]`
+and `mov esi,[eax+0x8]` - the CLASS WORD of the object the context
+carries - and calls `esi+0x4` with edx = [node+0x8] and ebx =
+[node+0xc]. For the lion classes 0x96874 and TLewZaria 0x96960
+that slot is 0x23850, four instructions: `mov [eax],edx`,
+`mov [eax+0x4],ebx`, `call [edx+0x54]` - write [obj+0x0]/[obj+0x4]
+and refresh. The DRABINKA class 0x97cdc holds a different setter,
+0x23ea0, so the slot is per-class, not one global setter.
+(d) THE REFRESH. 0x55070 (the lion class's +0x54) is
+`lea edx,[obj+0xd6]; call [class+0xb0]` - the presented-point
+provider of the ask path (PR-313) - then `lea edx,[obj+0x89]; call
+0x541f0`, then `call [class+0x98]`. So a `pos` re-derives the
+point the ground queries use. It does NOT touch the velocity
+registers, [obj+0xca]/[obj+0xce] or any signal: the directive
+bypasses the physics step 0x546a0 of PR-312 completely.
+(e) THE CHAIN, EXACTLY. 0x457e0 is `ebx = [eax+0x0]` and, if
+non-null, `eax = that link; call [[link]+0x4]+0x4` - the PARENT
+link's +0x4 with the SAME second argument, not the owner object;
+0x45870 (the +0xc verb every one of these classes shares) walks
+the same link into its +0xc and, when the link is empty, builds an
+empty 12-byte set through 0x749a0 with ebx = 0xc. The list is a
+chain in both slots and the object always arrives as the argument.
+(f) THE PORT'S APPLY, RED FIRST. The new selftest leg parses the
+two shipped shapes in one fixture - the upper-case RAN.01 row with
+its trailing `GEN K_GEN1` and the authored `pos 1020,692` - and
+then runs the player on a ground line at 692 + the contact offset,
+so the authored point is an exactly-grounded point and the physics
+pass neither adds nor removes anything there. Derived expectation,
+from PR-110's row clock (100 units a feed): the 250-unit first row
+holds iterations 0-2, so the pair must appear on iteration 3 and
+nowhere before; on iteration 4 (a row with no `pos`) the position
+must be unchanged, because it is a set and not a delta; on
+iteration 6, where the list wraps and row 0 is admitted again, its
+`POS 220,140` must re-apply, because the engine re-runs a row's
+chain every time it runs the row. Controls: with the parse arm
+disabled 5 checks fail (2 parse + 3 runtime); with only the apply
+disabled exactly the 3 runtime checks fail; with both in, the leg
+is green and `--mov-selftest` stays green.
+(g) WHAT DOES NOT MOVE. The ZARIA.01 level probe is unchanged, and
+its "frame directive(s) the model does not act on" count stays 52
+before and after: that count covers the PLACEMENT scripts, not the
+lion's own `ZAR_LEW`, so the shipped exit row was never in it.
+(h) THE EXIT SITS IN A HOLE. Reading `zaria_a.plt` for the
+authored point: the terrain across the exit column runs
+(953,654) (994,644) (1007,646) (1051,633), then NOTHING until
+(1115,662) - a 64 px gap - and the same file authors a catch-all
+line (-100,1500)-(3000,1500). The authored `pos 1020,692` is 39
+px below the terrain at x 1007 and 59 px below it at x 1051, inside
+that gap column: the level drops its lion through the floor it
+authored, and the only surface under him is the 1500 line.
+OPENS: F4 first, since the chain still cannot be walked:
+`A_WYJSCIE` is entered from `A_WPAD` on AC_BREAK_NEXT and
+`A_WPAD` from `A_PRE_JUMP` on AC_ONAIR,AC_DRECT, and AC_DRECT has
+no raiser in the port or in the reading (OI-018). Second, the
+`lock`/`unlock` pair of PR-316 (0x54f40/0x54f90 behind the
+[obj+0xb6] bit-1 flag): BOTH exit states author `lock` on their
+first row and `unlock` on their last, so the walk-off needs it.
+Third, `ldir`, whose name is at 0x91936 and whose body has never
+been opened - it is the third row of the same authored block.
+Fourth, the order of a `pos` against an `M` in one row's chain,
+which no shipped row can answer. Fifth, whether RAN.01's death
+teleports are worth a level leg now that the set exists.
+CLOSES: plan step F6 for the `pos` mechanism: the exit directive
+the level authors is now parsed as data and applied as the engine
+applies it, with the leg above as its red-first evidence.
+CORRECTS: PR-316, twice. Its paragraph (b) said 0x457e0 "calls the
+OWNING object's class +0x4 verb" - what it calls is the PARENT
+LINK's +0x4 verb (the walk of [node+0x0]), and the object a
+directive acts on arrives as its second argument, whose [0] is the
+object and whose object's [0x8] is the class word (paragraph (c)
+here). And its closing hedge about the apply slot is now narrower:
+the row step's execute call 0x52303 and the shared chain walkers
+0x45800/0x45870 are PR-218's measured sites, so the +0x4 bodies
+are reached through that chain; what stays unread is only the first
+link the row hands them.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+verdict lines as PR-298's 69 plus two per-file frame lines of the
+container-media leg (INTRO_P.IS), which follow the media present,
+not this change: this PR adds no leg of its own, its assertions
+live inside the existing `--play-selftest` (whose `pos` block was
+RED before the change, and whose two controls are in (f)). rc=0
+first (HANDOFF section 4); the run is the no-Windows legs
+(DATA=/tmp/opencode/iso_stage/LEO HD=/tmp/opencode/hd_files) -
+the verify-cmake parity and the verify-win/verify-mod legs stay
+excluded per the owner's 2026-11-22 request.
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+PR-287's pair; the hermetic half is where the new `pos` block
+runs, so it is exercised in that configuration too.
 ```

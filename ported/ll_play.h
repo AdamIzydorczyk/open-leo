@@ -314,6 +314,7 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                  int has_i, ix, iy, endlv;
                  int has_f, fx, fy;           /* PR-253 row `F x,y` tail  */
                  int has_fc, fcx, fcy;       /* PR-253 row `FC x,y` tail */
+                 int has_pos, posx, posy;   /* PR-317 row `pos x,y` tail   */
                  short gsig_id; short gneg; short gop; } ll_mov_fr;
                  /* has_i: `I ix,iy` row pull pair (PR-98/PR-250: with the
                   * `F` pair it forms the one-shot 0x54170 target applied
@@ -324,6 +325,32 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                   * pull re-applies every iteration the row stays current)
                   * tails of PR-250/PR-251. The `IC` tail (id 3, force
                   * pair) has no shipped instance's consumer modeled here. */
+                  /* has_pos/posx/posy: the `pos x,y` row tail, modelled in
+                  * PR-317. The engine's parse arm 0x466d6-0x46718 makes a
+                  * 0x10-byte node (class word 0xa11b0 at [node+0x4]) and reads
+                  * the pair through the format at 0x91944 into [node+0x8] and
+                  * [node+0xc]; its apply is that node class's +0x4 verb
+                  * 0x45a30 - every directive class differs from its siblings at
+                  * +0x4 and +0x1c, and each +0x4 body opens with the shared
+                  * helper 0x457e0, which walks [node+0x0] and calls the OWNING
+                  * object's class +0x4 verb: a directive is bound to an object,
+                  * not to the level. For the lion classes 0x96874/TLewZaria
+                  * 0x96960 that verb is 0x23850, `mov [eax],edx;
+                  * mov [eax+0x4],ebx; call [class+0x54]` - write the position
+                  * the physics step and the ask protocol both read, then
+                  * refresh: 0x55070 recomputes the presented point [obj+0xd6]
+                  * through the class +0xb0 provider (the ask path of PR-313),
+                  * then calls 0x541f0 with the [obj+0x89] field and the class
+                  * +0x98 verb. NO carry, NO clearance and NO signal: `pos`
+                  * bypasses the physics step 0x546a0 of PR-312 completely. The
+                  * port applies the SET at the row admit, which is where the
+                  * engine runs the row's directive chain, and touches no
+                  * velocity. Measured over the 777 extracted texts: 4 rows in 3
+                  * files, BOTH spellings shipped - `pos 1020,692` in ZAR_LEW and
+                  * ZAR_LEWPL [A_WYJSCIE] (the level's own exit, PR-309) and
+                  * `POS 220,140` / `POS 200,140` in RAN.01 [A_DEAD] /
+                  * [A_DEAD1]. The 4 rows carry no `M` tail, so the chain's
+                  * authored order is not observable in the data. */
                  /* gsig_id / gneg: this row's `Wait <signal>` tail
                  * (PR-217), ACTED ON by the object walker since
                  * PR-287 (ll_mov_row_gate); the player's row admit

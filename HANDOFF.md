@@ -5309,15 +5309,22 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
     F4. [read] the AC_ONAIR / AC_DRECT raisers (OI-018) - the
         exit chain is gated on exactly those two signals.
     F5. [read] the water as a floor (OI-082): A_WPAD and
-        A_WYJSCIE choose `seq=wet`/`seq=dry` and the authored
-        exit point 1020,692 sits below ZARIA_A.PLT's main ground
-        line 680/684; measure the WODA placements, and the seven
-        ZARIA_A.PLT polylines this port counts as moving ground.
-    F6. [port] only what F1 supports, red test first - either
-        ly_climb re-pinned, or a new ly_exit leg that walks
-        A_WPAD -> A_WYJSCIE and ends the level. At that PR: the
-        full no-Windows suite (the last full run is PR-298's)
-        and its fixture-free half.
+        A_WYJSCIE choose `seq=wet`/`seq=dry`, and PR-317 read the
+        ground itself: `zaria_a.plt` runs (953,654)(994,644)
+        (1007,646)(1051,633) and then NOTHING until (1115,662), so
+        the authored exit point 1020,692 sits in a 64 px HOLE,
+        39-59 px under the terrain, with only the catch-all line
+        (-100,1500)-(3000,1500) below it. ZARIA.01 places no WODA
+        object at all (PR-314), so keep the water question for the
+        levels that do place it, and read the seven ZARIA_A.PLT
+        polylines this port counts as moving ground.
+    F6. DONE FOR THE FIRST HALF (PR-317): the authored `pos
+        1020,692` is parsed and applied as the engine applies it -
+        an absolute set at the row admit, red test first, with the
+        full no-Windows suite and its fixture-free half both rc=0
+        (the last full run is PR-317's). The ly_exit leg itself is
+        still open and waits on F4 and on the `lock`/`unlock` pair
+        PR-316 read, since both exit states open with `lock`.
     F7. [gate] the standing end pass only (OI-096): the Windows
         legs once, at the end, never per PR.
 
