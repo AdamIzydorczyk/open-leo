@@ -1286,9 +1286,13 @@ static double ll_play_v_px(long long r)
  *                                        drag with the value AFTER it,
  *                                        not with the old v
  * The engine also adds G_x * [obj+0x6d] on the x side (0x542c1) and
- * scales the row FC pair by the same unread word (0x54340); that word's
- * value is not read, so `add` carries no x gravity here - counted at
- * OI-015, not guessed. */
+ * scales the row FC pair by the same word (0x54340). PR-320 read
+ * that word: a direction multiplier, set to 1 at every state start
+ * (0x50442) and written -1/+1 by the `ldir`/`rdir` nodes
+ * (0x459f0/0x45a10) and by command opcode 6 (PR-319). This port
+ * parses neither directive yet (PR-321's), so `add` still carries
+ * no x gravity here -
+ * counted at OI-015, not guessed. */
 static long long ll_play_v_step(long long v, int t_pct, long long add)
 {
     long long drag = (v * (long long)t_pct) / 100LL;
@@ -1344,8 +1348,11 @@ static void apply_row_pull(ll_player *p, const ll_mov_st *st, int fi)
     long long vx100 = ll_play_v_raw(p->vx);
     long long vy100 = ll_play_v_raw(p->vy);
     /* The horizontal target keeps PR-74's facing multiply: the engine
-     * instead scales the X pair by the unread terrain/facing word
-     * [obj+0x6d] (0x54340), which stays an open read. */
+     * instead scales the X pair by the direction word [obj+0x6d]
+     * (0x54340) - NOT an open read any more: PR-320 read its
+     * setters, 1 at every state start (0x50442) and -1/+1 from
+     * `ldir`/`rdir` (0x459f0/0x45a10). The facing multiply stands
+     * in until PR-321 models those directives. */
     ll_play_pull(&vx100, tx * (p->walkdir ? (long long)p->walkdir : 1));
     ll_play_pull(&vy100, ty);           /* 0x54170, byte-for-byte */
     p->vx = ll_play_v_px(vx100);

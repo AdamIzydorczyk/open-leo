@@ -2726,7 +2726,7 @@ OI-081: the level-end scene (purple-robed NPC + bird + ball,
 
 OI-082: the water surface as a floor (the lion walks WODA at pool
   level; zax37 t=305-307)
-  status: OPEN
+  status: CLOSED BY PR-320 (NEGATIVE, with the mechanism)
   origin: G-7
   notes: PR-314 is a measured NEGATIVE for ZARIA.01: the level
     places no WODA object at all (its own placements are DRABINKA,
@@ -2747,6 +2747,32 @@ OI-082: the water surface as a floor (the lion walks WODA at pool
     no-op 0x23930 at +0xac, so the water runs no physics, and the
     floor question is still open - it is now a question about an
     object the level really places, not about a missing one.
+    PR-320 CLOSES IT AS A NEGATIVE. (1) WODA's whole authored
+    script (ZARIA.01_WODA_WODA.MOV) is two states, A_RUN/
+    A_RUN_AF, `seq=wod1`/`seq=wod2`, no transition, no motion
+    row, no SOLID/SEMI_SOLID/ANTI_SOLID word, and ZARIA.01's 32
+    .MOV texts spell those words only in KAMIEN1/2/3, LICHA3,
+    PAJAKZ and NOS. (2) Its class 0x96f20's +0x8 verb is the
+    authored-rectangle test 0x23e00 (geometry answer only), its
+    +0x4 verb 0x23ea0 only sets a flag at [obj+0xb6], its +0x10
+    verb 0x1ec90 chains to 0x53770 - and its +0xac physics verb
+    is the no-op. ZWODOSPD - the three `ZWODOSPD,992,610,
+    wodospad.grp` lines of ANI1.DES - is worse: a 4-field line
+    with no script at all, made at 0x1fb32 with primary class
+    0x96cf0 and the subobject table 0x98278 at [obj+0x8], whose
+    only verbs are the WODA flag-setter 0x23ea0 and the
+    authored-rectangle test 0x23e00, and whose primary class's
+    +0xac is the generic chain verb 0x531b0 with no authored state
+    to run in it. Neither can
+    be a contact surface, and the PR-60 contact gate would have
+    nothing to answer with. (3) The exit chain works BECAUSE the
+    ground fails: PR-317's 64 px hole is the mechanism,
+    AC_ONAIR (0x54800) plus the AC_DRECT gate fire on the fall,
+    and the pool is `seq=wet` art plus the `lock` anchor-freeze
+    of PR-320(c) - not a floor. The zax37 "walks on water"
+    observation is the same class of picture in another level;
+    if a future clip work needs it, that is video work, not
+    this mechanism question.
 
 OI-083: HUD display truth: both R3 clips start at 5 lives (the
   port prints a hard-coded 6) and the HUD energy at level start is
@@ -3368,7 +3394,22 @@ OI-111: which row-step path the port's row clock models -
     record byte [rec+0x12]: BY_X = 1 (0x51b6f), BY_Y = 2
     (0x51b89), BY_TIME = 4 (0x51ba3), BY_TX = 8, BY_TY = 0x10,
     then FRAME_REV 0x20, SEQ_REV_X 0x40, SEQ_REV_Y 0x80, with
-    more at [rec+0x13] (0x51c59). So 0x543a0's switch is
+    more at [rec+0x13] (0x51c59). CORRECTED BY PR-320: that
+    keyword-to-value list is shifted - the parser loads the
+    keyword strings in its strcmp chain, and each OR-site
+    follows the strcmp that loaded THAT string: 0x9216e
+    "BY_X" jumps to a sets-nothing branch (mode 0 is the
+    default), and 0x51b6f/0x51b89/0x51ba3/0x51bbd/0x51bd7/
+    0x51bf1/0x51c0b/0x51c3f/0x51c25 follow strcmps against
+    "BY_Y"/"BY_TIME"/"BY_TX"/"BY_TY"/"FRAME_REV"/"SEQ_REV_X"/
+    "SEQ_REV_Y"/"CHECK_ANI"/"CHECK_ZW" setting 1/2/3/4/8/0x10/
+    0x20/0x40/0x80; 0x51c73 CHECK_ALL ORs the WORD 0x1c0,
+    0x51d5f "SOLID2" the DWORD 0x20400, 0x51d79 "SEMI_SOLID"
+    0x40400. The original's keyword names and mode numbers are
+    crossed one slot in this row's list - `BY_X` sets nothing
+    (mode 0 is the default), and the four mode keywords set
+    1/2/3/4 - exactly the table ported/ll_play.h:104-105 already
+    ships. So 0x543a0's switch is
     case 0 -> |[obj+0xca]| (walked X), 1 -> |[obj+0xce]|
     (walked Y) (0x54380-0x54390), 2 -> 0x543fb, 3 -> 0x543f2
     and 4 -> 0x5441b, both scene-frame-delta paths gated by
@@ -4109,3 +4150,31 @@ OI-119: what the object field pair [obj+0xc2] / [obj+0xc6] is -
     contact/attachment family, 0x53ba4 inside the two-object
     comparison 0x53ae0, 0x45a84 in a `.MOV` directive apply) - and
     the pair's UNIT, which those four sites decide.
+    PR-320 MEASURES THE PAIR'S FULL LIFECYCLE. (i) STATE ENTRY
+    ZEROES IT: 0x54e00 - called from 0x1ee03/0x1f0fa/0x3dd23 and
+    from the state-init family at 0x50392 - syncs the presented
+    point and zeroes [obj+0xa5], the intents [obj+0xba]/[obj+0xbe],
+    this pair with [obj+0xca]/[obj+0xce], the attach [obj+0xa9],
+    then sets the defaults [obj+0xad]=100/[obj+0xb1]=22 and clears
+    [obj+0xb6] except its top two bits. So the AC_DRECT gate's
+    `[lion+0xc6] > 0` must be satisfied WITHIN the asking state,
+    by one of the opcode 2/0xd posters. (ii) A DECAY FUNCTION
+    0x54860 is called from the per-object physics updates (its
+    listed callers run 0x28377/0x28547/0x2c634/0x2fc46/0x30036/
+    0x32a9c/0x3bbe8/0x3d807...): its eax is the object and its
+    edx a four-byte parameter block whose identity is open; if
+    parameter byte [ecx+0x2] carries 0x4 the pair is untouched,
+    else a positive [obj+0xc6] goes to floor(-2*c6/3) when both
+    [ecx] carries 0x10 and control byte [rec+0x13] carries 0x10,
+    and to 0 otherwise, with further zeroings gated on [ecx+0x3]
+    bit 2 (when the value is negative), [ecx] bit 2 and [ecx]
+    bit 1. (iii) It is compared at 0x5476f
+    (`cmp [obj+0xc6],0x58c`).
+    (iv) The +0x48 getter the lock trio calls descends the CURRENT
+    ROW: record [[obj+0x50]+[obj+0x5c]*4], its row-node vector
+    [rec+0x2e] indexed by the row cursor [rec+0x4], then
+    [row_node+0x8]/[row_node+0xc] and the array at
+    [[row_node+0x8]+8] via the 0x229c0 pointer helper; the sibling
+    +0xa8 verb 0x23940 returns the index word itself. WHO WRITES
+    [row_node+0x8]/[row_node+0xc] is this row's open half, with
+    0x53ae0 the open half on the unit.

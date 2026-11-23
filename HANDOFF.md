@@ -5306,8 +5306,8 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         F3b: what that exit word drives, and what ends a level
         whose lion script has no `end_level` row at all -
         ZARIA.01 is one.
-    F4. RAISERS NAMED AND COUNTED (PR-318); THE GATE'S INPUT STILL
-        OPEN. Both halves of this step's question - who raises
+    F4. RAISERS NAMED AND COUNTED (PR-318); THE GATE READ END TO
+        END (PR-319). Both halves of this step's question - who raises
         AC_ONAIR and AC_DRECT - are now tool output: AC_DRECT has
         exactly two constant-mask raisers in the image, 0x40d99
         (the `DRECT` class's ask verb 0x40d50, table 0xa1638 the
@@ -5318,29 +5318,65 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         placement line with the format at 0x91d00. ZARIA.01 is
         the ONE level in the shipped set that places a `DRECT`,
         and its rectangle (988..1340, 645..750) is the exit
-        region of PR-317. What the step could not close is the
-        gate's second condition, `[asker+0xc6] > 0` - OI-119 -
-        and what the asker's +0x68 verb returns.
-    F5. [read] the water as a floor (OI-082): A_WPAD and
-        A_WYJSCIE choose `seq=wet`/`seq=dry`, and PR-317 read the
-        ground itself: `zaria_a.plt` runs (953,654)(994,644)
-        (1007,646)(1051,633) and then NOTHING until (1115,662), so
-        the authored exit point 1020,692 sits in a 64 px HOLE,
-        39-59 px under the terrain, with only the catch-all line
-        (-100,1500)-(3000,1500) below it. ZARIA.01 DOES place
-        WODA - ANI2.DES line 29, `WODA,woda.ani,woda.mov,955,651`,
-        and the HD install carries ZARIA.01/WODA/WODA.MOV
-        (PR-318, correcting PR-314's inventory) - so this is now a
-        read of an object the level really places, and the port
-        already places it; read the seven ZARIA_A.PLT polylines
-        this port counts as moving ground too.
+        region of PR-317. CLOSED BY PR-319: the asker's +0x68
+        verb IS the point provider - for the lion classes the
+        cell holds 0x23900, `add eax,0xd6; ret`, the PRESENTED
+        POINT - and the gate's other input, `[asker+0xc6]`, is
+        now a named mechanism: the engine's object command bus
+        (poster 0x52b10, base +0x10 handler 0x54560, which the
+        lion reaches through 0x3d8f0) assigns/adds/zeroes the
+        `[obj+0xc2]/[obj+0xc6]` pair; it is never written by the
+        physics step. What stays open is only the pair's unit
+        and which poster reaches the lion - OI-119's narrowed
+        half, whose named next read is 0x53ae0.
+    F5. CLOSED AS A NEGATIVE (PR-320): WATER IS NOT A FLOOR.
+        A_WPAD and A_WYJSCIE choose `seq=wet`/`seq=dry`, and
+        PR-317 read the ground itself: `zaria_a.plt` runs
+        (953,654)(994,644)(1007,646)(1051,633) then NOTHING until
+        (1115,662), so the authored exit point 1020,692 sits in a
+        64 px HOLE, 39-59 px under the terrain, with only the
+        catch-all line (-100,1500)-(3000,1500) below it. ZARIA.01
+        does place WODA (ANI2.DES line 29) and three ZWODOSPD
+        (ANI1.DES 14-16, `ZWODOSPD,992,610,wodospad.grp`), but
+        neither can stand a contact - WODA's +0xac verb is the
+        no-op 0x23930, and ZWODOSPD is scriptless: made at
+        0x1fb32 with primary class 0x96cf0 (its +0xac is the
+        generic chain verb 0x531b0, with no authored state to run
+        in it) and a subobject table 0x98278 whose only verbs are
+        the flag-setter 0x23ea0 and the rectangle test 0x23e00.
+        WODA's whole authored script is the two
+        states A_RUN/A_RUN_AF with no motion row and no solid
+        state, and ZARIA.01 spells SOLID/SEMI_SOLID only in the
+        KAMIEN/LICHA/PAJAK/NOS texts. The hole IS the mechanism:
+        the exit chain runs on the ground query FAILING -
+        AC_ONAIR (0x54800) plus the AC_DRECT gate fire on the
+        fall - and the pool is `seq=wet` art plus the `lock`
+        anchor-freeze, now measured end to end (the position
+        store 0x54ee0-0x54f20 adds the frozen anchor
+        [obj+0x89]/[obj+0x8d] minus the presented point when
+        the object is attached, or unattached while value 1 of
+        [obj+0xb6] is set; state entry 0x54e00 zeroes
+        the whole physics state including [obj+0xc2]/[obj+0xc6],
+        and the decay 0x54860 keys on a four-byte parameter block
+        and the record's control bytes).
+        STILL OPEN from this step: the seven ZARIA_A.PLT
+        polylines the port counts as moving ground, and the unit
+        of the [obj+0xc6] gate input - OI-119, whose named read
+        is 0x53ae0, feeding F6's second half.
     F6. DONE FOR THE FIRST HALF (PR-317): the authored `pos
         1020,692` is parsed and applied as the engine applies it -
         an absolute set at the row admit, red test first, with the
         full no-Windows suite and its fixture-free half both rc=0
         (the last full run is PR-317's). The ly_exit leg itself is
-        still open and waits on F4 and on the `lock`/`unlock` pair
-        PR-316 read, since both exit states open with `lock`.
+        still open and it is now a PORT gap, not a read: F4's
+        gate is read end to end (PR-319) and so is the authored
+        directive machinery the exit states use - the `lock`/
+        `unlock` pair ([obj+0xb6] value 1, the frozen-anchor carry
+        at the position store, the 0x541f0 refresh gate) and
+        `ldir`/`rdir` (the [obj+0x6d] multiplier, 1 at state
+        start, all PR-320) - so what is missing is modelling
+        those in the port plus an AC_DRECT raise path, which this
+        port has none of (PR-318).
     F7. [gate] the standing end pass only (OI-096): the Windows
         legs once, at the end, never per PR.
 

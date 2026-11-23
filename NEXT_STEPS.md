@@ -43394,3 +43394,205 @@ GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
 GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-318's pair.
 ```
+
+## PR-320 — WATER IS NOT A FLOOR: WODA AND ZWODOSPD ARE ANIMATION
+## OBJECTS WITH A NO-OP PHYSICS VERB, AND THE EXIT CHAIN RUNS ON THE
+## FALL PLUS `lock` - WHOSE PHYSICS MEANING IS NOW MEASURED END TO END
+```
+KIND: read
+SUBSYSTEM: the water-family placements of ZARIA.01 (WODA, ZWODOSPD), the
+  engine's physics-state fields the exit chain really uses ([obj+0xb6]
+  bit 1 and its carry pair [obj+0x89]/[obj+0x8d], the state reset
+  0x54e00, the [obj+0xc2]/[obj+0xc6] decay 0x54860, the +0x58
+  self-poster 0x54eb0), and plan step F5's question closed negative.
+ADDRESSES: 0x1fc5d, 0x90750, 0x96f20, 0x96f18, 0x1fb32, 0x90738,
+  0x98278, 0x96cf0, 0x23ea0, 0x23e00, 0x23930, 0x23c10, 0x23920,
+  0x23910, 0x1ec90, 0x53770, 0x54f40, 0x54f90, 0x54fe0, 0x55020,
+  0x45c50, 0x45c80, 0xa10d8, 0xa10c0, 0x91901, 0x91906, 0x9190c,
+  0x91913, 0x459f0, 0x45a10, 0xa0f58, 0xa0f70, 0x50442, 0x54bb2,
+  0x23870, 0x23880, 0x541f0, 0x55070, 0x54ee0, 0x54f18, 0x54f1e,
+  0x54f20, 0x54e00, 0x54eb0, 0x54860, 0x5476f, 0x53ae0, 0x53ba4,
+  0x1ee03, 0x1f0fa, 0x3dd23, 0x50392, 0x54bd6, 0x53670, 0x23aa0,
+  0x229c0, 0x23940, 0x51b0d, 0x51b6f, 0x51b89, 0x51ba3, 0x51bbd,
+  0x54841, 0x40d65, 0x54800, 0x9216e, 0x92173
+NAMES: WODA, ZWODOSPD, WODOSPAD, ANI1.DES, ANI2.DES, wodospad.grp,
+  woda.ani, woda.mov, [obj+0x8], [obj+0xc], [obj+0xb6], [obj+0x89],
+  [obj+0x8d], [obj+0xd6], [obj+0xda], [obj+0xa9], [obj+0xc2],
+  [obj+0xc6], [obj+0xca], [obj+0xba], [obj+0xbe], [obj+0x6d],
+  [obj+0x71], [rec+0x12], [rec+0x2e], [rec+0x4], lock, unlock,
+  lock2, unlock2, ldir, rdir, AC_ONAIR, AC_DRECT, AC_DUP_CD,
+  LL_CTRL_BY_TY, LL_CTRL_SEQ_REV_X, llrs_extract_mov.c
+CODE: yes: comment text only (ported/ll_play.c, the two [obj+0x6d]
+  notes); no model or behaviour change
+HOOKS: none
+MEASURED: (a) THE WATER OBJECTS AS THE ENGINE MAKES THEM. The name
+  "WODA" at 0x90750 is matched in the level-geometry factory
+  FUN_0001f870 at 0x1fc5d: allocate 0xa5, ctor 0x531f0, then
+  [obj+0x8] = class table 0x96f20, [obj+0xc] = 0x96f18. That class
+  has NO physics: its +0xac verb - the physics-step verb PR-312 named
+  - is 0x23930, `ret`, and its +0x3c verb 0x23c10 is `xor eax,eax`,
+  while its +0x4 verb 0x23ea0 only sets a flag (`or BYTE PTR
+  [obj+0xb6],0x10`, read by the physics step at 0x54bd6, which then
+  calls 0x53670) and its +0x10 verb 0x1ec90 handles opcode 7 (`or
+  dl,0x40` at [obj+0x66]) and chains everything else to 0x53770. Its
+  +0x8 verb is 0x23e00 - the same authored-rectangle test PR-318 read
+  for the DRECT box - so WODA answers geometry questions and nothing
+  else. "ZWODOSPD" (0x90738) is the next branch of the same factory,
+  0x1fb32: allocate 0xc5, and the code installs only the primary
+  class 0x96cf0 and the subobject table 0x98278 at [obj+0x8] -
+  whose verbs are just the WODA flag-setter 0x23ea0 at +0x4 and
+  the same authored-rectangle test 0x23e00 at +0x8 - and its
+  authored line is the 4-field `ZWODOSPD,992,610,wodospad.grp`
+  (ZARIA.01 ANI1.DES lines 14-16, x 992/1090/1190 y 610/610/600) -
+  a .grp word, no .ANI, no .MOV. The DATA census over the 103 dumped
+  .des records: ZWODOSPD occurs in ZARIA.01 ONLY (3 lines); the WODA
+  entry line in ZARIA.01 ONLY (ANI2.DES line 29); what LONA.05 and
+  TUNGA.11 place instead is `WODOSPAD,wodos1.seq,x,y` - the
+  static-image grammar PR-93/PR-136 read, which this port already
+  places; PIANA/SPLYW are not placed by ZARIA.01.
+  (b) WATER NEVER STANDS THE LION. WODA's authored script
+  (ZARIA.01_WODA_WODA.MOV, recovered with tools/re/llrs_extract_mov.c
+  into /tmp/opencode/mov, 777 texts, the same count as the earlier
+  .MOV censuses, e.g. NEXT_STEPS.md:3351) is two
+  states, A_RUN/A_RUN_AF, control=BY_TIME, `seq=wod1`/`seq=wod2`,
+  no transition, no motion row, no SOLID/SEMI_SOLID/ANTI_SOLID word;
+  ZWODOSPD has no script at all. Across all 33 ZARIA.01 .MOV texts
+  the words SOLID/SEMI_SOLID/ANTI_SOLID/SOLID2 appear in six files
+  only - KAMIEN1/2/3, LICHA3, PAJAKZ, NOS - and in none of the water
+  ones. The engine's contact gate (PR-60: the mover's state flags
+  select the lists, CHECK_ANI/CHECK_ZW/CHECK_LN) therefore has no
+  solid state to answer with for WODA or ZWODOSPD; WODA's own +0xac
+  physics verb is the no-op `ret` 0x23930 outright, and ZWODOSPD's
+  class 0x96cf0 has the generic chain verb 0x531b0 there but no
+  authored state to run in it. So the OI-082
+  question - does the lion stand on the water - is ANSWERED NO: the
+  exit works BECAUSE the ground fails. PR-317's 64 px hole IS the
+  mechanism: the fall makes the ground query fail, AC_ONAIR - raised
+  at 0x54800, the one constant-mask site of the PR-318 census - and
+  the DRECT ask at 0x40d65 fire together, and the pool is played as
+  `seq=wet` art, not as a surface.
+  (c) WHAT `lock`/`unlock` REALLY DO - the F6 half this read needed.
+  The directives are node class 0xa10d8, whose +0x4 verb 0x45c50
+  resolves the owner through 0x457e0 and calls 0x54f40 (lock) or
+  0x54f90 (unlock) on it; `lock2`/`unlock2` (names 0x91906/0x91913)
+  are the SEPARATE pair 0x54fe0/0x55020 reached through node class
+  0xa10c0 (apply 0x45c80, class +0xc0/+0xc4). lock/unlock always
+  set/clear value 1 of [obj+0xb6] (`or BYTE PTR [ecx+0xb6],0x1` /
+  `and ...,0xfe`); their body - the +0x48/+0x33/+0x50 trio - runs
+  only while the class +0xbc guard says not-attached, which for the
+  lion is 0x23870, `cmp [obj+0xa9],0x0; setne`, so the trio acts
+  only while he is off a surface; lock2/unlock2 set/clear values
+  1|2 (`or 0x3` / `and 0xfc`). The
+  physics step then branches on that bit AT THE POSITION STORE
+  (0x54ee0-0x54f20): when value 2 is clear and either the +0xbc
+  guard says ATTACHED (0x54eef jumps straight to the carry) or the
+  guard says unattached while value 1 is set, the store becomes
+  `pos = new + ([obj+0x89] - [obj+0xd6],
+  [obj+0x8d] - [obj+0xda])` - the raw position plus the frozen
+  anchor minus the PRESENTED point of PR-305. The anchor pair
+  [obj+0x89]/[obj+0x8d] is refreshed to the live position by 0x541f0
+  (run from the position re-derive 0x55070) ONLY while unlocked and
+  unattached. So `lock` freezes the anchor: while a row sequence
+  holds the lock, the animation's offsets stop moving the body, and
+  `unlock` releases it. ZARIA.01's exit states bracket exactly that:
+  A_WPAD `1,200,lock` ... `11,200,unlock` (T=150,150, seq=wet) and
+  A_WYJSCIE `0,0,lock / 0,0,ldir / 0,0,pos 1020,692 ...
+  -16,500,unlock`. `ldir`/`rdir` are node classes 0xa0f58/0xa0f70,
+  applies 0x459f0/0x45a10 writing [obj+0x6d] = -1/+1; every state
+  start resets that multiplier to 1 at 0x50442, and the physics step
+  scales the horizontal intent by it (`imul edx,DWORD PTR
+  [ebx+0x6d]` at 0x54bb2 after [obj+0xba]) - which closes the port's
+  "stays an open read" note at ported/ll_play.c:1348. Authored
+  census over the 777 texts: `lock` 125, `unlock` 74, `lock2` 11,
+  `unlock2` 11, `ldir` 18, `rdir` 58, `ground_on`/`ground_off`/
+  `chdir` 0.
+  (d) THE [obj+0xc2]/[obj+0xc6] PAIR IS NOW FULLY LIFECYCLED, and it
+  IS NOT a frame counter or an authored offset - it is a per-STATE
+  pair with a decay law. (i) STATE ENTRY ZEROES IT: 0x54e00 - called
+  from 0x1ee03, 0x1f0fa, 0x3dd23 and from the state-init family at
+  0x50392 - syncs the presented point, then zeroes [obj+0xa5], the
+  intents [obj+0xba]/[obj+0xbe], [obj+0xc2]/[obj+0xc6]/[obj+0xca]/
+  [obj+0xce], the attach [obj+0xa9], sets defaults [obj+0xad]=100/
+  [obj+0xb1]=22, and clears [obj+0xb6] except the top two bits
+  (`and ah,0xc0`). (ii) THERE IS A DECAY FUNCTION, 0x54860, called
+  from the per-object physics updates (0x28377, 0x28547, 0x2c634,
+  0x2fc46, 0x30036, 0x32a9c, 0x3bbe8, 0x3d807 and more): it takes
+  eax = the object and edx = a four-byte parameter block ecx whose
+  identity this read did NOT pin. Its exact tests: it loads the
+  current record's control-word block (`mov edx,DWORD PTR
+  [edx+0x12]`, PR-168's word) and the parameter byte [ecx+0x2];
+  if THAT byte carries 0x4 the pair is untouched. Otherwise a
+  positive [obj+0xc6] becomes floor(-2*c6/3) when BOTH [ecx]
+  carries 0x10 and byte [rec+0x13] carries 0x10 (one of PR-220's
+  "more at [rec+0x13]" bits), and 0 otherwise. Further zeroings
+  follow: [obj+0xc6] goes to 0 when [ecx+0x3] carries 0x2 and the
+  value is negative, or when [ecx] carries 0x2, and [obj+0xc2] to
+  0 when [ecx] carries 0x1. What that parameter block is stays
+  open. (iii) The pair is compared at 0x5476f
+  (`cmp [obj+0xc6],0x58c`) and the DRECT gate tests it at
+  0x40d65. Since (i) zeroes
+  it on every state change, the AC_DRECT gate's `[lion+0xc6] > 0`
+  must be satisfied INSIDE A_PRE_JUMP/A_DRAP by one of the opcode
+  2/0xd posters of PR-319 - and the named candidate stays 0x53ae0,
+  the two-object comparison that posts 0xd at 0x53ba4. OI-119's
+  unit question narrows to exactly that site.
+  (e) THE +0x48 "surface" GETTER, which the lock trio calls, walks
+  the CURRENT ROW: 0x23aa0 takes the record [[obj+0x50]+[obj+0x5c]*4]
+  (PR-101's [rec+0x2e] row-node vector, PR-153's cursor [rec+0x4]),
+  reads [row_node+0x8] and [row_node+0xc], and returns an entry of
+  the array at [[row_node+0x8]+8] indexed by [row_node+0xc] through
+  the pointer helper 0x229c0 (`add eax,edx; ret` after the loads).
+  The sibling +0xa8 verb 0x23940 - I checked its cells and its
+  body - is a plain `ret`, a no-op like the +0xac.
+  WHO FILLS [row_node+0x8]/[row_node+0xc] was NOT found in this
+  read; the subagent-run's claim that 0x519c0/0x51a9c/0x51d3c
+  initialize them is WRONG - those sites parse `%d`, `%d,` and the
+  ANTI_SOLID keyword (strings 0x9213c/0x92156/0x92212), not row
+  fields. Left open, in OI-119.
+  (f) THE PORT TODAY, measured not asserted: the WODA line parses as
+  an ordinary entry line (ported/ll_level.c:9636-9648: placed as an
+  animated object, its class hint counted at 9646-9648) - which
+  matches the engine, since neither side gives it physics; the three
+  ZWODOSPD lines match neither the statics grammar (9507-9508 needs
+  a .SEQ second field) nor the entry grammar, and fall to the
+  "line this reader cannot make sense of" counter at 9616-9622
+  (st->shortline); no water object has any modelled physics, and the
+  AC_ONAIR/AC_DUP raise paths still have no counterpart (PR-318
+  unchanged). The port-file changes in this PR are only closing the
+  two [obj+0x6d] open-read comments in ported/ll_play.c (the
+  gravity note near 1288 and the row-pull note near 1346):
+  the word is read now, and no model changes - the ldir/rdir model
+  itself is PR-321's.
+OPENS: OI-119 narrowed to 0x53ae0 (the only named poster of the
+  pair's opcode 0xd inside a two-object comparison) and to who fills
+  [row_node+0x8]/[row_node+0xc] for the +0x48 getter; who calls the
+  +0x58 self-poster 0x54eb0 (4 class-table cells, no direct or
+  indexed call site found); what the 0x58c threshold at 0x5476f
+  guards; whether ZARIA.01's exit needs the pair at all in a port
+  model, or whether AC_ONAIR+AC_DRECT can be reached without it -
+  the question F6's second half now has to answer with a red test.
+CLOSES: OI-082 - the water-as-floor question, ANSWERED NEGATIVE with
+  the mechanism in (a)/(b); the [obj+0x6d] "open read" noted at
+  ported/ll_play.c:1348 (setters/reader now in (c)); and the first
+  half of HANDOFF F5's step, whose "read the seven ZARIA_A.PLT
+  polylines" half stays open with the PLT read.
+CORRECTS: PR-220, whose ledger line in docs/OPEN_ITEMS.md quotes
+  the `control=` parser bit list off by one (`BY_X = 1
+  (0x51b6f), BY_Y = 2, BY_TIME = 4, BY_TX = 8, BY_TY = 0x10`): the
+  parser 0x51b0d loads the keyword strings in order - 0x9216e "BY_X"
+  jumps to the sets-nothing branch, and the or-writes at
+  0x51b6f/0x51b89/0x51ba3/0x51bbd follow strcmps against "BY_Y"/
+  "BY_TIME"/"BY_TX"/"BY_TY" setting 1/2/3/4 - exactly the table
+  ported/ll_play.h:104-105 already ships. The row is corrected to
+  that. It also corrects this PR's own subagent pass: its claims
+  that WODA/ZWODOSPD +0x44 return "constant 2" and that 0x23c10
+  returns 1 are wrong - 0x23920 returns the current record's control
+  word [rec+0x12], 0x23910 returns 1, and 0x23c10 returns 0.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; a comment-only change in ported/, so
+  the full profile applies; no Windows legs (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-318's and PR-319's pairs, with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope.
+```
