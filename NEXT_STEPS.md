@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-293.
+> at PR-294.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -40027,6 +40027,104 @@ the surviving route: the argument is the object's own signal
 set, and in the shipped probe the raise arrives through the
 lion's GEN rows of PR-257, not through the contact test. The
 reading of the index-1 arm itself (PR-291 (c)) stands.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-293 — 0x523f0 IS THE SET COMPOSER: IT RUNS THE ROW WALK
+## ITSELF, THEN THE OWNER'S +0xac AND +0xa8 VERBS AND THE
+## RECORD'S ENTER, INTO ONE BUFFER THAT IS OR-ed INTO [obj+0x60]
+```
+KIND: read
+SUBSYSTEM: OI-118's raise - the function 0x523f0 as the frame
+step of PR-292 calls it - and what that buffer is: the same
+argument the row walk 0x520c0 and the row step 0x521f0 take.
+Also the +0x54 verb of the frame step, a distance helper.
+ADDRESSES: 0x523f0, 0x523fd, 0x52402, 0x5240c, 0x52411,
+0x52416, 0x52423, 0x5242b, 0x52435, 0x52438, 0x52455,
+0x52570, 0x520c0, 0x521f0, 0x4fef0, 0x52a00, 0x52d30,
+0x52d45, 0x52d58, 0x52d6a, 0x57530, 0x57500, 0x98278,
+0x97ca8, 0x97d54, 0x97cb4, 0x97cb8, 0xcef40, 0xcef4c,
+0x4de2d, 0x4a56d, 0x5371c, 0x53725, 0x53733, 0x49580,
+0x3f1c0, 0x23950, 0x23a20, 0x4b8da, 0x4bd30
+NAMES: set composer, world query, ENTER verb, row walk,
+caller set, Manhattan distance, scene grid, OI-111, OI-118,
+OI-078, PR-172, PR-261, PR-287, PR-290, PR-291, PR-292
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: PR-290 left "(v) whether the set this verb fills is the
+very buffer the row step later matches a `Wait` clause against
+(0x521f0's [esp+0x68])", and OI-111 has carried "the row
+step's caller argument is never seen" since PR-287. OI-118
+asks what installs the table at [obj+0x00]; PR-291 (iv) asked
+whether [obj+0x08] and [rec+0x44] are one table. PR-292 found
+the frame step calling 0x523f0 and left its interior unread.
+MEASURED: (a) WHAT 0x523f0 DOES, END TO END. ebx = eax = a
+RECORD (its class word is [rec+0x44], the PR-261 field), and
+it keeps one 12-byte set buffer plus mode byte on its own
+stack ([esp], [esp+0xc]) for everything: it calls the record
+class's +0x08 verb (0x52570) with that buffer (0x52402); the
+record class's +0x0c verb, which is THE ROW WALK 0x520c0 of
+PR-261/PR-290, with the same buffer (0x5240c); then `eax =
+[rec+0x00]` and `esi = [[rec+0x00]+0x08]` - the OWNER
+OBJECT's class word - and calls its +0xac verb (0x52416) and
+its +0xa8 verb (0x52423), each with the buffer; then the
+record's own +0x10 verb with ecx = 0xc and the buffer
+(0x5242b-0x52435) - that entry is the ENTER 0x4fef0 that
+PR-172 found zeroes the row clock. Finally it copies the
+buffer and its mode byte into the CALLER's out set (0x52438-
+0x52452) and returns that pointer (0x52455). The caller is the
+frame step 0x536f0 at 0x5371c, and 0x53725 OR-s this returned
+set into [obj+0x60] with 0x49580 - so this is the engine's
+per-object signal-raise path: five sources, one set, OR-ed
+into the object's own bits. (b) THE CALLER ARGUMENT IS NOW
+SEEN IN BOTH DIRECTIONS. The same buffer is handed to the row
+walk 0x520c0, which is the only place the row step 0x521f0's
+[esp+0x68] set can come from (PR-287 read that step OR-ing
+[esp+0x68] with [obj+0x60] at 0x522bc). Two independent facts
+line up: 0x523f0 is the only composer that calls the walk with
+a set buffer, and the walk's own 0x52100 call fills a buffer
+of the geometry-base class (PR-290 (b)). The link from the
+walk to the row step is still inferred - no direct call of
+0x521f0 exists in the image - but its argument now has a named
+producer. (c) OI-118'S FIELD READS AS THE OWNER POINTER. At
+0x5240f-0x52414 the code takes [rec+0x00], then
+[[rec+0x00]+0x08] as a class word, and calls two verbs
+through it; +0xac resolves in the 0x97ca8 block to 0x3f1c0,
+the ENTER verb PR-291 read - so the same pass is entered
+through the record as through the object. [rec+0x00] is a
+pointer to an object whose first words are its coordinates
+(the walk of PR-288/PR-290 reads them) and whose class word is
+at +0x08; what INSTALLS that pointer is still unfound, and the
+identity of the two class words remains inferred from this
+offset arithmetic, not observed. (d) THE FRAME STEP'S +0x54
+CALL IS A DISTANCE: 0x52a00 (0x97ca8+0x54) calls 0x52d30 twice
+- once on `[[0xcef40]+0x394]` (a per-level subsystem the wiring
+parser writes at 0x4de2d..; the same field the world-query
+fallback of PR-290 asked at 0x4bdf6) and once on the caller -
+and returns |x1-x0| + |y1-y0|, the Manhattan distance. 0x52d30
+is the scene lookup: it reads `ecx = [[0xcef40]+0x390]` (the
+scene grid), takes the object's position through its +0x68
+getter, builds a base-class point with the class word 0x98278
+from [obj+0]/[obj+4] and calls 0x57530 with the object's
+container [obj+0x24] - the same pair 0x4b8da uses. This is a
+named candidate for the proximity tests that raise K_GEN1
+(0x24a38's |Δx| < 0x96 of PR-291's census).
+OPENS: in order: (i) the record class's +0x08 verb 0x52570 and
++0xa8 verb 0x23950 - the first and fourth of the five sources
+of every object's raise; (ii) what the level subsystem at
+[[0xcef40]+0x394] is (written from 0x4de2d in the wiring
+parser, read by the world-query fallback and by 0x52a00);
+(iii) the walk-to-row-step call itself, still unseen (PR-288:
+no immediate names 0x97ca8's +0x00 entry); (iv) what installs
+[rec+0x00] (OI-118, third time named); (v) the record's +0x10
+ENTER being called with a SET buffer - PR-172 read it as the
+row-clock zeroing, and its +0x10 call here passes the
+composing buffer as edx, which PR-172 did not note.
+CLOSES: PR-290 OPENS (v) in direction if not in code: the set
+composer exists, it calls the walk with its buffer, and its
+result is what reaches [obj+0x60]; and PR-292 OPENS (v)'s
+outer half - 0x523f0's interior is read.
+CORRECTS: none.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```

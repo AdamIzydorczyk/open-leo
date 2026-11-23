@@ -2762,6 +2762,17 @@ OI-111: which row-step path the port's row clock models -
     [rec+0x44] is also what [obj+0x08] points at - one class,
     two dispatch words (sharpening OI-118's question; inferred
     from the single instance of 0x3f1c0, not seen).
+    PR-293 gives this row's caller argument a NAMED PRODUCER:
+    the set composer 0x523f0 (called by the frame step
+    0x536f0 at 0x5371c, OR-ed into [obj+0x60] at 0x53725)
+    builds one 12-byte set buffer on its own stack and hands it
+    to five verbs in order - the record's +0x08 (0x52570), the
+    record's +0x0c, which IS the row walk 0x520c0, the owner
+    object's +0xac and +0xa8 through [[rec+0x00]+0x08], and the
+    record's +0x10 (the ENTER 0x4fef0 of PR-172) - and returns
+    it. The walk is therefore reached with that buffer, and the
+    row step 0x521f0's [esp+0x68] has no other candidate. The
+    walk-to-step call is still unseen.
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port
@@ -3285,4 +3296,14 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
     (0x23900 = `add eax,0xd6; ret`), 0x98278's +0x8 verb
     being the point-in-rectangle test 0x23e00. So a second
     table at [obj+0x00] is exactly the shape the engine uses
-    elsewhere - but nothing installs it.
+    elsewhere - but nothing installs it. PR-293 reads the
+    field AS AN OWNER POINTER in the only place that matters:
+    the set composer 0x523f0 takes `[rec+0x00]` at 0x5240f,
+    loads `[[rec+0x00]+0x08]` as a CLASS WORD at 0x52411 and
+    calls that table's +0xac and +0xa8 verbs (0x52416/0x52423)
+    with the composing set; +0xac in the 0x97ca8 block is the
+    ENTER verb 0x3f1c0 of OI-078. So the record's [rec+0x00]
+    and the object's own dispatch reach the same verb, and the
+    two class words are one table - inferred from that offset
+    arithmetic, still not observed, and what installs the
+    pointer is still unfound.
