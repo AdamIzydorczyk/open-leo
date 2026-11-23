@@ -253,6 +253,20 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     PR-141, poster PR-146, and bits 12/22 have NO poster anywhere
     (counted negative, PR-146). AC_ONAIR's raiser and the semantic
     modeling of all five remain.
+    PR-313 NAMES THREE RAISERS FROM THE ENGINE'S PHYSICS STEP
+    (PR-312's +0xac verb 0x546a0 and the queries it calls):
+    AC_ONAIR (byte 2 mask 0x4) is raised when NO surface is found
+    or an attached one is left - so it is the ground query
+    FAILING, which is exactly the gate ZARIA.01's exit chain
+    (A_DRAP/A_PRE_JUMP -> A_WPAD on AC_ONAIR,AC_DRECT) waits on;
+    AC_DUP (byte 0 mask 0x10) on ATTACHING to a surface;
+    AC_DUP_CD (byte 1 mask 0x20) when that surface's kind byte is
+    not 0; and the blockade query 0x4b430 raises AC_BLOK (byte 0
+    mask 0x1) after 0x45620 has pushed the object sideways by the
+    penetration into [obj+0xca]. AC_DRECT is NOT raised by any of
+    those three queries - still open, as is AC_EDGE's full
+    semantics. The kind byte, the mode argument and the per-point
+    flag byte of PR-312 are the unmodelled half of the semantics.
 
 OI-019: what the object-side AC_ENEMY consumers do (A_DEAD(1)/
   A_AWAY/A_SHOW class conditions)
@@ -2534,11 +2548,36 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     `control=` meaning of bits 0x4000/0x0100, then whether those
     queries raise the AC_ONAIR/AC_DRECT pair this row's exit chain
     waits for.
+    PR-313 READS THOSE THREE QUERIES. 0x4b430 is a BLOCKADE test:
+    it takes the object's rect, adds the pending delta, and walks
+    an array (base [world+0x70], count +0x7c, stride 0x14, entry
+    x at +0x4, y at +0x8, length at +0x10) through 0x45620 - a
+    vertical barrier inside the rect is answered by adding
+    (entry.x - the farther edge) into [obj+0xca], a sideways push
+    the carry then applies - and raises AC_BLOK. 0x4b600 is the
+    ask sweep: the point through the +0xb0 provider, the attached
+    surface first through its class +0x8 verb with mode 2, then
+    every object in [world+0x74] (count +0x80, stride 0xc)
+    through its class +0x1c verb. 0x4b7f0 asks the objects of a
+    third array (+0x78, count +0x84) through their +0x4 verb and
+    raises AC_UP_DUP; 0x4b6d0/0x4b762 are the nearest-below /
+    nearest-above searches over the second array using the entry's
+    +0x14 verb. The ZARIA.01 route stays the same: which arrays
+    the level builds (0x44370 / 0x44540, not yet read) and what
+    the queried objects answer.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
   status: OPEN
   origin: PR-86 item 8.8, PR-150's ladder-overlap model, PR-179
+  notes: PR-313 found the PRODUCER: the physics step 0x546a0 (the
+    +0xac verb, installed in 108 of the 151 classes) raises
+    AC_DUP when it attaches to a surface, AC_DUP_CD when that
+    surface's kind byte is non-zero, and AC_ONAIR when no surface
+    is found; the attach also calls the surface's class +0x0
+    enter / +0x4 leave verbs and the object's own +0xb4/+0xb8.
+    Modelling that machine stays open; what is settled is that no
+    row-tail directive raises AC_DUP.
 
 OI-080: SURPRISE '?' firing (G-12); the factory branch lead is
   0x4e62f

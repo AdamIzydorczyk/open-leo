@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-313.
+> at PR-314.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42539,6 +42539,109 @@ CORRECTS: PR-305, whose reading of the +0xac cell as "ENTER" is
 kept as a measurement (the ladder family really does hold the
 empty stub 0x23930 there) but is the wrong role: for 108 of the
 151 classes the slot is the per-frame ground/attach/carry step.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last full
+no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
+since then only comments in ported/ have changed.
+```
+
+## PR-313 — THE THREE GROUND QUERIES THE PHYSICS STEP CALLS:
+## A BLOCKADE PUSH, AN ASK SWEEP, A CEILING TEST - AND THE
+## NAMED SIGNALS THEY RAISE, INCLUDING AC_ONAIR
+```
+KIND: read
+SUBSYSTEM: 0x4b430, 0x4b600 and 0x4b7f0, the queries PR-312 found
+gated by the state control word inside the physics step 0x546a0;
+the world arrays they walk; their sibling nearest-object searches
+0x4b6d0/0x4b762; and the signal bits the step itself raises, read
+against the port's own LL_SIG_* table.
+ADDRESSES: 0x546a0, 0x4b430, 0x4b500, 0x4b600, 0x4b6d0, 0x4b762,
+0x4b7f0, 0x4b870, 0x45620, 0x534e0, 0x541f0, 0x49580, 0x749a0,
+0x44370, 0x44540, 0x98274, 0x98278, 0xcef40, 0xcef44, 0xa94e8,
+0x287a0, 0x23930
+NAMES: AC_BLOK, AC_DUP, AC_DUP_CD, AC_ONAIR, AC_UP_DUP, AC_DRAB,
+blokady, blockade, ceiling, floor, nearest, penetration, push,
+ask sweep, world arrays, control word, OI-018, OI-079, OI-078,
+PR-312, PR-305, PR-308, LL_SIG_AC_ONAIR, LL_SIG_AC_DUP
+CODE: no: machine-code reading; the port's signal enum was READ
+as a name table, nothing under `ported/` was changed, so no red
+leg is owed.
+HOOKS: PR-312's OPENS first item (the three queries), second item
+(the control-word bits) and third item (whether they raise
+AC_ONAIR / AC_DRECT - the pair ZARIA.01's exit chain waits for,
+OI-018).
+MEASURED: (a) THE BLOCKADE QUERY 0x4b430. It builds the object's
+own RECT (a local rect object of class 0x98274, filled through
+0x534e0), adds the pending delta [obj+0xca]/[obj+0xce] to all four
+edges, then walks an array whose base is at [arg+0x70] and whose
+count is at [arg+0x7c], stride 0x14, entry x at +0x4, y at +0x8,
+length at +0x10, calling 0x45620 per entry. 0x45620 accepts an
+entry whose x lies inside the rect's x-span and whose y..y+len
+crosses the rect's y-span AND which is more than 1 px from the
+farther x edge; on accept it adds (entry.x - that edge) into
+[obj+0xca] - a SIDEWAYS PUSH through the same pending-delta field
+the carry reads - and returns 1. First match wins. The query then
+composes the answer: an EMPTY set if nothing matched, and with the
+set's byte 0 OR-ed with 0x1 = signal bit 0 = AC_BLOK if something
+did (the name matches the behaviour exactly).
+(b) THE ASK SWEEP 0x4b600, the one the control word runs in mode 0
+or 2. It takes the object's POINT through the +0xb0 provider
+(0x541f0 with the {0,0,0x98278} triple, PR-308), adds the pending
+delta, and if a surface is attached at [obj+0xa9] it asks THAT
+first, through the surface's class [+0x8] verb with ecx = 2. Then
+it walks a second array, base [arg+0x74], count [arg+0x80],
+stride 0xc, whose entries hold an object pointer at +0x0, and
+calls each entry's class [+0x1c] verb with eax = that object,
+edx = the world, ecx = the asking object, ebx = &point. The
+collected answer is composed at 0x4b500 with the mode from the
+control word and a global from ds:0xa94e8.
+(c) THE CEILING/FLOOR SEARCHES 0x4b6d0 and 0x4b762 walk the same
+second array and, for every entry, ask it through its class
+[+0x14] verb with the object's own [+0x6c] result, keeping the
+best: 0x4b6d0 requires a NEGATIVE answer and keeps the largest
+(starting at 0x80000001), 0x4b762 requires a POSITIVE one and
+keeps the smallest (starting at 0x7fffffff); both write the chosen
+entry's address out. 0x4b7f0 is the third query: it walks a THIRD
+array, base [arg+0x78], count [arg+0x84], stride 0x14, whose
+entry at +0x10 names an object, calls that object's class [+0x4]
+verb, and on a non-zero answer composes an empty set with byte 3
+OR-ed with 0x2 = signal bit 25 = AC_UP_DUP.
+(d) THE SIGNALS ARE NAMED NOW. Matching the byte index and bit
+mask against the port's own enum in ported/ll_play.h (AC_BLOK = 0
+.. AC_KOLO = 34): the blockade query raises AC_BLOK, and the
+physics step of PR-312 raises, on the surface branch, byte 0 mask
+0x10 = bit 4 = AC_DUP when it ATTACHES, byte 1 mask 0x20 = bit 13
+= AC_DUP_CD when the surface's kind byte is not 0, and byte 2 mask
+0x4 = bit 18 = AC_ONAIR when no surface was found at all (or the
+attached one was left). So OI-018's AC_ONAIR has a producer and it
+is the ground query FAILING: ZARIA.01's exit chain A_DRAP /
+A_PRE_JUMP -> A_WPAD waits on AC_ONAIR,AC_DRECT, i.e. on the lion
+having no ground under him. And OI-079's AC_DUP producer is the
+attach branch of 0x546a0, not a row-tail directive.
+(e) THE WSPRECT ANSWER, one site, read only as far as its signal:
+its ask verb 0x287a0 ends by clearing the set's mode byte, calling
+0x749a0 with ebx = 0xc and OR-ing byte 1 mask 0x4 = bit 10 =
+AC_DRAB - the ladder signal, from a RECTANGLE class.
+(f) The three arrays are separate from the contact lists of
+PR-312: their base/count pairs (+0x70/+0x7c, +0x74/+0x80,
++0x78/+0x84) are written together at 0x44599..0x4460f, a setup
+that parses config text through 0x4a0b0 and builds the runtime
+arrays in 0x44370 - that producer is named, NOT read here.
+OPENS: 0x44370 / 0x44540 - which level-config block becomes which
+of the three arrays, and the entry layout of each; then the
++0x1c / +0x14 / +0x8 / +0x4 verbs a queried object answers with
+(which is how a ladder or a platform reports itself as ground);
+then AC_DRECT, which is NOT raised by any of the three queries
+read here; then whether AC_ONAIR's producer being the missing
+ground is what the port's LL_PLAY_GRAVITY stand-in replaces.
+Fifth, F1's capture read still stands as plan step one.
+CLOSES: PR-312's first three opens: the queries are read at the
+level of their arrays, their verbs, their arithmetic and their
+signals; AC_ONAIR and AC_DUP have named producers (OI-018,
+OI-079).
+CORRECTS: none. PR-312's reading of the same bits as "0x10
+(landed), 0x20 (kind != 0), 4 (airborne)" is unchanged as bytes;
+they are now named AC_DUP, AC_DUP_CD and AC_ONAIR.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
 red leg by the rule PR-245 states, and no suite run. The last full
 no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
