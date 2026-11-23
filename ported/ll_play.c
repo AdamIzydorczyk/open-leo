@@ -605,6 +605,7 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                         mf->has_f = mf->fx = mf->fy = 0;   /* PR-253 tails */
                         mf->has_fc = mf->fcx = mf->fcy = 0;
                         mf->has_pos = mf->posx = mf->posy = 0;
+                        mf->lockcmd = mf->dircmd = 0;  /* PR-321 words */
                         mf->endlv = 0;
                         mf->gsig_id = -1;   /* PR-217: no `Wait` tail */
                         mf->gneg = 0;
@@ -618,12 +619,23 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                          * raise are the 0x919ec block) and ATC_ON/ATC_OFF
                          * (PR-89, the attack-connect window).
                          * Everything else the table names (ground_on/off,
-                         * lock/unlock, chdir, ldir/rdir, goto/gotorel,
+                         * chdir, goto/gotorel/goto_rel, the `lock2`/
+                         * `unlock2` pair,
                          * F/IC, MOVE, the smp and vol sound
                          * words, inline F=) is counted -
                          * measured 1568 such lines before this PR took
                          * the GEN and ATC ones out of that count, PLAN
-                         * 8g - never dropped in silence. `end_level`
+                         * 8g - never dropped in silence. `lock`/`unlock`
+                         * and `ldir`/`rdir` joined the modeled set in
+                         * PR-321 (kept in ll_mov_fr.lockcmd/dircmd): the
+                         * parse and apply are PR-320's read (the apply
+                         * 0x45c50 to 0x54f40/0x54f90 setting and clearing
+                         * value 1 of [obj+0xb6], the applies
+                         * 0x459f0/0x45a10 writing [obj+0x6d]); the
+                         * census over the 777 texts is lock 126
+                         * (3 LOCK), unlock 73, ldir 18 (1 LDIR), rdir 58
+                         * (9 RDIR), and ZARIA.01 brackets BOTH of its
+                         * exit states with them. `end_level`
                          * joined the modeled set in PR-199 once PR-198
                          * had read its apply: it is 26 lines in the
                          * whole shipped set (three LEW.MOV members), so
@@ -782,6 +794,43 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                                             q++;
                                         continue;
                                     }
+                                }
+                                if (strcasecmp(word, "lock") == 0) {
+                                    /* PR-321: the one-word `lock` tail.
+                                     * The engine's apply 0x45c50 binds the
+                                     * node to its owner through 0x457e0 and
+                                     * calls 0x54f40, `or BYTE PTR
+                                     * [obj+0xb6],0x1` - value 1 of the
+                                     * physics flags. `unlock` is 0x54f90,
+                                     * `and ...,0xfe`; the pair brackets
+                                     * ZARIA.01's two exit states (PR-320,
+                                     * and the census: lock 126 / unlock 73
+                                     * lines, 3 spelled LOCK). The model
+                                     * acts at the position store, see
+                                     * ll_player_step's integration gate. */
+                                    mf->lockcmd = 1;
+                                    continue;
+                                }
+                                if (strcasecmp(word, "unlock") == 0) {
+                                    mf->lockcmd = -1;
+                                    continue;
+                                }
+                                if (strcasecmp(word, "ldir") == 0 ||
+                                    strcasecmp(word, "rdir") == 0) {
+                                    /* PR-321: the direction-word writes.
+                                     * Node classes 0xa0f58/0xa0f70, applies
+                                     * 0x459f0/0x45a10: `mov DWORD PTR
+                                     * [obj+0x6d],0xffffffff` / `0x1` - the
+                                     * engine's OWN writes to the word the
+                                     * x-side scalers read (0x54340,
+                                     * 0x54bb2). 18 ldir (1 LDIR) and 58
+                                     * rdir (9 RDIR) rows in the corpus;
+                                     * A_WYJSCIE row 0 carries `ldir` right
+                                     * after its `lock`. */
+                                    mf->dircmd =
+                                        (word[0] == 'l' || word[0] == 'L')
+                                        ? -1 : 1;
+                                    continue;
                                 }
                                 if (strcasecmp(word, "GEN") == 0) {
                                     /* PR-69: `GEN <signal>` = the frame raises
@@ -1289,9 +1338,9 @@ static double ll_play_v_px(long long r)
  * scales the row FC pair by the same word (0x54340). PR-320 read
  * that word: a direction multiplier, set to 1 at every state start
  * (0x50442) and written -1/+1 by the `ldir`/`rdir` nodes
- * (0x459f0/0x45a10) and by command opcode 6 (PR-319). This port
- * parses neither directive yet (PR-321's), so `add` still carries
- * no x gravity here -
+ * (0x459f0/0x45a10) and by command opcode 6 (PR-319). PR-321 models
+ * the authored writes and scales the row-pull/FC x sides with them
+ * (ll_play_dir_word). The G_x term itself is still not added here -
  * counted at OI-015, not guessed. */
 static long long ll_play_v_step(long long v, int t_pct, long long add)
 {
@@ -1328,6 +1377,20 @@ static void ll_play_pull(long long *v, long long t)
     }
 }
 
+static long long ll_play_dir_word(const ll_player *p)
+{   /* PR-321: the x-side scale word, the engine's [obj+0x6d]. An
+     * authored `ldir`/`rdir` write (applies 0x459f0/0x45a10, taken at
+     * the row admit) wins outright, and every state start rewrote the
+     * word to 1 (0x50442) - that default is p->dirword == 0 here,
+     * "nothing authored in force". With none in force the PR-74/PR-82
+     * walkdir multiply keeps its role as the stand-in for whatever
+     * ELSE writes that word in the engine; no read says the key-walk
+     * path does, and the estimate stays named at OI-015. */
+    if (p->dirword)
+        return p->dirword;
+    return p->walkdir ? (long long)p->walkdir : 1;
+}
+
 static void apply_row_pull(ll_player *p, const ll_mov_st *st, int fi)
 {   /* PR-253: when a row BECOMES CURRENT - on state entry or on the
      * admit that advances to it - the engine's merge applies the row's
@@ -1347,13 +1410,12 @@ static void apply_row_pull(ll_player *p, const ll_mov_st *st, int fi)
                  + (fr->has_f ? (long long)fr->fy : 0);
     long long vx100 = ll_play_v_raw(p->vx);
     long long vy100 = ll_play_v_raw(p->vy);
-    /* The horizontal target keeps PR-74's facing multiply: the engine
-     * instead scales the X pair by the direction word [obj+0x6d]
-     * (0x54340) - NOT an open read any more: PR-320 read its
-     * setters, 1 at every state start (0x50442) and -1/+1 from
-     * `ldir`/`rdir` (0x459f0/0x45a10). The facing multiply stands
-     * in until PR-321 models those directives. */
-    ll_play_pull(&vx100, tx * (p->walkdir ? (long long)p->walkdir : 1));
+    /* The engine scales the X pair by the direction word [obj+0x6d]
+     * (0x54340) - PR-320 read the setters, PR-321 models the authored
+     * ones: `ldir`/`rdir` at 0x459f0/0x45a10 and the 1 written at
+     * every state start (0x50442). With no authored word in force the
+     * walkdir stand-in keeps answering: ll_play_dir_word. */
+    ll_play_pull(&vx100, tx * ll_play_dir_word(p));
     ll_play_pull(&vy100, ty);           /* 0x54170, byte-for-byte */
     p->vx = ll_play_v_px(vx100);
     p->vy = ll_play_v_px(vy100);
@@ -1477,6 +1539,13 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
             p->atc = 0;                /* PR-89: an attack window belongs *
                                         * to the state that opened it.    */
             p->atc_hit = 0;
+            p->lock = 0;               /* PR-321: the state start clears  */
+            p->dirword = 0;            /* value 1 of [obj+0xb6] - `and    */
+                                       /* ah,0xc0` in 0x54e00 - and        */
+                                       /* rewrites [obj+0x6d] to 1         */
+                                       /* (0x50442); 0 here is that        */
+                                       /* rewrite: no authored value in    */
+                                       /* force.                           */
             ev |= LL_PLAY_EV_STATE;
             apply_row_pull(p, nt, p->fi);
         }
@@ -1775,10 +1844,12 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
          * zero and before the delta output: the CURRENT row's `FC` pair
          * pulls both axes UNGATED, every iteration the row stays current
          * (PR-250/PR-251: channel id 1 bypasses the [obj+0x95] one-shot
-         * gate). Its x side is the one the engine scales by [obj+0x6d]
-         * (0x54340); the facing multiply stands in for that word. */
+         * gate). Its x side is the one the engine scales by the
+         * direction word (0x54340): since PR-321 an authored
+         * `ldir`/`rdir` in force scales it outright, and with none in
+         * force the walkdir stand-in keeps answering. */
         ll_play_pull(&vx100, (long long)st->fr[p->fi].fcx *
-                             (p->walkdir ? (long long)p->walkdir : 1));
+                             ll_play_dir_word(p));
         ll_play_pull(&vy100, (long long)st->fr[p->fi].fcy);
     }
     p->vx = ll_play_v_px(vx100);
@@ -1798,8 +1869,24 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * engine's [obj]/[obj+0x4] words are, and the DRAW position in
      * ll_level.c is an int of the same number. */
     double dxv = (double)(vx100 / 100);   /* [obj+0xca], idiv semantics */
-    p->x += dxv;
-    p->y += (double)(vy100 / 100);        /* [obj+0xce] */
+    /* PR-321: the store branch. The engine's step ends its integration
+     * at 0x54ee0-0x54f20, and while value 1 of [obj+0xb6] is set - the
+     * `lock` word of the row chain, 0x54f40 - that store keeps the
+     * drawn body at the frozen anchor pair [obj+0x89]/[obj+0x8d] minus
+     * the presented point instead of following the new position; the
+     * anchor is refreshed (0x541f0) only while the bit is clear, so the
+     * body stands still for the whole locked window while the velocity
+     * register, the row clock and the signal path run on. ZARIA.01
+     * parks its exit inside exactly such a window: A_WYJSCIE row 0
+     * `lock`, `ldir`, `pos 1020,692` (PR-317), row 16 `unlock`. The
+     * port has no separate anchor/presented pair, so the counterpart of
+     * the branch is simply: no position write while p->lock is set.
+     * What the engine's ground-contact pass writes while locked is not
+     * read yet - named in PR-321's OPENS; no port leg leans on it. */
+    if (!p->lock) {
+        p->x += dxv;
+        p->y += (double)(vy100 / 100);    /* [obj+0xce] */
+    }
     /* PR-110: the row accumulator's feed depends on the state's control
      * mode, and this is the other half of it. The engine's dispatcher
      * 0x543a0 (PR-98 item 2, its owner read by PR-100) feeds mode 0 =
@@ -2119,6 +2206,23 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
                 p->x = (double)st->fr[p->fi].posx;
                 p->y = (double)st->fr[p->fi].posy;
             }
+            /* PR-321: the one-word tails run at this same point of the
+             * row chain - 0x45c50 (lock/unlock) and 0x459f0/0x45a10
+             * (ldir/rdir) are ordinary apply methods walked when the
+             * engine walks the row's chain, exactly like the `pos`
+             * apply above (PR-316/PR-320). They write the object's own
+             * words: lock/unlock mirror value 1 of [obj+0xb6]; the
+             * not-attached guard the engine puts in front of that pair
+             * (the class +0xbc verb, 0x23870 for the lion,
+             * `cmp [obj+0xa9],0x0; setne`) has no port counterpart
+             * because attachment - PR-319's opcode 0x1b block - is not
+             * modelled, so the word applies unconditionally here. */
+            if (st->fr[p->fi].lockcmd > 0)
+                p->lock = 1;
+            else if (st->fr[p->fi].lockcmd < 0)
+                p->lock = 0;
+            if (st->fr[p->fi].dircmd)
+                p->dirword = st->fr[p->fi].dircmd;
             if (p->fi + 1 >= st->nfr) {
                 p->fi = 0;
                 p->broke = 1;
@@ -4656,6 +4760,214 @@ int ll_play_selftest(void)
                                                  /* every time it runs it */
         ll_plt_free(&pp);
         free(pm);
+    }
+
+    /* PR-321: the one-word `lock`/`unlock` tails, end to end inside the
+     * player. The engine side is PR-320's read: the apply 0x45c50 takes
+     * the owner through the shared binder 0x457e0 and calls 0x54f40 or
+     * 0x54f90, which `or BYTE PTR [obj+0xb6],0x1` / `and ...,0xfe` -
+     * set and clear VALUE 1; state entry 0x54e00 clears the value again
+     * (`and ah,0xc0`). The physics step branches on it AT THE POSITION
+     * STORE (0x54ee0-0x54f20): while it is set the store adds the
+     * frozen anchor pair [obj+0x89]/[obj+0x8d] minus the presented
+     * point, and 0x541f0 refreshes that pair only while the bit is
+     * clear - so the drawn body stands still while a row sequence
+     * holds the lock, whatever the velocity register does. ZARIA.01
+     * brackets both of its exit states with the pair: A_WPAD rows 1
+     * and 11, A_WYJSCIE rows 0 and 16, the `pos 1020,692` set of
+     * PR-317 INSIDE the locked window. The port's counterpart of that
+     * store branch is the integration gate in ll_player_step: while
+     * p->lock is set the position words are not written; velocity,
+     * the row clock feeds and the signal path run on, exactly as the
+     * engine's store branch leaves them. */
+    {
+        static const char LKF[] =
+            "[A_LK]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100\n2,100,lock\n3,100,I 100,0\n4,100\n"
+            "5,100,unlock\n6,100\n";
+        static const char LKF2[] =      /* the same fixture with the
+                                         * two words taken out: the
+                                         * control case, the body must
+                                         * walk while its row pulls */
+            "[A_LK]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100\n2,100\n3,100,I 100,0\n4,100\n"
+            "5,100\n6,100\n";
+        ll_mov_t *lk = calloc(1, sizeof *lk), *nl = calloc(1, sizeof *nl);
+        ll_player lp, lq;
+        ll_play_keys lkk = { 0 };
+        double lx[6], nx[6];
+        CHECK(lk && nl);
+        CHECK(ll_mov_parse(LKF, lk) == 1);
+        CHECK(lk->st[0].nfr == 6);
+        CHECK(lk->st[0].fr[0].lockcmd == 0 &&
+              lk->st[0].fr[1].lockcmd == 1 &&      /* the word, and ONLY  */
+              lk->st[0].fr[4].lockcmd == -1 &&     /* on its own row      */
+              lk->st[0].fr[2].lockcmd == 0 &&
+              lk->st[0].fr[2].has_i && lk->st[0].fr[2].ix == 100);
+        /* The derived timeline. PR-110's row clock feeds 100 a
+         * iteration, so each 100-unit row closes in exactly one
+         * iteration, and a row's directive runs when ITS row closes
+         * (PR-317's timing, and 2044's admit block). Row 1 ends on
+         * iteration 1: the bit is SET there, and the same boundary
+         * admits row 2, whose `I 100,0` sets the register to 100 =
+         * 1 px an iteration (PR-253's pull). Iterations 2 and 3 are
+         * therefore the frozen window: register live, position not
+         * written. Row 4 ends on iteration 4 and clears the bit, so
+         * the first position write back is iteration 5: x = 301. */
+        ll_player_start(&lp, lk, 300, 100, 0);
+        for (int t = 0; t < 6; t++) {
+            ll_player_step(&lp, NULL, &lkk, 0, 2000, LL_ITER_MS);
+            lx[t] = lp.x;
+        }
+        CHECK(lp.lock == 0);                       /* the row cleared it   */
+        CHECK(ll_play_v_raw(lp.vx) == 100);        /* the register never  */
+                                                   /* stopped: only the    */
+                                                   /* store was gated     */
+        CHECK(lx[0] == 300 && lx[1] == 300);       /* before the lock: no */
+                                                   /* velocity yet         */
+        CHECK(lx[2] == 300 && lx[3] == 300 && lx[4] == 300);
+                                                   /* the frozen window   */
+        CHECK(lx[5] == 301);                       /* first write after   */
+                                                   /* `unlock`            */
+        /* The control half: the identical fixture minus the two words
+         * walks the whole way, so the freeze above is the word and not
+         * the row structure. Row 2 ends on iteration 2; the pull was
+         * admitted at row 2's ADMIT (iteration 1's boundary), so the
+         * first step is iteration 2: 301, 302, 303, 304. */
+        CHECK(ll_mov_parse(LKF2, nl) == 1);
+        CHECK(nl->st[0].fr[0].lockcmd == 0 && nl->st[0].fr[1].lockcmd == 0);
+        ll_player_start(&lq, nl, 300, 100, 0);
+        for (int t = 0; t < 6; t++) {
+            ll_player_step(&lq, NULL, &lkk, 0, 2000, LL_ITER_MS);
+            nx[t] = lq.x;
+        }
+        CHECK(nx[2] == 301 && nx[3] == 302 && nx[4] == 303 && nx[5] == 304);
+        free(lk);
+        free(nl);
+    }
+
+    /* PR-321, leg LK-C: the state ENTRY clears the lock - 0x54e00's
+     * `and ah,0xc0` drops [obj+0xb6] to its top two bits, value 1
+     * included. One authored state locks from its first closed row and
+     * never unlocks; its list ends on the row that wraps, the wrap's
+     * AC_BREAK_NEXT runs the transition, and the NEXT state - which
+     * carries no words of its own - must have its position store back.
+     * Derived: A's row 0 closes on iteration 0 and SETS the bit; the
+     * row-1/row-2 `I 100,0` pulls are admitted at the boundaries but
+     * iterations 1 and 2 write no position (300, 300); row 2 is last,
+     * so its close on iteration 2 wraps and arms BREAK_NEXT, and
+     * iteration 3 enters B, clears the bit, and applies B's own row-0
+     * pull through the state-entry admit (PR-253) - the register is
+     * live and the body walks: 301 on iteration 3, 302 on iteration 4
+     * (the pulls re-admit on every row boundary). Without the
+     * state-entry clear B would stand at 300 forever. */
+    {
+        static const char LKC[] =
+            "A_L2\nA_L3\n\n[A_L2]\ncontrol=BY_TIME\nF=0,0\nT=0,0\n"
+            "G=0,0\nA_L3(1)=AC_BREAK_NEXT\nseq=a\n"
+            "1,100,lock\n2,100,I 100,0\n3,100,I 100,0\n"
+            "\n[A_L3]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100,I 100,0\n2,100,I 100,0\n3,100,I 100,0\n";
+        ll_mov_t *kc = calloc(1, sizeof *kc);
+        ll_player kp;
+        ll_play_keys kkk = { 0 };
+        double kx[5];
+        CHECK(kc);
+        CHECK(ll_mov_parse(LKC, kc) == 2);
+        ll_player_start(&kp, kc, 300, 100, 0);
+        for (int t = 0; t < 5; t++) {
+            ll_player_step(&kp, NULL, &kkk, 0, 2000, LL_ITER_MS);
+            kx[t] = kp.x;
+        }
+        CHECK(kp.sti == 1);                         /* the wrap ran the   */
+                                                    /* transition         */
+        CHECK(kx[1] == 300 && kx[2] == 300);        /* locked inside A    */
+        CHECK(kx[3] == 301 && kx[4] == 302);        /* B starts UNlocked  */
+        free(kc);
+    }
+
+    /* PR-321: the `ldir`/`rdir` tails - the engine's OWN writes to the
+     * direction word [obj+0x6d] (applies 0x459f0/0x45a10, PR-320), and
+     * 0x50442 rewrites the word to 1 at EVERY state start. Both legs
+     * drive the word through the FC channel, the one consumer the
+     * engine scales by the word EVERY iteration the row stays current
+     * (0x54340, PR-250/PR-251), so a flip is visible in one iteration.
+     * The fixtures also pin the shipped spellings' case twins (3 LOCK /
+     * 9 RDIR / 1 LDIR in the corpus): like `pos`'s in PR-317, the name
+     * match is case-insensitive. */
+    {
+        /* LEG D1 - the flip. Timeline (PR-110's 100-a-iteration row
+         * clock, directives run when their own row closes): row 0 ends
+         * on iteration 0 and writes -1. Rows 1-3 carry `FC 100,0`, so
+         * iteration 1's x target is 100 * (-1): the register goes to
+         * -100 and x walks 299, then 298. Row 2 carries `RDIR` too and
+         * writes it when row 2 closes at the END of iteration 2, so
+         * iteration 3's FC target is +100: it pulls the register from
+         * -100 to 0 and x STANDS at 298 - the flip, one iteration
+         * wide. An unmodelled word would walk to 297 there. */
+        static const char D1[] =
+            "[A_D1]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100,ldir\n2,100,FC 100,0\n3,100,RDIR FC 100,0\n"
+            "4,100,FC 100,0\n";
+        ll_mov_t *d1 = calloc(1, sizeof *d1);
+        ll_player p1;
+        ll_play_keys kk1 = { 0 };
+        double x1[4];
+        CHECK(d1);
+        CHECK(ll_mov_parse(D1, d1) == 1);
+        CHECK(d1->st[0].fr[0].dircmd == -1 &&        /* the words, and    */
+              d1->st[0].fr[2].dircmd == 1 &&         /* ONLY on their     */
+              d1->st[0].fr[1].dircmd == 0 &&         /* own rows          */
+              d1->st[0].fr[1].has_fc && d1->st[0].fr[1].fcx == 100 &&
+              d1->st[0].fr[2].has_fc &&              /* the RDIR+FC row   */
+              d1->st[0].fr[2].fcx == 100);           /* keeps BOTH tails  */
+        ll_player_start(&p1, d1, 300, 100, 0);
+        for (int t = 0; t < 4; t++) {
+            ll_player_step(&p1, NULL, &kk1, 0, 2000, LL_ITER_MS);
+            x1[t] = p1.x;
+        }
+        CHECK(x1[1] == 299 && x1[2] == 298);         /* `ldir` took effect */
+        CHECK(x1[3] == 298);                         /* `RDIR` reversed it */
+        free(d1);
+    }
+    {
+        /* LEG D2 - the 0x50442 reset. Row 0 writes -1; rows 1-2 carry
+         * `FC 100,0` and walk the body left (299, 298); row 2 is the
+         * last one, so closing it on iteration 2 wraps the list and
+         * the wrap's AC_BREAK_NEXT runs the authored transition on
+         * iteration 3. The state entry rewrites the word to its
+         * default, and the target's row 0 - which also CLOSES on
+         * iteration 3, the transition zeroing the clock but the
+         * feed still running that iteration (PR-115's one row per
+         * iteration) - pulls the register from -100 to 0, so x
+         * stands at 298; iteration 4's row-1 FC takes the register
+         * to +100 and walks to 299. Had the word survived the state
+         * change it would still pull left: 297 at iteration 3. */
+        static const char D2A[] =
+            "A_D2\nA_RST\n\n[A_D2]\ncontrol=BY_TIME\nF=0,0\nT=0,0\n"
+            "G=0,0\nA_RST(1)=AC_BREAK_NEXT\nseq=a\n"
+            "1,100,LDIR\n2,100,FC 100,0\n3,100,FC 100,0\n"
+            "\n[A_RST]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100,FC 100,0\n2,100,FC 100,0\n3,100,FC 100,0\n";
+        ll_mov_t *d2 = calloc(1, sizeof *d2);
+        ll_player p2;
+        ll_play_keys kk2 = { 0 };
+        double x2[5];
+        CHECK(d2);
+        CHECK(ll_mov_parse(D2A, d2) == 2);
+        CHECK(d2->st[0].fr[0].dircmd == -1);         /* the LDIR spelling  */
+        ll_player_start(&p2, d2, 300, 100, 0);
+        for (int t = 0; t < 5; t++) {
+            ll_player_step(&p2, NULL, &kk2, 0, 2000, LL_ITER_MS);
+            x2[t] = p2.x;
+        }
+        CHECK(x2[1] == 299 && x2[2] == 298);         /* left, while the   */
+                                                     /* word is authored   */
+        CHECK(p2.sti == 1);                          /* the wrap ran the   */
+                                                     /* transition         */
+        CHECK(x2[3] == 298 && x2[4] == 299);         /* the state entry    */
+                                                     /* rewrote the word  */
+        free(d2);
     }
 
     return rc;

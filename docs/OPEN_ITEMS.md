@@ -230,6 +230,15 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     WITHDRAWN: the row pull words and the G words are register
     adds in that one unit; only the DISPLAYED u/s divides by
     LL_PLAY_RAW_VDIV.
+    PR-321 MODELS the authored direction-word writes and their
+    two x-side consumers: `ldir`/`rdir` (0x459f0/0x45a10) and
+    the state-start 1 (0x50442) now scale the row-pull target
+    and the UNGATED FC pair (0x54340) through
+    ll_play_dir_word. What stays named in this row: whether
+    the engine's key/CH_DIR path also writes [obj+0x6d] -
+    until that is read the port's walkdir multiply stays the
+    stand-in when no authored word is in force - and the G_x
+    term 0x542c1, still not added to `add`.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
@@ -764,6 +773,21 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     bits0/1 are the ground pair written by `lock2`/`unlock2`
     (0x54f40/0x54f90) and `ground_on`/`ground_off` (the
     target's vtable +0xc0/+0xc4, lion 0x54fe0/0x55020);
+    CORRECTED BY PR-321, name table 0x918ef-0x9198e read in
+    order against the apply bodies: that list is shifted by
+    one directive. 0x45c20 is the `op` node (0 shipped lines)
+    - `and dl,0xdf`, `and ebx,0x1`, `shl ebx,0x5`, `or
+    [eax+0xb6],ebx` at 0x45c45: bit5 comes from the node's
+    flag byte; `lock` is the class 0xa10d8 with apply 0x45c50
+    calling 0x54f40, and 0x54f40 ends at 0x54f7b `or BYTE PTR
+    [ecx+0xb6],0x1` on BOTH paths (its pre-test only skips
+    the +0x48/[rec+0x33]/+0x50 trio) - value 1, not bit5;
+    `unlock` 0x54f90 clears that same value; the real
+    lock2/unlock2 pair is apply 0x45c80 to 0x54fe0/0x55020,
+    values 1|2. PR-321 also MODELS value 1: the port's
+    position store stops while it is set (the anchor branch
+    0x54ee0-0x54f20, PR-320) and state entry clears it
+    (0x54e00's `and ah,0xc0`).
     `chdir`/`ldir` write the direction word [obj+0x6d]. The
     bit0/1 pair gates the 0x5426c T-raise and the
     0x54c00/0x54d0c contact-and-draw pass; bit5's getter
@@ -821,6 +845,16 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     0x54fe0/0x55020) - have no measured caller from an
     ANSWER, and no leg but ly_chang pins the drop as it
     now is.
+    PR-321 RE-NAMES THAT WRITER PAIR too: 0x54fe0/0x55020
+    (apply 0x45c80) belong to `lock2`/`unlock2`, values 1|2;
+    `ground_on`/`ground_off` (names 0x9191b/0x91925) have 0
+    shipped lines and no measured node class, so the
+    bit0/1-gated paths stay unreachable in shipped data until
+    a class is named. The [obj+0xb6] work that IS modelled
+    now - value 1, the `lock` freeze of the position store -
+    is PR-321's; bit2/3/6/7, `op`'s reader (0x23860's bit5
+    law stands), and the grounded-y instruction stay open
+    here.
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -1954,7 +1988,11 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     rows - the lift hunt is now at the answer-window law.
     PR-284 ENDS THE HUNT: the answer verbs (slot +0x78,
     corrected from PR-282's +0x88 label) raise SIGNALS for
-    TRANSITIONS, never motion; rdir is a randomizer (0x52070);
+    TRANSITIONS, never motion; rdir is a randomizer (0x52070;
+    CORRECTED BY PR-321: the rdir node applies 0x45a10,
+    `mov DWORD PTR [eax+0x6d],0x1` - 0x52070 is called from
+    the ADJACENT 0x45a50, the apply of the goto-family name
+    that follows `pos` in the table 0x918ef-0x9198e);
     and the authored block says it - A_PODCIAG's T=100,100
     consumes any carried velocity in ONE iteration with
     F=0,0/G=0,0 and NO moving row, so its position is frozen
@@ -2525,9 +2563,11 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     `lock`, `ldir`, `pos 1020,692`, `wait AC_TIME` and then the
     reverse-numbered walk-off. `pos` exists exactly TWICE in the
     whole shipped set, both in the two ZARIA.01 lion scripts,
-    both in that state, both with the same pair - and this port
-    counts `pos`, `lock`, `unlock`, `ldir`, `rdir` and `goto`
-    without acting on any of them. What this row needs next is
+    both in that state, both with the same pair - and this
+    port counted `pos`, `lock`, `unlock`, `ldir`, `rdir` and
+    `goto` without acting on any of them (AS OF PR-317/PR-321
+    that is obsolete except for `goto`: `pos` is modelled, and
+    so are the four word tails). What this row needs next is
     therefore not another ask-path read: it is the apply of
     those six directives, the AC_ONAIR/AC_DRECT raisers, the
     water-as-floor question (OI-082, since the exit point
@@ -2697,6 +2737,16 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     has no raiser (F4, and OI-018); both exit states also author
     `lock`/`unlock` on their first and last rows, so the walk-off
     needs PR-316's pair too.
+    PR-321 CLOSES THE DIRECTIVE HALF of that list: `pos` (PR-317)
+    plus `lock`/`unlock` and `ldir`/`rdir` are now modelled -
+    the lock freezes the position store for the whole locked
+    window (value 1 of [obj+0xb6], 0x54f40/0x54f7b, with the
+    anchor branch 0x54ee0-0x54f20 PR-320 read), the words reset
+    at state entry (0x54e00, 0x50442), and the FC/pull x sides
+    scale by the authored word (0x54340). What this row still
+    needs is the AC_ONAIR raise path on the hole's fall
+    (PR-318 named the raisers, the port does not raise them
+    yet) and the ly_exit leg end to end.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

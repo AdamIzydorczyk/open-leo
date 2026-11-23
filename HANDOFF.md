@@ -5363,20 +5363,27 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         polylines the port counts as moving ground, and the unit
         of the [obj+0xc6] gate input - OI-119, whose named read
         is 0x53ae0, feeding F6's second half.
-    F6. DONE FOR THE FIRST HALF (PR-317): the authored `pos
+    F6. IN PROGRESS (PR-317, PR-321): the authored `pos
         1020,692` is parsed and applied as the engine applies it -
-        an absolute set at the row admit, red test first, with the
-        full no-Windows suite and its fixture-free half both rc=0
-        (the last full run is PR-317's). The ly_exit leg itself is
-        still open and it is now a PORT gap, not a read: F4's
-        gate is read end to end (PR-319) and so is the authored
-        directive machinery the exit states use - the `lock`/
-        `unlock` pair ([obj+0xb6] value 1, the frozen-anchor carry
-        at the position store, the 0x541f0 refresh gate) and
-        `ldir`/`rdir` (the [obj+0x6d] multiplier, 1 at state
-        start, all PR-320) - so what is missing is modelling
-        those in the port plus an AC_DRECT raise path, which this
-        port has none of (PR-318).
+        an absolute set at the row admit, red test first - and
+        PR-321 models the rest of the exit states' directive
+        machinery: `lock`/`unlock` (value 1 of [obj+0xb6] set
+        through the apply 0x45c50 to 0x54f40/0x54f90, the port's
+        position store writes nothing while it is set - the
+        counterpart of the frozen-anchor branch 0x54ee0-0x54f20
+        and the 0x541f0 refresh gate PR-320 read - and state
+        entry clears it, 0x54e00) and `ldir`/`rdir` (the
+        [obj+0x6d] multiplier, -1/+1 from 0x459f0/0x45a10, the
+        0x50442 default at state start, now scaling the
+        row-pull/FC x sides). All four legs red first, four
+        mutations reported, full suite plus fixture-free half
+        rc=0. The ly_exit leg itself is still open and it is
+        now purely a PORT gap: the AC_ONAIR/AC_DRECT raise path
+        (PR-318 named the raisers, the port raises neither) and
+        the leg end to end; what the ground/contact pass writes
+        WHILE a lock holds is unread and named in PR-321's
+        OPENS - it matters the moment that leg runs A_WPAD's
+        fall into the locked pool.
     F7. [gate] the standing end pass only (OI-096): the Windows
         legs once, at the end, never per PR.
 

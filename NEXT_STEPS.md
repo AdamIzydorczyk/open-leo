@@ -43596,3 +43596,150 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-318's and PR-319's pairs, with DATA=/tmp/opencode/nope
   HD=/tmp/opencode/nope.
 ```
+
+## PR-321 — THE `lock`/`unlock` AND `ldir`/`rdir` ROW WORDS ARE MODELLED:
+## THE POSITION STORE FREEZES WHILE VALUE 1 OF [obj+0xb6] IS SET, AND
+## THE DIRECTION WORD [obj+0x6d] TAKES ITS AUTHORED -1/+1 WRITES
+```
+KIND: port
+SUBSYSTEM: the player's row-directive parser (the one-word tails),
+  ll_player's physics state (the lock mirror of [obj+0xb6] value 1 and
+  the authored direction word [obj+0x6d]), the integration gate at the
+  port's position store, the state-start resets, and the two x-side
+  scalers now reading the word (ll_play_dir_word).
+ADDRESSES: 0x54f40, 0x54f7b, 0x54f90, 0x45c50, 0x457e0, 0xa10d8,
+  0x459f0, 0x45a10, 0xa0f58, 0xa0f70, 0x50442, 0x54e00, 0x54ee0,
+  0x54f20, 0x541f0, 0x23870, 0x54340, 0x54bb2, 0x542c1, 0x45c20,
+  0x45c45, 0x45a50, 0x52070, 0x918ef, 0x91901, 0x91906, 0x9190c,
+  0x91913, 0x91936, 0x9193b, 0x91940, 0x9194d, 0x54fe0, 0x55020,
+  0xa10c0, 0x45c80, 0x54200, 0x54ed9
+NAMES: lock, unlock, lock2, unlock2, ldir, rdir, LOCK, LDIR, RDIR,
+  op, ground_on, ground_off, [obj+0xb6], [obj+0x6d], [obj+0x89],
+  [obj+0x8d], [obj+0xd6], [obj+0xa9], lockcmd, dircmd, dirword,
+  ll_play_dir_word, p->lock, A_WPAD, A_WYJSCIE, A_PODCIAG,
+  AC_BREAK_NEXT, K_LFWD, FC, pos, ll_mov_fr
+CODE: yes: two fields in ll_mov_fr (lockcmd/dircmd), two in ll_player
+  (lock/dirword), four parser arms, their apply at the row admit, the
+  state-start reset, the integration gate in ll_player_step, and the
+  helper ll_play_dir_word at the two x-scale sites; no new tools
+HOOKS: none
+MEASURED: (a) THE WORDS, re-read before wiring. 0x54f40 (the `lock`
+  apply's target, PR-320) opens with the class +0xbc guard and a
+  `test BYTE PTR [ecx+0xb6],0x1; jne` - if the bit is SET the
+  +0x48/+0x33/+0x50 trio is skipped - and BOTH paths land on
+  0x54f7b `or BYTE PTR [ecx+0xb6],0x1`: the value written is 1, on
+  every path. `ldir`'s apply, 0x459f0, is three instructions after
+  the binder 0x457e0: `mov DWORD PTR [eax+0x6d],0xffffffff`; rdir is
+  0x45a10 writing 1. The two state-entry writes are the ones this
+  model had to copy: 0x50442 `mov DWORD PTR [ecx+0x6d],0x1` and
+  0x54e00's `and ah,0xc0` on the [obj+0xb6] byte, value 1 included.
+  (b) THE AUTHORED SCOPE, counted over the 777 extracted .MOV texts:
+  lock 126 (3 spelled LOCK), unlock 73, ldir 18 (1 LDIR), rdir 58
+  (9 RDIR) - so the parser matches case-insensitively, like `pos` in
+  PR-317. The `lock2`/`unlock2` pair (11 each; node class 0xa10c0,
+  apply 0x45c80, 0x54fe0/0x55020 setting/clearing values 1|2, read
+  at 0x54200/0x54ed9) is NOT modelled and stays counted. `op`,
+  `ground_on`, `ground_off` and `chdir` have 0 shipped lines (PR-320
+  census) and stay counted.
+  (c) THE MODEL. Parse: four arms set ll_mov_fr.lockcmd (1/-1) and
+  dircmd (-1/+1) on their own rows only. Admit: at the same point of
+  the row chain that PR-317's `pos` uses, lockcmd writes p->lock and
+  dircmd writes p->dirword; the engine's not-attached guard in front
+  of the lock pair (the class +0xbc verb, 0x23870 for the lion,
+  `cmp [obj+0xa9],0x0; setne`) has no port counterpart because
+  attachment (PR-319's opcode 0x1b block) is not modelled, so the
+  word applies unconditionally - named below. Physics: the engine's
+  position store 0x54ee0-0x54f20 keeps the body at the frozen anchor
+  minus the presented point while value 1 is set and refreshes the
+  anchor (0x541f0) only while it is clear (PR-320); the port has no
+  anchor/presented pair, so the counterpart of that branch is: while
+  p->lock is set the integration writes no position - velocity, the
+  row-clock feeds and the signal path run on, as they do in the
+  engine's locked window. State entry: p->lock and p->dirword reset
+  with the other per-state fields, mirroring 0x54e00/0x50442. The
+  x scalers (the row-pull 0x54170 target and the UNGATED FC pair at
+  0x54340, PR-250/PR-251) now scale by ll_play_dir_word: the
+  authored -1/+1 while one is in force, and PR-74's walkdir stand-in
+  otherwise - the stand-in stays the named OI-015 estimate until a
+  read shows whether the key-walk path also writes that word.
+  (d) THE LEGS, red first, all values derived from PR-110's 100-a-
+  feed row clock and PR-253's pull law. LK: rows `2,100,lock` and
+  `5,100,unlock` around an `I 100,0` pull - the register goes to 100
+  at iteration 1's boundary, iterations 2-4 write NO position (300,
+  300, 300), and the first write back is iteration 5 (301); the
+  fixture minus the two words walks 301, 302, 303, 304 - the freeze
+  is the word, not the row structure; the register is asserted to
+  stay AT 100 through the frozen window. LK-C: A locks at row 0 and
+  never unlocks; the list wrap's AC_BREAK_NEXT transitions to B, and
+  B - no words of its own - walks again (301 on iteration 3, 302 on
+  4), pinning the 0x54e00 clear at state entry. D1: `ldir` at row 0,
+  `FC 100,0` on rows 1-3, `RDIR` on row 2: the body walks left
+  (299, 298) while the word is -1 and STANDS at 298 on iteration 3,
+  when the +1 target pulls the register from -100 to 0 - the flip
+  is one iteration wide. D2: the word authored as LDIR survives two
+  walking rows, the wrap transitions, and the new state's FC pulls
+  RIGHT from iteration 3 (298, then 299) - the 0x50442 reset,
+  measured against the 297 the un-restored word would give.
+  MUTATIONS, each run against the full leg set: parser arms off -
+  7 failures (both parse blocks and every runtime assertion except
+  the controls); admit off - 5 failures (runtime only, parses pass);
+  integration gate off - exactly the 2 frozen-window checks;
+  state-entry reset off - exactly LK-C's and D2's 2 state-entry
+  checks. The PR-135 hold fixture that already carried `7,500,rdir`
+  (A_PODCIAG) is unchanged by the model - that state authors no x
+  pair to scale - and its legs stayed green.
+  (e) ONE ADJACENCY TRAP FOUND WHILE WIRING: the directive names sit
+  in the engine's table block 0x918ef-0x9198e in the order op,
+  atc_on, atc_off, lock, lock2, unlock, unlock2, ground_on,
+  ground_off, chdir, ldir, rdir, pos, goto, gotorel, goto_rel, I,
+  F, IC, FC, M, MOVE, GEN, Wait, end_level - and the apply bodies
+  sit in the same order: 0x45c20 (the `op` node: `and dl,0xdf`,
+  `shl ebx,0x5`, `or [eax+0xb6],ebx` at 0x45c45 - it writes BIT 5
+  from the node's flag byte), 0x45c50 (lock), 0x45a30 (pos),
+  0x45a50 (the goto family, which calls 0x52070). PR-273's
+  "bit5 IS the row-directive lock/unlock flag (0x45c20 writes it)"
+  and PR-284's "rdir is a randomizer (0x52070)" are the same
+  off-by-one-class error; OI-073's and OI-078's sentences are
+  corrected here.
+OPENS: whether the engine's key/CH_DIR path writes [obj+0x6d] - the
+  walkdir stand-in stays named at OI-015; what the engine's ground/
+  contact pass writes while a lock holds (raw [obj]/[obj+4] or the
+  presented [obj+0xd6]) - the port does NOT gate its ground snap
+  and its section-7 `M` delta on the lock, and no port leg leans
+  on that yet (it matters the moment a driven leg runs A_WPAD's
+  fall into the locked pool, i.e. F6's ly_exit); whether a locked
+  object's `M` deltas move the body (the engine's chain vs the
+  store branch - unread); which node class `ground_on`/`ground_off`
+  actually use (0 shipped lines, never exercised); the `op` word
+  (0 shipped lines, bit5 - now named but unmodelled); and whether
+  the art facing follows [obj+0x6d] (the port keeps facing on
+  walkdir and CH_DIR, PR-82, untouched).
+CLOSES: HANDOFF section 8 T5 step F6's directive half - with PR-317's
+  `pos` and this PR's `lock`/`unlock`/`ldir`/`rdir`, every word
+  ZARIA.01's exit states carry is modelled; what F6 still needs is
+  the AC_ONAIR/AC_DRECT raise path and the ly_exit leg itself. The
+  OI-078 sentence "this port counts pos, lock, unlock, ldir, rdir
+  and goto without acting on any of them" is obsolete except for
+  `goto`, and the row is updated.
+CORRECTS: PR-273, on the [obj+0xb6] directive layer (the OI-073 and
+  OI-078 notes): `lock`/`unlock` do NOT raise "bit5 ... 0x45c20
+  writes it" and 0x54f40/0x54f90 are NOT the `lock2`/`unlock2`
+  pair's "ground bits 0/1" - 0x54f40 ends at 0x54f7b `or BYTE PTR
+  [ecx+0xb6],0x1` under the node class 0xa10d8's apply 0x45c50
+  (lock, value 1) and 0x54fe0/0x55020 under 0x45c80 (lock2/unlock2,
+  values 1|2); bit5 belongs to the `op` directive (0x45c20/0x45c45,
+  name 0x918ef, 0 shipped lines). PR-284, on `rdir`: it is NOT a
+  randomizer through 0x52070 - the node class 0xa0f70 named rdir
+  (0x9193b) applies 0x45a10, `mov DWORD PTR [eax+0x6d],0x1`;
+  0x52070 is called from the adjacent 0x45a50, the apply of the
+  goto-family name that follows `pos` in the table. OI-073's bit
+  map and OI-078's two sentences are rewritten to this.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; red first (8 failures), then green,
+  with the four mutations above reported in MEASURED (d); no
+  Windows legs (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-318/PR-319/PR-320's pairs, with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope.
+```

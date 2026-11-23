@@ -315,6 +315,8 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                  int has_f, fx, fy;           /* PR-253 row `F x,y` tail  */
                  int has_fc, fcx, fcy;       /* PR-253 row `FC x,y` tail */
                  int has_pos, posx, posy;   /* PR-317 row `pos x,y` tail   */
+                 signed char lockcmd, dircmd; /* PR-321 row `lock`/`unlock`
+                                               * and `ldir`/`rdir` words */
                  short gsig_id; short gneg; short gop; } ll_mov_fr;
                  /* has_i: `I ix,iy` row pull pair (PR-98/PR-250: with the
                   * `F` pair it forms the one-shot 0x54170 target applied
@@ -351,6 +353,25 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                   * `POS 220,140` / `POS 200,140` in RAN.01 [A_DEAD] /
                   * [A_DEAD1]. The 4 rows carry no `M` tail, so the chain's
                   * authored order is not observable in the data. */
+                  /* lockcmd / dircmd: the one-word row tails PR-321
+                  * models. The engine's names sit in its own directive
+                  * table block - "lock" at 0x91901, "unlock" at 0x91906,
+                  * the ldir/rdir pair beside them - and the lock/unlock
+                  * apply is the node class 0xa10d8's +0x4 verb 0x45c50
+                  * calling 0x54f40 (lock: `or BYTE PTR [obj+0xb6],0x1`)
+                  * or 0x54f90 (unlock: `and ...,0xfe`); ldir/rdir are
+                  * node classes 0xa0f58/0xa0f70 with applies
+                  * 0x459f0/0x45a10 writing [obj+0x6d] = -1/+1 outright
+                  * (PR-320). Value 0 here = the row carries no such
+                  * word; a non-zero value is the engine's OWN write,
+                  * not a port invention. Measured over the 777
+                  * extracted texts: lock 126 (3 spelled LOCK), unlock
+                  * 73, ldir 18 (1 LDIR), rdir 58 (9 RDIR) - ZARIA.01
+                  * brackets both exit states with them (A_WPAD rows
+                  * 1/11, A_WYJSCIE rows 0/16). The `lock2`/`unlock2`
+                  * pair (11 each; node class 0xa10c0, applies
+                  * 0x54fe0/0x55020 on values 1|2) is NOT modelled here
+                  * and stays counted. */
                  /* gsig_id / gneg: this row's `Wait <signal>` tail
                  * (PR-217), ACTED ON by the object walker since
                  * PR-287 (ll_mov_row_gate); the player's row admit
@@ -934,6 +955,28 @@ typedef struct {
     int grounded;
     int walkdir;                /* -1/1, set by K_BKWD/K_FWD transitions
                                  * (the real CH_DIR flag's effect)        */
+    signed char dirword;        /* PR-321: the authored value of the
+                                 * engine's direction word [obj+0x6d],
+                                 * written by the row words `ldir`/`rdir`
+                                 * at 0x459f0/0x45a10 and rewritten 1 at
+                                 * every state start (0x50442). 0 here
+                                 * means no row has written it and the
+                                 * walkdir stand-in keeps its role at
+                                 * the two x-scale sites (0x54340,
+                                 * 0x54bb2); +/-1 overrides it there.
+                                 * Whether the key-walk path also writes
+                                 * that word in the engine is unread -
+                                 * the stand-in stays named at OI-015. */
+    int lock;                   /* PR-321: mirror of VALUE 1 of the
+                                 * engine's [obj+0xb6]: set by the `lock`
+                                 * row word through 0x54f40, cleared by
+                                 * `unlock` through 0x54f90, and cleared
+                                 * again at every state entry by 0x54e00
+                                 * (`and ah,0xc0`). While it is set the
+                                 * engine's position store 0x54ee0-
+                                 * 0x54f20 keeps the drawn body at the
+                                 * frozen anchor; the port's counterpart
+                                 * is ll_player_step's integration gate. */
     signed char face;           /* PR-82: instance facing, -1/1, like
                                  * lvl_obj.face (PR-81). Updated from walkdir
                                  * only while the state carries CH_DIR;
