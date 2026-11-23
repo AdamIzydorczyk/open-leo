@@ -4392,3 +4392,42 @@ OI-119: what the object field pair [obj+0xc2] / [obj+0xc6] is -
     0x24731/0x321fe/0x33348), the 0x54860 block above, and the
     surface words [obj+0xa9]/[obj+0xe6]/[obj+0xe2] that decide when
     AC_ONAIR, AC_DUP and AC_DUP_CD fire.
+
+OI-120: the `s <seq>` row field names a SEQUENCE - the art that
+  row's frames come from - and the port reads the field without
+  acting on it
+  status: OPEN
+  origin: PR-330 (the .MOV line-cursor read)
+  notes: The engine's state-block reader 0x51910 has a field arm
+    for the token `s` at 0x92146. Its name scan is
+    " %[^ ,]%*[ ,]" (0x92148) at 0x51a6a; the name is resolved
+    through the record table at 0x51a7b-0x51a95, and the row
+    record built at 0x51ac1 keeps it at [row+0x8] on every frame
+    path (0x5169e negative, 0x516cf positive, and for an authored
+    frame 0 the record comes from 0x44110 at 0x516af-0x516c2) next
+    to the frame at [row+0xc] and the
+    units at [row+0x10]. A ROW can therefore name the sequence
+    its frames come from, while the state's own `seq=` line names
+    only the default. PR-330 models the row - frame, units,
+    tails, the same threshold rules - and counts the switch as
+    ll_mov_st.seq_switch, which the object census reports; no
+    part of the port changes the art from it. Measured over the
+    777 extracted .MOV texts: 206 such lines, 26 of the files,
+    36 states, in two written forms - `s name 1,300` (164) and
+    `s name,1,200` (42) - the lion's A_FALL_DOWN and A_TO_BOR in
+    ZARIA.01, ZARIA.02, TUNGA.11 and TUNGA2.12, KARA.07's
+    A_PUT_BOMB (27 rows), LONA.05's T_TELEPORT trio and
+    A_WSP_LIN_DOWN2 (42), ENA.03's A_BORING4 (24), the six
+    KADMAR.07 ninjas' A_DEAD, the three SCHODY A_RUN and seven
+    SADES.06 objects' A_DEAD.
+    WHAT WOULD CLOSE IT: the consumer of [row+0x8] - which draw
+    path reads it, whether the row's record replaces the state's
+    sequence for that row's frames or only for the element list
+    it carries, and how it composes with [row+0x14], the
+    sign flag the engine writes at 0x51696 and this
+    port draws mirrored. Until that is read, a row that switches
+    sequence mid-state is drawn from the state's art: the frame
+    NUMBER and the row's timing are right, the art is not. It is
+    a row and not a counted item because it spans the play work:
+    it is the draw half of what PR-330 read, and the 36 states
+    include the states of the level this project is aimed at.

@@ -310,6 +310,18 @@ enum {
 int ll_sig_id(const char *name);
 
 typedef struct { int frame; unsigned thresh; int dx, dy;
+                 int no_scale;        /* PR-330: a row opened by the
+                                       * engine's `s <seq>` field is
+                                       * built with the CONSTANT 1000
+                                       * divisor (0x51ab7 pushes 0x3e8),
+                                       * while the ordinary row site
+                                       * passes the state's [st+0xe]
+                                       * time_scale (0x51f37-0x51f3e).
+                                       * So those rows keep their
+                                       * authored units: measured in
+                                       * LONA.05's T_TELEPORT trio,
+                                       * time_scale=600 and 37 such
+                                       * rows. 1 = do not scale. */
                  unsigned long long gsig; unsigned char atc;
                  int has_i, ix, iy, endlv;
                  int has_f, fx, fy;           /* PR-253 row `F x,y` tail  */
@@ -716,6 +728,16 @@ typedef struct {
                                              * as an unread directive    */
     int field_other;                        /* sample= time= (time_scale=
                                              * is modelled since PR-110)   */
+    int seq_switch;                         /* PR-330: row lines that OPEN
+                                             * with the engine's `s <seq>`
+                                             * field. The ROW is modelled
+                                             * (frame, units, tails, exactly
+                                             * like any other line); the
+                                             * sequence record the field
+                                             * names - [node+0x8], the art
+                                             * this row draws - is captured
+                                             * as a count and not acted on:
+                                             * the draw half is OI-120    */
     /* PR-216: the engine's state index for THIS state, the value of
      * [obj+0x5c] while the object runs it. The engine numbers states
      * by their position in the list a script declares BEFORE its
@@ -773,6 +795,22 @@ typedef struct {
 } ll_mov_t;
 
 int ll_mov_parse(const char *text, ll_mov_t *m);   /* returns m->nst      */
+/* PR-330: ONE copy of the engine's row-line test, so anything that
+ * counts rows counts what ll_mov_parse appends. Returns 1 and sets
+ * *body to the first byte of the frame field and *frame and *units
+ * to its two numbers; else 0. A line whose first token is the field
+ * name `s` (0x92146) is a row line too: the engine reads one .MOV
+ * line through one character cursor, so its `s` arm reads the
+ * sequence NAME (" %[^ ,]%*[ ,]", 0x92148) at 0x51a6a, registers
+ * that record at 0x51a7b-0x51a95, then reads the frame with "%d,"
+ * (0x92156) at 0x51a9a and the units with "%hi" (0x92115) inside the
+ * row ctor 0x515e0 (0x51660), and appends the node to the state's
+ * row vector [st+0x2e] (0x51ac9-0x51af7). *seqsw is 1 when the line
+ * opened that way; the caller then keeps the units as authored,
+ * because that arm builds the row with the constant 0x3e8 divisor
+ * (0x51ab7) instead of the state's time_scale. */
+int ll_mov_row_line(const char *line, const char **body, int *seqsw,
+                    int *frame, int *units);
 int ll_mov_find(const ll_mov_t *m, const char *name); /* state idx or -1  */
 /* PR-107: the row of ll_mov_tr.entry as a 0-based index into s's frame
  * list: entry-1, and 0 for an absent/non-numeric token or an over-long

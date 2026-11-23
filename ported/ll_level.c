@@ -8070,8 +8070,10 @@ static int stage_apply(int code, int tick, lvl_obj *objs, int nobj,
  * LEO_PLAY_ENDLV="<state>:<row>:<value>" inserts `,end_level <value>`
  * at the end of one authored row line, where the state and row are
  * counted EXACTLY the way ll_mov_parse counts them ([STATE] headers in
- * order; frame lines by the parser's own test,
- * `sscanf(line, "%d,%d", ...) == 2`). Everything downstream of that
+ * order; frame lines by the parser's own test - the shared
+ * ll_mov_row_line, which PR-330 put in one place because the engine's
+ * test is the number pair OR that pair after the `s <seq>` field its
+ * line cursor consumes first). Everything downstream of that
  * byte is shipped code. The line below names the injection, so no log
  * can read it as shipped data. Returns a NEW buffer (caller frees) with
  * the tail inserted, or NULL when nothing was asked for or the address
@@ -8106,7 +8108,7 @@ static char *mov_inject_endlv(const char *text, size_t len)
                 row = 0;
             } else if (st == want_st) {
                 int a, b;
-                if (sscanf(line, "%d,%d", &a, &b) == 2) {
+                if (ll_mov_row_line(line, NULL, NULL, &a, &b)) {
                     if (row == want_row) {
                         char tail[32];
                         int tn = snprintf(tail, sizeof tail,
@@ -8948,7 +8950,7 @@ typedef struct {                    /* counted while reading, never guessed */
     int statics, statics_placed, static_out, static_missing,
         static_shapeonly, attached, static_attached;
     int ntrans, ctrl_other, directive, wait_cap, field_other, drop_st,
-        drop_fr, drop_tr;
+        drop_fr, drop_tr, seq_switch;
     int fr_total, fr_blank, fr_mirror, fr_oob;   /* frame numbers: the game's
                                                   * 1-based/signed grammar */
 } obj_stats;
@@ -9224,6 +9226,7 @@ static obj_script *obj_script_get(place_ctx *pc, const char *leaf,
             st->directive += s->directive;
             st->wait_cap += s->wait_cap;
             st->field_other += s->field_other;
+            st->seq_switch += s->seq_switch;
             int ai = k < LMOV_MAXST ? sc->ast[k] : -1;
             if (ai >= 0 && ai < sc->nart && sc->art[ai].found)
                 for (int f = 0; f < s->nfr; f++) {
@@ -10891,10 +10894,17 @@ static void des_placement(place_ctx *pc, llrs *hd_ety,
                " parsed and counted, acted on"
                " only once the rest of the AC_*/K_* signal bus lands"
                " (named-signal bits landed in PR-88; the cross-object"
-               " routing and the engine-internal raisers have not)\n",
+               " routing and the engine-internal raisers have not);"
+               " %d row line(s) open with the engine's `s <seq>` field"
+               " (PR-330 reads this row too: 206 of them across the"
+               " shipped 777 .MOV texts). Their ROW is modelled - frame,"
+               " units, tails, and the units kept as authored because"
+               " the engine builds that row with the constant 1000 -"
+               " and the sequence record the field names is counted"
+               " here, not drawn: the per-row art switch is OI-120\n",
                st->ntrans, st->ctrl_other, st->directive, st->field_other,
                st->state_noart, st->drop_st, st->drop_fr, st->drop_tr,
-               st->wait_cap);
+               st->wait_cap, st->seq_switch);
     if (st->fr_total)
         printf("ll_level: frame numbers of the scripts that have art (the"
                " game's grammar: 1-based, negative = drawn mirrored, 0 = no"

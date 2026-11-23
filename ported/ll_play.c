@@ -527,6 +527,89 @@ static void parse_cond(ll_mov_gate *c, int *ncp, int max,
     }
 }
 
+/* PR-330: the engine reads one .MOV line through ONE character cursor.
+ * The state-block reader 0x51910 builds that cursor in its prologue
+ * (0x51926-0x51929: the slot at [ebp-0x1c] gets the stream vtable
+ * 0x961fc) and every scan after it consumes from where the previous one
+ * stopped - the `time` arm proves the chaining outright, it reads "%hi"
+ * (0x9211e) into [st+0x8] and then ",%hi" (0x92122) into [st+0xa] of the
+ * same line. Its first step is the token `" %[^,| \r\n\t]"` (0x92162),
+ * compared with the plain byte compare 0x76d20 - NOT the case-folded
+ * 0x76a69 that names states - against the field names time (0x92119),
+ * sample, time_scale, seq (0x9213f), s (0x92146), control (0x9215a).
+ * `s` is the one field name that does NOT consume the line: after its
+ * name scan `" %[^ ,]%*[ ,]"` (0x92148) at 0x51a6a and the record
+ * lookup/creation through the level object's record table at
+ * 0x51a7b-0x51a95, the SAME arm reads the frame with "%d," (0x92156) at
+ * 0x51a9a, calls the row ctor 0x515e0 (its own class word 0xa2638 is
+ * set at 0x5160a) at 0x51ac1 with the CONSTANT 0x3e8 pushed as the
+ * threshold
+ * divisor - the ordinary row fill at 0x51f37-0x51f3e pushes the
+ * state's [st+0xe] time_scale into that same slot, so an `s`-led row
+ * keeps its authored units - and appends the node to the state's row
+ * vector [st+0x2e] at 0x51ac9-0x51af7. Inside the ctor, 0x51660 reads
+ * the units with "%hi" from that same cursor (so it lands on the
+ * number AFTER the name) and scales them; the frame paths then store
+ * the sequence record at [node+0x8] on all three of them (0x5169e for
+ * an authored negative, 0x516cf for a positive, and for an authored 0
+ * the record comes from 0x44110 at 0x516af-0x516c2), with [node+0xc]
+ * the frame reduced by one (0x516d2, and 0x516a3-0x516a8 for a
+ * negative) and [node+0x14] its sign flag (0x51696) - the PR-107
+ * mapping is this port's copy of that pair. 0x516d5 then walks the
+ * rest of the line as the row's directive chain through 0x45df0 like
+ * any other row. So
+ * `s idle 1,300,GEN K_GEN1` IS a row of A_FALL_DOWN: frame 1, 300 units,
+ * a GEN K_GEN1 tail, drawn from the "idle" sequence. MEASURED over the
+ * 777 extracted texts (the same scan that reproduces the 18617 rows the
+ * older records quote): 206 such lines in 26 of them, 36 states, in two
+ * written forms - `s idle 1,300` (164) and `s idle,1,200` (42, the comma
+ * that same `%*[ ,]` scan eats). The lion's A_FALL_DOWN (ZARIA.01/.02,
+ * their LEWPL twins, TUNGA.11/.12, KADMAR.07's 0_0, which also carries
+ * it on A_LISC_END) and his A_TO_BOR (5 `s borring` rows with
+ * VOL_MUSIC), KARA's A_PUT_BOMB (27), LONA's T_TELEPORT trio and
+ * A_WSP_LIN_DOWN2 (42), ENA's A_BORING4 (24), the six KADMAR.07
+ * ninjas' A_DEAD, the three SCHODY A_RUN and seven SADES.06 objects'
+ * A_DEAD. The port read NONE of them: its test was the number pair at
+ * the line head, so 36 states' row lists were short, and ZARIA.01's
+ * A_FALL_DOWN(3) landed on the wrong row - the reason a landed lion
+ * stays in the fall pose once the surface-link raiser of the next PR
+ * makes that state reachable. The sequence record itself stays
+ * captured-not-drawn: OI-120. */
+int ll_mov_row_line(const char *line, const char **body, int *seqsw,
+                    int *frame, int *units)
+{
+    const char *q = line;
+    int sw = 0;
+    int f, ms;
+
+    while (*q == ' ' || *q == '\t')            /* every scan skips blank */
+        q++;
+    if (q[0] == 's' && (q[1] == ' ' || q[1] == '\t' || q[1] == ',')) {
+        const char *n = q + 1;
+        while (*n == ' ' || *n == '\t')
+            n++;
+        if (*n && *n != ',') {                 /* " %[^ ,]" = the name   */
+            while (*n && *n != ' ' && *n != '\t' && *n != ',')
+                n++;
+            while (*n == ' ' || *n == '\t' || *n == ',')
+                n++;                           /* ... and `%*[ ,]`        */
+            q = n;
+            sw = 1;
+        }
+    }
+    if (seqsw)
+        *seqsw = sw;
+    if (sscanf(q, "%d,%d", &f, &ms) != 2)
+        return 0;
+    if (body)
+        *body = q;
+    if (frame)
+        *frame = f;
+    if (units)
+        *units = ms;
+    return 1;
+}
+
 int ll_mov_parse(const char *text, ll_mov_t *m)
 {
     memset(m, 0, sizeof *m);
@@ -586,7 +669,21 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
             } else if (m->nst > 0) {
                 ll_mov_st *s = &m->st[m->nst - 1];
                 int f, ms;
-                if (sscanf(line, "%d,%d", &f, &ms) == 2) { /* frame line   */
+                const char *body = NULL;
+                int seqsw = 0;
+                /* PR-330: the shared row-line test, including the `s
+                 * <seq>` prefix the engine's cursor consumes before the
+                 * frame field. The prefix is not part of the row, so the
+                 * line is rewritten to what follows it and everything
+                 * below parses an ordinary row; the sequence record the
+                 * field names is counted on the state, never drawn
+                 * (OI-120). */
+                if (ll_mov_row_line(line, &body, &seqsw, &f, &ms)) {
+                    /* frame line */
+                    if (seqsw) {
+                        memmove(line, body, strlen(body) + 1);
+                        s->seq_switch++;
+                    }
                     if (s->nfr < LMOV_MAXFR) {
                         ll_mov_fr *mf = &s->fr[s->nfr++];
                         mf->frame = f;
@@ -598,6 +695,12 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                          * engine reads %hi into node+0x10 first
                          * (0x51679), matching the viewer's mov_parse. */
                         mf->thresh = ms > 0 ? (unsigned)ms : 100u;
+                        /* PR-330: an `s`-led row is NOT scaled by the
+                         * block's time_scale: the engine's `s` arm
+                         * pushes the constant 0x3e8 into the ctor slot
+                         * that the ordinary row fill feeds with the
+                         * state's [st+0xe] (0x51ab7 vs 0x51f37). */
+                        mf->no_scale = seqsw;
                         mf->dx = mf->dy = 0;
                         mf->gsig = 0;
                         mf->atc = 0;
@@ -613,8 +716,13 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                         mf->gop = LL_GOP_NAME;
                         /* A frame line may carry further fields. The ones the
                          * model acts on are the authored motion of THIS frame,
-                         * "N,ms, M dx,dy" (285 of 18617 shipped frame lines
-                         * carry it; there are no standalone "M" lines), the
+                         * "N,ms, M dx,dy" (285 of the 18823 shipped frame
+                         * lines carry it - the population as PR-330's
+                         * row test counts it, 18617 before that PR read
+                         * the `s <seq>` lines; no `s`-led line carries an
+                         * M tail, so the 285 is the
+                         * same count either way; there are no standalone
+                         * "M" lines), the
                          * `GEN <signal>` tails (PR-88: the engine's own
                          * directive table is at 0x917c0, the names it can
                          * raise are the 0x919ec block) and ATC_ON/ATC_OFF
@@ -1172,10 +1280,16 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
          * (0x51679 imul / 0x5168d idiv 0x3e8): only rows read AFTER
          * the `time_scale=` line are scaled (scale_at). KADMAR.07's
          * balloon: authored 200 with time_scale=2000 stores 400, i.e.
-         * FOUR iterations per row, not two. */
+         * FOUR iterations per row, not two. PR-330 adds the one
+         * exception the same ctor shows: a row the `s <seq>` field
+         * opens is built with the constant 1000 (0x51ab7), so its
+         * units are stored as authored - LONA.05's T_TELEPORT trio
+         * (time_scale=600) is the only place in the shipped set where
+         * that is observable, 37 rows. */
         for (int r = s->scale_at; r < s->nfr; r++)
-            s->fr[r].thresh = (unsigned)((long)s->fr[r].thresh *
-                                         s->time_scale / 1000);
+            if (!s->fr[r].no_scale)
+                s->fr[r].thresh = (unsigned)((long)s->fr[r].thresh *
+                                             s->time_scale / 1000);
         for (int t = 0; t < s->ntr; t++)
             s->tr[t].tidx = ll_mov_find(m, s->tr[t].target);
     }
@@ -5145,6 +5259,84 @@ int ll_play_selftest(void)
         CHECK(kx[5] == 295 && kx[6] == 294);         /* and the looped    */
                                                      /* one, seamless     */
         free(g2);
+    }
+    {
+        /* PR-330, LEG S - the row line that OPENS with the engine's
+         * `s <seq>` field. ZARIA.01's own [A_FALL_DOWN] is the data:
+         * THREE authored rows, of which this parser read two until
+         * this PR - and the missing one is the FIRST, so every row
+         * index and the `A_FALL_DOWN(3)` start-row token were one row
+         * off. The engine appends that row: 0x51a6a-0x51af7, all of
+         * it riding one chained character cursor per line (the name
+         * with " %[^ ,]%*[ ,]" at 0x92148, the frame with "%d," at
+         * 0x92156, the units with "%hi" at 0x92115 inside the row
+         * ctor 0x515e0), and the record the name becomes is stored ON
+         * THE ROW at [node+0x8]. The port models the row and COUNTS
+         * the sequence switch (st->seq_switch, reported): drawing it
+         * is OI-120. */
+        static const char SD[] =
+            "[A_FALL_DOWN]\ncontrol=BY_TIME|FRAME_REV|CHECK_ALL|CH_DIR\n"
+            "F=120,0\nT=30,1\nG=0,55\n"
+            "A_WPAD(1)=AC_ONAIR,AC_DRECT\nA_DRAP(1)=AC_BREAK_NEXT\n"
+            "A_FALL_DOWN(3)=!AC_ONAIR\nseq=fall_dn\n"
+            "s idle 1,300,GEN K_GEN1\n7,0,WAIT K_NEVER\n"
+            "8,300,F 0,100\n";
+        ll_mov_t *sd = calloc(1, sizeof *sd);
+        CHECK(sd);
+        CHECK(ll_mov_parse(SD, sd) == 1);
+        CHECK(sd->st[0].nfr == 3);                 /* ALL THREE rows,     */
+        CHECK(sd->st[0].seq_switch == 1);          /* one `s`-led among   */
+        CHECK(sd->st[0].fr[0].frame == 1 &&        /* the frame and the   */
+              sd->st[0].fr[0].thresh == 300 &&     /* units come AFTER    */
+              sd->st[0].fr[0].gsig ==              /* the name, and its   */
+              (1ull << LL_SIG_K_GEN1));            /* tails still parse   */
+        CHECK(sd->st[0].fr[1].frame == 7 &&        /* `7,0` keeps the     */
+              sd->st[0].fr[1].thresh == 100 &&     /* engine's minimum    */
+              sd->st[0].fr[1].gsig_id == -2);      /* K_NEVER = no bit    */
+        CHECK(sd->st[0].fr[2].frame == 8 &&        /* the landing row     */
+              sd->st[0].fr[2].thresh == 300 &&
+              sd->st[0].fr[2].has_f &&
+              sd->st[0].fr[2].fx == 0 && sd->st[0].fr[2].fy == 100);
+        CHECK(ll_mov_row_start(&sd->st[0], 3) == 2);   /* the authored    */
+                                                       /* (3) lands on    */
+                                                       /* `8,300,F 0,100` */
+        /* The two ctor arguments differ and only this state shows it:
+         * the `s` arm pushes 0x3e8 (0x51ab7), the ordinary row fill
+         * pushes the state's [st+0xe] (0x51f37-0x51f3e). LONA.05's
+         * T_TELEPORT trio is `time_scale=600` with 37 `s`-led rows -
+         * the one place in the shipped set where the two differ, and
+         * the shape below is that state's, 600 and 300 verbatim. */
+        static const char SC[] =
+            "[T_TELEPORT1]\ncontrol=BY_TIME\ntime_scale=600\n"
+            "seq=uj22\n1,300\ns uj25a 2,300\n";
+        ll_mov_t *sc = calloc(1, sizeof *sc);
+        CHECK(sc);
+        CHECK(ll_mov_parse(SC, sc) == 1);
+        CHECK(sc->st[0].nfr == 2 && sc->st[0].seq_switch == 1);
+        CHECK(sc->st[0].fr[0].thresh == 180 &&     /* 300 * 600 / 1000, */
+                                              /* the PR-110 law   */
+              !sc->st[0].fr[0].no_scale);
+        CHECK(sc->st[0].fr[1].frame == 2 &&        /* the `s` row keeps */
+                                              /* its authored     */
+              sc->st[0].fr[1].thresh == 300 &&     /* units            */
+              sc->st[0].fr[1].no_scale);
+        free(sc);
+        /* The field-name compare is the engine's plain byte compare
+         * 0x76d20 (0x76a69, which folds A-Z, is only for state names),
+         * and the name scan needs a token: all 206 shipped lines are a
+         * lowercase `s`, a name, and the numbers. A nameless `s` line
+         * WOULD still append a row in the original - the `%d,` scan
+         * fails and the ctor takes the caller's UNINITIALIZED slot, an
+         * undefined read with no shipped instance - and this parser
+         * calls it not-a-row, which is the named difference. */
+        static const char SN[] =
+            "[A]\nS idle 1,300\ns\ns ,1,300\nsample=25\nseq=a\n1,100\n";
+        ll_mov_t *sn = calloc(1, sizeof *sn);
+        CHECK(sn);
+        CHECK(ll_mov_parse(SN, sn) == 1);
+        CHECK(sn->st[0].nfr == 1 && sn->st[0].seq_switch == 0);
+        free(sd);
+        free(sn);
     }
 
     return rc;

@@ -44906,3 +44906,186 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-322's/PR-328's pair, with DATA=/tmp/opencode/nope
   HD=/tmp/opencode/nope.
 ```
+
+## PR-330 — THE .MOV LINE IS READ THROUGH ONE CHAINED CURSOR, SO AN
+## `s <seq>` LINE IS A ROW TOO: 206 WERE UNREAD, AND ZARIA.01'S LION
+## RAN A TWO-ROW FALL WHERE THE GAME AUTHORS THREE
+```
+KIND: port
+SUBSYSTEM: the row-line test of the .MOV parser - ported/ll_play.c's
+  ll_mov_parse and the new shared ll_mov_row_line - and the row count
+  of the object census in ported/ll_level.c and its end-level row
+  injector. It is the read that makes the F6 exit thread of HANDOFF
+  section 8 T5 (6) walkable: A_FALL_DOWN is the state the surface-link
+  raiser of the next step reaches, and its authored row list was short
+  by one row, so the state's own row tokens addressed the wrong rows.
+ADDRESSES: 0x51910, 0x51921, 0x51926, 0x51929, 0x961fc, 0x92115,
+  0x92119, 0x9211e, 0x92122, 0x92126, 0x92127, 0x9212e, 0x92131,
+  0x9213c, 0x9213f, 0x92146, 0x92148, 0x92156, 0x9215a, 0x92162,
+  0x51933, 0x51944, 0x51948, 0x51956, 0x5195a, 0x51960, 0x519ab,
+  0x519c3, 0x51a4e, 0x51a55, 0x51a64, 0x51a6a, 0x57d30, 0x51a7b,
+  0x51a86, 0x51a8c, 0x51a92, 0x51a95, 0x51a9a, 0x49920,
+  0x51ab7, 0x51ac1, 0x51ac9, 0x51af7, 0x21e80, 0x515e0, 0xa2638,
+  0x51660, 0x51679, 0x5168d, 0x51692, 0x51696, 0x5169e, 0x516a3,
+  0x516a8, 0x516af, 0x516c2, 0x516cf, 0x516d2, 0x44110, 0x516d5,
+  0x45df0, 0x76d20, 0x76a69, 0x51eb0, 0x51f37, 0x51f3e,
+  0x51f48, 0x51f54, 0x3e8, 0xcef40, 0xceff4, 0xceff8
+NAMES: s, seq, time, time_scale, sample, control, BY_TIME, FRAME_REV,
+  ll_mov_row_line, ll_mov_parse, ll_mov_st, seq_switch, no_scale,
+  ll_mov_fr, ll_mov_row_start, A_FALL_DOWN, A_TO_BOR, A_LISC_END,
+  A_PUT_BOMB, A_WSP_LIN_DOWN2, A_BORING4, T_TELEPORT1, T_TELEPORT2,
+  A_DEAD, A_RUN, A_WSP, A_DRAP, A_LOOKDOWN, ZARIA.01, ZARIA.02,
+  TUNGA.11, TUNGA2.12, KADMAR.07, KARA.07, LONA.05, ENA.03,
+  SADES.06, F6, OI-120, OI-111
+CODE: yes: ported/ll_play.c (ll_mov_row_line, the row branch of
+  ll_mov_parse, the time_scale pass, and the LEG S block added to
+  --play-selftest), ported/ll_play.h (that declaration,
+  ll_mov_st.seq_switch, ll_mov_fr.no_scale) and ported/ll_level.c
+  (the census field, its report clause, and PR-199's end-level row
+  injector now calling the shared test). Makefile: the PR-278
+  ladder-descend leg re-pinned for the third row; no leg added or
+  removed, so the fixture count stays 71.
+HOOKS: none new. The re-pinned leg runs under the existing
+  LEO_PLAY_SCRIPT / LEO_PLAY_ASK / LEO_LEVEL_PPM / LEO_LEVEL_PPM_TICK
+  knobs; the data-free legs ride --play-selftest, which verify-play
+  already requires.
+MEASURED: (a) WHAT THE PORT ASKED, AND WHAT THE ENGINE ASKS. The port
+  required a line to BEGIN with the number pair, sscanf(line, "%d,%d").
+  The engine never looks at a line head. Its state-block reader 0x51910
+  builds ONE character cursor in its prologue - 0x51921 loads the
+  stream vtable 0x961fc, 0x51926/0x51929 store it at [ebp-0x1c] with
+  a zero at [ebp-0x20] - and every scan after that consumes from where
+  the previous one stopped. The `time` arm shows the chaining
+  outright: it reads "%hi" (0x9211e) at 0x51948 into [st+0x8] and
+  then ",%hi" (0x92122) at 0x5195a into [st+0xa] of the SAME line.
+  Its first step is the token " %[^,| \r\n\t]" (0x92162) compared by
+  the plain byte comparator 0x76d20 - NOT the case-folding 0x76a69
+  that names states - against the field names time (0x92119), sample
+  (0x92127), time_scale (0x92131), seq (0x9213f), s (0x92146),
+  control (0x9215a).
+  (b) THE `s` ARM DOES NOT END THE LINE. At 0x51a4e the token `s` is
+  compared; on a match (0x51a64 is the not-match exit) 0x51a6a scans
+  the sequence NAME with " %[^ ,]%*[ ,]" (0x92148) through 0x57d30,
+  0x51a7b-0x51a92 resolves that name through the record table reached
+  from ds:0xcef40 +0x398, then its [obj+0x16] vtable +0x4, with the
+  record-id counter ds:0xceff8 as the second argument, and 0x51a9a
+  reads the frame with "%d," (0x92156) through 0x49920. 0x51aa9
+  allocates the row node (0x18 bytes) and 0x51ac1 calls the row ctor
+  0x515e0 - the same ctor the ordinary row lines use from the
+  state-body reader 0x51eb0 at 0x51f54; its class word is 0xa2638.
+  0x51ac9-0x51af7 appends the node to the state's row vector at
+  [st+0x2e], growing it through 0x21e80.
+  (c) THE ROW RECORD AND THE TWO DIFFERENT CTOR ARGUMENTS. The ctor
+  zeroes [node+0x8]/[0xc]/[0x14] and sets [node+0x10] to 1 (its own
+  default threshold), then 0x51660 reads the units itself with "%hi"
+  (0x92115) from that same cursor - so the number AFTER the name is
+  the row's units - multiplies by the caller's factor and divides by
+  0x3e8 (0x51679, 0x5168d). The frame paths follow: 0x51692 branches
+  on the sign, a negative frame sets [node+0x14] (0x51696) and stores
+  the magnitude at [node+0xc] (0x516a3-0x516a8), a positive one
+  stores it minus one (0x516d2) - PR-107's 1-based, negative-means-
+  mirrored mapping is this port's copy of that pair - and the record
+  the field named goes to [node+0x8] on every path (0x5169e, 0x516cf,
+  and for an authored frame 0 the record comes from 0x44110 at
+  0x516af-0x516c2). The ordinary fill passes the state's [st+0xe]
+  time_scale (0x51f37-0x51f3e, the word the `time_scale` arm stores
+  at 0x519c3); the `s` arm passes the CONSTANT 0x3e8 (0x51ab7). So an
+  `s`-led row keeps its authored units. That is observable in exactly
+  three shipped states: LONA.05's T_TELEPORT1, T_TELEPORT1_2 and
+  T_TELEPORT2, `time_scale=600` with 37 `s`-led rows between them.
+  [node+0x8] is the sequence record the field named: a row may choose
+  the art its frames come from, while the state's own `seq=` line
+  names only the default. 0x516d5 then walks the rest of the line
+  through the directive chain 0x45df0 like any other row, which is why
+  the `GEN`/`Wait`/`F` tails of these lines parse with the rules the
+  port already has.
+  (d) THE POPULATION, RE-MEASURED. A scan that reproduces the 18617
+  row lines the older records quote EXACTLY, run over the same 777
+  extracted texts: 206 of them are `s`-led, in 26 files and 36
+  states, in two written forms - `s name 1,300` (164) and
+  `s name,1,200` (42, the comma the engine's %*[ ,] eats) - so the
+  shipped row count is 18823, not 18617. No `s`-led line carries an
+  M tail, so PR-59's 285 stands. The lists the port was short: one
+  A_FALL_DOWN row plus five A_TO_BOR rows in each of ZARIA.01,
+  ZARIA.02, their LEWPL twins, TUNGA.11 and TUNGA2.12; KADMAR.07's
+  0_0 (A_FALL_DOWN, A_LISC_END), its six ninjas' A_DEAD (5 each) and
+  its three SCHODY A_RUN; KARA.07's A_PUT_BOMB (27); LONA.05's
+  A_WSP_LIN_DOWN2 (5) and T_TELEPORT trio (37); ENA.03's A_BORING4
+  (24); and seven SADES.06 objects' A_DEAD and A_RUN (42).
+  (e) THE MODEL. ll_mov_row_line is now the ONE row test, and it
+  returns the frame and the units too: ll_mov_parse calls it, rewrites
+  the line to what follows the `s` field and parses the rest with the
+  unchanged rules - the 100-unit floor, the tails, the `Wait` capture.
+  The sequence record is counted as ll_mov_st.seq_switch, totalled per
+  object and reported by the object census with the shipped 206 named
+  in the wording; ll_mov_fr.no_scale carries the ctor difference. The
+  end-level injector of PR-199 counts rows through the same function,
+  so its <state>:<row> addressing cannot drift from the parser's.
+  (f) WHY A PLAY FIXTURE MOVED. ZARIA.01's A_FALL_DOWN has THREE
+  authored rows and the unread one is the FIRST, so every row index
+  and the state's own `A_FALL_DOWN(3)=!AC_ONAIR` token were one row
+  off. The PR-278 ladder-descend leg re-pins to the authored chain:
+  the fall ENTERS on `s idle 1,300` - frame 1 at tick 251 - the three
+  rows close in 1+1+3 iterations, the list ENDS at 253,
+  `A_DRAP(1)=AC_BREAK_NEXT` takes him out at 254, `A_LOOKDOWN(1)=
+  K_DOWN` (FWD,DOWN held since 223) follows at 255, and the ground
+  comes at 217,652 at 264: feet 652 plus the 30 px look_dn art
+  contact = 682, the .plt main-ground line at that x. The old pins -
+  251 frame 8, 270 pos 214,651 - are superseded. Nothing else moved:
+  verify-all with the data staged is 71 (ok), the same count as
+  before.
+  (g) RED FIRST, AND THE MUTATIONS. The data-free leg is LEG S of
+  --play-selftest, built from ZARIA.01's own [A_FALL_DOWN] text:
+  three rows, seq_switch == 1, the frame 1 and units 300 of the
+  `s` row and its GEN K_GEN1 tail, the `7,0` row's 100-unit floor and
+  its WAIT K_NEVER capture, the `8,300,F 0,100` landing row, and
+  ll_mov_row_start(3) resolving to that third row - plus a
+  time_scale=600 block shaped like LONA.05's (300 scaled to 180 for
+  the ordinary row, 300 kept for the `s` row) and the negatives: an
+  uppercase S is not the field, a nameless `s` line is not a row.
+  Against the parser as it was, LEG S is RED at the row count. Seven
+  mutations, every one caught: M1 the old test (8 failures, first at
+  the row count), M2 the row taken with the `s` prefix left in place
+  (8), M3 the field name matched case-insensitively (1, the negative
+  leg), M4 the row read but the switch not counted (2), M5 the count
+  raised once per block row instead of per line (1), M6 the `s` row
+  scaled by the block time_scale (1), M7 no_scale never set (1).
+  (h) THE NAMED DIFFERENCES, ALL WITH ZERO SHIPPED INSTANCES. An `s`
+  line with no name before its comma: in the engine the name scan
+  fails, %*[ ,] still consumes the separator, "%d," reads the frame
+  and the record slot keeps the caller's value, so a row IS appended;
+  this parser calls it not-a-row. Its mirror: %[^ ,] ends a name only
+  at a space or a comma in the engine and this parser ends it at a
+  tab as well, and the engine's %*[ ,] would consume a tab that this
+  parser leaves. Both are unreachable in the shipped 206 lines.
+OPENS: the sequence record at [node+0x8] and the draw path that reads
+  it - OI-120; what 0x44110 returns for an authored frame 0, the one
+  row path that resolves a record WITHOUT the `s` field; whether the
+  record table at 0x51a7b-0x51a95 hands back
+  the SAME record a block's `seq=` line named - "idle" is both
+  A_FALL_DOWN's row sequence and the idle state's own art - which
+  decides whether a row can share art with a state at all; the
+  nameless-`s` row and the tab rules of (h); the growth law of the
+  row vector at 0x21e80 beyond the append at 0x51ade; and OI-111's
+  `Wait` tail, still unconsulted by the player's row admit, which is
+  why `7,0,WAIT K_NEVER` holds nothing in this port today.
+CLOSES: nothing. It restores the authored row lists of 36 states and
+  with them the row numbers their own transition tokens name -
+  ZARIA.01's A_FALL_DOWN(3) among them - which is the precondition
+  for the surface-link raiser step that follows it.
+CORRECTS: PR-278's ladder-descend note, whose fall stayed inside
+  A_FALL_DOWN to tick 270 on a two-row list; the population quoted as
+  18617 shipped frame lines in ported/ll_play.c and in PR-110,
+  PR-221 and the 15317-of-18617 note in HANDOFF.md, all measured with
+  the pre-PR-330 test - the figures are 18823 rows, 206 of them
+  `s`-led; and PR-199's comment naming sscanf(line, "%d,%d") as the
+  row test the end-level injector had to agree with.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; red first, then green, with the seven
+  mutations above reported in MEASURED (g); no Windows legs
+  (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-328's/PR-329's pair, with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope.
+```

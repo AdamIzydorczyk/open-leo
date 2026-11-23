@@ -2144,11 +2144,23 @@ ifeq ($(PX_DATA),1)
 # band the ladder's answer never carries AC_DRAB (P1
 # precedence, PR-270's measured order), so A_WSP's own
 # `A_FALL_DOWN(1)=!AC_DRAB` takes it on its first step:
-# A_FALL_DOWN at 251. The fall lands grounded 1 at 214,651 at
-# 270 - feet 651 + the 31 px fall_dn art contact (PR-97's
-# max-over-the-state-art rule) = 682, the .plt main-ground
-# line at x 214. Every tick above is the fixture's own
-# arithmetic; the chain is exactly what the authored rows
+# A_FALL_DOWN at 251 - and PR-330 is what makes this leg read
+# the authored way. A_FALL_DOWN has THREE rows, and the first
+# one is the `s idle 1,300,GEN K_GEN1` line this parser used to
+# drop, so the list is now ENTERED on that row (frame 1 at 251,
+# the `7,0` row one iteration later at 252 and `8,300,F 0,100`
+# at 253) and the state's own `A_FALL_DOWN(3)=!AC_ONAIR` token
+# lands on the real third row instead of outside the list. He is
+# mid-air, so that row simply closes: the list ENDS at 253 and
+# `A_DRAP(1)=AC_BREAK_NEXT` takes him out at 254, where
+# `A_LOOKDOWN(1)=K_DOWN` (FWD,DOWN held since 223) follows at
+# 255. A_LOOKDOWN's own motion lands him grounded 1 at
+# 217,652 at 264 - feet 652 + the 30 px look_dn art contact
+# (PR-97's max-over-the-state-art rule) = 682, the .plt
+# main-ground line at x 217. Before PR-330 the short two-row
+# list made the (3) token fall outside it and the state stayed
+# in the fall through 270. Every tick above is the fixture's
+# own arithmetic; the chain is exactly what the authored rows
 # order, and this is the descend half of the ladder.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
@@ -2175,11 +2187,15 @@ ifeq ($(PX_DATA),1)
 	       /tmp/opencode/ly_cdown.log \
 	  && grep -q 'play tick 243: state A_SCIAG seq lift frame 2 pos 217,553 grounded 0' \
 	       /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play tick 251: state A_FALL_DOWN seq fall_dn frame 8 pos 217,555 grounded 0' \
+	  && grep -q 'play tick 251: state A_FALL_DOWN seq fall_dn frame 1 pos 217,555 grounded 0' \
 	       /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play tick 270: state A_FALL_DOWN seq fall_dn frame 8 pos 214,651 grounded 1' \
+	  && grep -q 'play tick 253: state A_FALL_DOWN seq fall_dn frame 1 pos 217,558 grounded 0' \
 	       /tmp/opencode/ly_cdown.log \
-	  && echo "play ladder-descend (PR-278): mid-air AC_EDGE + K_DOWN takes A_WALK's own A_SCIAG row, the m 0,1 rows descend one px an admit at the PR-100 row clock, the list's AC_BREAK_NEXT re-enters A_WSP which its own !AC_DRAB row leaves inside the edge band (PR-270's precedence), and the fall lands on the .plt ground (ok)" \
+	  && grep -q 'play: A_FALL_DOWN -> A_DRAP' /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play: A_DRAP -> A_LOOKDOWN' /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 264: state A_LOOKDOWN seq look_dn frame 5 pos 217,652 grounded 1' \
+	       /tmp/opencode/ly_cdown.log \
+	  && echo "play ladder-descend (PR-278): mid-air AC_EDGE + K_DOWN takes A_WALK's own A_SCIAG row, the m 0,1 rows descend one px an admit at the PR-100 row clock, the list's AC_BREAK_NEXT re-enters A_WSP which its own !AC_DRAB row leaves inside the edge band (PR-270's precedence), and the THREE authored fall rows - PR-330 reads the s-idle one - end the state and the land lands on the .plt ground (ok)" \
 	  || { echo "play ZARIA ladder-descend grep FAILED"; \
 	       grep -E 'play: A_|state A_(WSP|SCIAG|FALL_DOWN|WALK) ' \
 	         /tmp/opencode/ly_cdown.log | tail -12; exit 1; }
