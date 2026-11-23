@@ -203,6 +203,29 @@ Paths on the development machine (edit for another one; tools hard-code them):
 | scratch cut from them | `/tmp/opencode/yt/` (frames, crops, measurement scripts; older `-f 135` copies of ep.1/ep.2 live there too) |
 | disassembly | `/tmp/opencode/vis/text.asm` (make it with `tools/re/make_text_asm.sh`) |
 
+### Agent skills in this repo (local tooling, never in git)
+
+Three project-local agent skills live under `.opencode/skills/`
+(gitignored on purpose: verify-docs P5 inventories tracked `.md` and
+these SKILL.md files must stay outside that closed set). Sessions
+discover them automatically from that directory; each is a ROUTER to
+the one home named below - the docs stay the authority, and a skill
+that drifts from them is wrong, not the other way round.
+
+- `leo-verify-gate` - which gate a change must pass: rule 4's GATE
+  PROFILE (full Linux gate vs the docs light gate), the rule-8
+  Windows deferral, the never-change standing facts. Home: section 2.
+- `leo-pr-record` - the PR-nn journal procedure: numbering, the
+  kind-tagged commit (rule 9), the record field block, index
+  regeneration. Home: sections 10 and 10a; the block itself is
+  defined ONLY there.
+- `leo-ghidra-re` - the engine-reading pipeline: le_dump -> Ghidra
+  headless, VA/file-offset arithmetic, leodb vs objdump, the vtable
+  method, the evidence rules. Home: section 9 and tools/re/README.md.
+
+These skills change nothing about the rules above; rule 11's ban on
+the remote-wrapper skills (`lin`/`wrt`) stays absolute.
+
 ### Reference captures (never in git, but kept on disk)
 
 The three captures the port's footage-based claims rest on are stored in

@@ -80,3 +80,8 @@ movies/
 # section 3 ("Reference captures"); .mp4 frames cut from them stay in
 # /tmp/opencode/ as always.
 reference/video/
+
+# Agent skills (SKILL.md trees for OpenCode/Claude) are local tooling:
+# verify-docs P5 (tools/doc_census.py) inventories every TRACKED .md and
+# fails outside the closed docs set, so these stay untracked on purpose.
+.opencode/
