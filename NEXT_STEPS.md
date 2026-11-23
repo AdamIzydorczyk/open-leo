@@ -43980,3 +43980,96 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-321's pair, with DATA=/tmp/opencode/nope
   HD=/tmp/opencode/nope.
 ```
+
+## PR-324 — THE ANSWER-6 CURSOR JUMP RUNS ON THE SCENE-OBJECT ROW
+## CLOCK TOO: obj_close REWRITES o->fi INSTEAD OF THE +1/WRAP, AND THE
+## HELD-LOOP AND DELAYED-LIST-END SHAPES BECOME OBSERVABLE
+```
+KIND: port
+SUBSYSTEM: the scene-object row step (obj_advance in ll_level.c,
+  the answer-6 branch at the row close), the object state
+  selftest (two legs plus their word-less controls), and the
+  parser census comment in ll_play.c.
+ADDRESSES: 0x46739, 0x46777, 0x467dd, 0x467ee, 0x49920, 0x91952,
+  0xa1018, 0xa1030, 0x45d90, 0x45dc0, 0x520c0, 0x52135, 0x52140,
+  0x521c1, 0x521b6, 0x521f0, 0x536f0, 0x54170
+NAMES: goto, gotorel, goto_rel, GOTO_REL, gotocmd, gotoval,
+  answer-6, obj_advance, o->fi, o->row_t, brk_arm, AC_BREAK_NEXT,
+  A_GO, A_HO, A_END, G3-O, G4-O, RYBA, KAMIEN, SEP, SPLYW,
+  KADMAR2_SCHODY, A_FIGHT, M -30,0, apply_row_pull
+CODE: yes: one branch at the row close of obj_advance (the goto
+  pair evaluated where the +1/wrap step used to run, the same
+  shape PR-323 added on the player clock), and two selftest legs
+  with word-less controls in obj_state_selftest. No new fields -
+  ll_mov_fr.gotocmd/gotoval shipped with PR-323 and the object
+  side parses through the same reader.
+HOOKS: none
+MEASURED: (a) THE MODEL. At the point where the object's closing
+  row hands over (after its M motion, GEN bits and ATC words,
+  the port's mirror of 0x520c0's +0x04 pass), a row carrying the
+  word takes the cursor step of 0x45d90/0x45dc0 INSTEAD of the
+  +1: absolute rows set fi to the parse-stored 0-based number
+  (minus one folded at parse, 0x46777), relative rows add the
+  verbatim delta (0x467dd/0x467ee). The wrap branch, its base-
+  position reset and the brk_arm of the list end all belong to
+  the NORMAL step and are skipped for that close - the 0x52140
+  answer-6 skip, PR-322's read. The clamp to [0, nfr-1] is the
+  same named port safety net as PR-323's; KADMAR2_SCHODY's
+  `1,0,GOTOREL -1` at row 1 is the authored case that would hit
+  it, and it is an object state, so the net matters MORE here.
+  (b) THE LEGS, red first (the block failed before the branch
+  existed). G3-O, the absolute shape: row 0 `goto 3,M 100,0` -
+  step 1 ends at fi=2, x=100, no bit; closing that jumped-to
+  LAST row at step 2 is an ordinary last-row close (fi=0, base
+  reset, bit armed); row 1 carries the word again, so the state
+  CYCLES jump, wrap, jump, wrap - the held-loop pattern the
+  KADMAR2 `gotorel 0` rows make explicit. Its word-less control
+  walks 0, 1, 2, arms at its step 2 and takes its declared
+  AC_BREAK_NEXT at step 3 (the bit tested by a later step's
+  composition, PR-135) - the jump DELAYS the list end, and the
+  control's state change is the discriminator that the jumped
+  object never has. G4-O, the A_FIGHT/KADMAR2 shape: last row
+  `GOTO_REL -2` with every row `M -30,0` - the cursor cycle is
+  3 -> 1 -> 2 -> 0 -> 1, no wrap, no bit ever, and x runs
+  -30,-60,-90,-120,-150 straight THROUGH the seam; the plain
+  control resets to the base at its wrap and its declared
+  transition lands the following step. (c) THE MUTATIONS, each
+  against the full leg set. Object branch off: the first object
+  leg fails at the absolute-jump check; with the earlier G3
+  branches bypassed in turn the SAME mutation also fails the
+  step-after-jump check (which now carries the G4 cursor pair
+  3 -> 1 and 1 -> 2), the cycle-after-jump check, and the
+  cursor-cycle/motion checks - every leg discriminates, and the
+  word-less control legs stay green (their fixtures carry no
+  word). Dropping the parse-time minus-one (shared parser):
+  exactly the object parse check (cmd 1 val 3, want 1 2) plus
+  PR-323's player parse check - the runtime hides 3 because the
+  clamp maps it back onto row 3, so the PARSE check is what
+  pins 0x46777's arithmetic here too. Removing both clamps:
+  zero failures on either clock - the legs stay in range, the
+  nets are named safety, not exercised law.
+OPENS: the engine's out-of-range cursor read (the heap around
+  the row table) - the clamp is a net, not a reading; whether
+  re-entering the CURRENT row (`gotorel 0` at the KADMAR2 hold
+  rows) re-runs the one-shot I/F admit gate [obj+0x95] in the
+  engine (the player port re-applies apply_row_pull at every
+  goto entry, PR-323; the object path models no one-shot pulls
+  at all, so nothing here distinguishes); the FC re-application
+  at a jump entry on the object draw path (0x52070's row-entry
+  effects, the `zero` family, all unread); and the SEQ_REV
+  reverse step, still unmodelled on both clocks (PR-322 (d)).
+CLOSES: the object half of F2b as HANDOFF section 8 T5 named it
+  - RYBA, KAMIEN 1-3, SEP, SEP2, SPLYW, ANIBACK_* and
+  KADMAR2_SCHODY now run their authored row loops; what remains
+  under F2b is the reverse step, and the engine-side row-entry
+  question moves to OI-111's note.
+CORRECTS: none
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the
+  same suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; red first, then green, with the
+  mutations above reported in MEASURED (c); no Windows legs
+  (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-323's pair, with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope.
+```

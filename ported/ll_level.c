@@ -1593,6 +1593,28 @@ static void obj_advance(lvl_obj *o, unsigned dt_ms)
         if (f->atc & LMOV_ATC_OFF)    /* it, an ATC_OFF frame closes it). */
             o->atc = 0;               /* The ENEMY hitting the LION with  */
                                       /* it is T3, not this PR.           */
+        /* PR-324: the answer-6 cursor jump, the object half of F2b
+         * (the player half is PR-323). PR-322 read the law: 0x520c0
+         * walks the closing row's +0x10 verbs BEFORE stepping
+         * (ebx = &[rec+4]), 0x45d90 writes the cursor outright (the
+         * parse stored authored-minus-one) and 0x45dc0 adds the
+         * verbatim delta, and the answer of 6 at 0x52140 skips the
+         * normal step COMPLETELY - this loop's head test at the
+         * top of the next iteration included, so a jump off the
+         * LAST row neither wraps nor arms the list-end bit. The
+         * clamp is the same named port safety net as PR-323's (the
+         * engine reads the heap around the row table; KADMAR2_
+         * SCHODY's `1,0,GOTOREL -1` at row 1 is exactly that
+         * out-of-range case). */
+        if (f->gotocmd) {
+            int nf = f->gotocmd == 1 ? (int)f->gotoval
+                                     : o->fi + (int)f->gotoval;
+            if (nf < 0)
+                nf = 0;                          /* port safety net  */
+            if (nf >= s->nfr)
+                nf = s->nfr - 1;                 /* ... and here too */
+            o->fi = nf;
+        } else {
         o->fi++;
         if (o->fi >= s->nfr) {      /* the admit just ran past the last row:
                                      * that WAS this step's one row, the list
@@ -1604,6 +1626,7 @@ static void obj_advance(lvl_obj *o, unsigned dt_ms)
                 o->x = o->bx;
                 o->y = o->by;
             }
+        }
         }
     }
     }
@@ -2850,6 +2873,171 @@ static int obj_state_selftest(void)
         }
         free(ue);
         free(un);
+        if (!pass)
+            goto out;
+    }
+    {   /* PR-324: the answer-6 cursor jump on the OBJECT row clock,
+         * the other half of F2b. PR-322 read that 0x520c0's chain
+         * walk rewrites [rec+4] (0x45d90/0x45dc0) and 0x52140 then
+         * skips the WHOLE normal step, head test included; the
+         * scene objects share the law - RYBA, KAMIEN, SEP, SPLYW,
+         * KADMAR2_SCHODY and the rest of the 102 states. G3-O is
+         * the absolute shape: row 0 carries `goto 3` (the parse
+         * stores 2, 0x46777), and its `M 100,0` moves the body, so
+         * after the first step the JUMPED object sits at x=100 with
+         * fi=2 and no list-end bit. Closing that jumped-to LAST
+         * row at the end of step 1 is an ordinary last-row close -
+         * the bit arms then; the word-less control arms its own
+         * one step later, at the end of its step 2, and its
+         * declared AC_BREAK_NEXT transition is taken at its step
+         * 4 - the bit is tested by the composition of a LATER
+         * step than the one that armed it (PR-135) - so it
+         * LEAVES the state - while the jumped
+         * object, which declares none, re-runs row 1 and its
+         * word: the state cycles jump, wrap, jump, wrap - the
+         * held-loop pattern KADMAR2's `gotorel 0` rows make
+         * explicit.
+         * G4-O is the loop shape KADMAR2_SCHODY actually ships:
+         * `4,100,GOTO_REL -3` from the last row back to row 1,
+         * where every row moves -30 - no wrap and no bit ever, so
+         * the object walks through the seam (0, -30, -60, -90,
+         * then the jumped close gives -120 where the plain wrap
+         * lands back at the base 0). */
+        static const char go_abs[] =
+            "A_GO\nA_END\n\n[A_GO]\ncontrol=BY_TIME\n"
+            "1,100,goto 3,M 100,0\n2,100\n"
+            "3,100\n\n[A_END]\ncontrol=BY_TIME\n1,100\n";
+        static const char go_abs_plain[] =
+            "A_GO\nA_END\n\n[A_GO]\ncontrol=BY_TIME\n"
+            "A_END(1)=AC_BREAK_NEXT\n1,100,M 100,0\n2,100\n"
+            "3,100\n\n[A_END]\ncontrol=BY_TIME\n1,100\n";
+        static const char go_rel[] =
+            "A_HO\nA_END\n\n[A_HO]\ncontrol=BY_TIME\n"
+            "1,100,M -30,0\n2,100,M -30,0\n"
+            "3,100,M -30,0\n4,100,M -30,0,GOTO_REL -2\n\n[A_END]\n"
+            "control=BY_TIME\n1,100\n";
+        static const char go_rel_plain[] =
+            "A_HO\nA_END\n\n[A_HO]\ncontrol=BY_TIME\n"
+            "A_END(1)=AC_BREAK_NEXT\n1,100,M -30,0\n2,100,M -30,0\n"
+            "3,100,M -30,0\n4,100,M -30,0\n\n[A_END]\n"
+            "control=BY_TIME\n1,100\n";
+        ll_mov_t *ga = calloc(1, sizeof *ga), *gp2 = calloc(1, sizeof *gp2);
+        ll_mov_t *gr = calloc(1, sizeof *gr), *gp3 = calloc(1, sizeof *gp3);
+        obj_script sga, sgp, sgr, sgp3;
+        lvl_obj ja, jp, lr, lp;
+        long long ax[5], cx[5], rx[6], px[6];
+        int afi[5], cfi[5], rfi[6];
+        int ast[5], lst[5], cst[5];
+        int lp_st = -1, lp_fi = -1, lr_st = -1;
+        unsigned abr[5];
+        unsigned lp_brk = 9u;
+        int pass = 0;
+        memset(&sga, 0, sizeof sga);
+        memset(&sgp, 0, sizeof sgp);
+        memset(&sgr, 0, sizeof sgr);
+        memset(&sgp3, 0, sizeof sgp3);
+        memset(&ja, 0, sizeof ja);
+        memset(&jp, 0, sizeof jp);
+        memset(&lr, 0, sizeof lr);
+        memset(&lp, 0, sizeof lp);
+        int pa = 0, pb = 0, pc = 0, pd = 0;
+        if (ga && gp2 && gr && gp3) {
+            pa = ll_mov_parse(go_abs, ga);
+            pb = ll_mov_parse(go_abs_plain, gp2);
+            pc = ll_mov_parse(go_rel, gr);
+            pd = ll_mov_parse(go_rel_plain, gp3);
+        }
+        if (pa == 2 && pb == 2 && pc == 2 && pd == 2) {
+            sga.mov = ga;
+            sgp.mov = gp2;
+            sgr.mov = gr;
+            sgp3.mov = gp3;
+            ja.sc = &sga;
+            jp.sc = &sgp;
+            lr.sc = &sgr;
+            lp.sc = &sgp3;
+            for (int it = 0; it < 4; it++) {
+                obj_advance(&ja, LL_ITER_MS);
+                obj_advance(&jp, LL_ITER_MS);
+                ax[it] = ja.x;
+                cx[it] = jp.x;
+                afi[it] = ja.fi;
+                ast[it] = ja.sti;
+                cfi[it] = jp.fi;
+                cst[it] = jp.sti;
+                abr[it] = ja.brk_arm;
+            }
+            for (int it = 0; it < 5; it++) {
+                obj_advance(&lr, LL_ITER_MS);
+                obj_advance(&lp, LL_ITER_MS);
+                rx[it] = lr.x;
+                px[it] = lp.x;
+                rfi[it] = lr.fi;
+                lst[it] = lr.sti;
+                if (it == 4) {      /* the control's state change: its */
+                    obj_advance(&lp, LL_ITER_MS);   /* armed bit is TESTED */
+                    lp_st = lp.sti;                 /* by this extra step, */
+                    lp_fi = lp.fi;                  /* which then admits   */
+                    lp_brk = lp.brk_arm;            /* A_END's one row.    */
+                }
+            }
+            lr_st = lr.sti;
+            if (ga->st[0].fr[0].gotocmd != 1 ||
+                ga->st[0].fr[0].gotoval != 2)
+                fprintf(stderr, "object state selftest: FAILED the goto "
+                                "word parsed as cmd %d val %d (want 1, 2)\n",
+                        ga->st[0].fr[0].gotocmd,
+                        ga->st[0].fr[0].gotoval);
+            else if (ast[0] != 0 || afi[0] != 2 || ax[0] != 100 ||
+                     abr[0] != 0u)
+                fprintf(stderr, "object state selftest: FAILED the "
+                                "absolute jump (state %d fi %d x %lld "
+                                "brk %u; want 0, 2, 100, 0)\n",
+                        ast[0], afi[0], ax[0], abr[0]);
+            else if (afi[1] != 0 || abr[1] != 1u || ax[1] != 0 ||
+                     rfi[3] != 1 || rfi[4] != 2)
+                fprintf(stderr, "object state selftest: FAILED the step "
+                                "after the jump (fi %d brk %u x %lld, rel "
+                                "cursor %d %d; want 0, 1, 0, 1, 2)\n",
+                        afi[1], abr[1], ax[1], rfi[3], rfi[4]);
+            else if (ast[2] != 0 || afi[2] != 2 || abr[2] != 0u ||
+                     ax[2] != 100 || cx[2] != 0)
+                fprintf(stderr, "object state selftest: FAILED the cycle "
+                                "after the jump (fi %d brk %u x %lld, "
+                                "control x %lld; want 2, 0, 100, 0)\n",
+                        afi[2], abr[2], ax[2], cx[2]);
+            else if (cst[3] != 1 || jp.fi != 0 || cfi[0] != 1)
+                fprintf(stderr, "object state selftest: FAILED the control's "
+                                "transition (state %d fi %d at its step 4)\n",
+                        cst[3], jp.fi);
+            else if (lst[0] != 0 || lst[4] != 0 ||
+                     lr_st != 0 || lp_brk != 1u || lp_st != 1 ||
+                     lp_fi != 0 || px[4] != 0)
+                fprintf(stderr, "object state selftest: FAILED the loop "
+                                "controls (rel state %d, plain state %d "
+                                "fi %d x %lld)\n", lr_st, lp_st,
+                        lp_fi, px[4]);
+            else if (afi[3] != 0 ||
+                     rfi[0] != 1 || rfi[1] != 2 || rfi[2] != 3 ||
+                     rfi[3] != 1 || rfi[4] != 2)
+                fprintf(stderr, "object state selftest: FAILED the cursor "
+                                "cycle (abs %d, rel %d %d %d %d %d)\n",
+                        afi[3], rfi[0], rfi[1], rfi[2], rfi[3],
+                        rfi[4]);
+            else if (ax[3] != 0 ||
+                     rx[0] != -30 || rx[1] != -60 || rx[2] != -90 ||
+                     rx[3] != -120 || rx[4] != -150)
+                fprintf(stderr, "object state selftest: FAILED the motion "
+                                "across the jumps (abs %lld %lld, rel "
+                                "%lld %lld %lld %lld %lld)\n",
+                        ax[2], ax[3], rx[0], rx[1], rx[2], rx[3], rx[4]);
+            else
+                pass = 1;
+        }
+        free(ga);
+        free(gp2);
+        free(gr);
+        free(gp3);
         if (!pass)
             goto out;
     }

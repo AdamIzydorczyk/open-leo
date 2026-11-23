@@ -637,14 +637,17 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                          * (3 LOCK), unlock 73, ldir 18 (1 LDIR), rdir 58
                          * (9 RDIR), and ZARIA.01 brackets BOTH of its
                          * exit states with them. `goto N`/`gotorel
-                         * N`/`goto_rel N` joined it in PR-323 (kept in
+                         * N`/`goto_rel N` joined it in PR-323/PR-324
+                         * (kept in
                          * ll_mov_fr.gotocmd/gotoval): the arms
                          * 0x46739/0x4679c/0x4680c and the advance verbs
                          * 0x45d90/0x45dc0 are PR-322's read, the census
                          * is 135 lines (89 goto, 35 GOTO_REL family, 11
                          * GOTOREL) in 102 states, and the verbs act at
-                         * the ROW CLOSE by rewriting the cursor - the
-                         * one thing the engine never clamps. `end_level`
+                         * the ROW CLOSE by rewriting the cursor, on the
+                         * player clock (PR-323) and the scene-object
+                         * one (PR-324) alike - the one thing the engine
+                         * never clamps. `end_level`
                          * joined the modeled set in PR-199 once PR-198
                          * had read its apply: it is 26 lines in the
                          * whole shipped set (three LEW.MOV members), so

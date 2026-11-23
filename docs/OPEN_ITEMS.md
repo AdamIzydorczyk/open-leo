@@ -3471,6 +3471,18 @@ OI-111: which row-step path the port's row clock models -
     The object row clock (ll_level.c's o->fi/o->row_t) has NO
     such branch yet, and the SEQ_REV reverse step stays
     unmodelled.
+    PR-324 ADDS that object half: obj_advance's row close now
+    takes the same answer-6 branch (the wrap, its base-position
+    reset and brk_arm belong to the NORMAL step and are skipped
+    wholesale), so RYBA/KAMIEN/SEP/SPLYW/ANIBACK_*/KADMAR2_-
+    SCHODY run their authored loops; the object legs pin the
+    `GOTO_REL -2` cursor cycle, the through-seam motion, and
+    that a jump DELAYS the list end. What stays unread here:
+    the engine's out-of-table cursor read (both ports' clamps
+    are named nets), whether re-entering the CURRENT row re-
+    runs the [obj+0x95] one-shot gate (the object path models
+    no one-shot pulls at all), and the FC/`zero` row-entry
+    effects; the reverse step remains the only open F2b item.
   origin: PR-217 record; rewritten from the PR-218 record; the
     ladder chain stays OI-078
     PR-220 names the control bits that switch picks between:

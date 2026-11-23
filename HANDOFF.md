@@ -5309,16 +5309,16 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         `27,400,GOTO_REL -3` death loop and A_KILOF, RYBA,
         KAMIEN, SEP, SPLYW) and no SEQ_REV reverse step (the
         whole law is in PR-322's MEASURED (d)).
-    F2b. IN PROGRESS (player half DONE, PR-323): the lion's own
-        states now run the answer-6 protocol - `goto`/`GOTO_REL`
-        rewrite the row cursor at the row close and suppress the
-        +1/wrap step and its AC_BREAK_NEXT (G1/G2 legs, the
-        A_DEAD `27,400,GOTO_REL -3` loop shape). Still open
-        here: the SAME branch for the scene-object row clock
-        (ll_level.c's o->fi/o->row_t) - RYBA, KAMIEN, SEP,
-        SPLYW, ANIBACK_* still step plainly - and the SEQ_REV
-        reverse step, unmodelled and no authored player state
-        seen asking for it.
+    F2b. CLOSED but the reverse step (both halves DONE, PR-323
+        player / PR-324 object): both row clocks now run the
+        answer-6 protocol - `goto`/`GOTO_REL` rewrite the row
+        cursor at the row close and suppress the +1/wrap step
+        and its AC_BREAK_NEXT (G1/G2 and G3-O/G4-O legs; the
+        object legs pin the A_FIGHT `GOTO_REL -2` cycle, the
+        held-loop `gotorel 0` shape, and that a jump DELAYS the
+        list end while the bit itself behaves normally). Still
+        open here: the SEQ_REV reverse step, unmodelled and no
+        authored player state seen asking for it.
     F3. CLOSED AS A MIS-SCOPE (PR-316). Who writes
         [level+0x4] is OI-046, closed by PR-198/PR-199 - the
         end_level node's 0x45750 writes that exit word and the
