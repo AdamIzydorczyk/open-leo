@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-299.
+> at PR-300.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -40772,6 +40772,114 @@ CORRECTS: PR-297's sentence about "the contact record of kind
 row cursor, and 0x19 = 25 is a row number - its own constants
 (1..60) and the corpus row counts say so. PR-297's reading of
 the test itself and of the surrounding verb stands unchanged.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-299 — THE SECOND PAIR-ANSWER VERB: 0x287a0 ANSWERS
+## AC_DRAB FROM THE NEIGHBOUR LIST'S ENTRY-1 ROW NUMBER, AND
+## BOTH PAIR VERBS SHARE ONE GATE, THE OTHER OBJECT'S +0x3c
+```
+KIND: read
+SUBSYSTEM: the answer verb at 0x287a0 - the second producer of
+the AC_DRAB set PR-296 counted at 0x28805 - its gate, its
+geometry test, and the [obj+0x30] parent/neighbour array it
+reads through the accessor 0x55760.
+ADDRESSES: 0x287a0, 0x287a6, 0x287ac, 0x287b1, 0x287bc,
+0x287c1, 0x287c4, 0x287c7, 0x287ca, 0x287cf, 0x287d1,
+0x287d6, 0x287d9, 0x287de, 0x287e1, 0x287e4, 0x287e7,
+0x287ea, 0x28805, 0x2880b, 0x28813, 0x2881a, 0x28820,
+0x28823, 0x28826, 0x2882d, 0x2883a, 0x2885d, 0x2886e,
+0x55760, 0x3eac6, 0x3eac8, 0x3eaf9, 0x2831a, 0x28357,
+0x380a1, 0x3c29d, 0x3c270, 0x3c2a9, 0x749a0, 0x49580
+NAMES: pair answer, neighbour list, parent field, entry 1,
+AC_DRAB, row index, state index, +0x3c gate, +0x6c verb,
+neighbour loop, OI-078, OI-073, PR-279, PR-287, PR-295,
+PR-296, PR-297, PR-298, findcall.py, rec_idiom_census
+CODE: no: a reading and a call-graph query; no behaviour
+changed, so no red leg.
+HOOKS: PR-296 left the AC_DRAB producer 0x28805 unread;
+PR-297's OPENS (iii) asked what the shared +0x3c gate means
+and OPENS (v) asked who else reads [obj+0x30]; the port's own
+notes already name "the collision loop 0x3eac6 over the
+[obj+0x30] neighbour list" and "the requester's [obj+0x30]
+parent", so this field is known and unmodelled.
+MEASURED: (a) THE ENTRY AND ITS ARGUMENTS. 0x287a0 takes
+eax = the answering object (kept in ecx), ebx = ANOTHER object
+and edx = a value kept at [esp+0x10] - the same three-register
+convention PR-297 measured at 0x3c270. It has no E8/E9 caller
+(findcall.py: 0), so it is reached through a class table.
+(b) THE GATE IS THE SAME ONE. 0x287ac-0x287b1 calls
+`[[ebx+0x08]+0x3c]` - the other object's class +0x3c verb -
+and a false answer jumps to 0x2885d, which constructs an EMPTY
+set into the caller's out buffer (0x2885d-0x2886e, ecx = 0xc,
+the ctor 0x749a0). So this verb always returns a set, and this
+is the second place that +0x3c gate appears (the first is
+0x3c29d): whether an object may be asked at all is a property
+of the object being asked ABOUT.
+(c) THE GEOMETRY HALF USES A DIFFERENT GETTER. 0x287bc-
+0x287c1 calls `[[ebx+0x08]+0x6c]` - the +0x6c slot, not the
++0x68 position getter PR-293 identified - and the returned
+thing's own +0x08 verb is then called with eax = that value
+and edx = &[ecx+0x3c]: a point-in-block test of IT against
+THIS object's [obj+0x3c] rectangle (0x287c4-0x287ca). False
+again goes to the empty set; so the same rectangle family as
+PR-297's [obj+0x3c], but the test runs in the opposite
+direction: 0x3c270 put the other object's POSITION into
+[obj+0x3c]/[obj+0x50], this one puts the other object's +0x6c
+result into [obj+0x3c].
+(d) THE ROW HALF, AND THE FIELD IT READS. True at 0x287cf:
+`eax = [ecx+0x30]`, edx = 1, `call 0x55760` - and 0x55760 is
+three instructions: `mov eax,[eax+0x40]; mov eax,[eax+edx*4];
+ret`, i.e. entry edx of the object-pointer array at
+[x+0x40]. So the value is the SECOND entry (edx = 1) of the
+array belonging to the object's parent/neighbour list - the
+same [obj+0x30] field the port's own notes call the requester
+parent and the neighbour list, and 0x55760 has exactly 7 call
+sites: 0x2831a, 0x28357, 0x287d9, 0x2883a, 0x380a1, and the
+two inside the collision loop 0x3eac6 (0x3eac8, 0x3eaf9) that
+the port already models. That entry's state index is read at
+0x287de (`edx = [x+0x5c]`) and used as a record index into
+THAT ENTRY's own record array (0x287e1-0x287e4), and its row
+cursor [rec+0x04] is compared with 6 (0x287ea): equal, the
+verb builds a set and sets AC_DRAB at 0x28805.
+(e) THE SECOND BRANCH. Not equal, 0x2880b reads the OTHER
+object's state index [ebx+0x5c] and requires 0x12 = 18
+(0x28813), then that object's current record's row cursor and
+requires <= 0x19 = 25 (0x28820-0x28826); past both it takes
+0x55760([ecx+0x30], 1) again and enters a loop with ecx =
+0x10, edi = 0xa and the constant 0x8138764 (0x2882d-0x2883f),
+unread here.
+(f) THE PATTERN, WHICH IS WHAT MATTERS FOR FOCUS 1. Two verbs
+of the same family answer with SETS, both gated on the
++0x3c verb of the object they are asked about, one keyed on
+POSITION inside two authored rectangles ([obj+0x3c],
+[obj+0x50] - PR-297) and one keyed on a NEIGHBOUR ARRAY
+ENTRY'S ROW NUMBER (this leg). Neither reads an authored
+`GEN` line. Combined with PR-298's row-number dispatch, the
+engine's answer machinery is: gate on the asked object, choose
+by geometry or by the row the paired object is standing on,
+return a set. That is the concrete shape the port's
+ladder_answer_core has been approximating with authored
+rectangles alone.
+OPENS: in order: (i) what the +0x6c verb returns (the test
+subject here, versus +0x68's position), and which class slots
+0x287a0 and 0x3c270 occupy - the table family of PR-297 is
+still unnamed; (ii) what writes [obj+0x30] and [[x]+0x40],
+how many entries that array has, and what entry 1 is - "the
+player" is NOT established here, only that entry 1 is used as
+the reference entry in both legs; (iii) the 0x2882d-0x2883f
+loop with ecx = 0x10, edi = 0xa, esi = 0x8138764; (iv) the
+other four 0x55760 call sites (0x2831a, 0x28357, 0x380a1) and
+what their entries mean; (v) whether either verb is reachable
+for the ZARIA.01 DRABINKA - the class-identity question again.
+CLOSES: PR-296's OPENS (ii) for one of the two AC_DRAB
+producers named there: 0x28805 is read, and its condition is a
+row-number equality on a neighbour-array entry, not a contact
+test. It also gives PR-297's OPENS (iii) a first answer: the
++0x3c gate is shared, so it is a property of the answerer's
+class, not of one pair.
+CORRECTS: none.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```

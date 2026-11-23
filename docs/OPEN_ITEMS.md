@@ -2163,6 +2163,29 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     dispatch at all - ly_climb and ly_chang are pinned on the
     row machine as it is, so any change there is a pinned-leg
     decision, not a free fix.
+    PR-299 READS THE SECOND PRODUCER AND THE PATTERN IS NOW
+    COMPLETE ENOUGH TO NAME. 0x287a0 (no E8/E9 caller, so a
+    class-table verb) uses the same three-register convention
+    as 0x3c270 and the SAME gate - the other object's +0x3c
+    verb (0x287b1, as at 0x3c29d) - so being askable is a
+    property of the object asked about. Its geometry half
+    differs: it calls the +0x6c slot (not the +0x68 position
+    getter) and tests THAT against this object's [obj+0x3c]
+    box. Its signal half is what matters: through the
+    three-instruction accessor 0x55760 (`mov eax,[eax+0x40];
+    mov eax,[eax+edx*4]; ret`, 7 call sites, two of them
+    inside the collision loop 0x3eac6 the port already models)
+    it takes entry 1 of the parent/neighbour array at
+    [obj+0x30], reads THAT entry's state index and its current
+    record's row cursor, and `row == 6` sets AC_DRAB in the
+    returned set (0x287ea -> 0x28805); the other branch wants
+    the other object at state index 18 with row <= 25
+    (0x28813/0x28826). So the engine's answer machinery is:
+    gate on the asked object, choose by geometry OR by the row
+    number the paired object is standing on, return a SET -
+    never an authored `GEN` line, never an inline bit. Whether
+    either verb is reachable for the ZARIA.01 DRABINKA is
+    still the class-identity question.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
