@@ -2856,6 +2856,23 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     needs the surface-link half (the pass at 0x5476x-0x54800:
     AC_DUP on attach, AC_DUP_CD by surface kind, AC_ONAIR when
     [obj+0xa9] is dropped), named in OI-119's closed note.
+    PR-333 makes that signal-set lifetime load-bearing for the ROW
+    step and names what the port does with it: the player's row pass
+    asks ll_mov_row_admit with `row_live`, the set the transition
+    pass of the SAME iteration matched with, captured in
+    player_iterate just before its `p->sig = 0`. The engine has one
+    blob to consult - 0x52255-0x522a6 merges the caller's keys with
+    [obj+0x60], the 12 bytes PR-260 read as never lowered - while
+    this port keeps a per-tick set, so without that snapshot an
+    edge-only signal is invisible to the row that needs it: ZARIA.01's
+    A_JUMP row 10 `8,0,WAIT AC_DUP` is exactly such a row, AC_DUP
+    existing only for the iteration of the surface attach (PR-331),
+    and the row pass runs AFTER the clear. The unread half is
+    unchanged - the engine's clear sites are the ctor/allocator paths
+    only - so the per-tick clear and this snapshot of it are both the
+    named deviation here, and the A_JUMP, A_FALL_DOWN, A_LOOKDOWN and
+    A_DOSTAL holds the row gates produce are the first legs whose
+    pins depend on it.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -3444,7 +3461,9 @@ OI-110: the planies ACTIVATION chain is unread: what feeds the
 OI-111: which row-step path the port's row clock models -
   a `Wait` clause SELECTS the path, it never refuses the row
   status: OPEN (opened by PR-217; REWRITTEN by PR-218, whose
-    read settled the half this row asked)
+    read settled the half this row asked; the port half of its
+    OPENS line was closed by PR-333, which is what the row pass
+    does now)
   notes: SETTLED by PR-218, on the engine and on the shipped
     data, so the clause stays captured and un-actioned:
     (1) The clause's MODE byte at [set+0xc] is written by the
@@ -3782,12 +3801,71 @@ OI-111: which row-step path the port's row clock models -
     table unchanged - so `|K_ANY` is "an arrow is held", plain K_ANY is
     "all six at once" and plain K_NEVER is "UP and DOWN at once", both
     in practice never, which is the idiom the 115 `WAIT K_NEVER` rows
-    are written with. WHAT IS LEFT OPEN HERE is the port's own use of
-    the two paths, not the reading: ll_play.c's player row clock never
-    asks ll_mov_row_gate, and PR-287's object-side gate keeps the
-    threshold compare on the match path, which PR-287 itself named and
-    which only shows on a gated row with a non-zero threshold - 170 of
-    the 203 Wait rows counted in PR-332's record.
+    are written with. WHAT WAS LEFT OPEN THERE was the port's own use
+    of the two paths, not the reading: ll_play.c's player row clock
+    never asked ll_mov_row_gate, and PR-287's object-side gate kept
+    the threshold compare on the match path, which PR-287 itself
+    named and which only shows on a gated row with a non-zero
+    threshold -
+    170 of the 203
+    Wait rows counted in PR-332's record. PR-333 CLOSES that half and
+    is now what this row describes:
+    PR-333 PORTS BOTH PATHS. ported/ll_play.c gained ll_mov_fr_mask
+    (the clause as the mask the resolver builds: LL_SIG_K_ANY_MASK for
+    K_ANY at 0x48037-0x48048, LL_SIG_K_NEVER_MASK = K_UP|K_DOWN for
+    K_NEVER at 0x4806f-0x4807d, one bit for a name in a table, and 0
+    for a name in NO table or for the one tokenless `Wait ;` - 0x495b0
+    answers EMPTY for those, so they are not gated at all),
+    ll_mov_row_gated (mask non-zero = this row carries a clause),
+    ll_mov_row_gate rewritten as the engine compiles it (the clause's
+    OWN mode byte: plain is the subset arm 0x47e63, `!` is shares-
+    nothing 0x47edc), and ll_mov_row_admit, which IS the branch: a
+    gated row that does not match admits NOTHING (no frame, no cursor
+    step, no wrap, no list-end bit, no threshold consumed - 0x522ed),
+    a gated row that matches runs with the ZERO budget of 0x522f8 (its
+    threshold compare at 0x52329 never runs and the accumulator is left
+    at zero), and only a clause-less row reaches the clock compare and
+    carries the remainder (0x52320-0x52334). The player's row pass
+    (player_iterate section 7) and obj_advance's row step in
+    ported/ll_level.c both call it, which is PR-287's corrected half.
+    WHAT THE CLAUSE IS MATCHED AGAINST is the port's own named
+    deviation, and PR-333 makes it load-bearing: 0x52255-0x522a6
+    merges the CALLER's set with the object's persistent [obj+0x60],
+    so the player row pass captures `row_live` - the set the
+    transition pass of the SAME iteration matched with, taken just
+    before player_iterate's `p->sig = 0` - because a row clause must
+    see an edge-only signal: ZARIA.01's A_JUMP row 10 is
+    `8,0,WAIT AC_DUP` and AC_DUP exists for one iteration, raised at
+    the surface attach (PR-331). The engine's clear points are still
+    the ctor/allocator paths only (PR-260's read), so the port's
+    per-tick clear and this snapshot of it stay the named deviation at
+    OI-078. --play-selftest's LEG U pins the two paths with no data
+    at all: the same `2,1000,WAIT K_NEVER` row parks forever with
+    neither arrow held, admits in one iteration with both (the 1000
+    units unread), `!K_DOWN` admits unless DOWN is held, `K_DOWN`
+    admits with it, the clause-less twin of the same row takes ten
+    feed iterations, and no gated admit ever leaves a non-zero clock
+    behind. Play effect, one line each: A_FALL_DOWN's
+    `7,0,WAIT K_NEVER` parks the ZARIA.01 pit fall on frame 7 instead
+    of wrapping into A_DRAP; A_DOSTAL's `5,200,WAIT !AC_ENEMY_ATC`
+    matches a clause instead of waiting for its clock, so the hit
+    state's list closes one iteration before its 200 units are owed;
+    A_JUMP's row 10 holds the
+    flight and the landing happens INSIDE A_JUMP, then the authored
+    `A_JUMP(11)=AC_DUP` restart puts the recovery row next and its
+    banked clock admits at once, so its own `A_WALK(7)=AC_BREAK_NEXT`
+    runs at the start row that line names; A_LOOKDOWN's
+    `5,300,WAIT !K_DOWN` holds the look-down exactly as long as DOWN
+    is held. Seven Makefile legs re-pinned by that (PR-90, PR-140,
+    the PR-86/253/256 jump leg, the PR-274/285/287 climb chain,
+    PR-277, PR-278, PR-286) and two data-free legs of
+    --play-selftest. WHAT THIS ROW STILL HOLDS OPEN: what the class
+    verbs [obj+0x8]+0xa0 and +0xa4 (0x52317, 0x52341) do and whether
+    either touches the clock; bit 53 inside K_ANY's mask, the one bit
+    this port has no name for; OI-112's row TIME number and the row
+    descriptor's +0x10 verb; and the modes 2 and 3 (`*`, `|`), which
+    no shipped row uses (PR-218's count) and this port still does not
+    implement.
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port

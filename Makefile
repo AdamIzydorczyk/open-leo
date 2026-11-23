@@ -1199,7 +1199,7 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play tick 67: state A_DOSTAL seq hit frame 1' \
 	    /tmp/opencode/ly_dgr.log \
 	  && grep -q 'A_DOSTAL -> A_DRAP' /tmp/opencode/ly_dgr.log \
-	  && grep -q 'play tick 85: state A_DRAP seq idle frame 1' \
+	  && grep -q 'play tick 84: state A_DRAP seq idle frame 1' \
 	    /tmp/opencode/ly_dgr.log \
 	  && ! grep -q 'DANGER: lion' /tmp/opencode/ly_hit.log \
 	  && echo "play enemy attack: the DANGER/MAIN-box stand-in arms A_ATAK" \
@@ -1209,8 +1209,14 @@ ifeq ($(PX_DATA),1)
 	       "prior bump hurt, so the lion's countdown is clean - PR-139)." \
 	       "That raise drives the lion's OWN authored A_DOSTAL (hit art +" \
 	       "the entry-row pull pair) on the next tick (67), and it ends at" \
-	       "its own 18-iteration list wrap (85 = 67+18), not by a landing" \
-	       "or a BREAK. One hit only: the flinch and the worm's SEMI push" \
+	       "its own list wrap (84 = 67+17), not by a landing or a BREAK." \
+	       "PR-333 shortened that list by one: its row 5 is the clause" \
+	       "row WAIT !AC_ENEMY_ATC, and a row whose clause matches never" \
+	       "reads the row clock and is handed the" \
+	       "ZERO budget (0x52329 off the path, 0x522f8), so it closes one" \
+	       "iteration before its 200 units are owed - visible on screen as" \
+	       "frame 5 holding ONE tick (74) where the clock path held two." \
+	       "One hit only: the flinch and the worm's SEMI push" \
 	       "keep him out of the MAIN box for the rest of the run, pinned" \
 	       "as a count. No bump without a window ever hurt the lion (the" \
 	       "'hit by' negative - G-5), the same contact raises AC_ENEMY on" \
@@ -1298,26 +1304,25 @@ ifeq ($(PX_DATA),1)
 # It is closed: the iteration that finds no surface posts
 # AC_ONAIR, and ZARIA.01's authored `A_WALK -> A_FALL_DOWN(1)
 # =AC_ONAIR` now RUNS - tick 282, one iteration after the
-# airborne one. What follows is the authored fall cycle of the
-# lion's own script, on the THREE rows PR-330 reads: the
-# `s idle 1,300` row (282-283, frame 1), the `7,0` row at the
-# engine's 100-unit floor (284), and `8,300,F 0,100`
-# (285-287) - 3+1+3 iterations at the 100-per-iteration row
-# feed - then the list wraps into A_DRAP (289), A_DRAP's own
-# wrap `A_WALK(7)=AC_BREAK_NEXT` returns to A_WALK (290), and
-# the airborne A_WALK re-posts AC_ONAIR into A_FALL_DOWN (291):
-# a nine-iteration cycle, run three and a half times before the
-# death line - the loop the shipped .MOV describes for a
-# bottomless pit, run by the port for the first time. The y
-# curve is that cycle's own mix of registers (A_FALL_DOWN
-# G=0,55: +1,+1,+2,+2,+3,+3 px; A_DRAP G=0,250: +5,+8; then
-# A_WALK's G=30,350 re-armed), NOT the single-state
-# 0,3,6,9,13,15,18,21,23 curve of the PR-231 note, and it
-# reaches the death line slower: below lew_rect at (412,1016)
-# on tick 311, respawn at the spawn snap on 312. The x of the
-# death line moved (442 -> 412) because the fall states carry
-# the x register their own F= authors, not A_WALK's 2 px a step
-# hover over the pit. The run is therefore probed to tick 340.
+# airborne one. The first rows are the THREE rows PR-330 reads:
+# the `s idle 1,300` row (282-283, frame 1, 300 units = 3
+# feeds) and the `7,0` row at the engine's 100-unit floor
+# (284). PR-333 RE-PINS everything after that: row 2 of this
+# list is `7,0,WAIT K_NEVER`, a CLAUSE row, and K_NEVER is the
+# resolver's own two-bit mask (0x4806f-0x4807d: K_UP and
+# K_DOWN together) read through the plain SUBSET arm - with
+# only FWD held the clause answers NO, 0x522ed leaves the row
+# step, and the list PARKS at frame 7 for the whole fall,
+# 284-319. There is no A_DRAP and no A_WALK return: the cycle
+# PR-331 measured was the port running those lists ungated.
+# The y curve is now one state's own register (A_FALL_DOWN
+# G=0,55: +1,+1,+2,+2,+3,+3,+4,+4 px and on), the same ramp
+# the single-state note above describes, and it reaches the
+# death line at lew_rect (412,1016) on tick 319, respawn at
+# the spawn snap on 320. The x of the death line moved (442 ->
+# 412) because the fall states carry the x register their own
+# F= authors, not A_WALK's 2 px a step hover over the pit. The
+# run is therefore probed to tick 340.
 # The original game crosses this pit with jumps (the video's
 # player never walks across it - G-1(b)'s gallop note stands).
 	@grep -q 'obj DRABINKA/drab.mov\[mov\]: art DRAB.SEQ, 3 state(s), bbox 42x48 at (180,510)' \
@@ -1337,21 +1342,14 @@ ifeq ($(PX_DATA),1)
 	  /tmp/opencode/ly_trv.log \
 	  && grep -q 'play tick 284: state A_FALL_DOWN seq fall_dn frame 7 pos 412,654 grounded 0' \
 	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play tick 287: state A_FALL_DOWN seq fall_dn frame 8 pos 412,661 grounded 0' \
+	  && test "$$(grep -c 'state A_FALL_DOWN seq fall_dn frame 7' \
+	       /tmp/opencode/ly_trv.log)" -ge 35 \
+	  && grep -q 'play tick 319: state A_FALL_DOWN seq fall_dn frame 7 pos 412,999 grounded 0' \
 	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play: A_FALL_DOWN -> A_DRAP' \
-	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play tick 289: state A_DRAP seq idle frame 1 pos 412,669 grounded 0' \
-	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play: A_DRAP -> A_WALK' \
-	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play tick 290: state A_WALK seq walk frame 10 pos 412,677 grounded 0' \
-	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play tick 291: state A_FALL_DOWN seq fall_dn frame 1 pos 412,686 grounded 0' \
-	  /tmp/opencode/ly_trv.log \
+	  && ! grep -q 'state A_DRAP' /tmp/opencode/ly_trv.log \
 	  && grep -q 'below lew_rect at (412,1016) -> respawn' \
 	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play tick 312: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
+	  && grep -q 'play tick 320: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
 	  /tmp/opencode/ly_trv.log \
 	  && ! grep -qE 'hit by|ATTACKS through|lion energy' /tmp/opencode/ly_trv.log \
 	  && ! grep -qE 'state A_(DOSTAL|JUMP|SITW)' /tmp/opencode/ly_trv.log \
@@ -1363,14 +1361,23 @@ ifeq ($(PX_DATA),1)
 	     "G=30,350, crosses the authored death line at" \
 	     "(412,1020) (respawn at spawn on tick 309), at" \
 	     " ZERO energy cost; AC_ONAIR drives the authored" \
-	     " A_WALK -> A_FALL_DOWN -> A_DRAP -> A_WALK fall" \
-	     " cycle, run for the first time (282/289/290/291)" \
-	     " - the gap this leg once named is closed; the" \
+	     " A_WALK -> A_FALL_DOWN exit (282, PR-331), and" \
+	     " A_FALL_DOWN holds its OWN falling pose for the" \
+	     " whole 36-tick drop (frame 7 from 284 to 319):" \
+	     " its row 2 is the clause row WAIT K_NEVER - the" \
+	     " resolver mask K_UP|K_DOWN read through the SUBSET" \
+	     " arm - so with only FWD held the row step returns" \
+	     " at 0x522ed, the list never reaches its wrap, never" \
+	     " arms AC_BREAK_NEXT and never leaves the state" \
+	     " (PR-333). The gap this leg once named is closed;" \
+	     " the" \
 	     "ladder object is placed at its authored (180,510) and its" \
 	     "column is reached on tick 97; the worms answer with SEMI" \
 	     "push-out ALONE (>=30 lines), costing DELAY not a stop;" \
-	     "no damage line appears and the lion never leaves A_WALK" \
-	     "(AC_ONAIR closed that gap in PR-331)" \
+	     "no damage line appears; the lion leaves A_WALK" \
+	     "only into the authored fall (PR-331 raised the" \
+	     "signal, PR-333 keeps the fall state inside its" \
+	     "own list)" \
 	     "(ok)" \
 	  || { echo "play traverse probe grep FAILED"; \
 	       grep -E 'DRABINKA|SEMI|pos 1[78][0-9],|hit by|ATTACKS' \
@@ -1755,32 +1762,28 @@ ifeq ($(PX_DATA),1)
 # airborne canvas is not measured either way: the view's ease toward
 # the anchor belongs to the follow model, not to this leg.
 # PR-331 RE-PIN of the flow below (the AC_ONAIR raise, the engine's
-# surface-link tail 0x54760-0x54803): the mid-air A_WALK at 63 raises
-# AC_ONAIR on its own iteration, and ZARIA.01's authored
+# surface-link tail 0x54760-0x54803): the iteration that finds no
+# surface posts AC_ONAIR, and ZARIA.01's authored
 # `A_WALK(14th line)=AC_ONAIR` - `A_FALL_DOWN(1)=AC_ONAIR` - RUNS on
-# the next iteration: A_FALL_DOWN at 64, one iteration after the
-# airborne one, exactly the timing the --play-selftest T2 leg pins. So
-# the AC_TIME chain no longer reaches A_DRAP mid-fall: what runs is
-# A_FALL_DOWN's AUTHORED three-row list, on the rows PR-330 reads -
-# `s idle 1,300` (64-65), the `7,0` row at the engine's 100-unit
-# floor (66), `8,300,F 0,100` (67-69), the wrap's re-entry (70) - and
-# the wrap's AC_BREAK_NEXT into A_DRAP (71), which its own
-# `A_FALL_DOWN(1)=AC_ONAIR` hands straight back (72-74). The ground
-# catches him on tick 75: 643 at 74, the 681 grass at x 121 seen
-# mid-step, the feet re-seated at 650 = 681 - the fall pose's own
-# 31 px contact (PR-97's `pos = line - contact`, the PR-272 sweep
-# unchanged). Four grounded iterations later the last row closes and
-# THIS time the wrap ENDS the state - A_DRAP from 79, seated at 653 =
-# 681 - A_DRAP's own 28 px contact, x drifting to 119 on the LICHA
-# SEMI push-outs. On the port's two-row list this leg parked in the
-# fall pose forever: `A_FALL_DOWN(3)=!AC_ONAIR` addressed a row that
-# was not in the list, and PR-215's self-target law rewrote the
-# cursor on every iteration it matched. PR-330's row read is what ends
-# that; the x drift stays the worms.
+# the next iteration. What PR-331 measured after that - A_FALL_DOWN's
+# three-row list, its wrap into A_DRAP and back, the ground catch at
+# 75 and the A_DRAP the list ends in from 79 - was the port running
+# those lists UNGATED. PR-333 re-pins all of it: A_JUMP's row 10 is
+# `8,0,WAIT AC_DUP`, a clause row, so the list stops there on tick 59
+# and never reaches its mid-air wrap; the lion falls inside A_JUMP on
+# that state's own G=0,55, lands on tick 81, and the authored
+# `A_JUMP(11)=AC_DUP` transition - which needs no row gate, only the
+# AC_DUP the surface-link tail raised - restarts his list at row 11,
+# the recovery row the author wrote it for. The row list's clock kept
+# filling while the clause held (2325 units), so that row admits the
+# moment the cursor is put on it and its wrap arms AC_BREAK_NEXT:
+# A_WALK(7) on tick 83. A_FALL_DOWN is never entered and its own
+# `7,0,WAIT K_NEVER` row is never reached in this run.
+# The x drift stays the worms' SEMI push-outs.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=4 \
 	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 52:NONE" \
-	  LEO_LEVEL_PPM=/tmp/opencode/ly_zjump.ppm LEO_LEVEL_PPM_TICK=63 \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_zjump.ppm LEO_LEVEL_PPM_TICK=90 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zjump.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA jump FAILED (rc=$$rc)"; \
@@ -1808,40 +1811,43 @@ ifeq ($(PX_DATA),1)
 # compares with the log. The PR-73/74 /4 + 1650 fit reached 20 px and
 # fails this check by construction.
 	@python3 tools/jump_law_measure.py /tmp/opencode/ly_zjump.log 649 1200 55 1
-	@grep -q 'play tick 63: state A_WALK seq walk frame 4 pos 124,556 grounded 0' \
-	    /tmp/opencode/ly_zjump.log \
-	  && grep -q 'play tick 64: state A_FALL_DOWN seq fall_dn frame 1 pos 124,561 grounded 0' \
-	      /tmp/opencode/ly_zland.log \
-	  && grep -q 'play tick 67: state A_FALL_DOWN seq fall_dn frame 8 pos 124,580 grounded 0' \
-	      /tmp/opencode/ly_zland.log \
-	  && grep -q 'play: A_FALL_DOWN -> A_DRAP' /tmp/opencode/ly_zland.log \
-	  && grep -q 'play: A_DRAP -> A_FALL_DOWN' /tmp/opencode/ly_zland.log \
-	  && grep -q 'play tick 75: state A_FALL_DOWN seq fall_dn frame 8 pos 121,650 grounded 1' \
-	      /tmp/opencode/ly_zland.log \
-	  && grep -q 'play tick 82: state A_DRAP seq idle frame 1 pos 119,653 grounded 1' \
-	      /tmp/opencode/ly_zland.log \
-	  && grep -qE 'tick (79|8[0-2]): .* A_DRAP .* grounded 1' /tmp/opencode/ly_zland.log \
-	  && echo "play jump (PR-86 + PR-253/256): the (N) token is the target's" \
-	       "START ROW on real rotated data (authored frame 4 at the exit)," \
-	       "the row list runs its own 22-row clock through the whole" \
-	       "flight, the wrap exits via its OWN A_WALK(7)=AC_BREAK_NEXT -" \
-	       "mid-air, because the pull law's 100 px arc outlasts the list" \
-	       "(the arc is the closed form of the authored words, not a" \
-	       "fit); the state's own G=30,350 brings him down, the walked" \
-	       "rows' GEN AC_TIME line is never reached: AC_ONAIR hands" \
-	       "A_WALK to A_FALL_DOWN on tick 64 (PR-331), and its THREE" \
-	       "authored rows - the s-idle one PR-330 reads - run the fall" \
-	       "frames to their wrap's AC_BREAK_NEXT into A_DRAP and back" \
-	       "(71/72); the ground CATCHES him on 75 (PR-272): the" \
-	       "landing sweep starts at the previous iteration's contact" \
-	       "line, so the step over the 681 grass is seen and the feet" \
-	       "seat on it (650 = 681 - the fall pose's own 31 px contact)" \
-	       "- and the last row closing ENDS the state: A_DRAP from 79" \
-	       "seated at 653 = 681 - its own 28 px contact, x drifting" \
-	       "only on the LICHA SEMI push-outs (the two-row park this" \
-	       "leg used to pin is what PR-330's row read ends) (ok)" \
+	@grep -q 'play tick 59: state A_JUMP seq jump frame 8 pos 124,549 grounded 0' \
+	  /tmp/opencode/ly_zjump.log \
+	  && test "$$(grep -c 'state A_JUMP seq jump frame 8' \
+	       /tmp/opencode/ly_zjump.log)" -ge 20 \
+	  && ! grep -qE 'state A_FALL_DOWN|play: A_JUMP -> A_(FALL_DOWN|DRAP)' \
+	       /tmp/opencode/ly_zjump.log \
+	  && grep -q 'play tick 81: state A_JUMP seq jump frame 8 pos 115,649 grounded 1' \
+	  /tmp/opencode/ly_zland.log \
+	  && grep -q 'play tick 82: state A_JUMP seq jump frame 1 pos 112,649 grounded 1' \
+	  /tmp/opencode/ly_zland.log \
+	  && grep -q 'play: A_JUMP -> A_WALK' /tmp/opencode/ly_zjump.log \
+	  && grep -q 'play tick 83: state A_WALK seq walk frame 4 pos 112,649 grounded 1' \
+	  /tmp/opencode/ly_zjump.log \
+	  && echo "play jump (PR-86 + PR-253/256, PR-333 re-pin): the (N)" \
+	       "token is the target's START ROW on real rotated data (authored" \
+	       "frame 4 at the exit), the arc is the closed form of the authored" \
+	       "words (the 100 px the tool derives from I 150,-1200 / T=20,1 /" \
+	       "G=0,55), not a fit; and the row list is now HELD by its own" \
+	       "clause row: A_JUMP's row 10 is WAIT AC_DUP, so the list reaches" \
+	       "it on tick 59 and stays there - 23 iterations of frame 8 while" \
+	       "the row accumulator fills 2025, 2125 ... 2325 units that a" \
+	       "clause path never reads (PR-332, PR-333). There is no mid-air" \
+	       "exit any more and no A_FALL_DOWN hand-over: the flight ends on" \
+	       "the surface, tick 81, grounded at 649 = 681 - the jump pose's" \
+	       "own 32 px contact. The next iteration's transition pass matches" \
+	       "the authored A_JUMP(11)=AC_DUP - no row gate is involved, only" \
+	       "the AC_DUP the surface-link tail raised on the attach edge" \
+	       "(PR-331) - and that restarts the list at row 11, the recovery" \
+	       "row the author wrote it for: on the 2325 units banked while the" \
+	       "clause held, that row admits at once, wraps the list and arms" \
+	       "AC_BREAK_NEXT, so the state's OWN A_WALK(7)=AC_BREAK_NEXT runs" \
+	       "on tick 83 at the start row it names. What this leg used to" \
+	       "pin - a list that ran to its wrap mid-air and handed an" \
+	       "airborne lion to A_WALK, then the fall-state chain - was the" \
+	       "port running those row lists UNGATED (ok)" \
 	  || { echo "play ZARIA jump cam-y grep FAILED"; \
-	       grep -E 'tick (62|63|69|70|82):' /tmp/opencode/ly_zjump.log \
+	       grep -E 'tick (59|63|81|82|83):' /tmp/opencode/ly_zjump.log \
 	         /tmp/opencode/ly_zland.log; exit 1; }
 # PR-254, FOCUS 1 / OI-078: THE ASK IS A REQUESTER-CHANNEL WALK, NOT
 # A SHAPE MEET. PR-249 found the port never asks the ladder at all:
@@ -2177,16 +2183,35 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play tick 131: asked ladder DRABINKA/drab.mov at state 3' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 132: asked ladder DRABINKA/drab.mov at state 2' /tmp/opencode/ly_climb.log \
 	  && ! grep -qE 'play tick (1[0-2][0-9]|13[01]): asked ladder DRABINKA/drab.mov at state 2' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 151: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 400' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 153: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 1400' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 154: state A_TURN_BACK' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 266: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 100' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 267: state A_PODCIAG seq lift frame 1 pos 210,560 grounded 0' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 292: state A_PODCIAG seq lift frame 1 pos 210,560 grounded 0' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 153: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 400' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 155: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 1400' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 156: state A_TURN_BACK' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 268: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 100' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 269: state A_PODCIAG seq lift frame 1 pos 209,560 grounded 0' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 294: state A_PODCIAG seq lift frame 1 pos 209,560 grounded 0' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play: A_DRAP -> A_FALL_DOWN' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play: A_FALL_DOWN -> A_WSP' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 316: state A_WSP seq climb frame 3 pos 210,648 grounded 1' /tmp/opencode/ly_climb.log \
-	  && echo "play climb chain (PR-274/PR-285/PR-287): the authored ladder climb runs end to end - A_UP's `WAIT K_GEN1` row holds until the ask raises the bus, the ladder then takes its own 2700-unit A_DROP descent (27 iterations, answerable only from 132), CATCH only inside the middle 70%, A_TURN_BACK at 150 (A_LOOKUP never), A_WSP 1 px/t to the band, AC_EDGE at the band edge, A_PODCIAG's own 2700-unit clock HOLDS the body at the band edge (its authored T=100 is the hold) and exits to A_DRAP at 293; AC_ONAIR then hands the drop to A_FALL_DOWN and its OWN authored A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR row RE-CATCHES the ladder at 295, so the leg ends with the lion back ON the column at its foot (648, grounded from 316) - the platform top stays OI-073's named open route (ok)" \
+	  && grep -q 'play tick 318: state A_WSP seq climb frame 3 pos 209,648 grounded 1' /tmp/opencode/ly_climb.log \
+	  && echo "play climb chain (PR-274/PR-285/PR-287, PR-333 re-pin): the authored ladder climb runs end to end -" \
+	     "A_UP's WAIT K_GEN1 row holds until the ask raises the bus, the" \
+	     "ladder then takes its own 2700-unit A_DROP descent (27" \
+	     "iterations, answerable only from 132), CATCH only inside the" \
+	     "middle 70%, A_TURN_BACK at 156 (A_LOOKUP never), A_WSP 1 px/t" \
+	     "to the band, AC_EDGE at the band edge, A_PODCIAG's own" \
+	     "2700-unit clock HOLDS the body at the band edge (its authored" \
+	     "T=100 is the hold) and exits to A_DRAP at 295; AC_ONAIR then" \
+	     "hands the drop to A_FALL_DOWN and its OWN authored" \
+	     "A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR row RE-CATCHES the ladder at" \
+	     "297, so the leg ends with the lion back ON the column at its" \
+	     "foot (648, grounded from 318) - the platform top stays" \
+	     "OI-073's named open route. PR-333 moved the whole approach by" \
+	     "two ticks and the column x by one (210 -> 209, the worms'" \
+	     "SEMI push-outs differ after the later landing): the approach" \
+	     "jump at 98 no longer exits its list mid-air - A_JUMP's row" \
+	     "10 is WAIT AC_DUP, so the flight is held there and ends on" \
+	     "the surface, and the authored A_JUMP(11)=AC_DUP restart puts" \
+	     "the recovery row next; the walk to the column resumes two" \
+	     "ticks later than this leg was written (ok)" \
 	  || { echo "play ZARIA climb chain grep FAILED"; \
 	       grep -E 'play: A_|ANSWERS|state A_(TURN_BACK|WSP|PODCIAG|DRAP) ' \
 	         /tmp/opencode/ly_climb.log | tail -12; exit 1; }
@@ -2218,44 +2243,47 @@ ifeq ($(PX_DATA),1)
 # (0x3df00 -> the asked's +0xd8 verb -> 0x45320 with
 # [asked+0xee], PR-23x/PR-275), the same word A_WSP's
 # `A_TURN_BACK(1)=AC_DUP,K_DOWN` row needs - still unmodelled.
-# PR-331 RE-PIN (the AC_ONAIR/AC_DUP surface-link raises, the
-# engine's tail 0x54760-0x54803): the leap is now CAUGHT ON, one
-# iteration into the flight, by A_JUMP's OWN row. The approach is
-# the PR-331 fall cycle of the leg above, so A_WSP starts at 169
-# from 210,652 and K_JUMP finds it at 210,627 on 200 (1 px/t as
-# ever, four ticks later than this leg was written);
+# PR-333 RE-PIN: the approach above is now held by A_JUMP's own
+# `8,0,WAIT AC_DUP` clause row (PR-332, PR-333), so the approach
+# jump ends ON the surface and the walk to the column runs two
+# ticks later than this leg was written; the x is one px left (the
+# worms' SEMI push-outs differ after that landing). A_WSP starts
+# at 171 from 209,652 and K_JUMP finds it at 209,629 on 199.
 # `A_PRE_JUMP(1)=K_JUMP` takes it, its `2,75,I 250,-1100`
-# launches, and `A_JUMP(4)=AC_BREAK_NEXT` hands to A_JUMP at 203
-# - frame 3, 213,608. That iteration finds no surface, so
-# AC_ONAIR posts (0x54800), the ladder answers `set 1400` =
+# launches, and `A_JUMP(4)=AC_BREAK_NEXT` hands to A_JUMP at 203 -
+# frame 3, 212,610. That iteration finds no surface, so AC_ONAIR
+# posts (0x54800), the ladder answers `set 1400` =
 # AC_DRAB|AC_DRAB_CATCH on the SAME tick, and A_JUMP's authored
 # `A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR` row - it stands BEFORE that
 # block's `A_JUMP(11)=AC_DUP` and `A_WALK(7)=AC_BREAK_NEXT`
 # lines, and 5 of the 777 texts author it - is TAKEN: A_WSP at
-# its row 3 at 204, 213,603. So the apex at 541 and the mid-air
-# CATCH at 228 this leg used to pin are not what the shipped
-# script does once AC_ONAIR is live: a ladder jump that stays
-# over the column is recaught at once. The climb then runs on
-# the authored words unchanged - 1 px/t, 603 at 204 to the band
-# edge 560 at 244, the ladder's `set 100` = AC_EDGE at 244, and
-# K_UP still held so `A_PODCIAG(1)=AC_EDGE,K_UP` at 245 -
-# A_PODCIAG holds 213,560 through 270 (26 iterations of its own
-# T=100,100) and its `A_DRAP(1)=AC_BREAK_NEXT` runs at 271.
-# THE SECOND NEW CHAIN IS A_DRAP'S OWN: at 562 the query finds
-# nothing again, AC_ONAIR posts, and A_DRAP's
-# `A_TURN_BACK(1)=K_UP,AC_DRAB_CATCH` row (3 of the 777 texts
-# author it on A_DRAP) is taken at 272. That state's own
-# `G=0,100` carries him to the main ground - 652 = the 682 .plt
-# line at x 213 minus that pose's own 30 px contact, the same
-# arithmetic PR-274 pinned - at 284, and its
+# its row 3 at 204, 212,605. A matched clause is a transition,
+# not a row close (PR-332), so the row clock is not consulted -
+# the recatch lands on A_WSP's row 3, whose list had been running
+# since 171. The apex at 541 and the mid-air CATCH at 228 the
+# paragraph above recites are not what the shipped script does
+# once AC_ONAIR and the row gates are live: a ladder jump that
+# stays over the column is recaught at once.
+# The climb then runs on the authored words unchanged -
+# 1 px/t, 605 at 204 to the band edge 560 at 246, the ladder's
+# `set 100` = AC_EDGE at 246, and K_UP still held so
+# `A_PODCIAG(1)=AC_EDGE,K_UP` at 247 - A_PODCIAG holds 212,560
+# through 272 (26 iterations of its own T=100,100) and its
+# `A_DRAP(1)=AC_BREAK_NEXT` runs at 273. THE SECOND NEW CHAIN IS
+# A_DRAP'S OWN: at 562 the query finds nothing again, AC_ONAIR
+# posts, and A_DRAP's `A_TURN_BACK(1)=K_UP,AC_DRAB_CATCH` row (3
+# of the 777 texts author it on A_DRAP) is taken at 274. That
+# state's own `G=0,100` carries him to the main ground - 652 =
+# the 682 .plt line at x 212 minus that pose's own 30 px contact,
+# the same arithmetic PR-274 pinned - at 286, and its
 # `A_WSP(1)=AC_BREAK_NEXT,AC_DRAB` row (5 texts) puts the climb
-# back on at 287: 652 at 288 to 626 at 318, 1 px/t, x at 213.
+# back on at 289: 652 at 290 to 628 at 318, 1 px/t, x at 212.
 # What stays UNMODELLED is the other AC_DUP - the one an
 # object's ask raises (0x3df00 -> the asked's +0xd8 verb ->
 # 0x45320 with [asked+0xee], PR-275). PR-331 models the
-# ground-query attach edge (0x54785), not a surface ask's
-# signal, so this script's `A_JUMP(11)=AC_DUP` and
-# `A_TURN_BACK(1)=AC_DUP,K_DOWN` rows still never run here.
+# ground-query attach edge (0x54785), not a surface ask's signal,
+# so this script's `A_TURN_BACK(1)=AC_DUP,K_DOWN` row still never
+# runs here.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
 	  LEO_PLAY_SCRIPT="1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP \
@@ -2273,42 +2301,44 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play: A_PODCIAG -> A_DRAP' /tmp/opencode/ly_cjump.log \
 	  && grep -q 'play: A_DRAP -> A_TURN_BACK' /tmp/opencode/ly_cjump.log \
 	  && grep -q 'play: A_TURN_BACK -> A_WSP' /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 199: state A_WSP seq climb frame 5 pos 210,627 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 199: state A_WSP seq climb frame 4 pos 209,629 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
 	  && grep -q 'play tick 200: state A_PRE_JUMP' /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 203: state A_JUMP seq jump frame 3 pos 213,608 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 203: state A_JUMP seq jump frame 3 pos 212,610 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
 	  && grep -q 'play tick 203: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 1400' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 204: state A_WSP seq climb frame 3 pos 213,603 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 244: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 100' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 245: state A_PODCIAG seq lift frame 1 pos 213,560 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 270: state A_PODCIAG seq lift frame 1 pos 213,560 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 271: state A_DRAP seq idle frame 1 pos 213,562 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 272: state A_TURN_BACK seq turn_bk frame 1 pos 213,565 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 284: state A_TURN_BACK seq turn_bk frame 5 pos 213,652 grounded 1' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 287: state A_WSP seq climb frame 1 pos 213,652 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
-	  && grep -q 'play tick 318: state A_WSP seq climb frame 5 pos 213,626 grounded 0' \
-	       /tmp/opencode/ly_cjump.log \
-	  && echo "play ladder-jump (PR-277): K_JUMP mid-climb takes A_PRE_JUMP's own row, its I 250,-1100" \
-	  "launches the leap, and A_JUMP's OWN A_WSP(3)=AC_DRAB_CATCH," \
-	  "AC_ONAIR row - live the moment AC_ONAIR exists (PR-331) -" \
-	  "RECATCHES it one iteration in (204); the 1 px/t climb then" \
-	  "runs to the band, AC_EDGE at 244, A_PODCIAG HOLDS 245-270" \
-	  "and its A_DRAP exit at 271 hands to A_DRAP's OWN" \
-	  "K_UP,AC_DRAB_CATCH row (272), whose own G=0,100 lands him on" \
-	  "the .plt line by PR-274's contact arithmetic (284) and whose" \
-	  "A_WSP(1)=AC_BREAK_NEXT,AC_DRAB row puts the climb back on" \
-	  "(287-, 626 at 318); the ASK-raised AC_DUP of this block's" \
-	  "own rows stays unmodelled (ok)" \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 204: state A_WSP seq climb frame 3 pos 212,605 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 246: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 100' \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 247: state A_PODCIAG seq lift frame 1 pos 212,560 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 272: state A_PODCIAG seq lift frame 1 pos 212,560 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 273: state A_DRAP seq idle frame 1 pos 212,562 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 274: state A_TURN_BACK seq turn_bk frame 1 pos 212,565 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 286: state A_TURN_BACK seq turn_bk frame 5 pos 212,652 grounded 1' \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 289: state A_WSP seq climb frame 1 pos 212,652 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
+	  && grep -q 'play tick 318: state A_WSP seq climb frame 4 pos 212,628 grounded 0' \
+	         /tmp/opencode/ly_cjump.log \
+	  && echo "play ladder-jump (PR-277, PR-333 re-pin): K_JUMP mid-climb" \
+	     "takes A_PRE_JUMP's own row, its I 250,-1100 launches the" \
+	     "leap, and A_JUMP's OWN A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR row" \
+	     "- live the moment AC_ONAIR exists (PR-331) - RECATCHES it" \
+	     "one iteration in (204), at that row's own position because a" \
+	     "matched clause never reads the row clock (PR-332); the 1 px/t" \
+	     "climb then runs to the band, AC_EDGE at 246, A_PODCIAG HOLDS" \
+	     "247-272 and its A_DRAP exit at 273 hands to A_DRAP's OWN" \
+	     "K_UP,AC_DRAB_CATCH row (274), whose own G=0,100 lands him on" \
+	     "the .plt line by PR-274's contact arithmetic (286) and whose" \
+	     "A_WSP(1)=AC_BREAK_NEXT,AC_DRAB row puts the climb back on" \
+	     "(289-, 628 at 318); the ASK-raised AC_DUP of this block's" \
+	     "own rows stays unmodelled (ok)" \
 	  || { echo "play ZARIA ladder-jump grep FAILED"; \
 	       grep -E 'play: A_|state A_(WSP|PRE_JUMP|JUMP|WALK|TURN_BACK) ' \
 	         /tmp/opencode/ly_cjump.log | tail -12; exit 1; }
@@ -2351,26 +2381,33 @@ ifeq ($(PX_DATA),1)
 # in the fall through 270. Every tick above is the fixture's
 # own arithmetic; the chain is exactly what the authored rows
 # order, and this is the descend half of the ladder.
-# PR-331 RE-PIN (the AC_ONAIR/AC_DUP surface-link raises, the
-# engine's tail 0x54760-0x54803): the A_SCIAG half of this leg
-# is GONE, and the cause is the recatch the ladder-jump note
-# above describes. The climb now runs to 213,582 at 222 (FWD,UP
-# from 150, the K_JUMP at 200, A_JUMP's AC_DRAB_CATCH,AC_ONAIR
-# row handing him back to A_WSP at 204), FWD,DOWN from 223
-# reverses the SAME authored BY_TY pair - `F=0,100` with the
-# intent word now down, `T=160,50` - and he walks DOWN the
-# column one px an iteration, 583 at 223 to 646 at 293, x pinned
-# at 213 the whole way while the ladder answers `set 1400`. At
-# 294 the ground query catches him: 654 = the 682 .plt line at
-# x 213 minus A_WSP's own 28 px contact, grounded 1 - and the
-# PR-86 FALLBACK (ll_play.c: a landing while the state declares
-# no AC_BREAK_NEXT exit of its own takes A_STAY, else A_DRAP)
-# fires, because A_WSP authors no AC_BREAK_NEXT line: A_WSP ->
-# A_DRAP. A_DRAP's own `A_LOOKDOWN(1)=K_DOWN` row follows at 295
-# (652 = 682 - the look_dn pose's own 30 px contact), that list
-# closes and hands back at 314, and the A_DRAP <-> A_LOOKDOWN
-# loop runs to the end of the run: the authored cycle of holding
-# DOWN at the foot of a ladder.
+# PR-331/PR-333 RE-PIN (the AC_ONAIR/AC_DUP surface-link
+# raises, the engine's tail 0x54760-0x54803, and the row-step
+# gates): the A_SCIAG half of this leg is GONE, and the cause is
+# the recatch the ladder-jump note above describes. The climb now
+# runs to 212,584 at 222 (FWD,UP from 150, the K_JUMP at 199,
+# A_JUMP's AC_DRAB_CATCH,AC_ONAIR row handing him back to A_WSP
+# at 204 - a matched clause is a transition, not a row close, so
+# that recatch enters at A_WSP's row 3 without reading its
+# clock), FWD,DOWN from 223 reverses the SAME authored BY_TY pair
+# - `F=0,100` with the intent word now down, `T=160,50` - and he
+# walks DOWN the column one px an iteration, 584 at 223 to 646 at
+# 291, x pinned at 212 the whole way while the ladder answers
+# `set 1400`. At 292 the ground query catches him: 654 = the 682
+# .plt line at x 212 minus A_WSP's own 28 px contact, grounded
+# 1 - and the PR-86 FALLBACK (ll_play.c: a landing while the
+# state declares no AC_BREAK_NEXT exit of its own takes A_STAY,
+# else A_DRAP) fires, because A_WSP authors no AC_BREAK_NEXT
+# line: A_WSP -> A_DRAP. A_DRAP's own `A_LOOKDOWN(1)=K_DOWN` row
+# follows at 293 (652 = 682 - the look_dn pose's own 30 px
+# contact). PR-333 then changes the END of this leg: A_LOOKDOWN's
+# row 5 is `5,300,WAIT !K_DOWN` - a clause row, and the `!` is
+# the engine's shares-nothing mode (0x52227's test), so while
+# this script holds DOWN the gate never passes, the row step is
+# left with no frame, no cursor step and no wrap, and the state
+# HOLDS frame 5 to the end of the run instead of wrapping into
+# A_DRAP at 314. That is the authored meaning of the row: a
+# look-down that lasts exactly as long as the key is held.
 # WHY A_SCIAG CANNOT RUN HERE ANY MORE. Its two entry rows -
 # A_WALK's and A_DRAP's `A_SCIAG(1)=AC_EDGE,K_DOWN` - need a
 # state that SURVIVES mid-air inside PR-270's edge band. AC_ONAIR
@@ -2403,33 +2440,40 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play: A_JUMP -> A_WSP' /tmp/opencode/ly_cdown.log \
 	  && grep -q 'play: A_WSP -> A_DRAP' /tmp/opencode/ly_cdown.log \
 	  && grep -q 'play: A_DRAP -> A_LOOKDOWN' /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play: A_LOOKDOWN -> A_DRAP' /tmp/opencode/ly_cdown.log \
+	  && ! grep -q 'play: A_LOOKDOWN -> A_DRAP' /tmp/opencode/ly_cdown.log \
 	  && ! grep -q 'state A_SCIAG' /tmp/opencode/ly_cdown.log \
 	  && test "$$(grep -c 'play: A_WALK -> A_TURN_BACK' \
-	       /tmp/opencode/ly_cdown.log)" -eq 1 \
-	  && grep -q 'play tick 199: state A_WSP seq climb frame 5 pos 210,627 grounded 0' \
-	       /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play tick 204: state A_WSP seq climb frame 3 pos 213,603 grounded 0' \
-	       /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play tick 222: state A_WSP seq climb frame 1 pos 213,582 grounded 0' \
-	       /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play tick 293: state A_WSP seq climb frame 4 pos 213,646 grounded 0' \
-	       /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play tick 294: state A_DRAP seq idle frame 1 pos 213,654 grounded 1' \
-	       /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play tick 295: state A_LOOKDOWN seq look_dn frame 1 pos 213,652 grounded 1' \
-	       /tmp/opencode/ly_cdown.log \
-	  && grep -q 'play tick 318: state A_LOOKDOWN seq look_dn frame 3 pos 213,652 grounded 1' \
-	       /tmp/opencode/ly_cdown.log \
-	  && echo "play ladder-descend (PR-278, re-pinned by PR-331): the K_JUMP" \
-	     "leap is recatched by A_JUMP's own AC_DRAB_CATCH,AC_ONAIR row," \
-	     "so the mid-air descent this leg ran through A_SCIAG is replaced" \
-	     "by the authored BY_TY reversal - DOWN flips the climb pair and" \
-	     "walks him down the column 1 px an iteration to its foot, where" \
-	     "the ground catches him (654 = 682 - A_WSP's own 28 px contact)" \
-	     "and A_DRAP's A_LOOKDOWN(1)=K_DOWN row starts the authored" \
-	     "DOWN-at-the-foot loop. A_SCIAG's two AC_EDGE,K_DOWN entry rows" \
-	     "need a state that survives mid-air in the edge band, which" \
+	         /tmp/opencode/ly_cdown.log)" -eq 1 \
+	  && grep -q 'play tick 199: state A_WSP seq climb frame 4 pos 209,629 grounded 0' \
+	         /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 204: state A_WSP seq climb frame 3 pos 212,605 grounded 0' \
+	         /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 222: state A_WSP seq climb frame 1 pos 212,584 grounded 0' \
+	         /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 291: state A_WSP seq climb frame 3 pos 212,646 grounded 0' \
+	         /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 292: state A_DRAP seq idle frame 1 pos 212,654 grounded 1' \
+	         /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 293: state A_LOOKDOWN seq look_dn frame 1 pos 212,652 grounded 1' \
+	         /tmp/opencode/ly_cdown.log \
+	  && grep -q 'play tick 318: state A_LOOKDOWN seq look_dn frame 5 pos 212,652 grounded 1' \
+	         /tmp/opencode/ly_cdown.log \
+	  && echo "play ladder-descend (PR-278, PR-331/PR-333 re-pin): the" \
+	     "K_JUMP leap is recatched by A_JUMP's own AC_DRAB_CATCH,AC_ONAIR" \
+	     "row, so the mid-air descent this leg ran through A_SCIAG is" \
+	     "replaced by the authored BY_TY reversal - DOWN flips the climb" \
+	     "pair and walks him down the column 1 px an iteration to its" \
+	     "foot, where the ground catches him (292, 654 = 682 - A_WSP's" \
+	     "own 28 px contact) and A_DRAP's A_LOOKDOWN(1)=K_DOWN row" \
+	     "starts the authored DOWN-at-the-foot loop (293). PR-333 also" \
+	     "changes its end: A_LOOKDOWN's row 5 is WAIT !K_DOWN, a clause" \
+	     "row in shares-nothing mode, and this script holds DOWN to the" \
+	     "last tick, so that gate never passes, the row step is left" \
+	     "with no frame, no cursor step and no wrap, and the look-down" \
+	     "HOLDS its last frame - the row says exactly as long as the key" \
+	     "is held. A_SCIAG's two AC_EDGE,K_DOWN entry rows need a state" \
+	     "that survives mid-air in the edge band, which AC_ONAIR no" \
+	     "longer allows: named at OI-121 (ok)" \
 	     "AC_ONAIR no longer allows: named at OI-121 (ok)" \
 	  || { echo "play ZARIA ladder-descend grep FAILED"; \
 	       grep -E 'play: A_|state A_(WSP|SCIAG|FALL_DOWN|WALK) ' \
@@ -2469,70 +2513,76 @@ ifeq ($(PX_DATA),1)
 # the re-catch cycle (`A_TURN_BACK(1)=K_UP,AC_DRAB_CATCH` at 290,
 # A_WSP at once back into A_PODCIAG, no position gain in any of
 # the three). The route to 489 is open again, named at OI-078.
-# PR-331 RE-PIN (the AC_ONAIR/AC_DUP surface-link raises). The
-# hold this leg leaves moved four iterations later (A_WSP starts
-# at 169, the climb pair reaches the band edge 560 at 266,
-# `A_PODCIAG(1)=AC_EDGE,K_UP` at 267), so the key release and
-# the JUMP press moved with it - 292:NONE, 294:JUMP - and the
-# hold runs 267..292 on the same 2700-unit list. The HOP IS NOW
-# NETTED ONE ITERATION IN, and that is the finding:
-# `A_PODCIAG(1)=AC_BREAK_NEXT` runs at 293 (562), the JUMP press
-# takes A_DRAP's `A_JUMP_S(1)=K_JUMP` at 294 - that line stands
-# BEFORE `A_FALL_DOWN(1)=AC_ONAIR` in the same block, so the key
-# wins the order race - but A_JUMP_S's own block carries the
-# same `A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR` row as A_JUMP and
-# A_FALL_DOWN (5 of the 777 texts author it in those three
-# states), the hop's first iteration is an airborne one, AC_ONAIR
-# posts, the ladder answers `set 1400`, and A_JUMP_S is out at
-# 295 (210,570) before its `2,150,I 120,-1200` launch row is
-# EVER admitted. So the 27 px arc and the 553 apex this leg used
-# to pin do not run: over a ladder column, every authored jump
-# state ZARIA.01 has - A_JUMP, A_FALL_DOWN, A_JUMP_S - hands the
-# lion back to the climb within one iteration once AC_ONAIR
-# exists. The leg's MEASUREMENT stands, and stronger: the LOWEST
-# y anywhere in this run is 560, the band edge, 71 px above the
-# platform line's 489, and the negative is pinned on every x.
+# PR-331/PR-333 RE-PIN (the AC_ONAIR/AC_DUP surface-link
+# raises and the row-step gates). The approach is now held by
+# A_JUMP's own `8,0,WAIT AC_DUP` clause row (see the climb leg),
+# so the whole chain moved two ticks later and the column x one
+# left: A_WSP starts at 171, the climb pair reaches the band edge
+# 560 at 268, `A_PODCIAG(1)=AC_EDGE,K_UP` runs at 269 and the
+# hold is 269..294 on the same 2700-unit list. The key release
+# and the JUMP press moved WITH it - 292:NONE, 296:JUMP - so the
+# press is still one iteration after the hang's own exit, which
+# is what this leg tests. The HOP IS NETTED ONE ITERATION IN, and
+# that is the finding: `A_PODCIAG(1)=AC_BREAK_NEXT` runs at 295
+# (562), the JUMP press takes A_DRAP's `A_JUMP_S(1)=K_JUMP` at
+# 296 - that line stands BEFORE `A_FALL_DOWN(1)=AC_ONAIR` in the
+# same block, so the key wins the order race - but A_JUMP_S's own
+# block carries the same `A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR` row as
+# A_JUMP and A_FALL_DOWN (5 of the 777 texts author it in those
+# three states), the hop's first iteration is an airborne one,
+# AC_ONAIR posts, the ladder answers `set 1400`, and A_JUMP_S is
+# out at 297 (209,570) before its `2,150,I 120,-1200` launch row
+# is EVER admitted - a matched clause is a transition, not a row
+# close, so no row clock is ever consulted (PR-332). So the 27 px
+# arc and the 553 apex this leg used to pin do not run: over a
+# ladder column, every authored jump state ZARIA.01 has - A_JUMP,
+# A_FALL_DOWN, A_JUMP_S - hands the lion back to the climb within
+# one iteration once AC_ONAIR exists. The leg's MEASUREMENT
+# stands, and stronger: while he is ON the column no tick reads a
+# position above the band edge 560, still 71 px above the
+# platform line's 489 (the only higher point anywhere is the
+# approach jump's 549 at x 124, away from the ladder), and the
+# negative is pinned on every x.
 # With the keys released at 292 the re-catch cycle also runs to
-# the end of the run: A_WSP at 295, the stand-in pulling him
-# down the column to 648, the ground holding him from 315.
+# the end of the run: A_WSP at 297, its own rows pulling him
+# down the column to 648, the ground holding him from 317.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=20 \
 	  LEO_PLAY_SCRIPT="1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP \
-292:NONE 294:JUMP 296:NONE" \
+292:NONE 296:JUMP 298:NONE" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_chang.ppm \
 	  LEO_LEVEL_PPM_TICK=400 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_chang.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA hang-and-hop FAILED (rc=$$rc)"; \
 	    cat /tmp/opencode/ly_chang.log; exit 1; fi
-	@grep -q 'play tick 267: state A_PODCIAG seq lift frame 1 pos 210,560 grounded 0' \
-	       /tmp/opencode/ly_chang.log \
-	  && grep -q 'play tick 292: state A_PODCIAG seq lift frame 1 pos 210,560 grounded 0' \
-	       /tmp/opencode/ly_chang.log \
+	@grep -q 'play tick 269: state A_PODCIAG seq lift frame 1 pos 209,560 grounded 0' \
+	         /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 294: state A_PODCIAG seq lift frame 1 pos 209,560 grounded 0' \
+	         /tmp/opencode/ly_chang.log \
 	  && grep -q 'play: A_PODCIAG -> A_DRAP' /tmp/opencode/ly_chang.log \
-	  && grep -q 'play tick 293: state A_DRAP seq idle frame 1 pos 210,562 grounded 0' \
-	       /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 295: state A_DRAP seq idle frame 1 pos 209,562 grounded 0' \
+	         /tmp/opencode/ly_chang.log \
 	  && grep -q 'play: A_DRAP -> A_JUMP_S' /tmp/opencode/ly_chang.log \
-	  && grep -q 'play tick 294: state A_JUMP_S seq fall_dn frame 1 pos 210,566 grounded 0' \
-	       /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 296: state A_JUMP_S seq fall_dn frame 1 pos 209,566 grounded 0' \
+	         /tmp/opencode/ly_chang.log \
 	  && grep -q 'play: A_JUMP_S -> A_WSP' /tmp/opencode/ly_chang.log \
-	  && grep -q 'play tick 295: state A_WSP seq climb frame 3 pos 210,570 grounded 0' \
-	       /tmp/opencode/ly_chang.log \
-	  && grep -q 'play tick 315: state A_WSP seq climb frame 3 pos 210,648 grounded 1' \
-	       /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 297: state A_WSP seq climb frame 3 pos 209,570 grounded 0' \
+	         /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 317: state A_WSP seq climb frame 3 pos 209,648 grounded 1' \
+	         /tmp/opencode/ly_chang.log \
 	  && ! grep -qE 'pos 2[0-9][0-9],4[0-9][0-9] ' /tmp/opencode/ly_chang.log \
 	  && ! grep -q 'state A_SCIAG' /tmp/opencode/ly_chang.log \
-	  && echo "play hang-and-hop (PR-286, re-pinned by PR-331): the" \
-	     "authored hold ends and K_JUMP takes the hang's own" \
-	     "A_JUMP_S row - but that state carries the SAME" \
-	     "A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR row as A_JUMP and" \
-	     "A_FALL_DOWN, so its own first airborne iteration hands" \
-	     "the lion back to the climb BEFORE its I 120,-1200" \
-	     "launch row is ever admitted: no hop arc runs over the" \
-	     "column, the lowest position anywhere in this run is the" \
-	     "band edge 560, still 71 px above the platform line at" \
-	     "489 (pinned on every x), and the route to 489 stays" \
-	     "named at OI-078 (ok)" \
+	  && echo "play hang-and-hop (PR-286, PR-331/PR-333 re-pin): the" \
+	     "authored hold ends and K_JUMP takes the hang's own A_JUMP_S" \
+	     "row - but that state carries the SAME" \
+	     "A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR row as A_JUMP and A_FALL_DOWN," \
+	     "so its own first airborne iteration hands the lion back to the" \
+	     "climb BEFORE its I 120,-1200 launch row is ever admitted: no" \
+	     "hop arc runs over the column, no position above the band edge" \
+	     "560 is ever read while he is on the column, still 71 px above" \
+	     "the platform line at 489 (pinned on every x), and the route to" \
+	     "489 stays named at OI-078 (ok)" \
 	  || { echo "play ZARIA hang-and-hop grep FAILED"; \
 	       grep -E 'play: A_|state A_(PODCIAG|DRAP|JUMP_S|SCIAG|TURN_BACK|WSP) ' \
 	         /tmp/opencode/ly_chang.log | tail -12; exit 1; }

@@ -45438,3 +45438,179 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   leg is owed and no suite run; the last full no-Windows suite run is
   PR-331's, rc=0 with 71 green verdict lines.
 ```
+
+## PR-333 - THE PORT TAKES THE ROW STEP'S TWO PATHS: A `Wait` CLAUSE THAT
+## DOES NOT MATCH ADMITS NOTHING AT ALL, ONE THAT MATCHES RUNS ON A ZERO
+## BUDGET, AND EVERY LADDER-CHAIN ROW IS NOW HELD BY ITS OWN CLAUSE
+```
+KIND: port
+SUBSYSTEM: the row step of ported/ll_play.c - ll_mov_fr_mask,
+  ll_mov_row_gated and the rewritten ll_mov_row_gate, the new
+  ll_mov_row_admit that IS the branch of 0x521f0, the `row_live`
+  capture in player_iterate and its row pass - plus obj_advance's row
+  step in ported/ll_level.c (PR-287's gate, half of which this
+  corrects), the U_CASES leg of --play-selftest, and the seven ZARIA.01
+  play legs of the Makefile whose pins the gate changes. It is the
+  port step PR-332's record named as its own successor in the F6 exit
+  thread of HANDOFF section 8 T5: with the clause acted on, the
+  authored holds of this level - `WAIT K_NEVER`, `WAIT !K_DOWN`,
+  `WAIT AC_DUP` - are what stop and start its row lists.
+ADDRESSES: 0x521f0, 0x52217, 0x52235, 0x5223c, 0x52241, 0x52243,
+  0x5224b, 0x52251, 0x52255, 0x52279, 0x522a6, 0x522bc, 0x522e6,
+  0x522ed, 0x522f8, 0x52320, 0x52323, 0x52329, 0x52334, 0x52354,
+  0x495b0, 0x495bd, 0x495ce, 0x495d5, 0x47e40, 0x47e4b, 0x47e63,
+  0x47edc, 0x48037, 0x48048, 0x4806f, 0x4807d, 0x45970, 0x45981,
+  0x4598f, 0x919ec, 0x919f5, 0x919fb, 0x91a06, 0x2e, 0x4, 0x8,
+  0xc, 0x10, 0x60, 0x95, 0x2001f8, 0x60
+NAMES: ll_mov_fr_mask, ll_mov_row_gated, ll_mov_row_gate,
+  ll_mov_row_admit, ll_mov_fr, gsig_id, gneg, gop, LL_GOP_NAME,
+  LL_GOP_ANY, LL_GOP_NEVER, LL_SIG_K_ANY_MASK, LL_SIG_K_NEVER_MASK,
+  live_bits, live_bits_with, row_live, p->sig, o->sig, player_iterate,
+  obj_advance, U_CASES, A_JUMP, A_JUMP_S, A_WSP, A_PODCIAG, A_DRAP,
+  A_LOOKDOWN, A_FALL_DOWN, A_DOSTAL, A_TURN_BACK, A_WALK, A_PRE_JUMP,
+  DRABINKA, ZARIA.01, AC_DUP, AC_ONAIR, AC_EDGE, AC_DRAB,
+  AC_DRAB_CATCH, AC_BREAK_NEXT, AC_ENEMY_ATC, K_NEVER, K_DOWN, K_UP,
+  K_GEN1, K_JUMP, WAIT, T5, F6, OI-111, OI-078, OI-121
+CODE: yes: ported/ll_play.c (the four functions above ll_sig_id, the
+  row_live capture in player_iterate, its row pass's admit call, the
+  U_CASES leg of --play-selftest, and two re-pinned data-free legs);
+  ported/ll_play.h (the ll_mov_row_admit declaration and the
+  re-worded ll_mov_row_gate contract); ported/ll_level.c
+  (obj_advance's row step calls ll_mov_row_admit instead of gating
+  and then comparing). Makefile: seven ZARIA.01 legs re-pinned - the
+  PR-90 enemy-attack leg, the PR-140 traverse probe, the
+  PR-86/PR-253/PR-256 jump-and-land leg, the PR-274/PR-285/PR-287
+  climb chain, the PR-277 ladder-jump, the PR-278 ladder-descend and
+  the PR-286 hang-and-hop leg; the last of those also has its key
+  times moved (292:NONE 296:JUMP 298:NONE) because the hold it
+  leaves now ends two iterations later. No leg added or removed, so
+  the fixture count stays 71.
+HOOKS: none new. The re-pinned legs run under the existing
+  LEO_PLAY_SCRIPT / LEO_PLAY_DANGER / LEO_PLAY_ASK / LEO_LEVEL_PPM /
+  LEO_LEVEL_PPM_TICK knobs; the data-free legs ride --play-selftest,
+  which verify-play already requires.
+MEASURED: (a) WHAT THE PORT NOW DOES, in the order of the engine's
+  own step. ll_mov_fr_mask compiles the captured clause into the bit
+  mask the resolver builds: K_ANY is LL_SIG_K_ANY_MASK (the six
+  arrows plus bit 53, OR-ed into data dword 1 at 0x48037-0x48048),
+  K_NEVER is LL_SIG_K_NEVER_MASK (K_UP|K_DOWN, 0x4806f-0x4807d), a
+  name in one of the tables is one bit, and a name in NO table - or
+  the one tokenless `Wait ;` - is 0, which is 0x495b0's EMPTY answer,
+  so that row is not gated at all. ll_mov_row_gated asks which path
+  the row takes (mask non-zero = the clause path of 0x52251) and
+  ll_mov_row_gate is TEventSet::match's two shipped arms with the
+  CLAUSE's own mode byte: plain is the subset arm 0x47e63, `!` is
+  shares-nothing 0x47edc. ll_mov_row_admit then IS the branch: no
+  match returns through 0x522ed having consumed nothing - no frame, no
+  cursor step, no wrap, no list-end bit, no threshold - and a match
+  takes the ZERO budget of 0x522f8, so its threshold compare is never
+  run and its accumulator is left at zero; only a clause-less row
+  reaches the compare at 0x52329 and carries the remainder. Both call
+  sites go through it: the player's row pass and obj_advance's, whose
+  "gate, then compare the threshold anyway" was PR-287's named gap
+  and shows on the 170 non-zero-threshold Wait rows PR-332 counted.
+  (b) RED FIRST. Leaving the gate unconsulted is exactly the
+  pre-PR-333 shape, and reproduced as mutation M1 it fails
+  --play-selftest 18 times: first `air2 == 28 && land == 28`, then
+  `exit_t == 34 && exit_fi == 3`, `land < exit_t`,
+  `rec_at == 22 && land_at == 11 && !badlaw`, and U_CASES' own cases
+  at `at == U_CASES[uc].at`. (c) THE DATA-FREE PIN OF BOTH PATHS,
+  U_CASES: one state, rows `1,100` / `2,1000,<tail>` / `3,100`,
+  twelve iterations, no fixture. The SAME 1000-unit row parks forever
+  with a plain `WAIT K_NEVER` and neither arrow held (it stands at
+  1100 units, far past its own threshold, and never wraps), and
+  admits in ONE iteration with UP and DOWN both held - 1000 units
+  unread, because the threshold compare never runs. `!K_DOWN` admits
+  when DOWN is not held and parks when it is; `K_DOWN` admits with
+  it; and the clause-less twin of that same row takes the ten feed
+  iterations of the clock path. A seventh probe reads the clock after
+  every gated admit: none of them leaves a non-zero accumulator, so
+  the zero budget of 0x522f8 is what is implemented, not the old
+  carry. (d) THE PLAYER, per leg, with the engine reason. The PR-140
+  traverse probe: A_FALL_DOWN's row 2 `7,0,WAIT K_NEVER` is the
+  authored park - frame 7 held from 284 to 319, the death line at
+  319, the respawn walk at 320, and NO A_DRAP anywhere, because the
+  wrap that used to hand the lion to A_DRAP cannot happen: a
+  non-matching clause leaves the row step, so the list neither moves
+  nor arms AC_BREAK_NEXT. The PR-90 enemy-attack leg: A_DOSTAL's
+  row 5 is `5,200,WAIT !AC_ENEMY_ATC`, shares-nothing mode, and with
+  no attack bit live that clause matches, so the row is admitted on
+  the clause and never reads its clock: the hit state's list wraps at
+  84 instead of 85 and frame 5 holds ONE tick (74) where the clock
+  path held two. The PR-86/PR-253/PR-256
+  jump-and-land leg of --play-selftest: the fixture's own arc still
+  tops at y 57 (43 px up), the air/land pair is 28/28 at loop step
+  30 - the flight ENDS on the surface - and the list
+  parks at its row 10 from step 20 with its accumulator running 25 to
+  1025 units that a clause path never reads, and the exit lands at
+  step 34 at the start row A_WALK(4) names, with `land < exit_t`. The
+  PR-86 ZARIA.01 jump leg: A_JUMP's row 10 `8,0,WAIT AC_DUP` holds
+  frame 8 from tick 59 to the landing at 81, grounded at 649 = 681
+  minus the jump pose's own 32 px contact, and the flight never hands
+  to A_FALL_DOWN; the NEXT iteration's transition pass matches the
+  authored `A_JUMP(11)=AC_DUP` - no row gate is involved there, only
+  the AC_DUP PR-331 raises at the attach - which puts the cursor on
+  row 11, whose clock was banked to 2325 units while the clause
+  held, so that row admits at once, wraps the list, and the state's
+  own `A_WALK(7)=AC_BREAK_NEXT` runs at 83 at the start row the line
+  names, frame 4. The PR-91 hit leg of --play-selftest: close_at is
+  {6,8,10,12,13,15,17,19,21} and rec_at 22, the hub register is
+  -197 where it was -192, and the total travel is still ux0 - 42.
+  The PR-274/PR-285/PR-287 climb chain, the PR-277 ladder-jump and
+  the PR-278 ladder-descend legs move because the approach jump above
+  no longer exits mid-air: everything after it is two iterations
+  later and one px left in x (the worms' SEMI push-outs differ after
+  the later landing), A_PODCIAG's authored T=100 hold is 269..294,
+  and the ladder-descend leg now ENDS in a new hold - A_LOOKDOWN's
+  row 5 is `5,300,WAIT !K_DOWN`, shares-nothing mode, and the script
+  holds DOWN to the last tick, so that gate never passes, frame 5 is
+  held 302..318, and there is no wrap and no hand-back to A_DRAP:
+  the row says exactly as long as the key is held. The PR-286
+  hang-and-hop leg keeps its finding on the same shifted timeline
+  with its JUMP press moved to 296, one iteration after the hang's
+  own A_DRAP exit: `A_DRAP`'s `A_JUMP_S(1)=K_JUMP` wins the order
+  race against `A_FALL_DOWN(1)=AC_ONAIR` in the same block, and
+  A_JUMP_S's own `A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR` row ends the hop
+  before its `I 120,-1200` launch row is ever admitted - a matched
+  clause is a transition, not a row close. (e) THE MUTATIONS, all on
+  the new code, all caught by --play-selftest, cited by first failing
+  CHECK: ignoring ll_mov_row_gated (M1) fails at
+  `air2 == 28 && land == 28`; dropping the clause mode so `!` is the
+  subset arm (M2) at `rec_at == 22 && land_at == 11 && !badlaw`;
+  keeping the banked clock on a matched clause (M3) at
+  `exit_t == 34 && exit_fi == 3`; dropping the threshold compare from
+  the clock path (M4) at `top == 100.0 - (double)apex`; gating
+  against the state's own set instead of the merged one (M5) at
+  `exit_t == 34 && exit_fi == 3`; letting a named clause match every
+  bit (M6) at the same CHECK; and giving K_NEVER no bit (M7), which
+  is PR-332's reading dropped, at `at == U_CASES[uc].at`.
+OPENS: where the engine lowers the object's [obj+0x60] - PR-260
+  found only the ctor and allocator paths, so this port's per-tick
+  clear and the row_live snapshot it needed are both the named
+  deviation at OI-078; what the class verbs [obj+0x8]+0xa0 and +0xa4
+  (0x52317, 0x52341) do and whether either touches the clock; bit 53
+  inside K_ANY's mask, the one bit of it this port has no name for;
+  the modes 2 and 3 (`*`, `|`), which no shipped row uses (PR-218's
+  count) and this port still does not implement; the AC_DUP an
+  OBJECT's ask raises (0x3df00 -> the asked's +0xd8 verb -> 0x45320
+  with [asked+0xee]), which is why ZARIA.01's
+  `A_TURN_BACK(1)=AC_DUP,K_DOWN` rows still never run, named at
+  OI-121 with the A_SCIAG reachability question and the platform-top
+  route of OI-073/OI-078.
+CLOSES: nothing. It closes the port half of OI-111's OPENS line and
+  rewrites that row to what the code does now.
+CORRECTS: PR-287 - its object-side gate kept the threshold compare
+  on the match path ("a gated row with a non-zero threshold" was the
+  case it named as unproven; PR-332 read that the compare is not
+  reached there at all), and treated K_ANY/K_NEVER as always/never
+  rather than as the resolver's masks with the clause's own mode;
+  and the pins of the seven play legs and two selftest legs listed in
+  CODE, which were measured with the row lists running ungated.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; red first, then green, with the seven
+  mutations above reported in MEASURED (e); no Windows legs
+  (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-331's, with DATA=/tmp/opencode/nope HD=/tmp/opencode/nope.
+```

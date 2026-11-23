@@ -816,11 +816,21 @@ int ll_mov_find(const ll_mov_t *m, const char *name); /* state idx or -1  */
  * list: entry-1, and 0 for an absent/non-numeric token or an over-long
  * row. The engine evidence and both model choices are in the definition. */
 int ll_mov_row_start(const ll_mov_st *s, int entry);
-/* PR-287: this row's `Wait` clause, matched against the live signal set:
- * 1 admits the row, 0 holds it (no frame, no list wrap, no signal). The
- * engine's admit test 0x52235/0x5223c/0x522e6 and the operand arms are
- * in the definition. */
+/* PR-287: this row's `Wait` clause, matched against the live signal set.
+ * PR-333 re-read it as the engine compiles it: the operand is a BIT MASK
+ * (K_ANY and K_NEVER are the resolver's whole masks at 0x48037/0x48075,
+ * not wildcards) and the clause's OWN mode byte decides the test - the
+ * plain prefix is the subset arm 0x47e63, `!` is shares-nothing 0x47edc.
+ * 1 admits the row, 0 holds it (no frame, no list wrap, no signal). */
 int ll_mov_row_gate(const ll_mov_fr *f, unsigned long long live);
+/* PR-333: the row step's TWO admission paths, 0x521f0 read end to end
+ * (PR-332's record). 1 = this iteration admits the row, 0 = nothing at
+ * all happens; the row clock is updated by the path's own rule - the
+ * clause-less row subtracts its threshold and carries the remainder,
+ * the clause-matched row is zeroed (the ZERO budget of 0x522f8) and its
+ * threshold compare never runs. */
+int ll_mov_row_admit(const ll_mov_fr *f, unsigned long long live,
+                     int walk, unsigned *row_t, double *facc);
 
 /* ------------------------------------------------------- player sim ---- */
 /* Held-key view of the input (platform.h translates the arrows; the CI

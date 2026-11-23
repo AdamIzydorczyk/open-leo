@@ -1565,26 +1565,22 @@ static void obj_advance(lvl_obj *o, unsigned dt_ms)
          * `facc`, the distance its own walk fed this step (PR-98's
          * distance law, 0x543a0 mode 0), and the branch above fed it
          * no wall clock at all: one accumulator, one source. */
-        /* PR-287: the row's own `Wait` clause comes FIRST, as the
-         * engine's does: 0x521f0 asks the row node's test slot +0x8 at
-         * 0x52235 and 0x495b0 (the empty test) at 0x5223c, and only a
-         * node whose set is EMPTY reaches the threshold compare at
-         * 0x52329; a `Wait` node hands back its own clause and the
-         * match against the caller's keys and [obj+0x60] at 0x522e6
-         * decides, with `je 0x52354` ending the whole step. The live
-         * set here is what this port keeps in o->sig - the bits raised
-         * since the transition pass cleared the mask, PR-262. */
-        if (!ll_mov_row_gate(f, o->sig))
-            continue;
-        if (walk ? o->facc < (double)f->thresh   /* units, not ms: the same  */
-                 : o->row_t < f->thresh)        /* one clock, two feeds  */
+        /* PR-287, completed by PR-333: the row's own `Wait` clause comes
+         * FIRST, as the engine's does - 0x521f0 asks the node's test
+         * slot +0x8 at 0x52235 and tests the answer for EMPTY with
+         * 0x495b0 at 0x5223c - and the two paths differ in more than
+         * the gate: the EMPTY answer is the one that reaches the
+         * threshold compare at 0x52320, while a clause that MATCHES runs
+         * with the zero budget of 0x522f8, so its threshold is never
+         * consumed, and one that does not match leaves the step through
+         * 0x522ed without admitting anything. Both rules, including the
+         * clock, are in ll_mov_row_admit. The live set here is what this
+         * port keeps in o->sig - the bits raised since the transition
+         * pass cleared the mask, PR-262. */
+        if (!ll_mov_row_admit(f, o->sig, walk, &o->row_t, &o->facc))
             continue;                           /* this step admits no row;
                                                  * the NEXT iteration's step
                                                  * carries the accumulator  */
-        if (walk)
-            o->facc -= (double)f->thresh;
-        else
-            o->row_t -= f->thresh;
         o->x += f->dx;             /* the authored "N,ms, M dx,dy" motion  */
         o->y += f->dy;             /* directive of the frame being held    */
         o->sig |= f->gsig;          /* `GEN <signal>`: raised as the frame ends */

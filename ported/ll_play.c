@@ -264,18 +264,93 @@ int ll_mov_row_start(const ll_mov_st *s, int entry)
  * (its row admits on the clause alone, with the accumulator left alone) -
  * every gated row in the ladder chain this PR is about has threshold 0,
  * where the two readings agree; the general case is counted at OI-111. */
+static unsigned long long ll_mov_fr_mask(const ll_mov_fr *f)
+{
+    if (f->gop == LL_GOP_ANY)
+        return LL_SIG_K_ANY_MASK;     /* PR-263, re-read by PR-332: the
+                                       * resolver's answer for K_ANY is
+                                       * this mask (0x48037-0x48048),
+                                       * the six arrows plus bit 53 -
+                                       * NOT a wildcard */
+    if (f->gop == LL_GOP_NEVER)
+        return LL_SIG_K_NEVER_MASK;   /* and for K_NEVER it is 0x60 in
+                                       * mask word 1 = K_UP and K_DOWN
+                                       * together (0x4806f-0x4807d) */
+    if (f->gop == LL_GOP_NAME && f->gsig_id >= 0)
+        return 1ull << (unsigned)f->gsig_id;
+    return 0ull;                      /* a name in NO table, or the one
+                                       * tokenless `Wait ;`: the answer
+                                       * set is EMPTY, and 0x495b0
+                                       * answers 12 for an empty set -
+                                       * that row takes the clock path,
+                                       * so it is not gated at all */
+}
+
+static int ll_mov_row_gated(const ll_mov_fr *f)
+{
+    return ll_mov_fr_mask(f) != 0ull;
+}
+
 int ll_mov_row_gate(const ll_mov_fr *f, unsigned long long live)
 {
-    unsigned long long bit;
+    unsigned long long mask = ll_mov_fr_mask(f);
 
-    if (f->gsig_id == -1)
-        return 1;                       /* no clause, or the token-less one */
-    if (f->gop != LL_GOP_NAME)
-        return f->gop == LL_GOP_ANY;    /* no-bit operands: K_ANY always,
-                                         * K_NEVER and a name in NO table
-                                         * never (PR-88's convention) */
-    bit = 1ull << f->gsig_id;
-    return f->gneg ? (live & bit) == 0ull : (live & bit) != 0ull;
+    if (!mask)
+        return 1;                       /* not this path's business */
+    if (f->gneg)                        /* mode 1, the `!` prefix: the
+                                       * clause shares NOTHING with the
+                                       * live set (0x47e40's arm 0x47edc,
+                                       * the mode byte read from
+                                       * [set+0xc] at 0x47e4b) */
+        return (mask & live) == 0ull;
+    return (mask & ~live) == 0ull;      /* mode 0, the plain prefix: the
+                                       * clause must be a SUBSET of the
+                                       * live set (the arm 0x47e63). So
+                                       * plain K_ANY wants all six arrows
+                                       * at once and plain K_NEVER wants
+                                       * UP and DOWN held together: in
+                                       * play, never - which is what an
+                                       * author writing `WAIT K_NEVER`
+                                       * means, and the mode, not the
+                                       * name, is what would change it */
+}
+
+/* PR-333: the row step has TWO admission paths and the engine picks one
+ * by asking the row node's test slot +0x8 (0x52235) and testing the
+ * answer for EMPTY with 0x495b0 (0x5223c: it answers 12 when all three
+ * data dwords are zero and 0 the moment one is not). The `test eax,eax
+ * / sete al / and eax,0xff / je 0x522fc` at 0x52241-0x5224b sends the
+ * EMPTY answer - a row with no `Wait` clause, or a bit-less one - to the
+ * clock path: run the node's execute slot, and admit it only when the
+ * authored threshold is BELOW the row clock, the difference carried
+ * forward as the budget (0x52320-0x52334). A row whose clause carries
+ * bits instead merges the caller's key set with the object's [obj+0x60]
+ * (0x52251-0x522bc) and matches its clause against that at 0x522e6:
+ * NO answer leaves the whole step through 0x522ed - no execute slot, no
+ * cursor step, nothing consumed - and an answer takes `xor ebx,ebx` at
+ * 0x522f8 and jumps to the run with a ZERO budget, so the threshold
+ * compare at 0x52329 never runs and the clock is left at zero. `live`
+ * is that merged set: this port keeps the object's own bits in p->sig /
+ * o->sig and composes the keys onto them the way cond_true does. */
+int ll_mov_row_admit(const ll_mov_fr *f, unsigned long long live, int walk,
+                     unsigned *row_t, double *facc)
+{
+    if (ll_mov_row_gated(f)) {
+        if (!ll_mov_row_gate(f, live))
+            return 0;
+        if (walk)
+            *facc = 0.0;
+        else
+            *row_t = 0;
+        return 1;
+    }
+    if ((walk ? *facc : (double)*row_t) < (double)f->thresh)
+        return 0;
+    if (walk)
+        *facc -= (double)f->thresh;
+    else
+        *row_t -= f->thresh;
+    return 1;
 }
 
 /* PR-88: name -> LL_SIG_* index. The table is the engine's own (name
@@ -1064,9 +1139,10 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                                 }
                                 if (strcasecmp(word, "Wait") == 0) {
                                     /* PR-217: `Wait <signal>` - the row's
-                                     * own signal clause, KEPT as DATA
-                                     * (ll_mov_fr.gsig_id/gneg), not acted
-                                     * on yet. The arm mirrors the engine's
+                                     * own signal clause, kept as DATA
+                                     * (ll_mov_fr.gsig_id/gneg/gop) and
+                                     * ACTED ON by ll_mov_row_admit since
+                                     * PR-333. The arm mirrors the engine's
                                      * 0x46b62-0x46ba2: a 0x15-byte node
                                      * (class word 0xa11c8) whose operand
                                      * the clause parser 0x47d60 reads into
@@ -1406,13 +1482,14 @@ unsigned long long ll_mov_tr_mask(const ll_mov_tr *tr)
  * facing-relative, CH_DIR keeps face aligned, the pair is the same state
  * written twice for a right-facing spawn. K_UP/K_DOWN stay literal
  * (ladders/vines do not mirror). */
-static unsigned long long live_bits(const ll_player *p,
-                                   const ll_play_keys *k)
+static unsigned long long live_bits_with(const ll_player *p,
+                                         const ll_play_keys *k,
+                                         unsigned long long sig)
 {
     int face = p->face >= 0 ? 1 : -1;
     int fwd  = face  > 0 ? k->k_fwd : k->k_bkwd;
     int bkwd = face  > 0 ? k->k_bkwd : k->k_fwd;
-    unsigned long long m = p->sig;
+    unsigned long long m = sig;
     if (fwd)          m |= 1ull << LL_SIG_K_FWD;
     if (bkwd)         m |= 1ull << LL_SIG_K_BKWD;
     if (k->k_up)      m |= 1ull << LL_SIG_K_UP;
@@ -1427,6 +1504,15 @@ static unsigned long long live_bits(const ll_player *p,
     if (p->broke)     m |= 1ull << LL_SIG_AC_BREAK_NEXT;
     if (p->ac_time)   m |= 1ull << LL_SIG_AC_TIME;
     return m;
+}
+
+/* The set as it stands RIGHT NOW: the field the raises OR into plus the
+ * keys of this iteration. This is what a compiled condition is matched
+ * against (PR-264). */
+static unsigned long long live_bits(const ll_player *p,
+                                   const ll_play_keys *k)
+{
+    return live_bits_with(p, k, p->sig);
 }
 
 /* PR-264: and the match itself. The engine has ONE mask and ONE
@@ -1622,6 +1708,17 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * began? The engine's surface-link tail reads exactly this: [obj+0xa9]
      * before the query results are applied. */
     const int was_att = p->grounded;
+    /* PR-333: the live set as this iteration's transition pass saw it.
+     * The engine's row step merges the object's OWN set, [obj+0x60],
+     * into the clause match (0x52290-0x522bc) - the same field the
+     * surface-link tail OR-s AC_ONAIR/AC_DUP into (PR-331), and a set
+     * nothing in our reading clears per iteration. This port clears
+     * p->sig between the transition pass and the row pass as its
+     * one-tick-pulse convention, so the row pass reads the set as of
+     * that clear: one iteration after the raise, exactly the delay the
+     * transition path already has. The exact clear points of
+     * [obj+0x60] are unread (OI-018). */
+    unsigned long long row_live = 0ull;
     /* PR-256: this body is 0x54250 + the row clock + the position step,
      * and every number in it is in that pass's units: the velocity
      * register's (a signed integer, hundredths of a px per ITERATION) and
@@ -1732,6 +1829,7 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * SEQ_REV_X turns, not to stopping). */
     if (st->ctrl & LL_CTRL_CH_DIR)
         p->face = p->walkdir < 0 ? -1 : 1;
+    row_live = live_bits_with(p, keys, p->sig);      /* PR-333, above  */
     p->sig = 0;                                      /* one-tick pulses */
     p->broke = 0;
     p->ac_time = 0;
@@ -2254,6 +2352,13 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * grid-independent: at dt == LL_ITER_MS the feed is exactly 100
      * per step; at the CI's 20 ms grid it is 100 per 28 ms with the
      * leftover ms carried (Bresenham), never a drifted fraction.
+     * PR-333: that subtract-and-carry rule is the engine's CLOCK path,
+     * which a row with NO `Wait` clause takes; a row whose clause
+     * carries bits takes the match path instead - it skips the compare
+     * and is handed a zero budget (0x522f8), so its threshold is never
+     * consumed and it can hold the list at that row indefinitely. Both
+     * paths, and the `sete` that picks between them, are in
+     * ll_mov_row_admit.
      * The BY_X branch (PR-110, and the reason `walk` is in the gate):
      * the engine's dispatcher 0x543a0 feeds the SAME accumulator by
      * mode - mode 0 (BY_X) adds the distance travelled, |[obj+0xca]|,
@@ -2295,8 +2400,8 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
                                        * (0x4c8b7): no millisecond
                                        * arithmetic is left here, the
                                        * clock is ll_player_step */
-        if ((walk ? p->facc : (double)p->row_t) >=
-                (double)st->fr[p->fi].thresh) {
+        if (ll_mov_row_admit(&st->fr[p->fi], row_live, walk,
+                             &p->row_t, &p->facc)) {
             /* AT MOST ONE ROW PER ITERATION (PR-100's reading of the
              * state record's step at 0x521f0: compare, subtract the
              * authored threshold, hand the remainder over, and the step
@@ -2315,10 +2420,6 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
              * = 1.44 s per cycle, PR-79's measured period exactly.
              * A row's own `dx,dy` delta, its `GEN` signals and its
              * ATC window are applied on the admit, as before. */
-            if (walk)
-                p->facc -= (double)st->fr[p->fi].thresh;
-            else
-                p->row_t -= st->fr[p->fi].thresh;
             p->x += st->fr[p->fi].dx;
             p->y += st->fr[p->fi].dy;
             unsigned long long gf = st->fr[p->fi].gsig;
@@ -2958,7 +3059,10 @@ int ll_play_selftest(void)
          * Row timeline (leg step: what closes) - the entry call itself
          * feeds, because the transition runs first inside the iteration.
          * The authored rows are 75,75,75,100,150,150,225,900,225,0,150
-         * and M4-C raises that 0 to 100, so the list is 2225 units:
+         * and M4-C raises that 0 to 100. PR-333 changed the last two:
+         * row 9 carries `8,0,WAIT AC_DUP`, so it is a CLAUSE row - it
+         * never compares the clock (0x52329 is not on its path) and it
+         * admits only when the clause's mask, AC_DUP, is live:
          *   1 enter A_JUMP(1) = row index 0; closes row 0 (75)
          *   2 closes row 1 (75) -> row 2 becomes CURRENT, and its
          *     `I 150,-1200` pull fires on that admit: vy = -240,
@@ -2969,11 +3073,27 @@ int ll_play_selftest(void)
          *   18 closes it (900); 20 closes 8 (225); 21 closes 9 (100 =
          *     the M4-C clamp of the authored 0); 23 closes 10 (150)
          *     and the leftover 75 is kept as the debt against the next
-         *     pass - the engine's state step admits ONE row per step,
-         *     so the wrap lands on the NEXT step, 24 - which arms
-         *     AC_BREAK_NEXT and the match comes at the top of step 24.
-         * Cumulative units closed: 75, 150, 225, 325, 475, 625, 850,
-         * 1750, 1975, 2075, 2225 - and the 75 still owed.
+         *     pass.
+         *   20 makes index 9 CURRENT, and there the list STOPS: the
+         *     clause is AC_DUP and the lion is airborne (AC_ONAIR is
+         *     raised every one of these steps, PR-331), so 0x522ed
+         *     leaves the step and nothing is admitted for eleven steps
+         *     while the accumulator runs up 25, 125, 225 ... 1025 units
+         *     against a 100-unit threshold that is never read.
+         *   30 is the landing: the surface-link tail's attach edge
+         *     raises AC_DUP at the END of that step (PR-331) and the
+         *     airborne bit goes away.
+         *   31 the row pass sees that bit - it reads the set as of the
+         *     transition pass, one iteration after the raise - and the
+         *     row admits with the ZERO budget of 0x522f8: the 1025 units
+         *     are dropped, not decremented.
+         *   33 closes index 10 (150, from 200 with 50 carried), that
+         *     being the last row, wraps the list, arms AC_BREAK_NEXT,
+         *     and the `A_WALK(3)` match comes at the top of step 34 -
+         *     on the ground, six steps after the surface.
+         * Cumulative units closed by the clock path: 75, 150, 225, 325,
+         * 475, 625, 850, 1750, 1975 - then a clause that consumes
+         * nothing, then 150 more, and the 50 still owed.
          * The jump physics are that arithmetic (PR-256): the two
          * `F 0,350` heads fire on rows 0 and 1 while he is still
          * GROUNDED, the ground contact zeroes the register again before
@@ -2984,23 +3104,23 @@ int ll_play_selftest(void)
          * float model computed 48.13. The whole-px step truncates the
          * top of the arc away, and it truncates the fall's first steps
          * too - but the authored +55 per iteration wins and, unlike the
-         * float model, HE LANDS. The wrap exit at step 24 (unchanged by
-         * this PR: it is row arithmetic, not physics) moves him to
-         * A_WALK row 3, the `A_WALK(3)` seek, mid-air at y = 73; that
-         * target's row 0 `1,100,F 0,350` pulls the register to -350 UP,
-         * and A_WALK authors no G of its own, so the project's
-         * LL_PLAY_GRAVITY word (200 per iteration, see ll_play.h) is
-         * the bigger add and the steps go +2, +2, ... down to the
-         * surface at loop step 37. What this leg OWNS is the row
-         * grammar - the (N) entry token, the wrap arming the state's
-         * OWN exit at the seek's row, the carry across it. What it no
-         * longer covers is "a landing does not cut a state that
-         * declares its own AC_BREAK_NEXT exit": with this arithmetic the
-         * flight does not outlast this row list, so the state is gone
-         * before the surface arrives. Counted as a coverage gap in the
-         * PR-256 record, not papered over. (The JM fixture above keeps
-         * covering the FALLBACK branch: its A_JUMP declares no exit, so
-         * its landing still goes idle.) */
+         * float model, HE LANDS, at step 30, INSIDE A_JUMP, because the
+         * `WAIT AC_DUP` row holds the list there. That is the real
+         * A_JUMP grammar (ZARIA.01's own row 10, quoted in this fixture)
+         * and it is what the engine does: the frames stop at the landing
+         * pose until the surface arrives. The wrap exit at step 34 then
+         * moves him to A_WALK row 3, the `A_WALK(3)` seek, ON the ground
+         * at y = 100. What this leg OWNS is the row grammar - the (N)
+         * entry token, the wrap arming the state's OWN exit at the
+         * seek's row, the carry across it - and since PR-333 also the
+         * clause path: a row that waits for a signal, the clock it never
+         * reads, and the zero budget that admit carries. The older claim
+         * of this leg, that a state declaring its own AC_BREAK_NEXT exit
+         * ends MID-AIR before the surface, is gone with the gate: with a
+         * `WAIT AC_DUP` row the list cannot reach its wrap while he is
+         * off the ground. A list with no clause row still runs that way -
+         * the JM fixture above keeps its own mid-air wrap exit, and its
+         * FALLBACK branch (no declared exit, landing goes idle) too. */
         static const char JE[] =
             "A_WALK\nA_JUMP\n\n[A_WALK]\ncontrol=BY_TIME|CHECK_LN\n"
             "F=600,0\nT=90,90\nG=0,0\nA_JUMP(1)=K_JUMP\n"
@@ -3052,16 +3172,19 @@ int ll_play_selftest(void)
         }
         CHECK(top2 == 57.0);                /* the arc of this fixture's
                                              * own words: 43 px up */
-        CHECK(air2 == 37 && land == 37);    /* the flight ENDS: the whole
-                                             * -px fall reaches the surface
-                                             * at loop step 37 */
-        CHECK(exit_t == 24 && exit_fi == 3);  /* wrap arms the OWN exit
-                                                * at the seek's row     */
-        CHECK(exit_t < land);               /* ... mid-air, 13 steps
-                                             * before the surface: the
-                                             * "landing does not cut the
-                                             * state" half of this leg is
-                                             * no longer reachable here */
+        CHECK(air2 == 28 && land == 28);    /* the flight ENDS at the
+                                             * surface, at loop step 30,
+                                             * with the list held at its
+                                             * AC_DUP row */
+        CHECK(exit_t == 34 && exit_fi == 3);  /* the wrap, and the OWN
+                                                * exit at the seek's row,
+                                                * come AFTER that landing
+                                                * - not mid-air as they
+                                                * did before PR-333  */
+        CHECK(land < exit_t);               /* ... 6 steps after the
+                                             * surface: the clause row
+                                             * cannot be passed while he
+                                             * is airborne */
         CHECK(q.sti == 0 && q.grounded && q.y == 100.0);
         ll_plt_free(&jp2);
         free(je);
@@ -4009,16 +4132,26 @@ int ll_play_selftest(void)
          *   INSIDE the state, long before its list ends. With
          *   `grounded` back the y pass does not run, so the authored G_y
          *   is not a leash.
-         * - rows close on the EVEN steps of the state: 6, 8, 10, ..., 22,
-         *   the 9th close (step 22) wraps the list and arms
-         *   AC_BREAK_NEXT, and the exit matches at the top of step 23 -
-         *   18 iterations = 900 ms for the whole authored reaction.
+         * - rows close on 6, 8, 10, 12 and then on 13, 15, 17, 19, 21:
+         *   row index 4 carries `5,200,WAIT !AC_ENEMY_ATC`, and a clause
+         *   row takes the OTHER path of the engine's row step - no clock
+         *   compare at all, and the zero budget of 0x522f8 on a match
+         *   (PR-332, PR-333). AC_ENEMY_ATC is not live 9 steps after the
+         *   hit that raised it, the shares-nothing clause answers YES,
+         *   and the row closes a full iteration before its own 200 units
+         *   are owed; every row after it inherits that one-step lead.
+         *   The 9th close (step 21) wraps the list and arms
+         *   AC_BREAK_NEXT, and the exit matches at the top of step 22 -
+         *   17 iterations = 850 ms for the whole authored reaction.
          *   `A_DRAP(1)` = the hub's row 1 (index 0) and it stays: the
          *   state change zeroes row_t and that entry iteration's feed of
          *   100 is below its 200. This fixture's A_DRAP has no T=, so the
-         *   hit's remaining -192 is taken by NOTHING and keeps coasting
+         *   hit's remaining register is taken by NOTHING and keeps coasting
          *   through it at 1 px an iteration (the dragless-hub behaviour
-         *   PR-83 recorded, in the engine's own unit). */
+         *   PR-83 recorded, in the engine's own unit). The value it carries
+         *   in is -197 here: the clause row shortens the list by a step, so
+         *   the x drag has one FEWER iteration to run - one step less decay
+         *   than the -192 PR-91 measured. */
         static const char HR[] =
             "A_WALK\nA_DOSTAL\nA_DRAP\n\n"
             "[A_WALK]\ncontrol=BY_X|CH_DIR\nF=100,0\nT=20,5\nG=0,0\n"
@@ -4069,7 +4202,7 @@ int ll_play_selftest(void)
                                            * with the authored G_y=55 word
                                            * added first and the position
                                            * stepped by idiv(vy,100) px */
-        static const int close_at[] = { 6, 8, 10, 12, 14, 16, 18, 20, 22 };
+        static const int close_at[] = { 6, 8, 10, 12, 13, 15, 17, 19, 21 };
         for (int t = 6; t <= 31; t++) {               /* rows are two feeds  */
             ll_player_step(&u, &hp, &uk, 0, 2000, LL_ITER_MS); /* each, so every even step */
             if (!land_at) {
@@ -4103,13 +4236,17 @@ int ll_play_selftest(void)
             if (u.sti == 2) {                 /* this fixture's A_DRAP authors
                                                * NO T at all, so nothing is
                                                * taken from the register any
-                                               * more: the hit's remaining
-                                               * -192 coasts through the hub
-                                               * at idiv(-192,100) = -1 px an
-                                               * iteration (PR-83's
+                                               * more: whatever the hit left
+                                               * - and the clause row leaves
+                                               * the list one step short, so
+                                               * here -197, one drag step
+                                               * further along than PR-91's
+                                               * -192 - coasts through the
+                                               * hub at idiv(-197,100) = -1
+                                               * px an iteration (PR-83's
                                                * dragless-hub behaviour, now
                                                * in the engine's own unit) */
-                if (ll_play_v_raw(u.vx) != -192)
+                if (ll_play_v_raw(u.vx) != -197)
                     badlaw = 1;
             }
             if (u.sti == 1) {
@@ -4127,9 +4264,12 @@ int ll_play_selftest(void)
                                                        * row stays standing */
             }
         }
-        CHECK(rec_at == 23 && land_at == 11 && !badlaw);  /* AC_BREAK_NEXT at
+        CHECK(rec_at == 22 && land_at == 11 && !badlaw);  /* AC_BREAK_NEXT at
                                                            * the wrap, after an
-                                                           * 18-iteration list */
+                                                           * 17-iteration list
+                                                           * (one step short of
+                                                           * the clock-only
+                                                           * reading) */
         /* THE PULLBACK, from the walk above: the x register decays by 3% of
          * itself an iteration (idiv, so the step of the decay is what it is:
          * -9, -9, -8, -8, ...) and the STEP is idiv(register,100) whole px:
@@ -5491,6 +5631,101 @@ int ll_play_selftest(void)
         CHECK(!(op.sig & ((1ull << LL_SIG_AC_ONAIR) |
                           (1ull << LL_SIG_AC_DUP))));
         free(oa);
+    }
+
+    {
+        /* PR-333, the row step's TWO PATHS (the engine's 0x521f0, read end
+         * to end by PR-332) on a hermetic one-state .MOV. A row with NO
+         * `Wait` clause is the EMPTY answer (0x495b0 returns 12) and takes
+         * the clock path: its threshold is compared against the row
+         * accumulator at 0x52320 and the remainder carried - so a
+         * 1000-unit row takes exactly ten iterations of the 100-per-step
+         * feed. A row whose clause carries bits takes the match path at
+         * 0x52251: no match and the step returns through 0x522ed having
+         * done NOTHING - no frame, no cursor step, no wrap, no
+         * AC_BREAK_NEXT - and a match runs with the ZERO budget of
+         * 0x522f8: its threshold is never consumed and the accumulator is
+         * left at zero, whatever it says. The clause is a bit mask with
+         * the clause's OWN mode: plain is the subset arm 0x47e63, `!` is
+         * shares-nothing 0x47edc, and K_NEVER is the resolver's own mask
+         * K_UP|K_DOWN (0x4806f-0x4807d) - not a wildcard for "never",
+         * which is why case 2 below ADMITS it with both arrows held.
+         * Rows: `1,100` / `2,1000,<tail>` / `3,100`, twelve iterations.
+         * `at` is the iteration that first reaches row 3, `fi`/`wr` where
+         * the list stands after twelve and how many wraps it took. */
+        static const struct {
+            const char *tail;   /* the row-2 `Wait` tail; "" = no clause */
+            int up, down;       /* the arrows held throughout             */
+            int at, fi, wr;
+        } U_CASES[] = {
+            { "WAIT K_NEVER", 0, 0, 0, 1, 0 },   /* subset of {UP,DOWN}
+                                                  * with neither up: parks
+                                                  * for good at 1100 units,
+                                                  * far past its own 1000,
+                                                  * and NEVER wraps */
+            { "WAIT K_NEVER", 1, 1, 2, 0, 4 },   /* both arrows: it admits
+                                                  * in ONE iteration, the
+                                                  * 1000 units unread */
+            { "WAIT !K_DOWN", 0, 0, 2, 0, 4 },   /* shares nothing with
+                                                  * DOWN: admits */
+            { "WAIT !K_DOWN", 0, 1, 0, 1, 0 },   /* DOWN held: parks */
+            { "WAIT K_DOWN",  0, 1, 2, 0, 4 },   /* one-bit subset: admits */
+            { NULL,           0, 0, 11, 0, 1 },  /* no clause: the clock
+                                                  * path, ten feed
+                                                  * iterations to pass the
+                                                  * 1000-unit row - the
+                                                  * same row the four
+                                                  * gated cases passed at
+                                                  * once or never */
+        };
+        static const char UP[] = "1\n1 0,100;700,100;\r\n";
+        for (size_t uc = 0; uc < sizeof U_CASES / sizeof U_CASES[0]; uc++) {
+            char mov[512];
+            ll_mov_t *um = calloc(1, sizeof *um);
+            ll_plt upt;
+            ll_player u;
+            ll_play_keys uk = { 0 };
+            int at = 0, wr = 0, prev_fi = 0;
+            unsigned zeroed = 0;
+
+            snprintf(mov, sizeof mov,
+                     "A_STAY\n\n[A_STAY]\ncontrol=BY_TIME|CHECK_LN\n"
+                     "F=0,0\nT=0,0\nG=0,0\nseq=a\n1,100\n2,1000%s%s\n3,100\n",
+                     U_CASES[uc].tail ? "," : "",
+                     U_CASES[uc].tail ? U_CASES[uc].tail : "");
+            uk.k_up = U_CASES[uc].up;
+            uk.k_down = U_CASES[uc].down;
+            CHECK(um && ll_plt_parse(UP, &upt) == 0);
+            CHECK(ll_mov_parse(mov, um) == 1);
+            CHECK(um->st[0].nfr == 3);
+            ll_player_start(&u, um, 100, 100, 1);
+            for (int t = 1; t <= 12; t++) {
+                ll_player_step(&u, &upt, &uk, 0, 2000, LL_ITER_MS);
+                if (u.fi > prev_fi && u.fi == 2 && !at)
+                    at = t;                     /* the iteration that
+                                                 * reached row 3 */
+                if (prev_fi == 2 && u.fi == 0)
+                    wr++;                       /* a list wrap */
+                if (u.fi == 2 && u.row_t != 0u && !zeroed)
+                    zeroed = t;                 /* the gated admit left a
+                                                 * non-zero clock: the zero
+                                                 * budget of 0x522f8 is
+                                                 * NOT being applied */
+                prev_fi = u.fi;
+            }
+            CHECK(at == U_CASES[uc].at);
+            CHECK(u.fi == U_CASES[uc].fi);
+            CHECK(wr == U_CASES[uc].wr);
+            if (U_CASES[uc].at) {
+                /* a matched clause was handed the ZERO budget: the clock is
+                 * left at zero, NOT one tick past the row's own threshold -
+                 * the old code would have carried 200 - 1000 here. */
+                CHECK(!zeroed);
+            } else {
+                CHECK(u.row_t == 1100u && !zeroed);
+            }
+            free(um);
+        }
     }
 
     return rc;
