@@ -2497,6 +2497,43 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     list insert with mode 2, in the `-6300,-1350` pair, or in its
     own seq=nr walk - three named reads, none of them the climb
     states.
+    PR-312 ANSWERS THE "WHAT COULD MOVE A RIDER" QUESTION, AND
+    MOVES THE NEXT READ. The class slot +0xac, which PR-305 read
+    as "ENTER", is the per-frame PHYSICS STEP: 108 of the 151
+    census classes hold 0x546a0 there - every lion class
+    (0x96874, TLewZaria) plus PLATF, WINDA, SCHODY and the
+    enemies - while the whole ladder family holds the empty stub
+    0x23930 and the WSPRECT family 0x52a00. Its body: skip the
+    queries if [obj+0xb6] bit 2 is set (the carry still runs);
+    read the current state's control word at state+0x12 - bit
+    0x4000 runs 0x4b600 with mode 0 then 0x4b430, bit 0x0100 runs
+    0x4b600 with mode 2, 0x4b430 and 0x4b7f0 - all against the
+    world object ds:0xcef40, and 0x49580 ORs each result's three
+    dwords into the caller's signal set, so a GROUND QUERY RAISES
+    SIGNALS. The result travels in a triple: [obj+0xe6] the
+    surface, [obj+0xe2] its flag byte, [obj+0xea] the signed
+    clearance, with [obj+0xa9] the attached one. The attach law
+    calls the surface's class [+0x0]/[+0x4] enter/leave verbs and
+    the object's own [+0xb4]/[+0xb8], and raises the signal bits
+    0x10 (landed), 0x20 (kind != 0), 4 (airborne); a kind-2
+    surface is ignored while [obj+0xc6] < 0x58c. Then the carry:
+    pos.x += [obj+0xca], pos.y += [obj+0xce] + [obj+0xea], then
+    all three are zeroed - a rider is moved by the surface's frame
+    delta and by a SNAP to a polyline. And the surface may come
+    from an ask: 0x45320 (the contact-list insert PR-311 named)
+    gets the point through the +0xb0 provider, adds the pending
+    delta, and 0x45400 treats the list as a polyline of 13-byte
+    records (x, y, flag byte at +0xc) - first-entry flag vs the
+    mode, segment lookup 0x45380, interpolated clearance 0x455a0 -
+    filling the same triple. So PR-294's "treat the column as
+    solid" was the wrong shape of question: solidity in this
+    engine is a per-point flag byte and a query MODE. Next read,
+    in order: 0x4b430/0x4b600/0x4b7f0 (which level polylines the
+    queries walk and how mode and the flag byte filter them - the
+    direct route to the ZARIA.01 platform line), then the
+    `control=` meaning of bits 0x4000/0x0100, then whether those
+    queries raise the AC_ONAIR/AC_DRECT pair this row's exit chain
+    waits for.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

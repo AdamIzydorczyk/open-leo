@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-312.
+> at PR-313.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42443,6 +42443,102 @@ thread wrote while preparing PR-310 and is in no record: that .PLT
 lines carry a dropped type word (values 1,2,3,5 in ZARIA_A.PLT).
 Those numbers are segment counts, and ZARIA_A.PLT's own 45 lines
 match its declared 45.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last full
+no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
+since then only comments in ported/ have changed.
+```
+
+## PR-312 — THE OBJECTS' PHYSICS STEP: `+0xac` IS A GROUND QUERY,
+## AN ATTACH LAW AND A CARRY-AND-SNAP, AND IT RUNS FOR 108 OF THE
+## 151 CLASSES - INCLUDING EVERY LION - BUT NOT FOR THE LADDER
+```
+KIND: read
+SUBSYSTEM: the object class slot +0xac: what its body 0x546a0
+does, how often it is installed, and the field triple its result
+travels through; the contact-list insert 0x45320/0x45400 that also
+fills that triple; and the interpolation it uses. FOCUS 1 asked
+what could move a rider whose own state authors no motion: this is
+the named mechanism.
+ADDRESSES: 0x546a0, 0x54706, 0x54759, 0x54804, 0x45320, 0x45400,
+0x45380, 0x453d2, 0x455a0, 0x49580, 0x4b430, 0x4b600, 0x4b7f0,
+0x23930, 0x52a00, 0x45120, 0x541f0, 0x98278, 0x96874,
+0x96960, 0x96d1c, 0x97cdc, 0x99ff0, 0x1e970, 0x749a0, 0xcef40
+NAMES: physics step, ground query, attach, detach, carry, snap,
+clearance, contact list, polyline, segment count, flag byte,
+control word, AC_ONAIR, AC_DRECT, TLewZaria, TLewZariaB, DRABINKA,
+KATAPULT, WSPRECT, OI-078, OI-018, PR-304, PR-305, PR-307,
+PR-308, PR-311, ll_plt_first_below, ladder_answer_core
+CODE: no: image and class-table reading only; nothing under
+`ported/` changed, so no red leg is owed and none was written.
+HOOKS: PR-311's OPENS (i) - "what writing a contact-list entry
+with mode 2 does, and who reads that list back" - and the FOCUS-1
+rule that a mechanism must be read in the engine, not inferred.
+MEASURED: (a) WHO RUNS IT. The class slot +0xac holds 0x546a0 in
+108 of the 151 factory-census classes, including TLewZaria (its
++0xac cell is 0x96a0c), the lion base class 0x96874, PLATF, WINDA,
+SCHODY..4 and the enemies; 24 classes hold the empty stub 0x23930
+- the whole ladder family (DRABINKA 0x97cdc, LINA, KDRABINA,
+KATAPULT, PALMA, DZWIGNIA) - 5 hold 0x52a00 (the WSPRECT family),
+3 hold 0x45120, and one holds 0x45400. So a rider runs this step
+and a ladder does not.
+(b) ITS SHAPE. `test BYTE [obj+0xb6],0x2; jne 0x54804` - the
+queries are skipped when that bit is set, but the carry at 0x54804
+still runs. Then the current state record is read through
+[[obj+0x50] + [obj+0x5c]*4] and its control word at state+0x12
+selects: bit 0x4000 -> call 0x4b600 with ecx = 0 and then 0x4b430;
+bit 0x0100 -> 0x4b600 with ecx = 2, then 0x4b430, then 0x4b7f0.
+All three are called with eax = ds:0xcef40 (the world object) and
+their result is passed to 0x49580, which ORs three dwords into the
+12-byte signal set the verb was handed (that is the set shape with
+its mode byte at +0xc, PR-296) - so a ground query RAISES SIGNALS.
+(c) THE RESULT TRAVELS IN A TRIPLE ON THE OBJECT: [obj+0xe6] = the
+surface found, [obj+0xe2] = that surface's flag byte, [obj+0xea] =
+the signed clearance, and [obj+0xa9] = the surface currently
+attached. The law at 0x54759: no surface found -> if one was
+attached, call its class [+0x4] (leave), clear [obj+0xa9], call
+the object's own [+0xb8], set flag bit [edi+0x2] |= 4. Surface
+found -> if kind == 2 and [obj+0xc6] < 0x58c it is ignored too;
+otherwise if nothing is attached set [edi] |= 0x10, store it, call
+its class [+0x0] (enter) and the object's [+0xb4]; if a DIFFERENT
+one was attached, call the old one's [+0x4] first. Then kind != 0
+sets [edi+0x1] |= 0x20.
+(d) THE CARRY, 0x54804: pos.x += [obj+0xca]; pos.y += [obj+0xce]
++ [obj+0xea]; then [obj+0xea] and [obj+0xca]/[obj+0xce] are
+zeroed. So a rider is moved by the surface's per-frame delta and
+by the clearance to it - the only channel FOCUS 1 had left, and it
+is a snap to a polyline, not an authored rise.
+(e) HOW A CONTACT LIST BECOMES A SURFACE. The ask verbs pass their
+own [obj+0xa5] list, and the insert 0x45320 first asks the object
+for its point through 0x541f0 with the {0,0,0x98278} triple
+(PR-308's provider pre-seed), adds [obj+0xca]/[obj+0xce], then
+calls 0x45400, which treats the list as a polyline of 13-byte
+records (x at +0, y at +4, flag byte at +0xc): a mode gate on the
+FIRST entry's flag byte, then 0x45380 finds the segment whose
+x-span contains the point, and 0x455a0 returns (interpolated Y at
+that x) - Q.y; the best (nearest non-positive) candidate is
+stored in the triple of (c). 0x453d2 returns 0x7fffffff when no
+segment covers x. So the catapult's mode 2 (PR-311) is a filter
+value on that flag byte, and the flag byte is the same byte the
+.PT text reader fills from the point separator (0x451a1 stores 1
+for `;`).
+OPENS: 0x4b430 / 0x4b600 / 0x4b7f0 first - the three ground queries
+against the world object: which polylines of the level they walk,
+and how the mode argument and the per-point flag byte filter them.
+This is now the direct route to the ZARIA.01 platform line. Second,
+what the state control-word bits 0x4000 and 0x0100 are in the
+`control=` vocabulary the port parses. Third, the signals the
+queries raise - does one of them name AC_ONAIR / AC_DRECT, the two
+the level's own exit chain waits for (OI-018)? Fourth, the object's
+own [+0xb4]/[+0xb8] verbs and the surface's [+0x0]/[+0x4] class
+verbs. Fifth, F1's capture read still stands as plan step one.
+CLOSES: the FOCUS-1 question "is there any mechanism left that
+moves a rider with no authored motion" - yes, and it is now read
+at the level of its fields and arithmetic; and PR-311's OPENS (i).
+CORRECTS: PR-305, whose reading of the +0xac cell as "ENTER" is
+kept as a measurement (the ladder family really does hold the
+empty stub 0x23930 there) but is the wrong role: for 108 of the
+151 classes the slot is the per-frame ground/attach/carry step.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
 red leg by the rule PR-245 states, and no suite run. The last full
 no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
