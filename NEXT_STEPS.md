@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-297.
+> at PR-298.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -40548,6 +40548,119 @@ is confirmed exactly, and the signal names PR-216 could only
 label as the P1 and P3-FALSE exits are now named: AC_EDGE and
 AC_DRAB. The port's behaviour is unchanged and stays the
 counted model choice its notes already call it.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-297 — THE ASK MECHANISM, IN CODE: 0x3c270 TESTS ANOTHER
+## OBJECT'S POSITION AGAINST TWO OF ITS OWN RECTANGLES AND
+## RETURNS AC_DRAB AND AC_EDGE IN A SET; 0x3c310 RAISES K_GEN1
+## ON A KIND-0x19 RECORD
+```
+KIND: read
+SUBSYSTEM: the pair-answer producer PR-296 found raising
+AC_DRAB and AC_EDGE into one set - the verb at 0x3c270 - its
+neighbour 0x3c310 and the kind-0x19 test, and the block of
+sibling class tables those two are stored in.
+ADDRESSES: 0x3c270, 0x3c276, 0x3c27c, 0x3c291, 0x3c293,
+0x3c298, 0x3c29d, 0x3c2a2, 0x3c2a9, 0x3c2af, 0x3c2b2,
+0x3c2b7, 0x3c2b9, 0x3c2c3, 0x3c2c9, 0x3c2cc, 0x3c2d1,
+0x3c2d3, 0x3c2d8, 0x3c2e7, 0x3c2f0, 0x3c2f7, 0x3c310,
+0x3c316, 0x3c31b, 0x3c321, 0x3c32d, 0x3dcb0, 0x3c540,
+0x45120, 0x45320, 0x453d0, 0x45400, 0x23e00, 0x3cd40,
+0x3cff0, 0x52a00, 0x52a50, 0x550a0, 0x23850, 0x97ca8,
+0x9fd38, 0x9fd54, 0x9fe64, 0x9ff74, 0xa02a8, 0xa03b0,
+0xa03d0, 0x749a0, 0x53531, 0x53557, 0x3f222, 0x3f228
+NAMES: pair answer, authored rectangles, position getter,
+point-in-block verb, AC_DRAB, AC_EDGE, K_GEN1, contact record
+of kind 0x19, class table, sibling tables, verb slot, OI-078,
+OI-118, PR-283, PR-290, PR-291, PR-292, PR-293, PR-296,
+ladder_answer_core, findcall.py
+CODE: no: a reading and a pointer search; no behaviour
+changed, so no red leg.
+HOOKS: PR-296's OPENS (i) named 0x3c293-0x3c2d3 as "the
+producer shape the lion's rows actually need" and left it
+unread; PR-291's census had found the two kind-0x19 K_GEN1
+raises without reading their test; PR-290 had mapped 0x23e00
+as the contact test and PR-292 had mapped 0x45120 as the
+placement-element parser - both turn out to be verbs of this
+same table family.
+MEASURED: (a) 0x3c270, END TO END. It takes eax = the object
+that HOLDS the rectangles (kept in esi), ebx = the OTHER
+object (moved into ecx at 0x3c27c) and edx = the caller's out
+-set pointer (kept at [esp+0x10]); it builds an EMPTY 12-byte
+set with the mode byte at +0xc on its own stack (0x3c27e-
+0x3c293, ecx = 0xc, edx = 0, the ctor 0x749a0). Gate:
+`call [[ecx+0x08]+0x3c]` - the other object's class's +0x3c
+verb (0x3c298-0x3c29d); false jumps straight to the copy, so
+the answer is the empty set. Then `call [[ecx+0x08]+0x68]` -
+the position getter PR-293 named from 0x52d30 - on THE OTHER
+OBJECT, and its result's own +0x08 verb is called with
+edx = &[esi+0x3c] (0x3c2af-0x3c2b2): a point-in-block test of
+that position against the FIRST rectangle. True, 0x3c2b9 sets
+`or BYTE PTR [esp+0x1],0x4` = bit 10 = AC_DRAB. The same
+point is then taken again and tested against &[esi+0x50]
+(0x3c2c3-0x3c2cc); true, 0x3c2d3 sets `or BYTE PTR
+[esp+0x1],0x1` = bit 8 = AC_EDGE. Both signals go into the
+SET, never into an object, and 0x3c2d8-0x3c2f7 copies the set
+and its mode byte to the caller's out pointer with the same
+rep movs / rep movsb shape PR-292 recorded for 0x53531-0x53557.
+So this is an ask in the sense the port models: one object's
+position, two authored rectangles on another, two answer
+signals, returned as a set for the caller to merge. The only
+thing it does NOT do is merge the result - that is the
+caller's, and no caller of it exists in .text. (b) THE
+KIND-0x19 TEST, 0x3c310: it calls 0x3dcb0, and if the field
++0x04 of what comes back equals 0x19 it raises K_GEN1 inline
+at 0x3c321 with PR-291's four-instruction idiom; otherwise it
+returns without touching the set. That is the exact shape of
+the "contact record of kind 0x19" raise PR-291 counted.
+(c) THE TABLE FAMILY, which is where both live and why no
+caller is found. Neither 0x3c270 nor 0x3c310 has an E8/E9
+xref (findcall.py: 0 each). 0x3c270 is stored at 0xa02a8 and
+0x3c310 at 0xa03d0, inside a block of stored function pointers
+running 0x9fd38..0xa0744. The block contains REPEATED
+tables with identical layout: 0x45320 sits at 0x9fd58, 0x9fe68
+and 0x9ff78 - a stride of exactly 0x110, i.e. 68 slots - with
+0x45120 always at +8 from it and 0x23e00 always at +0x14; the
+fourth instance begins at 0xa03b0, where 0x3c310 is slot +0x20
+and the same table also holds 0x453d0 at +0x00, 0x45400 at
++0x08, 0x45120 at +0x0c, 0x3cd40 at +0x10, 0x23850 at +0x14,
+0x23e00 at +0x18, 0x3cff0 at +0x1c, 0x550a0 at +0x24, 0x3dd60
+and 0x3dd20, and 0x52a00 at +0x30 - the Manhattan-distance
+helper PR-293 found at 0x97ca8+0x54, here at a different slot,
+so this class family shares code with the animated-object class
+without sharing its table. Not one of these table addresses is
+named by an immediate anywhere in .text (searching the image
+for the dwords 0x9fd54, 0x9fe64, 0x9ff74, 0xa03b0 finds zero
+stores), so an instance's class word is written from computed
+values, which is the same shape OI-118 has been reporting for
+[obj+0x00]. (d) WHY THIS IS THE FOCUS-1 PROBLEM IN ONE
+PICTURE: the port's ladder_answer_core implements exactly this
+producer's logic - a point in one rectangle gives AC_EDGE, in
+another (inset) one AC_DRAB|AC_DRAB_CATCH - but attaches it to
+the DRABINKA's +0xc5/+0xb1 fields and asks with the lion's
+position point, while PR-296 showed that object's own path
+tests its own position and is inert on the shipped placement.
+The rectangles here are at +0x3c and +0x50, a third layout.
+OPENS: in order: (i) which class the 0x9fd38..0xa0744 tables
+are, and what writes a class word that is never named as an
+immediate (shared with OI-118); (ii) who writes and clears
+[obj+0x3c] and [obj+0x50], and which authored data they
+correspond to in the placement files; (iii) the +0x3c gate
+verb of the other object (0x3c29d) - what makes an object
+askable at all; (iv) the caller of this verb and the merge
+into the asker's [obj+0x60], still unfound - it is reached
+only through a table, so the class table of the ASKER names
+the slot; (v) 0x3dcb0 and the kind field at [rec+0x04] - the
+record kinds of the contact family, only 0x19 named so far;
+(vi) 0x3c540, 0x45400, 0x3dd60, 0x3dd20, 0x550a0 and 0x23850,
+the other slots of that table, none read.
+CLOSES: PR-296 OPENS (i) for the AC_EDGE producer: it is read
+- 0x3c2d3, inside a pair-answer verb, gated on another
+object's position being inside [obj+0x50] - and PR-291's
+kind-0x19 sentence is now backed by the test itself (0x3c31b).
+CORRECTS: none.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```

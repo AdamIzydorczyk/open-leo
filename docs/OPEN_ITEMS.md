@@ -2122,6 +2122,30 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     raises AC_DRAB and AC_EDGE into ONE set beside a K_GEN1
     raise site at 0x3c321 - that, not 0x3f214, is the next
     FOCUS-1 reading.
+    PR-297 READS THAT PRODUCER. 0x3c270 is an ask in exactly
+    the sense the port's answer model means: eax = the object
+    holding two authored rectangles, at +0x3c and +0x50 (a
+    THIRD layout, not the DRABINKA's +0xb1/+0xc5), ebx = the
+    other object, edx = the caller's out-set pointer. It
+    builds an empty 12-byte set on its stack (0x3c27e-0x3c293),
+    is gated on that other object's +0x3c verb (0x3c29d),
+    takes ITS POSITION through the +0x68 getter (0x3c2a9) and
+    tests it with the point's own +0x08 verb: inside
+    [obj+0x3c] sets `or BYTE PTR [esp+0x1],0x4` = AC_DRAB
+    (0x3c2b9), inside [obj+0x50] sets `...,0x1` = AC_EDGE
+    (0x3c2d3), and the set is copied to the out pointer by the
+    rep-movs idiom at 0x3c2d8-0x3c2f7. It never writes an
+    object's bits, and it has no caller in .text: it is stored
+    at 0xa02a8 inside a block of repeated 68-slot (0x110-byte)
+    class tables running 0x9fd38..0xa0744 - 0x45320 at
+    0x9fd58/0x9fe68/0x9ff78, 0x45120 always at +8, 0x23e00
+    always at +0x14, and the fourth instance at 0xa03b0 holds
+    0x3c310 at slot +0x20 and 0x52a00 (PR-293's distance
+    helper) at +0x30. No immediate anywhere in .text names any
+    of those tables. The sibling 0x3c310 calls 0x3dcb0, tests
+    `cmp DWORD PTR [rec+0x4],0x19` (0x3c31b) and on a match
+    raises K_GEN1 inline at 0x3c321 - PR-291's kind-0x19 raise
+    read to its test.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -3408,3 +3432,13 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
     two class words are one table - inferred from that offset
     arithmetic, still not observed, and what installs the
     pointer is still unfound.
+    PR-297 FINDS THE SAME ABSENCE AT A THIRD PLACE, and it is
+    systematic: a whole family of class tables lives in the
+    block 0x9fd38..0xa0744 (repeated 68-slot tables, stride
+    0x110, identical layout - 0x45320 at 0x9fd58/0x9fe68/
+    0x9ff78, 0x45120 at +8, 0x23e00 at +0x14, a fourth
+    instance at 0xa03b0), and the image contains NO store of
+    any of those table addresses and no code immediate naming
+    them, so the objects that use them get their class word
+    from computed values. Any answer to this row has to
+    account for those instances too, not only for [obj+0x00].
