@@ -2095,6 +2095,33 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     rider's set is now the named FOCUS-1 reading; the port's
     inline AC_EDGE/AC_DRAB raises stay the counted model
     choices they are documented as.
+    PR-296 ANSWERS THAT CENSUS AND CORRECTS THIS ROW'S ANSWER
+    MODEL IN ONE POINT. The answer signals are built into
+    SETS: the EventSet ctor 0x749a0 is called at 192 places and
+    45 set-bit raises over 33 signals follow them - AC_EDGE at
+    0x3c2d3/0x3f24d/0x3f41d, AC_DRAB at 0x28805/0x36a1f/
+    0x3c2b9/0x3f355, AC_LINA at 0x342ff/0x3f525 (PR-282's
+    twins), plus K_UP/K_DOWN/K_FIRE/K_ALT/K_JUMP at 0x5492c
+    and K_F1..K_F12 at 0x50643, i.e. the engine turns keys
+    into the same signal vocabulary its rows test. Inside this
+    object's own 0x3f214 path the geometry PR-268/PR-269/
+    PR-270 derived is confirmed word for word (the band
+    [obj+0xc5] at 0x3f228, the authored rectangle
+    [obj+0xb1..bd] with the class word 0x98274 and
+    `edx = 0x46` into 0x49fb0 at 0x3f278-0x3f293) - but the
+    POINT TESTED IS THE OBJECT'S OWN POSITION, taken through
+    its +0x68 getter at 0x3f222, not the asker's. On the
+    shipped placement (180,510) that point lies in neither the
+    band x 195..225 y 480..560 nor the rectangle
+    (203,540)-(233,670), so this path returns an EMPTY set for
+    this ladder: `ladder_answer_core`'s `pt_of(asker)` is the
+    port's own construction, and it is what makes the probe's
+    0x1400/0x100 answer sets possible at all. PR-292's
+    "the contact test never fires" is the same fact from the
+    other side. The real producer shape is 0x3c293, which
+    raises AC_DRAB and AC_EDGE into ONE set beside a K_GEN1
+    raise site at 0x3c321 - that, not 0x3f214, is the next
+    FOCUS-1 reading.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

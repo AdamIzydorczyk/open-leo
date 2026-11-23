@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-296.
+> at PR-297.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -40411,6 +40411,143 @@ field PR-102's list (0x8, 0xa, 0xe, 0x12) did not mention.
 CORRECTS: none. PR-102's field offsets, PR-110's scaling law,
 PR-163's model and PR-291's 18 sites are all confirmed by this
 leg, not changed by it.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-296 — THE ANSWER SIGNALS ARE BUILT INTO SETS: 45 RAISE
+## SITES OVER 33 SIGNALS, AND THE LADDER'S OWN ANSWER PATH
+## TESTS ITS OWN POSITION, NOT THE ASKER'S
+```
+KIND: read
+SUBSYSTEM: the second half of PR-295's census - the signals
+that are not raised inline but built into an EventSet by the
+ctor 0x749a0 and returned to the caller - and the ZARIA.01
+ladder answer path 0x3f214-0x3f2a0 read against that census,
+down to what point it tests.
+ADDRESSES: 0x749a0, 0x91a0e, 0x3f214, 0x3f21d, 0x3f222,
+0x3f225, 0x3f228, 0x3f230, 0x3f235, 0x3f237, 0x3f248,
+0x3f24d, 0x3f251, 0x3f256, 0x3f26f, 0x3f278, 0x3f283,
+0x3f293, 0x3f29f, 0x3f343, 0x3f350, 0x3f355, 0x3f364,
+0x3f375, 0x3f37a, 0x3f24d, 0x3f41d, 0x3f525, 0x3c293,
+0x3c2b9, 0x3c2d3, 0x3c321, 0x28800, 0x28805, 0x369bd,
+0x36a1f, 0x342fa, 0x342ff, 0x4b4e7, 0x4b4ec, 0x5492c,
+0x5493a, 0x54956, 0x549a6, 0x549b4, 0x50643, 0x5065b,
+0x506a8, 0x49fb0, 0x49580, 0x98274, 0x98278, 0x52290,
+0x522bc, 0x52d30
+NAMES: EventSet ctor, set-built raise, AC_EDGE, AC_DRAB,
+AC_DRABK, AC_LINA, K_UP, K_JUMP, K_F1, edge band, authored
+rectangle, 70% inset, position getter, answer path, OI-078,
+OI-092, PR-216, PR-268, PR-269, PR-270, PR-282, PR-287,
+PR-290, PR-292, PR-293, PR-295, blk_probe70, ladder_answer_
+core, place_rect, set_built_census.py
+CODE: no: a whole-image census plus a reading; no behaviour
+changed, so no red leg.
+HOOKS: PR-295 ended with "the answer signals can only travel
+as SETS, through 0x49580 - which of those 69 call sites feeds
+a rider's set is the named FOCUS-1 reading", and its OPENS (i)
+asked where AC_EDGE is produced at all. PR-270/PR-216 built
+the port's ladder_answer_core from 0x3f214..0x3f364 and its
+OPENS (ii) asked which point the test uses; PR-294 repeated
+that question. PR-282 named the AC_LINA twins 0x3f4ac/0x3f525.
+MEASURED: (a) THE SET-BUILT RAISE CENSUS. The engine's
+EventSet ctor 0x749a0 is called at 192 places; taking the
+buffer from the `mov eax,<reg>` that precedes each call and
+then looking for `or BYTE PTR [<reg>+d],imm` with d <= 0xb
+finds 45 set-bit raises over 33 signals - the other half of
+PR-295's picture, and the larger half. Bits are read from the
+name table at 0x91a0e (d*8 + bit(imm)). The FOCUS-1 signals
+are all here: AC_EDGE at 3 sites (0x3c2d3, 0x3f24d, 0x3f41d),
+AC_DRAB at 4 (0x28805, 0x36a1f, 0x3c2b9, 0x3f355), AC_DRABK
+at 1 (0x34767), AC_LINA at 2 (0x342ff, 0x3f525), AC_BLOK at
+0x4b4ec, AC_STONE at 0x2f649, AC_RECT at 3, AC_DRECT/AC_DRECT2
+at 4, and so on. Two groups stand out for the port: 0x5492c
+raises K_UP, K_DOWN, K_FIRE, K_ALT and K_JUMP into one set
+(0x5493a/0x54948/0x54956/0x549a6/0x549b4) and 0x50643 raises
+K_F1..K_F12 (0x5065b..0x506a8) - the input layer produces
+key signals in the same set vocabulary the .MOV rows test, so
+`K_UP` and `AC_EDGE` reach a row's `Wait` clause the same way.
+(b) THE LADDER ANSWER PATH, READ TO THE BOTTOM, AND ITS TEST
+SUBJECT IS THE OBJECT ITSELF. 0x3f214 `cmp edx,0x2` is the
+state-index gate PR-216 read. 0x3f21d-0x3f225 then calls
+`[[obj+0x08]+0x68]` - the position getter PR-293 named from
+0x52d30 - on THE ASKED OBJECT, takes the class word of what
+it returns, and 0x3f228-0x3f230 calls `[[point+0x08]+0x08]`
+with edx = &[obj+0xc5]: the object's own position tested
+against its own edge band. True (0x3f237-0x3f24d): the
+caller's out buffer at [esp+0x34] is zeroed and constructed as
+an empty set (mode byte at +0xc, ecx = 0xc) and
+`or BYTE PTR [ecx+0x1],0x1` sets byte 1 bit 0 = BIT 8 =
+AC_EDGE; the set is returned at 0x3f37a. False (0x3f256): the
+four words [obj+0xb1], [obj+0xb5], [obj+0xb9], [obj+0xbd] -
+the AUTHORED rectangle - are copied into a stack box with the
+class word 0x98274 (PR-288's box class) and edx = 0x46 = 70,
+and 0x3f293 calls 0x49fb0, the same call the port models as
+blk_probe70 ("0x49fb0 with n = 0x46 (0x3f278)" in its own
+note); 0x3f29f then tests the same own-position point against
+the inset box. So PR-268/PR-269/PR-270's reading of the
+geometry is confirmed word for word - the only thing it did
+not pin is the subject, and the subject is the object's own
+position, not an asker's. (c) AND THE REST OF THE SAME
+FUNCTION, which PR-216 had named only by exit number: the P3-
+FALSE exit at 0x3f343-0x3f355 builds an empty set and sets
+`or BYTE PTR [ecx+0x1],0x4` = bit 10 = AC_DRAB - a set-built
+AC_DRAB, matching the census entry at 0x3f355 - while the
+inert exit at 0x3f364-0x3f375 returns an EMPTY set. (d) WHAT
+THAT MEANS FOR THE SHIPPED LADDER, measured against the port's
+own numbers: the DRABINKA is placed at (180,510), its band is
+x 195..225 y 480..560 and its authored rectangle is
+(203,540)-(233,670). The point the engine tests is (180,510),
+which is in NEITHER. So on this placement the whole index-2
+path returns the empty set, and no AC_EDGE or AC_DRAB can come
+from this object by this route - which is exactly what
+PR-292 measured from the other side ("the CONTACT TEST NEVER
+FIRES for this object") and what the port's probe shows as the
+answer sets 0x1400/0x100 it produces itself instead. (e) THE
+NEIGHBOURING PRODUCER, the named next reading: 0x3c293
+constructs one set and raises BOTH AC_DRAB (0x3c2b9) and
+AC_EDGE (0x3c2d3) into it, and the same code region holds a
+K_GEN1 inline raise at 0x3c321 - one of PR-291's 18. The
+ladder-shaped answer that produces the pair the lion's
+`A_PODCIAG(1)=AC_EDGE,K_UP` and `A_FALL_DOWN(1)=!AC_DRAB`
+rows test is therefore a producer of this shape, not the
+DRABINKA's own 0x3f214 path.
+OPENS: in order: (i) what 0x3c293-0x3c2d3 is - the class or
+verb that raises AC_DRAB and AC_EDGE into one set beside a
+K_GEN1 site, and what it tests to decide each; (ii) the other
+AC_DRAB producers 0x28805, 0x36a1f and the AC_EDGE producer
+0x3f41d, and the AC_LINA pair 0x342ff/0x3f525 (PR-282's
+twins); (iii) how a set returned by a query reaches the ASKER's
+[obj+0x60] - 0x49580 at 69 sites, and the row step's own
+merge at 0x52290-0x522bc (it copies [obj+0x60] to a stack
+buffer and OR-s it with a second set, exactly PR-287's [esp]
+pair) merges into the row-step's local, not into the object;
+(iv) the input layer 0x5492c and 0x50643, unread, which is
+where the engine turns keys into signals; (v) the bound on this
+census: it needs a `mov eax,<reg>` within 5 instructions of a
+0x749a0 call and a byte-OR on that same register within 40
+instructions after it, so a set filled through a loop, a
+memcpy or a helper is not counted - 192 ctor sites against 45
+found raises says most construction sites are copy/clear, not
+raise.
+CLOSES: PR-295 OPENS (i) in part - AC_EDGE IS produced, at
+0x3c2d3/0x3f24d/0x3f41d, always into a constructed set, never
+inline - and PR-294's OPENS (ii) and PR-270's open subject
+question: the point the ladder's answer tests is the object's
+own position through its +0x68 verb, measured to be outside
+both of its own authored regions on the shipped placement, so
+that path is inert for this object.
+CORRECTS: PR-216's and PR-270's framing of the answer path,
+which is what the port's ladder_answer_core implements: it
+tests the ASKER's position point (`ladder_answer_for(o,
+asker)` with `pt_of(asker)`) against the band and the inset
+rectangle, while the engine tests the ANSWERED object's own
+position. The geometry those legs derived - the band
+[obj+0xc5], the authored rectangle, the 0x49fb0 n = 70 inset -
+is confirmed exactly, and the signal names PR-216 could only
+label as the P1 and P3-FALSE exits are now named: AC_EDGE and
+AC_DRAB. The port's behaviour is unchanged and stays the
+counted model choice its notes already call it.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```
