@@ -2382,6 +2382,26 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     = `ret`, an empty method (the lions' is 0x546a0), which
     settles PR-291's slot attribution for good: that arm is
     reachable only through an ask.
+    PR-306 FIXES THAT NOTE'S ZERO-HITS CLAIM AND NAMES THE
+    WRITER. The scan it quoted built its pattern as '0x' plus
+    an already-prefixed offset, so it matched nothing. Measured
+    again: [reg+0xd6] occurs exactly 3 times in the image
+    (0x54e0a, 0x54efa, 0x55078) and [reg+0xda] 3 times
+    (0x4d33d, 0x4d36d, 0x54f06), while the box at [obj+0x75]
+    is indeed reached only through its two accessors (0x23a20
+    and 0x23a50). The point is written by the class's +0x1c
+    verb 0x54e00 - the lion base holds it at 0x96890; the
+    ladder family's +0x1c is 0x52c70 instead - which copies
+    [obj+0x00]/[obj+0x04] into [obj+0xd6]/[obj+0xda] and
+    resets a batch of fields with it. So this port's pt_of is
+    right about the VALUE and wrong about the MOMENT: the
+    engine asks with the position as of the last +0x1c run.
+    The same note's move half: the +0x58 verb 0x54eb0 writes
+    the position as target - [obj+0xd6] + [obj+0x89]/[obj+0x8d]
+    (0x54f18/0x54f20), so an authored move is measured from the
+    stored point, and the frame step's +0x54 verb 0x55070 hands
+    the point's address to the class's +0xb0 verb. What is left
+    here is when that +0x1c verb runs.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

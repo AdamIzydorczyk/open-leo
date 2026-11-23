@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-306.
+> at PR-307.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -41835,4 +41835,120 @@ change, so no red leg by the rule PR-245 states, and no suite
 run. The last full no-Windows suite run is PR-298's, rc=0 with
 69 green verdict lines; since then only comments in ported/
 have changed (PR-304, PR-305).
+```
+
+## PR-306 — THE ASK POINT IS WRITTEN, AND WITH WHAT: 0x54e02
+## COPIES THE POSITION INTO [obj+0xd6]/[obj+0xda], THE MOVE VERB
+## 0x54eb2 LANDS A TARGET THROUGH IT, AND PR-305'S ZERO-HITS
+## MEASUREMENT IS WRONG
+```
+KIND: read
+SUBSYSTEM: who writes and who reads the nested point the ask
+protocol of PR-305 tests ([obj+0xd6]/[obj+0xda]), the object
+reset verb that fills it, the authored-move verb that composes
+against it, and a corrected offset census.
+ADDRESSES: 0x54e00, 0x54e0a, 0x54e15, 0x54e24, 0x54e74, 0x54e7e,
+0x54e88, 0x54e92, 0x54ea2, 0x54eb0, 0x54ed6, 0x54eef, 0x54efa,
+0x54f06, 0x54f18, 0x54f1c, 0x54f28, 0x55070, 0x55078, 0x5507e,
+0x55084, 0x55096, 0x4d33d, 0x4d36d, 0x23a20, 0x23a50, 0x534e0,
+0x52c70, 0x232e0, 0x541f0, 0x96890, 0x968cc, 0x968c8, 0x3f1c0,
+0x3f230, 0x5503
+NAMES: point accessor, box accessor, contact point, live box,
+reset verb, move verb, record head, signal clause, stack frame,
+OI-078, PR-235, PR-304, PR-305, pt_of
+CODE: no: image reading; no behaviour changed, so no red leg.
+HOOKS: PR-305 (d) claimed a scan of .text finds ZERO mentions of
++0xd6, +0xda, +0xd2, +0x75, +0x79, +0x7d or +0x81 and left
+"who writes them" as the first open step; OI-078's ask-path
+note added by PR-305 repeats that; the port's ladder_answer_for
+passes pt_of(asker), the lion's live x,y (ported/ll_level.c
+5503, 5556).
+MEASURED: (a) THE BUG AND THE RIGHT COUNTS. The pattern PR-305
+built was the literal '0x' followed by an offset string that
+already carried '0x', i.e. `0x0x75`, so it could not match
+anything. Re-measured with the sign separated: `[reg+0xd6]`
+occurs EXACTLY 3 times in the image (0x54e0a `lea`, 0x54efa a
+read, 0x55078 `lea`) and `[reg+0xda]` exactly 3 times (0x4d33d,
+0x4d36d, 0x54f06); `[reg+0x75]` occurs in code only at the two
+accessors 0x23a20 (`add eax,0x75`) and 0x23a50 (`push edx; lea
+edx,[eax+0x75]; call 0x534e0; pop edx; ret`, which hands the
+box to the copy-out helper PR-305 (d) named), and every other
+hit is decoded data past .text or a NEGATIVE displacement of a
+stack frame (-0x75, -0x79, -0x7d: 40, 7 and 44 sites). So the
+BOX is reachable only through its accessors, and the POINT is
+not.
+(b) WHO WRITES THE POINT: THE CLASS'S +0x1c VERB. The function
+the listing labels from 0x54e02 is entered at 0x54e00 (its two
+first bytes are the gap artifact) and is held in the +0x1c cell
+of 108 class tables, the lion base 0x96874 among them (the
+cell 0x96890). It begins `mov edx,eax; call 0x52c70` - the
+ladder family's own +0x1c is 0x52c70, so a DRABINKA does not
+run this - and then at 0x54e0a-0x54e17 does `lea eax,
+[obj+0xd6]; mov ebx,[obj]; mov ecx,[obj+4]; mov [eax],ebx;
+mov [eax+4],ecx`: [obj+0xd6] = the object's x, [obj+0xda] =
+its y, copied from the live position words. The same block
+zeroes [obj+0xa5] (the contact-list buffer), [obj+0xca],
+[0xce], [0xd2], [0xe2], [0xe6], sets [obj+0xad] = 0x64 and
+[obj+0xb1] = 0x16, and clears bits 0xc0 of [obj+0xb6]
+(0x54e24-0x54ea5).
+(c) WHAT THAT MEANS FOR THE PORT. The engine's ask tests use
+the position AS OF THE LAST RUN of that +0x1c verb, not the
+live one: the value the port computes with pt_of equals the
+engine's only while nothing has moved the object since, and
+nothing else in the image writes those two words, so a moved
+object asks with a STALE point - which is exactly the
+difference OI-078's
+"this port hands the verb its own element box instead" was
+reaching for, and it is testable with the shipped probe rather
+than by more reading.
+(d) THE MOVE VERB COMPOSES AGAINST THE STORED POINT. The block
+the listing labels from 0x54eb2 is entered at 0x54eb0 and is
+the +0x58 cell of 155 tables (the lion base's at 0x968cc); with
+eax = the object and edx = the requested target it first runs
+the
+message handler +0x10 with a fresh empty set (0x54ed6), tests
+[obj+0xb6] bit 2, then the class's +0xbc verb, then bit 1
+(0x54ed9-0x54ef8), and in the passing branch reads the point
+back at 0x54efa/0x54f06 and writes the position at
+0x54f18/0x54f20 as `[obj] = target.x - [obj+0xd6] +
+[obj+0x89]` and `[obj+4] = target.y - [obj+0xda] + [obj+0x8d]`
+- the same record-head pair PR-235 read through the +0x6c
+accessor. The failing branch writes the target unchanged
+(0x54f1e). So an authored move is measured from the STORED
+point plus the record's own delta, not from where the object
+is.
+(e) THE THIRD SITE IS THE FRAME STEP'S +0x54 VERB. 0x55070 is
+the +0x54 cell of 124 tables (the lion base's at 0x968c8) - the
+slot PR-292 saw called from the per-object step at 0x53733 -
+and it does `lea edx,[obj+0xd6]` and calls the class's +0xb0
+verb with that address (0x232e0 for the ladder class), then the
+record-head helper 0x541f0 and the +0x98 verb. The two
+0x4d33d/0x4d36d `lea` sites belong to another family and are
+unread.
+OPENS: in order: (i) when the +0x1c verb runs - the object
+ctor, a state entry, or a respawn - which decides how stale the
+ask
+point can be, and is the measurement FOCUS 1 needs; (ii) what
+the +0xb0 verb does with the point's address; (iii) 0x4d33d /
+0x4d36d and the family they belong to; (iv) the box [obj+0x75]
+still has NO writer in the image: with (a) that is now a
+positive result, so it is written through the accessors or by a
+block copy, and the block copy is unread; (v) PR-305's other
+opens stand unchanged.
+CLOSES: PR-305's OPENS (i) for the point half: the writer is
+named (the class's +0x1c verb, 0x54e00) and its value is the
+object's own position. It
+also supplies the missing mechanism for OI-078's ask-path note:
+the port is not wrong about the value, only about when it is
+sampled.
+CORRECTS: PR-305 (d)'s sentence that a scan of .text finds
+zero mentions of those offsets - the pattern was built as '0x'
+plus an already-prefixed offset - and the counts in (a) replace
+it. PR-305's (a)/(b)/(c)/(e)/(f) are unaffected, including the
+accessor table and the 0x97f50/0x98274 correction.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last
+full no-Windows suite run is PR-298's, rc=0 with 69 green
+verdict lines; since then only comments in ported/ have changed
+(PR-304, PR-305).
 ```
