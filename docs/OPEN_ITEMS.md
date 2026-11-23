@@ -1857,7 +1857,10 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     state 2 = A_DOWN, the LOWERED ladder, answers (A_UP
     `1,0,WAIT K_GEN1` -> A_DROP frames 2..10 = 2500 units ->
     A_DOWN `WAIT K_NEVER`) - and the port reaches A_DOWN ONE
-    iteration after A_DROP, not 25: both halves are open. What
+    iteration after A_DROP, not 25: both halves are open.
+    [PR-287 CORRECTS that sentence twice over: 2700 units,
+    27 iterations, and the port now walks all of them - see
+    its note at the end of this row.] What
     the probe re-opens is PR-273's GROUND PAIR: A_DRAP authors
     G=0,250, so unless the ladder's answer runs ground_on on
     the rider ([obj+0xb6] bit0/1, the target's vtable

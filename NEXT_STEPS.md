@@ -39174,6 +39174,7 @@ PR-285's pair; PR-278's count carried a 22nd SKIP line, the
 cmake-windows parity check, which this run does not invoke.
 ```
 
+
 ## PR-287 — THE `Wait` CLAUSE GATES THE ROW IT CARRIES: STATES
 ## HOLD THEIR FRAMES, THE LADDER TAKES ITS OWN 2700-UNIT
 ## DESCENT, AND PR-218'S BRANCH POLARITY IS CORRECTED
@@ -39183,10 +39184,11 @@ SUBSYSTEM: the object row walk (obj_advance's admit) and the
 row-record model (a new ll_mov_row_gate); the ZARIA.01
 ly_climb leg extended. No player-side change.
 ADDRESSES: 0x521f0, 0x52229, 0x52235, 0x5223c, 0x495b0,
-0x52241, 0x5224b, 0x52251, 0x522e6, 0x47e40, 0x522ed,
-0x522fc, 0x52303, 0x52329, 0x52354, 0x521c1, 0x521c5,
-0x45970, 0x46b62, 0xa11c8, 0x49580, 0x47e63, 0x47edc,
-0x4806f
+0x495d5, 0x52241, 0x5224b, 0x52251, 0x5226f, 0x52290,
+0x522bc, 0x522e6, 0x47e40, 0x522ed, 0x522ef, 0x522f8,
+0x522fc, 0x52303, 0x52329, 0x52334, 0x52338, 0x52354,
+0x521c1, 0x521c5, 0x45970, 0x46b62, 0xa11c8, 0x49580,
+0x47e63, 0x47edc, 0x4806f, 0x44e70, 0x53626
 NAMES: ll_mov_row_gate, LL_GOP_NAME, LL_GOP_NEVER, LL_GOP_ANY,
 WAIT K_GEN1, WAIT K_NEVER, WAIT AC_TIME, WAIT AC_DUP, A_UP,
 A_DROP, A_DOWN, AC_BREAK_NEXT, K_GEN1, K_NEVER, K_ANY,
@@ -39281,21 +39283,38 @@ whose authored threshold is 0, which is every row of the
 ladder chain and NOT the rows named in (b); and the LION's own
 row admit in player_iterate does not consult the clause at
 all, although ZAR_LEW carries `8,0,WAIT AC_DUP` and
-`8,200,WAIT !K_UP` rows. (g) THE SAME SHAPE ELSEWHERE IN THIS
-LEVEL: ZARIA.01's `[A_STOP]` in KAMIEN1.MOV is one `1,0,WAIT
-K_GEN1` row whose only exit is `A_GO(1)=AC_BREAK_NEXT`, and
-LINA.MOV is the ladder's twin (`[A_UP] 1,0,WAIT K_GEN1`, a
-nine-row A_DROP, `[A_DOWN] 10,0,WAIT K_NEVER`). Both
-re-entered their next state through the wrapped list-end bit -
-with a temporary trace on the pre-fix build, three
-`KAMIEN [A_STOP]->[A_GO]` lines land in the first ticks - and
-after the change the same 200-tick probe traces ZERO of them:
-the stones are now held by their own authored gate, because
-nothing in this port raises K_GEN1 on a KAMIEN (the raise
-paths are per object: a row's `GEN` tail, the balloon pop, the
-ladder's answer branch). LINA follows the ladder's chain
-exactly, A_DROP to A_DOWN, twice. That trace was a throwaway
-print, not a shipped probe.
+`8,200,WAIT !K_UP` rows. (g) THE SAME GATE ON THE OTHER
+OBJECTS OF THIS LEVEL, counted with a throwaway print at the
+gate (removed before commit, not a shipped probe): the
+16-second ZARIA.01 run now holds EIGHT object rows it used to
+run - KAMIEN A_STOP `1,0,WAIT K_GEN1`, DRABINKA A_UP and LINA
+A_UP (the same shape), KORONA A_IDLE and POCISK A_WISI `WAIT
+K_NEVER`, KATAPULT A_RUN and PALMA A_RUN `WAIT K_GEN1`,
+ANIBACK A_RUN row 8 `8,4600,WAIT AC_TIME`. Two of them were
+measured changing: a temporary state-change trace prints THREE
+`KAMIEN [A_STOP]->[A_GO]` lines in the first ticks of the
+pre-fix run and ZERO after it, and LINA.MOV - the ladder's
+twin, `[A_UP] 1,0,WAIT K_GEN1`, a nine-row A_DROP, `[A_DOWN]
+10,0,WAIT K_NEVER` - walks A_DROP into A_DOWN exactly, twice.
+The held K_GEN1 rows are NOT dead ends in this port:
+ladder_flag_raise (PR-241) raises K_GEN1 on ANY asked object
+whose current state is declared index 1, and KAMIEN1.MOV
+declares A_STOP first, so a pair contact starts the stones the
+same way it starts the ladder - the probe never touches one in
+16 s. ANIBACK's `WAIT AC_TIME` row is the one that stays held
+for good: this port's only AC_TIME raiser is the same-state
+match counter of PR-163 (0x53626-0x5365c), which an ANIMATED
+BACKGROUND never reaches, so its row never admits - a behaviour
+change in a level with no leg for it, named here rather than
+smoothed. (h) WHY THE ASK STARTS THE ROW: the gate's live set
+and PR-241's raise are THE SAME FIELD. The union at 0x52290
+copies [obj+0x60], the object's own 12-byte TEventSet, and the
+ask's write is `[eax+0x66] |= 0x40` (0x44e70, PR-241) - byte
+6, bit 6, i.e. bit 54 of that set, which is exactly
+LL_SIG_K_GEN1 (ll_play.h: LL_SIG_K_JUMP = 53, K_GEN1 next).
+So the branch that answers the ladder is the branch that lets
+its own A_UP row run, one step later, with no extra plumbing in
+either direction.
 OPENS: in order: (i) the zero-budget admit - an object row
 whose clause names a signal that DOES go up (the (b) list:
 K_GEN1 / AC_TIME / AC_DUP with a non-zero threshold) admits in
