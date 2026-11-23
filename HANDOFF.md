@@ -5437,11 +5437,30 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         the eight: lines 18-20 of ANI2.DES author a DRECT, a
         RECT and a KILOF_PL, and its falling lion in a
         CHECK_ALL state now gets AC_DRECT raised inside that
-        box. What still keeps the exit chain closed is the
-        AC_ONAIR term, which needs the surface-link pass (AC_DUP
-        on attach,
-        AC_DUP_CD by surface kind, AC_ONAIR when [obj+0xa9] is
-        dropped, 0x5476x-0x54800). What the ground/contact
+        box. The AC_ONAIR term this paragraph named as the
+        blocker is port code since PR-331: the surface-link tail
+        raises AC_DUP on the attach edge and AC_ONAIR when
+        [obj+0xa9] is dropped (0x5476x-0x54800), and PR-332/333
+        then settled the two row-admission paths the clauses of
+        those states sit on. What keeps the exit chain closed
+        now is OI-072's ground half. ZARIA.01's first chasm
+        (ZARIA_A.PLT ground ends `1 -50,680!408,684;`, the next
+        ground starts `3 624,673!...`) is NOT crossable by the
+        port's walk (2 px per iteration) or jump (measured: the
+        jump is vertical - x moves 400 to 403, apex y 551, see
+        /tmp/opencode/f6c_j1.log). The authored crossing is the
+        ANIPL2 seat-line chain - the KATAPULT pad segment
+        307..340 at y 633 and the three PALMA seats at y 475,
+        380 and 320, the last one spanning the 64 px exit hole
+        - and the port never parses those lines. PR-334 read
+        that chain end to end (0x45120 builds the object's own
+        13-byte surface table into [obj+0xa5] and 0x45200
+        places it; the ask verb 0x1e970 hands that point to
+        0x45320 with the asker's predicted position; 0x45400
+        answers the closest non-positive clearance as the
+        surface triple [actor+0xe6]/[+0xe2]/[+0xea]), so what
+        is left there is a port gap with no unknown in it:
+        PR-335. What the ground/contact
         pass writes WHILE a lock holds is unread and named in
         PR-321's OPENS - it matters the moment that leg runs
         A_WPAD's fall into the locked pool.

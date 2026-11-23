@@ -45614,3 +45614,277 @@ GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
 GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-331's, with DATA=/tmp/opencode/nope HD=/tmp/opencode/nope.
 ```
+
+## PR-334 - THE ANIMATED-PLATFORM LINE IS THE OBJECT'S OWN SURFACE:
+## 0x45120 BUILDS THE 13-BYTE RECORD TABLE INTO [obj+0xa5] AND THE
+## ASK VERBS TURN IT INTO THE ASKER'S SURFACE TRIPLE; THE LADDER AND
+## LINA ANSWERS ARE ARMS SWITCHED ON THE LADDER'S OWN STATE
+```
+KIND: read
+SUBSYSTEM: the engine half of OI-072's ground source and of the
+  ZARIA.01 climb's answer chain - the polyline-table element method
+  0x45120 and its table-shift 0x45200, the animated-platform record
+  verbs 0x1e4a0/0x1e512/0x1e560 and their ask verb 0x1e970, the
+  contact-list insert 0x45320 and the list-as-polyline query 0x45400
+  (with 0x45380, 0x453d2 and 0x455a0), and the two ladder-family
+  answer verbs 0x3f1c0 (DRABINKA) and 0x3f390 (LINA) with their
+  record verb 0x3f0f0. It is the reading the F6 exit thread's
+  missing crossing route and the port's LINA scope both wait on;
+  no code changed, this record is the ground the next step ports.
+ADDRESSES: 0x45120, 0x45130, 0x45149, 0x45155, 0x45169, 0x4517e,
+  0x4519d, 0x451a1, 0x451bb, 0x451be, 0x451cf, 0x451d4, 0x451db,
+  0x451e2, 0x45200, 0x45202, 0x45217, 0x45320, 0x45340, 0x45349,
+  0x45355, 0x4535f, 0x4536f, 0x45380, 0x45397, 0x453b3, 0x453d2,
+  0x453ed, 0x45400, 0x4540f, 0x45417, 0x4541f, 0x45434, 0x45439,
+  0x4545e, 0x45468, 0x45471, 0x45479, 0x45491, 0x4549a, 0x454a2,
+  0x454ba, 0x44f10, 0x44e90, 0x44ec0, 0x49f90, 0x49920, 0x498f0,
+  0x4a0b0, 0x3f0f0, 0x3f104, 0x3f11f, 0x3f124, 0x3f13a, 0x3f154,
+  0x3f159, 0x3f16f, 0x3f178, 0x3f1c0, 0x3f1d1, 0x3f1dc, 0x3f1ec,
+  0x3f203, 0x3f214, 0x3f222, 0x3f230, 0x3f24d, 0x3f256, 0x3f278,
+  0x3f28f, 0x3f2a4, 0x3f2b1, 0x3f2d2, 0x3f2f8, 0x3f313, 0x3f324,
+  0x3f355, 0x3f364, 0x3f390, 0x3f3a1, 0x3f3c6, 0x3f3d3, 0x3f3e4,
+  0x3f426, 0x3f448, 0x1e4a0, 0x1e4b9, 0x1e512, 0x1e51c, 0x1e52a,
+  0x1e560, 0x1e638, 0x1e640, 0x1e970, 0x1e97e, 0x1e985, 0x1e996,
+  0x3dd60, 0x3dd72, 0x3dd91, 0x3ddb5, 0x3ddc3, 0x1f4e0, 0x1f583,
+  0x541f0, 0x49580, 0x749a0, 0x54910, 0x41180, 0x23a10, 0x91828,
+  0x9182d, 0x91830, 0x91834, 0x91836, 0x91839, 0x91446, 0x90693,
+  0x98274, 0x98278, 0x96d1c, 0x97cdc, 0xa5, 0xa9, 0xb1, 0xb5,
+  0xb9, 0xbd, 0xc5, 0xca, 0xce, 0xe6, 0xe2, 0xea, 0xa9, 0x5c,
+  0x64, 0x68, 0x6c, 0x78, 0x3c, 0xd, 0xc, 0x46, 0x32, 0x50
+NAMES: 0x45120, 0x45200, 0x45320, 0x45400, 0x45380, 0x455a0,
+  0x3dd60, 0x3f0f0, 0x3f1c0, 0x3f390, 0x1e970, KATAPULT, PALMA,
+  LINA, DRABINKA, ANIPL2.DES, ZARIA.01, [obj+0xa5], [obj+0xb1],
+  [obj+0xc5], [obj+0xee], [obj+0xe6], [obj+0xe2], [obj+0xea],
+  [obj+0xa9], [obj+0xca], [obj+0xce], AC_EDGE, AC_DRAB,
+  AC_DRAB_CATCH, AC_LINA_CATCH, A_UP, A_DOWN, A_RUN, TEventSet,
+  place_rect_class, rect_class_answer, ladder_answer_core,
+  ladder_class, ladder_ask_raise, ll_plt, OI-072, OI-078, OI-119,
+  F6, T5
+CODE: no: nothing in ported/ or the Makefile moved. The port step
+  this grounds is named in OPENS.
+HOOKS: none. The reading is checked against the shipped data only:
+  the ANIPL2.DES and ANI2.DES record texts quoted below are the raw
+  ETAPY bytes (file offsets given), and the grammar claims are
+  testable against those bytes without any port code.
+MEASURED: (a) THE ENTRY LINE'S CONTINUATION FIELDS, ORDER AND ALL.
+  The port's placement reader already sees these lines - its load
+  log prints "authors an authored rectangle" and "1 contact
+  point(s)" - but it treats their text as generic noise. The ladder
+  family's record verb 0x3f0f0 consumes them IN ORDER off the entry
+  text: first 0x44f10 on the point object at [obj+0xa5] - the
+  count-and-point contact list of PR-242 ("1 33,-3" = 213,507 for
+  the ladder at 180,510 - already read, unchanged) - then 0x44e90
+  makes those points absolute (0x3f10b-0x3f110, PR-246 unchanged);
+  SECOND, 0x49f90 with the format at 0x91d00, "%d,%d;%d,%d , ",
+  into [obj+0xb1], [+0xb5], [+0xb9], [+0xbd] - x0,y0,x1,y1 - and
+  0x3f124-0x3f137 adds the placement to all four. That is the band
+  203,540;233,670 the port tests today (PR-269/PR-270 - its origin
+  here, in the entry's own text, is the part that was never
+  recorded). THIRD, 0x4a0b0's pair reader at 0x3f154 reads one
+  more pair into a temporary of class 0x98278, and 0x3f159-0x3f175
+  derives a box at [obj+0xc5] from it - the pair plus a side
+  0x50 wide (the exact derivation is an OPEN below). Byte for byte,
+  ANI2.DES: `DRABINKA,drab.ani,drab.mov,180,510` / `1 33,-3` /
+  `23,30;53,160` / `30,50` - the third field is the bare pair
+  210,560 absolute. PR-271 measured the CATCH position point as
+  x 207..229 and PR-282 the CLIMB COLUMN bottom as exactly 560:
+  this is the authored datum behind both, a point AND a derived
+  box, not the rectangle. The two LINA lines carry the identical
+  grammar: `LINA,lina.ani,lina.mov,125,292` / `1 0,200` /
+  `23,30;31,200` / `25,49` - contact point 125,492, rectangle
+  148,322;156,492, bare pair 150,341; and at 525,525: `1 0,0` /
+  `21,30;29,120` / `25,49` - point 525,525, rectangle
+  546,555;554,645, bare pair 550,574. ZARIA.01's ropes author the
+  same three fields as its ladder: what differs is the answer verb,
+  not the placement grammar.
+  (b) THE ANIPL2 LINE IS THE OBJECT'S OWN SURFACE TABLE. For the
+  animated-platform family the record-verb region 0x1e4a0/0x1e560
+  consumes the line after the coordinates through the element
+  method 0x45120 (called at 0x1e51c and 0x1e640 with eax =
+  [obj+0xa5] - the object's own embedded point object, class word
+  0x98278, the very point its ask verb passes to 0x45320), and
+  0x1e512 follows the parse with 0x45200, which walks every record
+  of the just-parsed table and adds a pair to each (0x45217:
+  rec[0] += esi, rec[4] += edi) - the placement step PR-311
+  inferred from the text ("points RELATIVE to the placement
+  point"): the table is stored translated, as the contact points
+  are. ANIPL2.DES (ETAPY file offset 0x2e7d): `KATAPULT,kat.ani,
+  kat.mov,300,588` then `1 7,45;40,45 -6300,-1350`, and three
+  PALMA entries at 820,435 / 965,335 / 1010,275 with `1
+  18,40;80,40`, `1 -80,45;-18,45`, `1 -80,45;-18,45`. Placed: the
+  catapult pad is a segment x 307..340 at y 633 - on the walk
+  surface, under nothing - and the palms' seats are 838..900 at
+  y 475, 885..947 at y 380 and 930..992 at y 320, a rising chain
+  from the east ground (line `3 624,673!...` of ZARIA_A.PLT)
+  toward the exit column.
+  (c) THE TABLE GRAMMAR, 0x45120, BYTE FOR BYTE: "%d" (0x9182d)
+  reads N; the allocation at 0x45149-0x4515a is (N+1)*0xd + 4
+  bytes - N+1 records of 13, the 13-byte record of PR-312's
+  0x45400, x at +0, y at +4, flag byte at +0xc; the loop at
+  0x4517e runs while a counter sits at or below N, i.e. N+1 times,
+  each record parsed "%d,%d" (0x91836/0x91839) and after EACH
+  record ONE character read with " %c" (0x91830), which decides
+  that record's flag byte: ';' (0x3b) stores flag 1 and continues
+  (0x451a6-0x451be), '#' (0x23) stores flag 2 and ends
+  (0x451cf-0x451e0), any other character stores flag 0 and ends.
+  So `1 7,45;40,45 -6300,-1350` is exactly TWO records - (307,633)
+  flagged 1, (340,633) flagged 0 - and the leading number is the
+  record count minus one, the same "count = points - 1" fact
+  PR-311 measured for .PLT lines, now with its reader named. The
+  trailing `-6300,-1350` is NOT consumed by 0x45120 (the character
+  after `40,45` is '-', which closes the loop with flag 0) nor by
+  any other reader found here: it stays counted data, in OPENS.
+  0x3dd60, the other 0x45120 caller, is another family's version:
+  it stores the table at [obj+0xee], copies the FIRST record into
+  [obj+0xfa]/[obj+0x100], and looks for an optional ` F = %d,
+  %d \n` tail (0x91446) into [obj+0x11a]/[obj+0x11e], zeroing
+  both when the match count is not exactly 2 (0x3ddbb-0x3ddd8):
+  that tail appears ZERO times in the shipped containers (scan of
+  ETAPY and ANIMACJE for `F = n,n` and `T = n,n`: none), so no
+  shipped object carries it.
+  (d) HOW A SEAT BECOMES SOMEONE'S GROUND, END TO END. 0x1e970,
+  the +0x78 entry of the table 0x96d1c (PR-311's), is setup plus
+  one call: eax = [kat+0xa5], ebx = a pointer to the predicted
+  pair, ecx = mode 2, call 0x45320; then the empty signal
+  composition (0x749a0, n=0xc, [ans+0xc]=0, the PR-296 mode) and
+  return - it raises NO signal, exactly as PR-311 read. The part
+  never read is what 0x45320 does first: it refreshes the
+  requester's presented point (0x541f0 with a temporary of class
+  0x98278, 0x45340), adds the requester's PENDING DELTA
+  [obj+0xca]/[obj+0xce] to it (0x45349-0x4536b - the predicted
+  position of PR-275's lift law), and calls 0x45400 with that
+  pair. 0x45400 runs the query on the point's record list: the
+  FIRST record's flag must not exceed the mode (0x4540f-0x45419 -
+  the "first-entry flag vs the mode" of PR-312; mode 2 accepts
+  flags 0, 1 and 2); 0x45380 finds the segment whose x span
+  brackets the passed position (0x45397-0x453bd, the walk over
+  13-byte records, 0x453d2 the same pair plus 0x455a0); then the
+  REQUESTER's own class +0x6c verb is called (0x45439 - the
+  anchor-point verb family of PR-329, 0x23a10 `add eax,0x89` for
+  the lion) and 0x455a0 interpolates the segment line AT THAT
+  POINT (0x4545e-0x45468) and again at the list position
+  (0x45491). If the requester is not already attached to this same
+  point ([actor+0xa9], 0x45471-0x4547f) a positive clearance is
+  rejected; the closest non-positive gap wins over any previous
+  candidate (0x4549a) and the winner is written into the REQUESTER
+  as the triple PR-312 named: [actor+0xe6] = the point object
+  (0x454a2), [actor+0xea] = the signed clearance (0x454a8),
+  [actor+0xe2] = that record's flag byte (0x454ba). That is the
+  whole "the surface may come from an ask" sentence, now read
+  through: an animated platform is candidate ground for every actor
+  whose state asks its class, and the rider moves by the law
+  PR-312 already read at 0x54250/0x54827 - pos += [obj+0xca],
+  [obj+0xce] and the [obj+0xea] snap. The seven ZARIA.01 states
+  that name KATAPULT (PR-311's list) therefore receive the seat
+  segment as a surface with the object's pending delta as the
+  carry term: the mechanism the first chasm's crossing needs.
+  (e) THE LADDER/LINA ANSWERS ARE SWITCHED ON THE LADDER'S OWN
+  STATE. 0x3f1c0 (DRABINKA's +0x78, PR-147) and 0x3f390 (LINA's)
+  agree instruction for instruction through everything read: first
+  the requester's askable probe (class +0x3c, PR-329; refusal
+  composes the inert answer, 0x3f1d1/0x3f3a1); then a switch on
+  [obj+0x5c], the LADDER's own current state index - not the
+  asker's. State 1, the unrolling A_UP of PR-325: the requester's
+  rectangle getter (+0x4c) and the contact-point walk 0x44ec0
+  against [obj+0xa5] (PR-243's gate seen from the asked side),
+  and on TRUE a write to its OWN set: byte +2 of [[obj+0x64]]
+  |= 0x40 - bit 22, AC_LINA_CATCH in the PR-69 numbering
+  (0x3f203/0x3f3d3). State 2, A_DOWN, "the only state that
+  answers the lion" (PR-325): first the requester's PRESENTED
+  POINT (class +0x68, PR-329) is tested against the object at
+  [obj+0xc5] (0x3f222-0x3f230); TRUE raises AC_EDGE, bit 8, into
+  the answer (0x3f24d) - the authored raiser of the AC_EDGE that
+  `A_PODCIAG(1)=AC_EDGE,K_UP` needs, raised from the LADDER's
+  state exactly as PR-271 measured in play. FALSE falls to the
+  band arm: [obj+0xb1..0xbd] (the entry's own rectangle, paragraph
+  (a)) into a temporary of class 0x98274 - the same temporary
+  family as 0x4a050's in PR-329 - with the point selector 0x46
+  (LINA: 0x32, 0x3f448), and a hit runs the P3+ tail (0x3f2a4):
+  the requester's +0x8 verb, then the answer carries
+  AC_DRAB|AC_DRAB_CATCH - or dh,0x10 and or bh,0x4, bits 12 and
+  10, the PR-271 pair - merged through 0x49580 and copied as the
+  12-byte answer (0x3f313-0x3f331: three dwords plus the +0xc
+  mode byte, the TEventSet of PR-332). What is NOT in this answer:
+  no surface triple travels on it - the ladder answer raises
+  signals only. PR-282's hunt for "the writer that moves the rider
+  up the column" therefore does not end inside 0x3f1c0: the only
+  position-moving ask channel in the image is the (d) chain.
+  (f) WHAT THIS SETTLES FOR THE PORT. The LINA scope the port
+  pinned as a leg (ladder_class's L3 class-scope case, PR-270:
+  DRABINKA 1, LINA 0, "the K-prefixed variants stay unanswered")
+  is now answered as DATA: LINA owns an answer verb of the same
+  shape, 0x3f390, with the same state switch, and ZARIA.01's two
+  ropes author the three fields that verb consumes - so a LINA can
+  raise AC_EDGE, AC_DRAB and AC_DRAB_CATCH at its own band, and
+  the rope at 525,525 with rectangle 546,555;554,645 stands INSIDE
+  the first chasm's x span (408..624), with the canopy line
+  `5 98,514;288,520;379,503;453,504;539,536;589,566` over it: the
+  video's "up the ladder, mid-canopy east" route has a second,
+  authored version through a rope the port refuses to answer. The
+  ANIPL2 seat lines are not ground in the port at all (ll_level
+  counts the four lines as "polyline data (moving ground: needs
+  the AC_* signal bus)") - paragraphs (b)-(d) name the three
+  pieces to port: the table parse with its flag bytes and the
+  0x45200 translation, the ask verb's predicted-position insert,
+  and the triple write. And the port's two-block A_UP/A_DOWN model
+  (ladder_answer_core) now has its engine switch named: the arms
+  are chosen by the ladder's own [obj+0x5c], which the port's
+  obj_transition already runs for drab.mov.
+  (g) THE FOUR SHIPPED NEGATIVES, COUNTED. The '#' flag-2
+  separator appears in no shipped entry text (scan of ETAPY for
+  ';' in entry lines: none); the ` F = n,n` tail appears nowhere
+  (both containers); a trailing pair after a table line appears
+  exactly once in the whole shipped set - the KATAPULT's
+  -6300,-1350 - unread by any found consumer; and the animated-
+  platform set itself: ZARIA.01's four entries are the only
+  seat-line tables in the fixture's levels that any lion state
+  names. These bound the port step: flags 0/1 and the two-point
+  segment can be implemented without inventing anything, and the
+  trailing pair stays counted, unacted data.
+OPENS: what consumes `-6300,-1350` after 0x45120 leaves the rest
+  pointer at it - and whether the pad moves at all: kat.mov authors
+  A_RUN `1,0,WAIT K_GEN1` then nine 300-unit rows with NO motion
+  word, so the cat's motion is that pair, or the .SEQ art frames
+  through the frame-step verb 0x53df0 (which copies the position
+  to the [obj+0x89] anchor and runs the .MOV step), or nothing -
+  read the 0x1e560/0x1e638 tails; 0x45200's dx,dy source at
+  0x1e521-0x1e52a (is the table stored absolute by the placement,
+  or kept relative and placed at query time through the +0x6c
+  provider?); the point class 0x98278's +0x6c verb 0x54910 and
+  +0xb0 verb 0x41180; the exact derivation of the [obj+0xc5] box
+  from the bare pair (0x3f159-0x3f175: the -0x50 side and the
+  equal-dword corners) and the point selectors 0x46 vs 0x32 (70 /
+  50 - which authored point each names); LINA's 0x3f426-0x3f54a
+  tail, including the 0x3f4ac arm PR-244 named for AC_LINA bit 21,
+  and the object at [obj+0xc5] with its +0x8 probe verb; the
+  semantics of the record flag byte inside queries beyond the
+  first-entry mode compare (0x45417) - PR-312's "a kind-2 surface
+  is ignored while [obj+0xc6] < 0x58c" against flags 0/1/2; the
+  remaining 0x45120 callers (0x288d5 inside the WSPRECT answer
+  0x287a0 - a box class building a table at runtime - and
+  0x3efe0), and the other 0x3dd60 families (0x2783c, 0x27d18,
+  0x34477, 0x346a6) including whether the platformy= .PLT lines
+  reach 0x45120 too (PR-279's "one surface-table object per line"
+  says yes, unverified here); and the K-prefixed climbable
+  variants KLINA/KDRABINA, whose answer verbs stay unanchored.
+CLOSES: nothing. It grounds the OI-072 port half (the parse + ask
+  + triple chain of (b)-(d)) and the LINA scope of the climb chain
+  ((f)), and narrows PR-282's lift hunt to one answer: the ladder
+  answer moves nothing, so the (d) chain is the only moving
+  ask-surface in the image.
+CORRECTS: PR-311's "each entry's polyline points are RELATIVE to
+  the placement point" - the table is parsed INTO the object's own
+  point [obj+0xa5] and translated by 0x45200 at parse time (the
+  dx,dy source stays in OPENS), not left relative; PR-311's "it
+  registers the asker in its contact list and raises NO signal" -
+  the no-signal half stands, but what 0x45320 does with the asker
+  is write the surface triple into it (the (d) chain), and the
+  platform's physics then acts on the asker's position through the
+  attach law, not through a list; and the port's own load-log
+  framing of the ANIPL2 lines as "moving ground: needs the AC_*
+  signal bus" - they are the object's OWN surface tables and no
+  signal bus is involved in their query at all.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg is owed and no suite run; the last full no-Windows suite run
+  is PR-333's, rc=0 with 71 green verdict lines.
+```

@@ -781,26 +781,35 @@ OI-071: the PCX-backdrop vertical camera against a TALL level
 
 OI-072: the ground SOURCE remainder (G-13): the port loads ground
   from `platformy=` only and never parses the ani_plat= LOCAL
-  ground lines (ANIPL2: KATAPULT/PALMA); engine-side the entity-
-  record table chain (0x34850, [obj+0x48]/[obj+0x4c]) and its
-  MOVEPLAT-chain provider are unread
+  ground lines (ANIPL2: KATAPULT/PALMA)
   status: OPEN
   origin: PR-136/138/140
-  PR-302 SHARPENS THIS INTO A CONCRETE FILE. The engine names
-  the section key: 'ani_plat' at 0x91dd1 and 0x91ded, in the
-  same string block as 'tlo' (0x91dba), 'zwierzaki' (0x91dbe),
-  'animacje' (0x91dc8), 'platformy' (0x91e1e), 'blokady'
-  (0x91e2c) and 'sufity' (0x91e38) - its level-record parser.
-  And ZARIA.01 DOES carry one: its shipped record (LEVELDES
-  +0x19b9c5c6) says `plany=T|TA|TALAB` with
-  `ani_plat=none,anipl2.des,none` and
-  `platformy=zaria_a.plt`, so an animated-platform set exists
-  on the middle layer of the FOCUS-1 level, and the port reads
-  none of it. The engine side is now anchored too: the value
-  that same key produces is the global ds:0xa94ec (written at
-  0x4cda6-0x4cda9 in the branch that loads the 'ani_plat'
-  string), and that pool is the object the pair-answer verb
-  0x287a0 asks.
+  PR-302 SHARPENED THIS INTO A CONCRETE FILE: the section key
+  'ani_plat' at 0x91dd1/0x91ded, and ZARIA.01's shipped record
+  (LEVELDES +0x19b9c5c6) `ani_plat=none,anipl2.des,none`.
+  PR-334 ANCHORS THE ENGINE SIDE COMPLETELY, so what is left
+  here is a port gap, not a read gap. The .des entry's lines
+  after the coordinates are the object's OWN surface table:
+  the element method 0x45120 parses `N x,y;...` into N+1
+  13-byte records (x, y, flag byte at +0xc from the
+  separator: ';' flag 1, '#' flag 2, anything else flag 0)
+  stored INTO the object's embedded point at [obj+0xa5]
+  (class 0x98278), and 0x45200 translates every record by
+  the placement, so the table is stored absolute, exactly
+  like the ladder's contact points. The ask verb 0x1e970
+  feeds that point to 0x45320 with the asker's PREDICTED
+  position ([actor+0xca]/[+0xce] added at 0x45349), and
+  0x45400 answers the closest non-positive clearance as the
+  triple [actor+0xe6]/[+0xe2]/[+0xea] - so the KATAPULT pad
+  segment 307..340 at y 633 and the three PALMA seats at
+  y 475/380/320 are candidate ground for every lion state
+  that names those classes, and the rider moves by the
+  attach law PR-312 read at 0x54250/0x54827. NOT YET
+  PORTED: that parse (the port's place parser counts the
+  four ANIPL2 lines as polyline noise), the predicted-point
+  insert, and the triple write; and the KATAPULT line's
+  trailing `-6300,-1350` stays unacted data that no found
+  reader consumes (PR-334 OPENS).
 
 OI-073: the engine's grounded-y bookkeeping: the instruction that
   turns the shape bottom into the grounded y is unread; the port's
