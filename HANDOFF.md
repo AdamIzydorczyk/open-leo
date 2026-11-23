@@ -5427,18 +5427,19 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         port side is what is missing: PR-328 places those lines
         now - the token names the class and its four numbers are the
         box at [obj+0x3c], absolute and unsorted as 0x40c90 writes
-        them - so the ask walk has its objects; what is left is the
-        verbs, since nothing raises AC_RECT/AC_DRECT/AC_DRECT2 yet.
-        PR-327 counts which classes
-        could (AC_DRECT is raised by the DRECT and the BICZRECT
-        ask verbs, AC_RECT by RECT and BRECT, and this level's
-        `A_KILOF` ask has only the KILOF_PL verb 0x1e3a0 in
-        reach - its raise 0x1e42b is a register form the census
-        tool misses, and that verb tests the asker's facing
-        ([asker+8]+0x70 = 0x239f0 = [obj+0x6d], so a right-facing
-        lion), and ZARIA.01 places a DRECT and a KILOF_PL and
-        nothing else of the eight; and the AC_ONAIR term needs the
-        surface-link pass (AC_DUP on attach,
+        them - so the ask walk has its objects, and PR-329 runs
+        the verbs: the class tables' +0x78 answer entries are the
+        ask verbs (the walk calls them at 0x4b5be), gated by the
+        requester's own CHECK_* channel bits and the plane gate
+        0x4b5a1, and their raises are bits 17/19/20/32 of the
+        signal set - AC_RECT, AC_DRECT, AC_DRECT2, AC_KILOF -
+        exactly the LL_SIG_* indexes. ZARIA.01 places THREE of
+        the eight: lines 18-20 of ANI2.DES author a DRECT, a
+        RECT and a KILOF_PL, and its falling lion in a
+        CHECK_ALL state now gets AC_DRECT raised inside that
+        box. What still keeps the exit chain closed is the
+        AC_ONAIR term, which needs the surface-link pass (AC_DUP
+        on attach,
         AC_DUP_CD by surface kind, AC_ONAIR when [obj+0xa9] is
         dropped, 0x5476x-0x54800). What the ground/contact
         pass writes WHILE a lock holds is unread and named in

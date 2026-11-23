@@ -2054,6 +2054,7 @@ static void obj_touch_enemy(lvl_obj *o, int verbose, int tick);
  * counts and placement are exercised). */
 static int place_grammar_selftest(void);
 static int place_rectclass_selftest(void);   /* PR-328 */
+static int rect_class_ask_selftest(void);         /* PR-329 */
 
 static int obj_contact(const lvl_obj *o);   /* defined below, with the shape
                                              * helpers it reads */
@@ -4919,7 +4920,8 @@ int ll_mov_selftest(void)
         obj_motion_selftest() != 0 || contact_model_selftest() != 0 ||
         plany_selftest() != 0 ||
         ladder_answer_selftest() != 0 || place_grammar_selftest() != 0 ||
-        place_rectclass_selftest() != 0) {
+        place_rectclass_selftest() != 0 ||
+        rect_class_ask_selftest() != 0) {
         free(sc.mov);
         free(m);
         return 1;
@@ -4944,7 +4946,15 @@ int ll_mov_selftest(void)
            " placement the way the ladder's 0x3f0f0 does, and unsorted as"
            " authored; one class record per token, one instance per line;"
            " ZONE, KRY and a token whose numbers are not a box place"
-           " nothing) + PR-107 authored"
+           " nothing) + PR-329 the rectangle-class answer of the class"
+           " tables' +0x78 entry, run by the requester's ask walk"
+           " (DRECT = askable + falling + point-in-box raises AC_DRECT,"
+           " DRECT2 drops only the fall, RECT drops the probe too,"
+           " KILOF_PL adds facing > 0, BICZRECT facing == -1 and the"
+           " anchor point, BRECT the AC_RECT bit; the channel bit of the"
+           " requester's state and the plane gate 0x4b5a1 decide who is"
+           " asked at all)"
+           " + PR-107 authored"
            " start row ((3) enters a 3-row state at its THIRD row, (1),"
            " (9) and (x) at the top, and that row list's wrap still"
            " returns through A_RUN(1)=AC_BREAK_NEXT) + PR-110 the object's"
@@ -6067,6 +6077,134 @@ static void gen_bus_raise(play_ctx *pl, lvl_obj *objs, int nobj,
                    " line: state %s\n", tick, o->sc->leaf,
                    o->sc->movname, o->sc->mov->st[o->sti].name);
         o->sig = 0;                   /* one beat, as above */
+    }
+}
+
+/* PR-329: the rectangle-class ANSWER - the +0x78 entry of the eight class
+ * tables whose record verb 0x40c90 read the box line (PR-327), called by
+ * the requester's ask walk 0x4b500 (0x4b5be: `call DWORD PTR [edi+0x78]`
+ * with eax = the candidate, ebx = the requester, edx = the answer record),
+ * merged into the requester's live set at 0x4b5c5 (0x49580). The answer
+ * record's ors are the signal bits themselves: 0x40d23/0x40d99/0x40dff write
+ * BYTE [ans+0x2] |= 0x2 / 0x8 / 0x10 and 0x1e422-0x1e42b writes BYTE
+ * [ans+0x4] |= 0x1 - bits 17, 19, 20 and 32, exactly the LL_SIG_* indexes
+ * of AC_RECT, AC_DRECT, AC_DRECT2 and AC_KILOF (the signal table of
+ * PR-69 confirms the numbering; this is also why PR-327's register-form
+ * raise at 0x1e42b is AC_KILOF). Read verb by verb:
+ *   RECT 0x40cf0: the only test is the requester's PRESENTED point (class
+ *     verb +0x68, for the lion 0x23900 = `add eax,0xd6`, the position block
+ *     mirrored at [obj+0xd6] by the +0xb0 provider 0x544f0, which starts it
+ *     as a copy of [obj+0]/[obj+4]) against the box at [rect+0x3c]: no
+ *     probe, no fall test. Raises AC_RECT.
+ *   DRECT2 0x40dc0: the asker's askable probe first (class verb +0x3c;
+ *     the lion class 0x97a98 answers 0x230a0 = `mov eax,1`, so for this
+ *     asker it is always open - the ZARIA.01 lion IS askable, unlike the
+ *     base pair of PR-327) and then the same point test. Raises AC_DRECT2.
+ *   DRECT 0x40d50: that probe, then [asker+0xc6] > 0 - the velocity
+ *     register of PR-99/PR-119 (OI-119), positive = falling - then the
+ *     same point test. Raises AC_DRECT.
+ *   KILOF_PL 0x1e3a0: the probe, then the facing verb (class +0x70, for
+ *     the lion 0x239f0 = `mov eax,[obj+0x6d]`) must be POSITIVE, facing
+ *     right, then the same point test against a copy of the box 0x4a050
+ *     builds into a temporary object of class 0x98274 - the same numbers.
+ *     Raises AC_KILOF.
+ *   BICZRECT 0x286a0: the probe, the facing verb == -1, and the ANCHOR
+ *     point (class +0x6c, for the lion 0x23a10 = `add eax,0x89`). Raises
+ *     the AC_DRECT bit (0x286ec), the same bit the DRECT verb raises.
+ *   BRECT 0x28710: the probe; then if [asker+0x5c], the current state
+ *     index, sits in 9..13 the anchor point is tested, otherwise the
+ *     presented one - both are the position block in this port (PR-321:
+ *     no separate anchor/presented pair), so the two arms coincide.
+ *     Raises AC_RECT (0x2772).
+ * WSPRECT 0x287a0 and KRA1 0x37ea0 answer differently - the first an
+ * anchor test PLUS a state lookup through the box's own [rect+0x30] object
+ * id (0x55760), raising bit 12 (AC_DRAB_CATCH - not AC_DRAB, correcting
+ * PR-327's naming), the second two signals not read at all - and no
+ * shipped level places either of them as a box line, so they raise
+ * nothing here; named again in OPENS.
+ * The point test itself is the point class's +0x8 verb called at
+ * 0x40d7d/0x40de3/0x1e405 on the box at [rect+0x3c] - the same
+ * point-in-rectangle shape as 0x23e00 (PR-243: inclusive edges), and with
+ * the authored edges NOT sorted, so a box written backwards matches
+ * nothing (PR-328). */
+static int rect_class_id(const char *tok);          /* the PR-328 table */
+
+static unsigned long long rect_class_answer(const lvl_obj *o,
+                                           const ll_player *p)
+{
+    int id = rect_class_id(o->sc->leaf);
+    if (id < 0 || !o->nrect || id >= 6)     /* WSPRECT and KRA1: unread */
+        return 0;
+    int px = (int)(p->x >= 0 ? p->x + 0.5 : p->x - 0.5);
+    int py = (int)(p->y >= 0 ? p->y + 0.5 : p->y - 0.5);
+    if (px < o->arx0 || px > o->arx1 || py < o->ary0 || py > o->ary1)
+        return 0;
+    int face = p->face >= 0 ? 1 : -1;       /* the live_bits convention */
+    switch (id) {
+        case 0: return 1ull << LL_SIG_AC_RECT;      /* RECT: geometry only */
+        case 1: return p->vy > 0.0                  /* DRECT: + the fall   */
+                          ? 1ull << LL_SIG_AC_DRECT : 0ull;
+        case 2: return 1ull << LL_SIG_AC_DRECT2;
+        case 3: return face > 0                     /* KILOF_PL: + facing  */
+                          ? 1ull << LL_SIG_AC_KILOF : 0ull;
+        case 4: return face < 0                     /* BICZRECT: facing -1,*/
+                          ? 1ull << LL_SIG_AC_DRECT : 0ull;  /* anchor    */
+        default: return 1ull << LL_SIG_AC_RECT;     /* BRECT: same bit    */
+    }
+}
+
+/* The walk's own gates, run exactly as 0x4b500 runs them for this asker:
+ * the channel bit of the REQUESTER's current state picks the list the
+ * candidate sits on (0x523f0 asks per step from the state's control words,
+ * PR-245; the port's src index of des_place_keys = the same lists, the
+ * model PR-208 read at FUN_00052780 and play_collide already applies), and
+ * 0x4b5a1 skips a candidate of another parallax plane unless the state
+ * carries CHECK_ALL_PLANE. What the port does NOT run is the walk's first
+ * filter, the candidate's +0x60 verb: for these classes that is the
+ * generic 0x23b80 getter of [obj+0x2c], and the contact node for a box
+ * object is written by the broad phase 0x4b970 through class +0x64
+ * (0x23b70 -> the base +0x8 verb 0x237f0: the authored box tested against
+ * the LAYER'S ACTIVE WINDOW, 0x4b940 expanding the layer origin by
+ * -0xa0,-0x78,+0x1e0,+0x140). That window needs the layer transform, which
+ * this port has none of - so every placed box is asked, and an OPENS keeps
+ * the culling model. It cannot change the answer of any leg below: a box
+ * outside the active window cannot contain the player, whom the camera
+ * keeps on it. */
+static void rect_class_asks(play_ctx *pl, const lvl_obj *objs, int nobj,
+                            int verbose, int tick)
+{
+    if (!pl->have || !pl->mov || pl->p.sti < 0 ||
+        pl->p.sti >= pl->mov->nst)
+        return;
+    const ll_mov_st *ls = &pl->mov->st[pl->p.sti];
+    for (int k = 0; k < nobj; k++) {
+        const lvl_obj *o = &objs[k];
+        if (!o->sc || !o->sc->leaf[0] || !o->nrect ||
+            rect_class_id(o->sc->leaf) < 0)
+            continue;
+        if (o->src == 0 ? !(ls->ctrl & LL_CTRL_CHECK_ZW)
+                        : o->src == 1 ? !(ls->ctrl & LL_CTRL_CHECK_ANI) : 1)
+            continue;
+        if (o->layer != pl->layer &&
+            !(ls->ctrl & LL_CTRL_CHECK_ALL_PLANE))
+            continue;
+        unsigned long long ans = rect_class_answer(o, &pl->p);
+        if (ans) {
+            pl->p.sig |= ans;
+            if (verbose)
+                printf("ll_level: play tick %d: %s box %d,%d;%d,%d answered"
+                       " the player at (%d,%d): 0x%llx\n",
+                       tick, o->sc->leaf, o->arx0, o->ary0, o->arx1,
+                       o->ary1, (int)(pl->p.x + 0.5),
+                       (int)(pl->p.y + 0.5), ans);
+        } else if (ask_probe()) {
+            fprintf(stderr, "ll_level: play tick %d: asked rectangle class"
+                    " %s box %d,%d;%d,%d: the player at (%d,%d) vy=%g face"
+                    "=%d did not answer it (0x4b500 -> [class+0x78])\n",
+                    tick, o->sc->leaf, o->arx0, o->ary0, o->arx1, o->ary1,
+                    (int)(pl->p.x + 0.5), (int)(pl->p.y + 0.5),
+                    pl->p.vy, (int)pl->p.face);
+        }
     }
 }
 
@@ -7475,6 +7613,12 @@ static void play_advance(play_ctx *pl, const ll_play_keys *keys,
     ll_player_set_contact(&pl->p, nc);
     gen_bus_raise(pl, (lvl_obj *)objs, nobj, verbose, tick);
     play_collide(pl, objs, nobj, verbose, tick);
+    /* PR-329: the rectangle-class ask walk, part of the same per-step
+     * question (0x523f0 asks from the state's control words, and 0x4b500
+     * reaches the class answer entry 0x4b5be - no shape meet anywhere).
+     * Raised as a pulse, consumed by the next step's transitions and row
+     * gates before the clear, exactly like every other raise here. */
+    rect_class_asks(pl, objs, nobj, verbose, tick);
     if (pl->danger && pl->have) {   /* PR-90 stand-in for the engine's
                                      * per-class attack AI: see
                                      * obj_arm_atak's model note. */
@@ -10443,6 +10587,159 @@ static int place_rectclass_selftest(void)
         fail = 1;
     }
     scene_owner_free(&own);
+    return fail;
+}
+
+/* PR-329: the rectangle-class ANSWER, the class table's +0x78 entry, run
+ * against the player as the asker. Everything asserted here is read: the
+ * +0x78 slots (0x40cf0 RECT, 0x40d50 DRECT, 0x40dc0 DRECT2, 0x1e3a0
+ * KILOF_PL, 0x286a0 BICZRECT, 0x28710 BRECT, 0x287a0 WSPRECT), the walk
+ * that calls them (0x4b500: channel bit from the requester's state, the
+ * plane gate 0x4b5a1, self skipped), and the signal bits - the answer
+ * record's ors at [ans+0x2] 0x2/0x8/0x10 and [ans+0x4] 0x1 are exactly
+ * bits 17/19/20/32, the LL_SIG_* indexes of AC_RECT / AC_DRECT /
+ * AC_DRECT2 / AC_KILOF. The boxes and positions are ZARIA.01's: the
+ * DRECT (988,645)-(1340,750) of ANI2.DES line 18 over the exit point
+ * 1020,692, the RECT (1820,380)-(1970,410) of line 19, the KILOF_PL
+ * (1760,590)-(1832,620) of line 20. The player states stand in for the
+ * lion's: one carries CHECK_ALL (which implies CHECK_ANI, the channel the
+ * ANI2 placements sit on - des_place_keys index 1 = the `animacje` key),
+ * one carries no CHECK bit (the walk is not run: the ask comes from the
+ * requester's state words, PR-245), and one carries CHECK_ANI with
+ * CHECK_ALL_PLANE (the walk's second gate lifted, PR-247). */
+static int rect_class_ask_selftest(void)
+{
+    static const char PL_MOV[] =
+        "ST_CHECK\nST_PLAIN\nST_PLANE\n\n"
+        "[ST_CHECK]\ncontrol=BY_TIME|CHECK_ALL\n1,0\n\n"
+        "[ST_PLAIN]\ncontrol=BY_TIME\n1,0\n\n"
+        "[ST_PLANE]\ncontrol=BY_TIME|CHECK_ANI|CHECK_ALL_PLANE\n1,0\n";
+    static const struct {
+        const char *cls;             /* the class token (the .des line's) */
+        int box[4];                  /* the authored box, unsorted         */
+        int layer, src;              /* the placement's plane and channel  */
+        int sti;                     /* the requester's state              */
+        double x, y, vy;
+        int face;                    /* -1/1 as ll_player.face             */
+        unsigned long long want;     /* the exact bits expected            */
+        const char *what;
+    } cases[] = {
+        { "DRECT", { 988, 645, 1340, 750 }, 0, 1, 0, 1020, 692, 3.0, 1,
+          1ull << LL_SIG_AC_DRECT,
+          "the ZARIA.01 DRECT: falling, inside, the exit point inside the"
+          " box (0x40d50: askable probe, [asker+0xc6] > 0, point in box)" },
+        { "DRECT", { 988, 645, 1340, 750 }, 0, 1, 0, 1020, 692, 0.0, 1,
+          0ull, "standing in the same box: no fall, no AC_DRECT" },
+        { "DRECT", { 988, 645, 1340, 750 }, 0, 1, 0, 1020, 692, -3.0, 1,
+          0ull, "rising through it: [asker+0xc6] is not > 0" },
+        { "DRECT", { 988, 645, 1340, 750 }, 0, 1, 0, 988, 645, 3.0, 1,
+          1ull << LL_SIG_AC_DRECT,
+          "the top-left corner itself: the point test is inclusive" },
+        { "DRECT", { 988, 645, 1340, 750 }, 0, 1, 0, 1341, 692, 3.0, 1,
+          0ull, "one px past the right edge" },
+        { "DRECT", { 988, 645, 1340, 750 }, 0, 2, 0, 1020, 692, 3.0, 1,
+          0ull, "the channel the line was placed on (index 2) matches no"
+                " CHECK bit of the state" },
+        { "DRECT", { 988, 645, 1340, 750 }, 1, 1, 0, 1020, 692, 3.0, 1,
+          0ull, "another plane, CHECK_ALL_PLANE not set (0x4b5a1)" },
+        { "DRECT", { 988, 645, 1340, 750 }, 1, 1, 2, 1020, 692, 3.0, 1,
+          1ull << LL_SIG_AC_DRECT,
+          "the same plane mismatch with CHECK_ALL_PLANE set: the gate is"
+          " lifted" },
+        { "DRECT", { 988, 645, 1340, 750 }, 0, 1, 1, 1020, 692, 3.0, 1,
+          0ull, "a state that carries no CHECK bit does not run the walk"
+                " (0x523f0 asks from the state's own control words)" },
+        { "DRECT2", { 988, 645, 1340, 750 }, 0, 1, 0, 1020, 692, 0.0, 1,
+          1ull << LL_SIG_AC_DRECT2,
+          "the DRECT2 verb 0x40dc0: same probe, same box, NO fall test -"
+          " the one difference PR-326 read between the two" },
+        { "RECT", { 1820, 380, 1970, 410 }, 0, 1, 0, 1900, 400, 0.0, 1,
+          1ull << LL_SIG_AC_RECT,
+          "the ZARIA.01 RECT of ANI2 line 19: 0x40cf0 has no probe and no"
+          " fall test, only the point-in-box (it does not even probe"
+          " askable)" },
+        { "RECT", { 900, 300, 800, 250 }, 0, 1, 0, 850, 275, 0.0, 1,
+          0ull, "an authored box that runs backwards matches nothing:"
+                " nothing in 0x40c90 or the point test orders the edges" },
+        { "KILOF_PL", { 1760, 590, 1832, 620 }, 0, 1, 0, 1796, 605, 0.0, 1,
+          1ull << LL_SIG_AC_KILOF,
+          "the ZARIA.01 KILOF_PL of ANI2 line 20: 0x1e3a0 probes askable,"
+          " the facing verb 0x239f0 = [obj+0x6d] must be > 0, and the"
+          " raise is the register form at 0x1e422-0x1e42b (bit 32)" },
+        { "KILOF_PL", { 1760, 590, 1832, 620 }, 0, 1, 0, 1796, 605, 0.0, -1,
+          0ull, "facing left: the 0x1e3f6 jle drops it" },
+        { "BICZRECT", { 218, 345, 230, 368 }, 0, 1, 0, 224, 356, 0.0, -1,
+          1ull << LL_SIG_AC_DRECT,
+          "BICZRECT 0x286a0: facing == -1 and the ANCHOR point (the +0x6c"
+          " verb 0x23a10 = [obj+0x89]) in the box; its raise is the same"
+          " AC_DRECT bit" },
+        { "BICZRECT", { 218, 345, 230, 368 }, 0, 1, 0, 224, 356, 0.0, 1,
+          0ull, "facing right: the 0x286c0 cmp 0xffffffff drops it" },
+        { "BRECT", { 10, 20, 30, 40 }, 0, 1, 0, 20, 30, 0.0, 1,
+          1ull << LL_SIG_AC_RECT,
+          "BRECT 0x28710 raises the AC_RECT bit; its state-index arm"
+          " ([asker+0x5c] in 9..13 chooses the anchor point over the"
+          " presented one) is not observable in this port, where the two"
+          " points are the same position block" },
+        { "WSPRECT", { 5, 5, 9, 9 }, 0, 1, 0, 7, 7, 0.0, 1,
+          0ull, "WSPRECT's +0x78 verb (0x287a0) is an anchor test plus an"
+                " object-id state lookup ([rect+0x30], 0x55760) raising"
+                " bit 12 - NOT read here, and no shipped level places one" },
+        { "KRA1", { 0, 0, 50, 50 }, 0, 1, 0, 10, 10, 0.0, 1,
+          0ull, "KRA1's +0x78 verb (0x37ea0) raises two signals this read"
+                " never touched; its shipped lines are ART placements that"
+                " go through the entry grammar, so no box-only KRA1 exists" },
+    };
+    ll_mov_t *m = calloc(1, sizeof *m);
+    if (!m) {
+        fprintf(stderr, "rect ask selftest: FAILED out of memory\n");
+        return 1;
+    }
+    ll_mov_parse(PL_MOV, m);
+    if (m->nst != 3) {
+        fprintf(stderr, "rect ask selftest: FAILED the synthetic player"
+                        " script did not parse (%d states)\n", m->nst);
+        free(m);
+        return 1;
+    }
+    int fail = 0;
+    for (unsigned c = 0; c < sizeof cases / sizeof cases[0]; c++) {
+        play_ctx pl;
+        memset(&pl, 0, sizeof pl);
+        pl.have = 1;
+        pl.mov = m;
+        pl.layer = 0;
+        pl.p.sti = cases[c].sti;
+        pl.p.x = cases[c].x;
+        pl.p.y = cases[c].y;
+        pl.p.vy = cases[c].vy;
+        pl.p.face = (signed char)cases[c].face;
+        obj_script sc;
+        lvl_obj o;
+        memset(&sc, 0, sizeof sc);
+        strcpy(sc.leaf, cases[c].cls);
+        memset(&o, 0, sizeof o);
+        o.sc = &sc;
+        o.nrect = 1;
+        o.arx0 = (short)cases[c].box[0];
+        o.ary0 = (short)cases[c].box[1];
+        o.arx1 = (short)cases[c].box[2];
+        o.ary1 = (short)cases[c].box[3];
+        o.src = (unsigned char)cases[c].src;
+        o.layer = (unsigned char)cases[c].layer;
+        rect_class_asks(&pl, &o, 1, 0, 0);
+        if (pl.p.sig != cases[c].want) {
+            fprintf(stderr, "rect ask selftest: FAILED: %s at %d,%d;%d,%d"
+                    " asked from state %d at (%.0f,%.0f) vy=%g face=%d:"
+                    " set %llx, expected %llx  [%s]\n",
+                    cases[c].cls, cases[c].box[0], cases[c].box[1],
+                    cases[c].box[2], cases[c].box[3], cases[c].sti,
+                    cases[c].x, cases[c].y, cases[c].vy, cases[c].face,
+                    pl.p.sig, cases[c].want, cases[c].what);
+            fail = 1;
+        }
+    }
+    free(m);
     return fail;
 }
 

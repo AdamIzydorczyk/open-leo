@@ -260,7 +260,12 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     AC_BLOK_Y raisers PR-94 + relation providers PR-177; AC_EDGE
     via the ladder answer PR-141/149; AC_DRAB/AC_DRAB_CATCH raise
     PR-141, poster PR-146, and bits 12/22 have NO poster anywhere
-    (counted negative, PR-146). AC_ONAIR's raiser and the semantic
+    (counted negative, PR-146). PR-329 CORRECTS that for bit 12:
+    the WSPRECT answer verb 0x287a0 posts `or BYTE PTR [ans+0x1],
+    0x4` at 0x28805 - the byte-register form the census tool
+    misses - so bit 12 HAS an engine raiser, only no shipped
+    level places a WSPRECT box to run it. Bit 22 stays
+    counted-negative. AC_ONAIR's raiser and the semantic
     modeling of all five remain.
     PR-313 NAMES THREE RAISERS FROM THE ENGINE'S PHYSICS STEP
     (PR-312's +0xac verb 0x546a0 and the queries it calls):
@@ -2822,9 +2827,12 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     authored box existed for the ask walk. PR-328 closes THAT half:
     the token names the class and the four numbers are the box at
     [obj+0x3c], absolute and unsorted as 0x40c90 writes them, so
-    ZARIA.01's DRECT and KILOF_PL now stand in the port's scene.
-    What is left is the verbs: nothing in the port
-    raises AC_RECT, AC_DRECT or AC_DRECT2. The AC_ONAIR term still
+    ZARIA.01's DRECT, RECT and KILOF_PL now stand in the port's
+    scene, and PR-329 runs their +0x78 answer verbs from the
+    requester's ask walk: AC_DRECT, AC_DRECT2, AC_RECT and
+    AC_KILOF are raised with the exact gates of 0x40d50/0x40dc0/
+    0x40cf0/0x1e3a0/0x286a0/0x28710. What is left for this row
+    is the AC_ONAIR term, which still
     needs the surface-link half (the pass at 0x5476x-0x54800:
     AC_DUP on attach, AC_DUP_CD by surface kind, AC_ONAIR when
     [obj+0xa9] is dropped), named in OI-119's closed note.

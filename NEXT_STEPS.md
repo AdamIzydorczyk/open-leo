@@ -44741,3 +44741,168 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-322's/PR-324's pair, with DATA=/tmp/opencode/nope
   HD=/tmp/opencode/nope.
 ```
+
+## PR-329 — THE RECTANGLE CLASSES ANSWER AT +0x78: THE ASK WALK RAISES
+## AC_RECT/AC_DRECT/AC_DRECT2/AC_KILOF, AND THE RAISE BITS ARE THE
+## LL_SIG_* INDEXES
+```
+KIND: port
+SUBSYSTEM: the per-step ask walk against the rectangle-class placements
+  added by PR-328, in ported/ll_level.c - the second half of the F6b
+  port step of HANDOFF section 8 T5 (6), and one of the two terms of
+  ZARIA.01's exit clause `A_WPAD(1)=AC_ONAIR,AC_DRECT`.
+ADDRESSES: 0x40cf0, 0x40d50, 0x40dc0, 0x1e3a0, 0x286a0, 0x28710,
+  0x287a0, 0x37ea0, 0x4b500, 0x4b5be, 0x4b5c5, 0x4b59a, 0x4b5a1,
+  0x4b560, 0x4b970, 0x4b940, 0x523f0, 0x52790, 0x49580, 0x23b80,
+  0x23b70, 0x237f0, 0x23e00, 0x23900, 0x239f0, 0x23a10, 0x230a0,
+  0x544f0, 0x98274, 0x4a050, 0x749a0, 0xa1624, 0xa16b0, 0xa173c,
+  0x96c00, 0x99fdc, 0x996e0, 0x9a068, 0x97a98, 0x1e422, 0x1e42b,
+  0x28805, 0x55760, 0x49f90
+NAMES: AC_RECT, AC_DRECT, AC_DRECT2, AC_KILOF, AC_DRAB_CATCH,
+  LL_SIG_AC_RECT, LL_SIG_AC_DRECT, LL_SIG_AC_DRECT2, LL_SIG_AC_KILOF,
+  +0x78, +0x60, +0x64, +0x3c, +0x68, +0x6c, +0x70, +0xb0, +0xb6,
+  obj+0x2c, obj+0x5c, obj+0x6d, obj+0x89, obj+0xc6, obj+0xd6,
+  rect_class_asks, rect_class_answer, rect_class_id, CHECK_ALL,
+  CHECK_ANI, CHECK_ZW, CHECK_ALL_PLANE, A_WPAD, A_WYJSCIE, ZARIA.01,
+  KADMAR.07, TUNGA.11, F6, F6b, OI-018, OI-078, OI-119
+CODE: yes: ported/ll_level.c (the answer function, the ask walk, its
+  call from play_advance, and the new rect_class_ask_selftest legs in
+  the --mov-selftest chain). The Makefile is untouched: the data-free
+  legs ride the existing --mov-selftest prerequisite of verify-level.
+HOOKS: LEO_PLAY_ASK=1 (PR-254) prints the asked-but-not-answered
+  probes on stderr, as it already does for the ladder's ask.
+  Data-free legs run in every configuration.
+MEASURED: (a) WHAT WAS MISSING. PR-328 placed the 18 shipped box
+  lines; nothing called a class answer verb, so no AC_RECT,
+  AC_DRECT, AC_DRECT2 or AC_KILOF could ever be live and the exit
+  clause of ZARIA.01 could not close. The port's only modelled
+  caller of an answer entry was the ladder's, reached from a shape
+  meet; PR-329 reaches +0x78 the way the engine does - from the
+  requester's own step, no shape anywhere.
+  (b) WHERE THE ASK COMES FROM, READ IN FULL. 0x523f0, the per-step
+  key builder, asks through the record class's +0x10 verb (0x52790
+  for the placed family), which switches on the requester state's
+  CHECK_* control words (PR-245). One walk found by its [vt+0x78]
+  call sites (only 4 in the whole image: 0x4b5be, 0x4bda9, 0x4be09,
+  0x55421) is 0x4b500: it iterates instance arrays (0x4b581), filters
+  each candidate by its class +0x60 (0x4b59a), skips self (0x4b5af),
+  matches planes unless the flag at [esp+0x54] is set (0x4b5a1, fed
+  by CHECK_ALL_PLANE), and calls [class+0x78] at 0x4b5be with
+  eax = candidate, ebx = requester; the 12-byte answer it returns is
+  merged into the requester's set by 0x49580 at 0x4b5c5. That is the
+  same +0x78 entry PR-147/PR-249 read for the ladder.
+  (c) THE BITS ARE THE SIGNAL INDEXES. The success paths write
+  `or BYTE PTR [ans+0x2], 0x2` (0x40d23), 0x8 (0x40d99), 0x10
+  (0x40dff) and, in the register form at 0x1e422-0x1e42b, `or ah,1`
+  into BYTE [ans+0x4]. Those are bit positions 17, 19, 20 and 32 -
+  exactly LL_SIG_AC_RECT, LL_SIG_AC_DRECT, LL_SIG_AC_DRECT2 and
+  LL_SIG_AC_KILOF of the PR-69 signal table, which is the engine's
+  own numbering. The answer record is the 3-dword TEventSet (its
+  +0xc byte is zeroed before every merge, and 0x749a0 with ebx=0xc
+  runs on both paths - housekeeping, not modelled).
+  (d) THE VERB GATES, EACH READ: RECT 0x40cf0 has NO probe at all,
+  only the requester's presented point against the box; DRECT2
+  0x40dc0 = askable probe + geometry; DRECT 0x40d50 = probe +
+  [asker+0xc6] > 0 (OI-119's velocity register, positive = falling)
+  + geometry; KILOF_PL 0x1e3a0 = probe + facing verb > 0 + geometry
+  against a 0x4a050 temporary of class 0x98274 holding the same four
+  numbers; BICZRECT 0x286a0 = probe + facing == -1 + ANCHOR point
+  (+0x6c) in the box, raising the same AC_DRECT bit; BRECT 0x28710
+  = probe, then [asker+0x5c] in 9..13 selects the anchor point over
+  the presented one (both are the position block here, PR-321, so
+  the arms coincide) and raises AC_RECT. The askable probe is the
+  requester's class +0x3c: the lion table 0x97a98 answers 0x230a0
+  `mov eax,1`, always askable - the fact PR-327 left half-open.
+  The presented point is the class +0x68 verb 0x23900 =
+  `add eax,0xd6`, and the +0xb0 provider 0x544f0 fills [obj+0xd6]
+  by copying the POSITION block [obj+0]/[obj+4], so the port's
+  position is its counterpart; the conditional frame-offset branch
+  after 0x54509 is not modelled and sits in OPENS. The point test
+  is the point class's +0x8 verb on the box at [rect+0x3c], the
+  same point-in-rectangle shape as 0x23e00 (PR-243: inclusive
+  edges), with the authored edges NOT sorted.
+  (e) THE WALK'S OWN GATES IN THE PORT: the channel bit of the
+  requester's current state, same expression play_collide already
+  applies for 0x52780 (src index = des_place_keys = the ZW/ANI
+  lists; ZARIA.01's three boxes sit on `animacje` = index 1 =
+  CHECK_ANI, and the seven states carrying the A_WPAD clause all
+  spell CHECK_ALL), and the plane gate 0x4b5a1. The walk's FIRST
+  filter is not run: for these classes +0x60 is the generic 0x23b80
+  getter of [obj+0x2c], and a box object's contact node is written
+  by the broad phase 0x4b970 through class +0x64 (0x23b70, which
+  just calls the base +0x8 verb 0x237f0: the authored box against
+  the LAYER'S ACTIVE WINDOW, 0x4b940 expanding the layer origin by
+  -0xa0,-0x78,+0x1e0,+0x140). No layer transform exists in this
+  port, so every placed box is asked - it cannot change any answer
+  here, because a box outside the window the camera keeps the
+  player inside cannot contain him; the culling model stays in
+  OPENS with the whole chain named.
+  (f) RED FIRST. Twenty cases over the six read verbs plus the two
+  unread ones, fed through rect_class_asks with a synthetic
+  three-state player (CHECK_ALL, no CHECK bit, CHECK_ANI +
+  CHECK_ALL_PLANE) and real ZARIA.01 geometry. Before the code:
+  `DRECT ... at (1020,692) vy=3: set 0, expected 80000`, the
+  corner, the CHECK_ALL_PLANE, DRECT2, RECT and KILOF_PL lines
+  alike. After it all twenty hold, including "standing in the same
+  box: no fall, no AC_DRECT", "a state that carries no CHECK bit
+  does not run the walk", and "an authored box that runs backwards
+  matches nothing".
+  (g) MUTATIONS, eight, each caught by the named legs (data-free,
+  so the fixture-free configuration sees them too): M1 DRECT with
+  the fall test dropped (2 legs, first "vy=0 ... set 80000,
+  expected 0"); M2 KILOF_PL without the facing probe (1); M3
+  BICZRECT without facing == -1 (1); M4 the channel gate dropped
+  (2); M5 the plane gate dropped (1); M6 the point test made
+  exclusive (1, the corner case); M7 WSPRECT treated as a read
+  class (2); M8 the box sorted low/high before the test (1, the
+  backwards box).
+  (h) WSPRECT, NAMED APART. Its +0x78 verb 0x287a0 is an askable
+  probe, an ANCHOR-point test, and then a state lookup THROUGH THE
+  BOX ITSELF: [rect+0x30] holds an object id, 0x55760(id, 1) finds
+  it, and the row pointer [obj+0x50]+[obj+0x5c]*4 field +0x4 must
+  equal 6; it posts 0x4 into BYTE [ans+0x1] - bit 12, AC_DRAB_CATCH,
+  NOT AC_DRAB as PR-327's naming said. That also puts a raiser on
+  bit 12, correcting PR-146's counted-negative (the byte-register
+  form is the one the census tool misses); no shipped level places
+  a WSPRECT box, so nothing raises it here and the leg pins that
+  stance. KRA1 0x37ea0 and its two signals stay unread; its
+  shipped lines are ART placements through the entry grammar, so no
+  box-only KRA1 exists.
+OPENS: AC_ONAIR, the other term of the exit clause: its raiser is
+  the surface-link pass at 0x5476x-0x54800 (PR-313) - F6c; the
+  player's row admit does not consult the `Wait <clause>` tail yet
+  (OI-111), so A_WPAD's own gated rows cannot run; the walk's
+  +0x60 filter for these classes (contact node from 0x4b970 via
+  +0x64/+0x8 against the active window, 0x4b940's margins) and the
+  layer transform it needs; the point class of [obj+0xd6] whose
+  +0x8 verb does the box test was not itself read (the shape is
+  0x23e00's, PR-243); 0x544f0's conditional frame-offset branch
+  (the [class+0xbc] test and +0x48) and what [obj+0xd6] holds
+  while `lock` is set; the anchor pair [obj+0x89]/[obj+0x8d] as a
+  position frozen across a locked window, which BICZRECT/BRECT
+  would use if the port carried it; WSPRECT's [rect+0x30] id
+  field - nothing in the .des grammar authors one - and KRA1's
+  answer; and whether the three other [vt+0x78] call sites
+  (0x4bd30's two, the animals' 0x55421) ever ask these classes too.
+CLOSES: nothing; it finishes the ask half of F6b as HANDOFF section
+  8 T5 (6) names it. ZARIA.01's exit clause now has one of its two
+  terms live in the port: a falling lion inside the authored DRECT,
+  in any of the seven CHECK_ALL states, gets AC_DRECT raised.
+CORRECTS: PR-327's naming of the WSPRECT raise at 0x28805 as
+  AC_DRAB - it is bit 12, AC_DRAB_CATCH - and PR-146's counted-
+  negative for bit 12, which now has an engine raiser (no shipped
+  placement). The HANDOFF F6 paragraph's "ZARIA.01 places a DRECT
+  and a KILOF_PL and nothing else of the eight" understates the
+  data - lines 18-20 of ANI2.DES author THREE of the eight, DRECT,
+  RECT and KILOF_PL - and its "nothing raises AC_RECT/AC_DRECT/
+  AC_DRECT2" is now replaced: the verbs run. PR-327's engine reads
+  and PR-328's placements stand.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; red first, then green, with the eight
+  mutations above reported in MEASURED (g); no Windows legs
+  (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-322's/PR-328's pair, with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope.
+```
