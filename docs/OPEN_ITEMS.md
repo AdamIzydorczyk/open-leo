@@ -290,6 +290,14 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     window that was read. What stays open here is the semantics,
     not the raisers: the gate's second condition is
     `[asker+0xc6] > 0`, and what that word is is OI-119.
+    PR-319 CLOSES THE OTHER HALF OF THE GATE. The asker's +0x68
+    verb, which the rectangle test reads, is the POINT PROVIDER:
+    for the LION's classes it is 0x23900 - `add eax,0xd6; ret` -
+    so AC_RECT/AC_DRECT/AC_DRECT2 compare the lion's PRESENTED
+    POINT [obj+0xd6] (PR-305's field, re-derived by the class
+    +0xb0 provider) against the instance's authored rectangle.
+    The same read established the command bus that writes the
+    `[asker+0xc6]` gate input: see OI-119.
 
 OI-019: what the object-side AC_ENEMY consumers do (A_DEAD(1)/
   A_AWAY/A_SHOW class conditions)
@@ -305,6 +313,18 @@ OI-020: signal-record posting and delivery: the key-bit posting
     node builders all read (PR-143..149); the key-bit path and the
     drain caller were still counted when the ledger stopped (the
     climb chain is OI-078).
+    PR-319 MEASURES THE OTHER POSTER, 0x52b10, WHICH IS NOT A
+    SIGNAL POST BUT THE OBJECT COMMAND BUS: eax = the object,
+    edx = a command opcode, ebx/ecx = two ints, and it builds a
+    4-word message ([msg+0x4] the opcode, [msg+0x8]/[msg+0xc] the
+    ints) for the object's class +0x10 verb. The base handler of
+    that verb is 0x54560 and its opcode map is in OI-119. The
+    signal message PR-235 read (type 0x10, payload = the AC_* bit)
+    uses THE SAME message layout, and 0x54560 does not handle
+    opcode 0x10 - it falls through to 0x53770. The census of the
+    poster's call sites is a tool now,
+    tools/re/command_post_census.py: 66 sites, opcode histogram in
+    the record.
 
 OI-021: the evaluator's remaining counts: [rec+0x10] threshold
   units vs row feeding, K_ANY marker honour, the `!` complement
@@ -4040,7 +4060,7 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
 
 OI-119: what the object field pair [obj+0xc2] / [obj+0xc6] is -
   the value the AC_DRECT ask verb gates on
-  status: OPEN
+  status: PARTIAL
   origin: PR-318 (the F4 read of OI-018's raisers)
   notes: The DRECT ask verb 0x40d50 refuses to answer unless
     `[asker+0xc6] > 0` (0x40d65-0x40d6d), so ZARIA.01's exit
@@ -4064,3 +4084,28 @@ OI-119: what the object field pair [obj+0xc2] / [obj+0xc6] is -
     non-zero at all while it stands on a platform. That question
     is load-bearing for the exit chain of the level this project
     is aimed at, so it is a row, not a counted item.
+    PR-319 ANSWERS THE FIRST HALF: IT IS A COMMAND-WRITTEN (x,y)
+    OFFSET, NOT A PHYSICS FIELD AND NOT AN AIR COUNTER. The engine
+    posts commands to an object through 0x52b10 (eax = the object,
+    edx = the opcode, ebx/ecx = two ints; it builds a 4-word
+    message, [msg+0x4] the opcode and [msg+0x8]/[msg+0xc] the
+    ints, and calls the object's class +0x10 verb). The base +0x10
+    handler 0x54560 maps opcode 2 = ASSIGN the pair, 0xd = ADD to
+    it, 8 = ZERO it, 6 = write [obj+0x6d]/[obj+0x71], 3 and 4 =
+    set bits 2 and 3 of [obj+0xb6], 0x1b = the [obj+0xa9] surface
+    attach/detach; everything else falls to its default 0x53770.
+    The LION reaches that handler: his class 0x96874 has +0x10 =
+    0x3d8f0, which handles opcode 5 itself and chains the rest to
+    0x54560 at 0x3d906. The pair is never written by the physics
+    step. Its readers are the AC_DRECT gate (a boolean `> 0`) and
+    two state-indexed point-provider verbs, 0x27350 (installed at
+    +0xe8 of the class 0x9a54c) and 0x36732, which return the
+    asker's +0x68 provider's point plus `[obj+0xc2] * 15 / 100`
+    plus `[obj+0x6d] * 60` plus `[obj+0xfe]`. WHAT REMAINS: which
+    of the poster sites can run against the lion - opcode 2 is
+    posted from 0x1e952/0x1f3ce/0x3e03d/0x3e446/0x3e840, opcode 8
+    from 0x1f3b6/0x3e01e/0x3e364/0x3e424/0x45a84, opcode 0xd from
+    0x1ea65/0x1eaef/0x3c3b8/0x53ba4 (the 0x3exxx ones are in the
+    contact/attachment family, 0x53ba4 inside the two-object
+    comparison 0x53ae0, 0x45a84 in a `.MOV` directive apply) - and
+    the pair's UNIT, which those four sites decide.

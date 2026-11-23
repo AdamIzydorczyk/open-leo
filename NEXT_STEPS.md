@@ -43247,3 +43247,150 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-317's pair; the tool is python over the disassembly index, so
   neither half depends on it.
 ```
+
+## PR-319 — THE OBJECT COMMAND BUS: 0x52b10 POSTS (opcode, x, y) TO AN
+## OBJECT'S CLASS +0x10 VERB, AND THE BASE HANDLER 0x54560 OWNS THE
+## [obj+0xc2]/[obj+0xc6] PAIR THE AC_DRECT GATE TESTS
+```
+KIND: read
+SUBSYSTEM: the object command bus - the class +0x10 verb and its opcode
+  map, the `[obj+0xc2]`/`[obj+0xc6]` offset pair, and what the `.MOV`
+  `MOVE` directive really moves
+ADDRESSES: 0x52b10, 0x54560, 0x54590, 0x5459c, 0x545a7, 0x545aa,
+  0x545bb, 0x545c6, 0x545d2, 0x545de, 0x545f4, 0x545fe, 0x5460e,
+  0x5463a, 0x54649, 0x5465d, 0x54680, 0x53770, 0x3d8f0, 0x96884,
+  0x96970, 0x1e130, 0x1e153, 0x1e18d, 0x50d60, 0x50d20, 0x50e58,
+  0x2885a, 0x2883f, 0x23900, 0x968dc, 0x969c8, 0x27350, 0x9a54c,
+  0x9a634, 0x36732, 0x2703e, 0x2743f, 0x45ce0, 0x46a77, 0xa1078,
+  0x91980, 0x91979, 0x45a6f, 0x45a84, 0x28880, 0x9a000, 0x53ae0,
+  0x53ba4, 0x457e0, 0x45a10, 0xa0f70, 0x1f870, 0x40d65, 0x1e952,
+  0x1f3b6, 0x1f3ce,
+  0x1ea65, 0x1eaef, 0x3c3b8, 0x3e01e, 0x3e03d, 0x3e364, 0x3e424,
+  0x3e446, 0x3e840, 0x45970
+NAMES: the class verb +0x10, opcodes 1, 2, 3, 4, 5, 6, 8, 0xd, 0x1b,
+  `MOVE`, `zero`, `chdir`, `ldir`, `rdir`, `[obj+0xc2]`,
+  `[obj+0xc6]`, `[obj+0x6d]`, `[obj+0x71]`, `[obj+0xb6]`,
+  `[obj+0xa9]`, `[obj+0xd6]`, `[obj+0x5c]`, `[obj+0xfe]`,
+  `[obj+0x126]`, `[obj+0x12a]`, AC_DRECT, AC_RECT, AC_DRAB,
+  command_post_census.py, signal_raise_census.py
+CODE: yes: one new read-only tool, tools/re/command_post_census.py
+  (a census of the poster's call sites over the leodb `insn` table),
+  and one comment correction in ported/ll_level.c - the PR-225 note
+  that called 0x2885a the lion's vtable+0x10; no behaviour change.
+HOOKS: none
+MEASURED: (a) THE BUS. 0x52b10 is a poster: eax = the object, edx =
+  a command opcode, ebx and ecx = two payload ints. It builds a
+  4-word message - [msg+0x4] = the opcode, [msg+8] and [msg+0xc] =
+  the ints - and calls `[[obj+8]+0x10]`. This is the same message
+  layout PR-235 read for the SIGNAL message (0x2883f-0x2885a builds
+  type 0x10 with payload 0xa = AC_DRAB and calls the same verb), so
+  the signal posts and the object commands are one bus, not two.
+  tools/re/command_post_census.py counts the poster's call sites:
+  66 of them, with the opcode each one loads - 0x1 x7, 0x2 x5,
+  0x5 x7, 0x8 x5, 0xa, 0xb, 0xc, 0xd x4, 0xf x5, 0x10, 0x11,
+  0x12 x2, 0x14, 0x15 x4, 0x19 x11, 0x1b x5, 0x1d, 0x1e, 0x21,
+  and 2 sites whose opcode is computed. The tool states its
+  heuristic (the last `mov edx, ...` in the 48 bytes before the
+  call) in its own header.
+  (b) THE BASE HANDLER'S MAP. 0x54560 is the +0x10 verb most object
+  classes install: 87 dword cells in the image hold it, and every
+  one the class-table join locates sits at table+0x10. Reading it
+  end to end: opcode 2 ASSIGNS
+  `[obj+0xc2]`/`[obj+0xc6]` from the two payload ints (0x54593 /
+  0x5459c); opcode 0xd ADDS to both (0x545aa / 0x545bb); opcode 8
+  ZEROES both (0x545f4 / 0x545fe); opcode 6 writes `[obj+0x6d]`
+  and `[obj+0x71]` (0x545de) - the same field the `rdir` directive
+  writes straight out at 0x45a1a (PR-316, through its node class
+  0xa0f70's +0x4 verb 0x45a10); which directive posts opcode 6 is
+  NOT established here. Opcodes 3 and 4 set bit 2 and bit 3 of
+  `[obj+0xb6]` (0x545c6 / 0x545d2) - bit 2 is the physics-skip
+  flag of PR-316; opcode 0x1b runs the `[obj+0xa9]` surface
+  attach/detach block, which is where PR-318's AC_DUP (0x54785),
+  AC_DUP_CD (0x547d1) and candidate AC_ONAIR (0x54800) sites are.
+  Every other opcode - including the signal type 0x10 - falls
+  through to 0x53770 (0x5463a / 0x54652 / 0x54675 / 0x5468d).
+  (c) THE LION IS ON THIS BUS. The LION class 0x96874 has +0x10 =
+  0x3d8f0, which handles opcode 5 itself (writes `[obj+0x6d]` and
+  sets a bit at `[obj+0x66]`) and chains EVERY other opcode to
+  0x54560 at 0x3d906. The other lion table 0x96960 has +0x10 =
+  0x1e130, whose unhandled path is 0x50d60 - a second handler with
+  its own jump table at 0x50d20 over opcodes 9..0x15 and a special
+  case for opcode 1 when `[obj+0x126]` is non-zero. So the pair is
+  reachable on the lion through 0x3d8f0, and nothing in the physics
+  step of PR-312/313 writes it.
+  (d) THE PAIR IS A COMMAND-WRITTEN (x,y) OFFSET. Opcode-2 posters:
+  0x1e952, 0x1f3ce, 0x3e03d, 0x3e446, 0x3e840. Opcode-8 posters:
+  0x1f3b6, 0x3e01e, 0x3e364, 0x3e424, 0x45a84. Opcode-0xd posters:
+  0x1ea65, 0x1eaef, 0x3c3b8, 0x53ba4. The 0x1exxx family is the
+  level-geometry path that also instantiates the KILOF_PL family
+  (0x1f870, PR-318); the 0x3cxxx/0x3exxx family is the
+  contact/attachment code PR-235 walked (its pair loop 0x3eac6);
+  0x45a84 sits in a `.MOV` directive apply, 0x45a6f, which
+  resolves its target through 0x457e0 and posts opcode 8 with both
+  payload ints zero; 0x53ba4 is inside 0x53ae0, the function that
+  compares two objects' class +0x44 verbs (the kind word PR-312
+  named) and then posts opcode 0xd. Together with the zeroing at
+  every state start (0x5042e/0x50438, PR-318), that is the whole
+  write set. Its readers are two: the AC_DRECT gate's boolean test
+  at 0x40d65, and the point-provider verbs 0x27350 (installed at
+  +0xe8, cell 0x9a634, of the class 0x9a54c that the ctors
+  0x2703e/0x2743f build) and 0x36732, which return the asker's
+  +0x68 provider's point plus `[obj+0xc2] * 15 / 100` plus
+  `[obj+0x6d] * 60` plus `[obj+0xfe]`, the first gated on the
+  current record index `[obj+0x5c] == 0x12` and the second on
+  `0x1f <= [obj+0x5c] <= 0x26` (PR-235's record-index field).
+  (e) WHAT `MOVE` MOVES. The name is at 0x91980; the directive
+  parser's arm at 0x46a77 allocates 0x10 bytes, installs the node
+  class 0xa1078, and parses the pair with the format at 0x91979 (`
+  %i,%i`) into node+0x8/node+0xc. The node's apply, 0xa1078+0x04 =
+  0x45ce0, resolves the target through the shared 0x457e0 (PR-316)
+  and posts OPCODE 1 with the two ints - so `MOVE` is not what
+  writes the pair. Opcode 1 on the classes that install 0x28880
+  (cell 0x9a000) reads `[obj+0x3c]/[+0x40]/[+0x44]/[+0x48]` - the
+  AUTHORED RECTANGLE the RECT-family classes parse their placement
+  numbers into (PR-318) - and offsets it by the payload. So the
+  authored rectangle of a placed rectangle-class object is movable
+  by a script, and that is what `MOVE x,y` does to it.
+  (f) THE AC_DRECT GATE IS NOW FULLY READ EXCEPT ITS UNIT QUESTION.
+  The asker's +0x68 verb, which PR-318's gate calls, is the point
+  provider: for the lion classes the cell (0x96874+0x68 = 0x968dc,
+  0x96960+0x68 = 0x969c8) holds 0x23900, which is `add eax,0xd6;
+  ret` - a pointer to the PRESENTED POINT of PR-305. So the gate
+  is exactly: the lion's presented point lies inside the placed
+  DRECT's authored box, AND `[lion+0xc6]` is positive, AND the
+  asker is ASKABLE. What OI-119 still owes is which of the
+  opcode-2/0xd posters can run against the lion and in what unit -
+  the named next read is 0x53ae0.
+OPENS: OI-119 narrowed to the posters' reachability and unit
+  (0x53ae0 named); whether the engine ever posts opcode 2/0xd to
+  the LION in ZARIA.01, which is the last unread condition on the
+  level's exit chain; the class at 0x9a54c and its ctors
+  0x2703e/0x2743f, whose point verbs read the pair; the +0x44
+  "kind word" verb family.
+CLOSES: PR-318's open item "what the asker's +0x68 verb returns"
+  (it is the presented point at [obj+0xd6]); the first half of
+  OI-119 (the pair's mechanism: command assign / add / zero, never
+  physics); the port's incorrect note about the lion's +0x10 verb.
+CORRECTS: PR-225, whose reading the port's comment in
+  ported/ll_level.c still carries: the synthetic signal message does
+  not call "the LION's vtable+0x10 (0x2885a)". 0x2885a is the CALL
+  SITE of `[[obj+8]+0x10]`; no table in the image holds 0x2885a;
+  the lion classes' +0x10 cells hold 0x3d8f0 (0x96874) and 0x1e130
+  (0x96960), and 0x3d8f0 chains every opcode but 5 to the base
+  handler 0x54560. The comment now says that. And the shape PR-235
+  read as a "signal message" is the same 4-word message this
+  record measures for object commands: one bus, [msg+0x4] the type,
+  [msg+0x8]/[msg+0xc] the payload. It also answers the question
+  OI-119 opened with - "a position offset? a distance since leaving
+  a surface? a frame count?" - by (d): a command-assigned (x,y)
+  offset pair, not a frame counter and not a physics field. The
+  remaining unknown there is its unit and reachability, not its
+  mechanism.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  verdict-line set as PR-318's run - the C change is a comment
+  only, and the new file is python over the disassembly index, so
+  no leg of its own is added. rc=0 first (HANDOFF section 4); no
+  Windows legs (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-318's pair.
+```

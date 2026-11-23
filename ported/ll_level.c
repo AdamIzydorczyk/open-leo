@@ -5542,12 +5542,17 @@ static ll_pt pt_of(const ll_player *p)
  *    model gaps.
  * On a pass it builds the synthetic signal message (type 0x10,
  * tag 0x8138764 at 0x2882d, payload 0xa = AC_DRAB at 0x28835)
- * and calls the LION's vtable+0x10 (0x2885a) - the handler that
- * ORs the bit into [lion+0x60] (PR-225): a raise on the LION,
- * class-scoped here to the ladder family like the answer path
- * (PR-304 read that scope: the answer verb 0x3f1c0 opens with
- * `call [[asker+8]+0x3c]`, so it answers only an ASKABLE asker,
- * which PR-303 measured as a lion). */
+ * and posts it through the target's class +0x10 verb - 0x2885a is
+ * that CALL SITE, not a table entry (PR-319 measured the LION's own
+ * +0x10 cells: 0x3d8f0 for the class 0x96874 and 0x1e130 for
+ * 0x96960; 0x3d8f0 handles opcode 5 itself and chains every other
+ * opcode to the base handler 0x54560, where opcode 0x10 falls
+ * through to that handler's default 0x53770) - the chain that ends
+ * with the bit OR-s into [lion+0x60] (PR-225): a raise on the
+ * LION, class-scoped here to the ladder family like the answer
+ * path (PR-304 read that scope: the answer verb 0x3f1c0 opens
+ * with `call [[asker+8]+0x3c]`, so it answers only an ASKABLE
+ * asker, which PR-303 measured as a lion). */
 static int acdrab_law(int lion_id, int other_id)
 {
     return (lion_id == 6 || lion_id == 0x12) && other_id >= 0 &&
