@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-285.
+> at PR-286.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -38928,4 +38928,133 @@ a hang, and the platform is reached by the hang's own jump.
 CORRECTS: PR-282 ([vt+0x88] is the contact-record creator;
 0x3f1c0 is [vt+0x78]).
 GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+## PR-285 — `T_y = 100` WITH NO y FORCE IS THE AUTHOR'S HOLD: THE
+## GAME HAS NO DEFAULT GRAVITY, SO THE PROJECT'S STAND-IN IS OUT OF
+## THOSE STATES - AND ZARIA.01'S CLIMB TAIL IS NOW EVERY WORD
+## AUTHORED (A_PODCIAG HOLDS THE BAND EDGE, A_DRAP'S OWN G=0,250
+## DROPS HIM TO THE MAIN GROUND)
+```
+KIND: port
+SUBSYSTEM: the y force/drag pass of the player step (section 3,
+0x54250's model) and its project stand-in LL_PLAY_GRAVITY; the
+player-sim selftest; the ly_climb fixture's tail.
+ADDRESSES: 0x54250, 0x54292, 0x542a7, 0x542cd, 0x542ee,
+0x54311, 0x52590, 0x54c00
+NAMES: LL_PLAY_GRAVITY, A_PODCIAG, A_SCIAG, A_DRAP,
+A_FALL_DOWN, A_WSP, A_WPAD, A_DEAD, A_JUMP_DEAD, A_WODA,
+A_FINISH_LEVEL, LIFT.SEQ, ly_climb, OI-015, OI-073, OI-078,
+PR-106, PR-256, PR-259, PR-274, PR-284
+CODE: yes: one guard term in ll_play.c section 3
+(`st->ty < 100` on the authored word, not the 130-capped one),
+its comment, the ll_play.h note for the constant, one new
+selftest leg, and the ly_climb pins in the Makefile.
+HOOKS: PR-284 MEASURED (e) names the defect in one line - the
+port's A_PODCIAG fall is the LL_PLAY_GRAVITY stand-in replacing
+an authored zero - and this PR removes that override. PR-256's
+law (the authored words ARE the register adds, and the drag is
+idiv(T_y*v,100) of the OLD register) is what makes the case
+decidable rather than a taste question: with adds = 0 and
+T_y >= 100 the closed form of ll_play_v_step is v_new = adds =
+0. PR-274's "wrong finish" pin is the net this lands on.
+MEASURED: (a) THE CORPUS HAS NO DEFAULT GRAVITY. A census of
+the 777 .MOV texts (/tmp/opencode/mov, this PR, script inline
+in this record's method) covers 2318 state blocks: 683 author a
+non-zero G_y, 697 author G=0,0 and 938 author no G line at all;
+the player's (LEW) blocks split 128 zero / 263 non-zero. Every
+state that falls authors its own word - ZARIA.01 A_FALL_DOWN
+G=0,55 with T=30,1, A_DRAP G=0,250 with T=60,15, A_WALK
+G=30,350 - and nothing in the image supplies a fall the author
+did not write. (b) THE HOLD IS A SEPARATE, RECOGNISABLE IDIOM,
+NOT A MISSING FALL: among the player blocks with G zero or
+absent the y-drag word clusters low - 45 at 10, 19 at 50, 18
+at 90, 8 at 0 - and there is a second mode at
+and above full drag: 26 blocks at EXACTLY 100, 3 at 150, 10 at
+1000, 39 in all, and their names are the states that STOP a
+body: A_DEAD (13), A_SCIAG (5), A_PODCIAG (5), A_WPAD (3),
+A_DEAD1, A_FINISH_LEVEL, A_JUMP_DEAD/_BK/_FW, A_HOLE, A_BORING,
+A_WODA. ZARIA.01's A_PODCIAG (F=0,0 T=100,100 G=0,0, not one
+moving row - PR-284) is the FOCUS-1 instance. (c) THE SHIPPED
+RULE TESTS THE AUTHORED WORD: T_y >= 100 (150 and 1000 included,
+the 0x52590 cap is a numeric clamp, not a change of meaning);
+below 100 the register is left open and the stand-in keeps its
+PR-106 scope. Only the player sim runs this pass, so the object
+side (ll_level.c) is untouched by construction.
+RED FIRST: the selftest leg went in BEFORE the guard term and
+failed exactly where designed - `q.y == 100` and the register
+zero after 20 iterations of A_PODCIAG's own words, seeded with
+the -300 register units an A_WSP climb carries (PR-259's
+equilibrium) - while its CONTRAST half, the same state at
+T_y = 50, passed unchanged on numbers derived by hand before
+any run (v = 200, 300, 350 and y = 102, 105, 108 in three
+iterations; the 200-add/50%-drag fixed point is v = 400). The
+boundary that moved is the authored 100, not the arithmetic.
+MEASURED (d) THE FIXED CHAIN, EVERY NUMBER AUTHORED: A_WSP
+still hands off at 212,560 (262, the edge answer); A_PODCIAG
+HOLDS 212,560 at every one of its 27 iterations (the entry at
+263 through the 288 step - its rows 300,300,300,200,200,200,
+500,300,200,100 = 2700 units = 27 iterations, its own
+AC_BREAK_NEXT exit landing at 289); the
+drop that follows is A_DRAP's OWN G=0,250 against its T_y = 15,
+the register 250, 463, 644, 798, 929, 1040, 1134, 1214, 1282,
+1340 and the position steps 2, 4, 6, 7, 9, 10, 11, 12, 12, 13 -
+562 at 289, 646 at 298, grounded 654 at 299, which is the .plt
+main-ground line 682 at x 212 through the PR-97 contact rule
+(654 + the 28 A_DRAP contact). No project word is left in the
+chain. The leg now pins the hold (263 and 288 both read 560)
+and the authored landing at 299 in place of PR-274's 294/654
+drift pins.
+MEASURED (e) WHY THIS IS NOT A HOLE I AM LEAVING: THE STATE
+MACHINE CANNOT RISE INSIDE THE COLUMN, SO NO STATE FIX WAS
+MISSED. ZARIA.01's A_WSP lists `A_PODCIAG(1)=AC_EDGE,K_UP` as
+its FIRST row - the moment the position point enters the
+column (y <= 560 with K_UP held) the climb state leaves itself
+- and A_PODCIAG's only exit row is `A_DRAP(1)=AC_BREAK_NEXT`
+at the end of its 2700 units, while A_DRAP's rows are the
+hang's exits: `A_SCIAG(1)=AC_EDGE,K_DOWN` (the descent),
+`A_JUMP_S(1)=K_JUMP`, `A_TURN_BACK(1)=K_UP,AC_DRAB_CATCH`
+(the re-catch cycle PR-277 legs). Between 560 and the column
+top 480 nothing in these four states writes position, and the
+two position channels that could - the surface snap and the
+carry law - were measured inert here in PR-281/PR-283. That is
+why the answer was never a missing lift: it was a stand-in
+adding motion the authored words forbid.
+OPENS: in order: (i) the FOCUS-1 finish is now NAMED rather
+than hunted: A_DRAP authors `A_JUMP_S(1)=K_JUMP` and the
+platform line at x 212 is y 518 while the hang sits at 560 -
+the next leg presses JUMP at the top and follows A_JUMP_S's own
+words through the existing ground path (OI-078); (ii) the hold
+now also covers the death family (A_DEAD 13, A_JUMP_DEAD 3): a
+player who dies in mid-air stays where the words put him until
+the death sequence's own rows move him, and NO shipped leg puts
+the player in a T_y >= 100 state while airborne - the suite's
+A_DEAD legs pin the name gate only, so that consequence is
+counted here, not assumed benign; (iii) the stand-in's
+remaining scope (T_y < 100) is still a project route with no
+author and no video check; removing it needs the AC_ONAIR
+raising no port code has (PR-50), and the engine's own
+ground-contact path 0x54c00 stays unread (OI-073).
+CLOSES: OI-015 item (c) and OI-078's "the port's A_PODCIAG
+fall is the LL_PLAY_GRAVITY stand-in replacing an authored
+zero" (PR-284's finding) - the stand-in no longer overrides an
+authored hold, and ly_climb's wrong-finish pins become the
+authored chain.
+CORRECTS: none.
+GATE: make 0 warnings; verify-all fixtures rc=0 63 (ok);
+the number is the DISTINCT green verdict lines in the run
+log - a raw grep counts 95 because the data legs run under
+several targets; rc=0 is the authoritative half, per
+HANDOFF section 4. The run is the 24 no-Windows legs
+(DATA=/tmp/opencode/iso_stage/LEO HD=/tmp/opencode/
+hd_files), serial; the verify-cmake parity and the
+verify-win/verify-mod legs stay excluded per the owner's
+2026-11-22 request. THE LEG SET IS UNCHANGED by this PR: the
+Makefile carries 54 verdict echoes before and after, and the
+new physics legs live inside the existing play-selftest line,
+so the only verdict line whose text moves is ly_climb's, and
+its new text is quoted in MEASURED (d).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named (PR-278's count
+carried a 22nd SKIP line, the cmake-windows parity check,
+which this run does not invoke);
 ```

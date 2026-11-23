@@ -1985,16 +1985,28 @@ ifeq ($(PX_DATA),1)
 # (300x3+200x3+500+300+200+100 = 2700 units = 27 iterations)
 # close at 289 through its own `A_DRAP(1)=AC_BREAK_NEXT`
 # (the transition ran inside 262's step; 262+27 = 289).
-# The chain's END is NOT the top of the ladder: A_PODCIAG's
-# LIFT is unmodelled - PR-273 read the directive layer it runs
-# on (`1,300,lock ... 7,500,rdir ... 8,300,unlock` = +0xb6
-# bit5) and named the motion source open (its OPENS (i)) - so
-# the port drifts 2 px a tick and lands back on the main
-# ground: feet 654 + the 28 contact = 682, the .plt line at
-# x 212, instead of sitting on the top platform (the .plt line
-# `5 98,514;288,520;...` reads y 518 there). When the lift is
-# modelled those last two pins are the ones that move; every
-# other number above is the fixture's own arithmetic.
+# THE TAIL IS NOW THE AUTHORED ONE (PR-285 replaced the old
+# "the lift is unmodelled, the port drifts 2 px a tick"):
+# A_PODCIAG authors `T=100,100 F=0,0 G=0,0` and not one
+# moving row, and idiv(100*v,100) IS v, so its first act is
+# to CONSUME the climb's register and hold the body at
+# 212,560 for every one of its 26 remaining iterations
+# (263..288). The 30 px of "lift" here is LIFT.SEQ's own
+# frame anchors (PR-284 MEASURED (d)) - art, not position.
+# The drop that follows is the HANG'S OWN WORD: A_DRAP
+# authors `G=0,250 T=60,15`, so from 289 the register adds
+# 250 an iteration against a 15% drag - 250, 463, 644, 798,
+# 929, 1040, 1134, 1214, 1282, 1340 - and the position steps
+# 2, 4, 6, 7, 9, 10, 11, 12, 12, 13: 562 at 289, 646 at 298,
+# and it lands at 299 on the main ground by the PR-97/PR-274
+# contact arithmetic (feet 654 + the 28 A_DRAP contact = 682,
+# the .plt line at x 212). Every number in that tail is an
+# authored word; the project's gravity stand-in is out of it
+# (its scope is now narrowed to states whose authored y-drag
+# is below 100, and A_PODCIAG's is 100). The TOP of the
+# ladder is still not reached by position: the named route to
+# it is the hang's own `A_JUMP_S(1)=K_JUMP` row, a leg of its
+# own, counted at OI-073.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
 	  LEO_PLAY_SCRIPT="1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP 275:NONE" \
@@ -2013,8 +2025,10 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play tick 148: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 1400' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 150: state A_TURN_BACK' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 262: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 100' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 294: state A_DRAP seq idle frame 1 pos 212,654 grounded 1' /tmp/opencode/ly_climb.log \
-	  && echo "play climb chain (PR-274): the authored ladder climb runs end to end - CATCH only inside the middle 70%, A_TURN_BACK at 150 (A_LOOKUP never), A_WSP 1 px/t, AC_EDGE at the band edge, A_PODCIAG's own 2700-unit clock exits to A_DRAP; the lift's TOP landing stays unmodelled and the leg pins that too (ok)" \
+	  && grep -q 'play tick 263: state A_PODCIAG seq lift frame 1 pos 212,560 grounded 0' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 288: state A_PODCIAG seq lift frame 1 pos 212,560 grounded 0' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 299: state A_DRAP seq idle frame 1 pos 212,654 grounded 1' /tmp/opencode/ly_climb.log \
+	  && echo "play climb chain (PR-274/PR-285): the authored ladder climb runs end to end - CATCH only inside the middle 70%, A_TURN_BACK at 150 (A_LOOKUP never), A_WSP 1 px/t, AC_EDGE at the band edge, A_PODCIAG's own 2700-unit clock HOLDS the body at the band edge (its authored T=100 is the hold) and exits to A_DRAP, whose own G=0,250 drops him to the main ground at 299; the platform top stays a named open route (ok)" \
 	  || { echo "play ZARIA climb chain grep FAILED"; \
 	       grep -E 'play: A_|ANSWERS|state A_(TURN_BACK|WSP|PODCIAG|DRAP) ' \
 	         /tmp/opencode/ly_climb.log | tail -12; exit 1; }

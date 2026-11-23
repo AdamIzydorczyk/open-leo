@@ -215,7 +215,16 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     it is now only the fallback for a state that authors no G
     word (RAN.01's A_WALK_FWD G=0,0), while ZARIA's states
     author theirs (A_WALK G=30,350, A_DRAP G=0,250, A_JUMP
-    G=0,55); (d) the engine's y pass looks unconditional where
+    G=0,55). PR-285 NARROWS IT AGAIN on the corpus: the
+    fallback never runs where the state authors T_y >= 100,
+    because that word consumes the register whole and IS the
+    author's hold (39 player blocks - 26 at exactly 100, 13
+    at 150/1000 - the A_DEAD/A_SCIAG/A_PODCIAG/A_WPAD/
+    A_JUMP_DEAD/A_FINISH_LEVEL family); the census
+    of 2318 state blocks finds NO default gravity anywhere -
+    683 author a non-zero G_y, 697 author zero, 938 author no
+    G line, and every state that falls authors its word. (d)
+    the engine's y pass looks unconditional where
     this port gates it on !grounded, and G_x stays unmodelled.
     The "raw/5 px/s and raw*4 px/s^2" conversion note above is
     WITHDRAWN: the row pull words and the G words are register
@@ -1808,6 +1817,21 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     an authored zero; the FOCUS-1 finish is climb -> frozen
     pull-up -> hang -> the hang's own K_JUMP hop onto 489
     through the EXISTING ground path.
+    PR-285 SHIPS THAT FINDING: the LL_PLAY_GRAVITY stand-in
+    no longer runs in a state whose authored T_y >= 100 (its
+    own words consume the register whole - the author's hold;
+    the corpus census of 2318 state blocks finds no default
+    gravity anywhere, and 39 player blocks use the hold
+    idiom). ly_climb is RE-PINNED on the authored tail:
+    A_PODCIAG holds 212,560 for all 26 of its remaining
+    iterations (263..288), and the drop that follows is
+    A_DRAP's OWN G=0,250 against its T_y=15 - 250, 463,
+    644, 798, ... 1340 register units, steps 2,4,6,7,9,10,
+    11,12,12,13 - landing grounded at 299 (654 + the 28
+    contact = the .plt line 682 at x 212). No project word
+    is left in that chain. The platform top is still not
+    reached, and the named route to it is the hang's authored
+    `A_JUMP_S(1)=K_JUMP` row - the next FOCUS-1 leg.
     PR-274 PINS THAT CHAIN as a leg (ly_climb, its record
     derives every tick from the fixture's own arithmetic):
     the whole chain runs deterministically and the leg also

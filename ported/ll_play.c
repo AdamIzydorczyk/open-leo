@@ -1636,21 +1636,29 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
                                            * pair's second word,
                                            * divided BEFORE G_y is
                                            * added, as the idiv does. */
-        if (ay == 0 && !p->grounded && (st->ctrl & LL_CTRL_CHECK_LN))
-            ay = LL_PLAY_GRAVITY;         /* the same unit, the same kind
-                                           * of word: see ll_play.h. The
-                                           * project constant's own note
-                                           * bounds it to a CHECK_LN state
-                                           * that LOSES its ground, and
-                                           * PR-108/PR-231 make CHECK_ALL
-                                           * imply CHECK_LN - so without
-                                           * this term the stand-in would
-                                           * fall on a lion standing on
-                                           * the ground with no key held,
-                                           * a case the new guard opens.
-                                           * On the old path the extra
-                                           * term cannot change anything:
-                                           * it was already true there. */
+        /* PR-285 narrows the stand-in to the states whose OWN words
+         * leave the register open. A state that authors T_y >= 100
+         * asks the engine to consume the register whole -
+         * idiv(100*v,100) IS v, so `out = adds`, and with no add
+         * there is no motion: that is how the game HOLDS a body,
+         * and it is authored 39 times in the player's own scripts
+         * (26 blocks at exactly 100, 13 more at 150/1000: A_DEAD,
+         * A_SCIAG, A_PODCIAG, A_WPAD, the A_JUMP_DEAD family,
+         * A_FINISH_LEVEL - see the selftest leg's census).
+         * ZARIA.01's A_PODCIAG is one of them. The test runs on the
+         * authored word, not on the 130-capped value below: a 150
+         * asks for the same hold. A body in a state below 100 keeps
+         * the PR-106 behaviour: the project constant, the same unit,
+         * the same kind of word: see ll_play.h. The project
+         * constant's own note bounds it to a CHECK_LN state that
+         * LOSES its ground, and PR-108/PR-231 make CHECK_ALL imply
+         * CHECK_LN - so without this term the stand-in would fall on
+         * a lion standing on the ground with no key held, a case the
+         * new guard opens. On the old path the extra term cannot
+         * change anything: it was already true there. */
+        if (ay == 0 && !p->grounded && (st->ctrl & LL_CTRL_CHECK_LN) &&
+            st->ty < 100)
+            ay = LL_PLAY_GRAVITY;
         int tyd = (int)st->ty;
         if (tyd > 130)
             tyd = 130;        /* the same 0x52590 parse cap the x
@@ -2725,6 +2733,82 @@ int ll_play_selftest(void)
         ll_player_step(&q, NULL, &kk, 0, 2000, LL_ITER_MS);
         CHECK(q.sti == 1);                  /* AND holds: fight */
         free(fk);
+    }
+    {   /* PR-285: THE FREEZE IS AN AUTHORING IDIOM, NOT A PHYSICS
+         * HOLE. A state that authors `T=<x>,100` with no y force
+         * holds its body where it is, and the project's gravity
+         * stand-in must NOT add what the author chose not to author.
+         * DERIVED FROM THE PORT'S OWN CLOSED FORM, NOT FROM ITS
+         * OUTPUT: ll_play_v_step (0x54250, PR-256) computes
+         * drag = idiv(T_y*v,100) from the OLD register, then
+         * post = v + adds, then out = post - drag. With T_y = 100
+         * the drag IS v, so out = adds; and with the authored F pair
+         * second word 0, no intent, and G_y = 0 there IS no add:
+         * the register is zero after the FIRST iteration from any
+         * starting value, and section 4 moves the body by
+         * idiv(register,100) = 0 px. The words themselves are the
+         * hold. THE DATA SAYS THIS IS HOW THE GAME STOPS BODIES:
+         * a census of the 777 .MOV texts (/tmp/opencode/mov, this
+         * PR) counts 2318 state blocks - 683 author a non-zero G_y,
+         * 697 author G=0,0 and 938 author no G line at all, and the
+         * engine has NO default gravity anywhere: every state that
+         * falls authors its own word (ZARIA.01 A_FALL_DOWN G=0,55
+         * with T=30,1; A_DRAP G=0,250; A_WALK G=30,350). The blocks
+         * that hold a body in the air are exactly the drag-100 +
+         * zero-force idiom: 26 player (LEW) blocks author T_y = 100
+         * with G zero or absent, and they are the hold states by
+         * name - A_DEAD (11), A_SCIAG (5), A_PODCIAG (5), A_DEAD1,
+         * A_FINISH_LEVEL, A_JUMP_DEAD/_BK/_FW. ZARIA.01's own
+         * A_PODCIAG is one of them: F=0,0 T=100,100 G=0,0 and not
+         * one moving row (PR-284 MEASURED (e)).
+         * LEG 1 - the authored hold. The words are A_PODCIAG's own.
+         * The register is seeded RISING with -60 px/iteration = the
+         * -300 register units a real A_WSP climb carries (PR-259's
+         * equilibrium), because that is the case the ladder shows:
+         * the climb's velocity must DIE, and the body must stay put.
+         * Derived: iteration 1 takes drag = idiv(100*-300,100) =
+         * -300, post = -300 + 0, out = 0 (and the sign test's
+         * post*out = 0 does not fire), so y never moves: 20
+         * iterations, y = 100 exactly, register 0.
+         * LEG 2 - the stand-in keeps its remaining scope. The same
+         * state with T_y = 50 leaves the register OPEN, which is the
+         * PR-106 case the stand-in was counted for. Derived step by
+         * step with LL_PLAY_GRAVITY = 200: v = 0 + 200 - 0 = 200
+         * (y += idiv(200,100) = 2 -> 102), v = 200 + 200 - 100 =
+         * 300 (y += 3 -> 105), v = 300 + 200 - 150 = 350 (y += 3
+         * -> 108). The fixed point of a 200 add against a 50% drag
+         * is idiv(50*v,100) = 200, v = 400, i.e. 4 px an iteration;
+         * the leg checks the register is climbing toward it. */
+        static const char HZ[] =
+            "[A_PODCIAG]\ncontrol=BY_TIME|CHECK_ALL\nF=0,0\n"
+            "T=100,100\nG=0,0\nseq=lift\n1,300\n2,300\n3,300\n"
+            "4,200\n5,200\n6,200\n7,500,rdir\n8,300\n9,200\n";
+        static const char OP[] =
+            "[A_PODCIAG]\ncontrol=BY_TIME|CHECK_ALL\nF=0,0\n"
+            "T=100,50\nG=0,0\nseq=lift\n1,300\n2,300\n3,300\n";
+        ll_mov_t *hz = calloc(1, sizeof *hz), *op = calloc(1, sizeof *op);
+        ll_player q, r;
+        ll_play_keys hk = { 0 };
+        CHECK(hz && op);
+        ll_mov_parse(HZ, hz);
+        ll_mov_parse(OP, op);
+        CHECK(hz->st[0].ty == 100 && hz->st[0].gy == 0);
+
+        ll_player_start(&q, hz, 500, 100, 0);
+        CHECK(!q.grounded);                 /* NULL ground: in the air */
+        q.vy = -60.0;                       /* -300 register units up  */
+        for (int t = 0; t < 20; t++)
+            ll_player_step(&q, NULL, &hk, 0, 2000, LL_ITER_MS);
+        CHECK(q.y == 100);
+        CHECK(ll_play_v_raw(q.vy) == 0);
+
+        ll_player_start(&r, op, 500, 100, 0);
+        for (int t = 0; t < 3; t++)
+            ll_player_step(&r, NULL, &hk, 0, 2000, LL_ITER_MS);
+        CHECK(r.y == 108);
+        CHECK(ll_play_v_raw(r.vy) == 350);
+        free(hz);
+        free(op);
     }
     {   /* PR-263: K_ANY IS THE INPUT-KEY MASK, NOT "some key is held".
          * The engine's name resolver 0x48000 answers AC_K_ANY/K_ANY

@@ -804,7 +804,17 @@ typedef struct { int k_fwd, k_bkwd, k_up, k_down, k_jump,
  * A_WALK carries, the resulting terminal speed of 0.56 px per iteration
  * truncated to a step of ZERO px: the body reported AIR and then did not
  * move). Counted as an open item, not smoothed over: this is a project
- * route, not an authored one, and its magnitude has no video check. */
+ * route, not an authored one, and its magnitude has no video check.
+ * PR-285 NARROWS ITS SCOPE, on data: it is never used in a state whose
+ * authored y-drag is 100 or more, because that word IS the author's hold
+ * - idiv(T_y*v,100) with T_y >= 100 consumes the register whole, so with
+ * no add the body stops where it is. The census of the 777 .MOV texts
+ * counts 2318 state blocks with no default gravity anywhere in the game
+ * (683 author a non-zero G_y, 697 author G=0,0, 938 author no G line),
+ * every falling state authors its own word, and the drag-100 +
+ * zero-force idiom appears 39 times in the player's own scripts (26
+ * blocks at exactly 100, 13 more at 150/1000) under the hold names
+ * A_DEAD, A_SCIAG, A_PODCIAG, A_WPAD, A_JUMP_DEAD, A_FINISH_LEVEL. */
 #define LL_PLAY_GRAVITY 200
 /* PR-253 replaces the PR-73/74 ESTIMATES (LL_PLAY_JUMP_DIV=4,
  * LL_PLAY_JUMP_G=1650) with the measured unit law. The engine keeps its
