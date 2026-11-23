@@ -2543,12 +2543,16 @@ OI-111: which row-step path the port's row clock models -
     reached as `call [esi+0x18]` with esi = [rec+0x44] = the
     record's own class word (the vtables here are the base+8
     kind, which is also why 0xa11c8 = 0xa11c0+8 and
-    0xa11e0 = 0xa11d8+8); it clones the row, builds a stack
-    POINT from the object's two coordinates with the shared
-    POINT class 0x98278 - "composes the key with the global
-    0x98278" was PR-218's wording for those six instructions
-    and PR-288 corrects it - and runs the row through its
-    class's
+    0xa11e0 = 0xa11d8+8); it clones the row and runs it on.
+    The key composition PR-218 described as "composes the key
+    with the global 0x98278" is 0x520e4-0x52100 inside that
+    verb: a twelve-byte buffer gets the class word 0x98278 and
+    is handed to `[[rec]+0x28]`, which the record's own class
+    table 0x97ca8 resolves to 0x52790 - a WORLD-QUERY set
+    built from the row's CHECK_LEW / CHECK_ANI / CHECK_ZW
+    keywords (PR-289; PR-288 read the same six instructions
+    first and called the buffer a POINT, which PR-289
+    corrects). It then calls the row class's
     +0x10 with edx = 6 (0x5213d), tests the answer against 6
     (0x52140), and does the list-end/wrap: 0x521b6-0x521d4
     compares [list+0x8] - 1 with the cursor and OR-s bits 4 and
