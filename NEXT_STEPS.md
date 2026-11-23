@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-304.
+> at PR-305.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -41521,4 +41521,183 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run. The
 last full no-Windows suite run (PR-298's, unchanged tree
 since) is rc=0 with 69 green verdict lines.
+```
+
+## PR-304 — WHO OWNS THE LADDER'S VERBS, MEASURED BY POINTER -
+## OCCURRENCE: THE ROPE CLASS CARRIES A PATH POSITIONER AND A
+## TIMER, THE LADDER CLASS CARRIES NEITHER, AND 0x3f1c0 SITS AT
+## +0x78, NOT AT +0xac
+```
+KIND: read
+SUBSYSTEM: the ladder/rope class family 0x97cdc (DRABINKA) and
+0xa1dfc (LINA): which vtable cells their verbs live in, the
+whole answer law of the ladder's ask verb, and the motion block
+(path positioner + timer) that only the rope class carries.
+ADDRESSES: 0x97cdc, 0x97cf4, 0x97d54, 0x97d5c, 0x97cd4, 0x97d88,
+0xa1dfc, 0xa1e14, 0xa1e74, 0xa1e7c, 0xa1fa8, 0xa2018, 0xa2024,
+0xa20e8, 0x9d8a8, 0x9d8a0, 0x9dc90, 0x9f848, 0x910d7, 0x34e39,
+0x34e62, 0x34e69, 0x92005, 0x4e81d, 0x4e8c4, 0x4e8cb, 0x4e8d2,
+0x3f0f0, 0x3f1c0, 0x3f390, 0x3f1cc, 0x3f1d6, 0x3f1dc, 0x3f1e4,
+0x3f203, 0x3f206, 0x3f209, 0x3f20c, 0x3f214, 0x3f217, 0x3f222,
+0x3f228, 0x3f230, 0x3f235, 0x3f244, 0x3f248, 0x3f24d, 0x3f256,
+0x3f27d, 0x3f283, 0x3f28f, 0x3f293, 0x3f29f, 0x3f2ad, 0x3f2b1,
+0x3f2b4, 0x3f2dc, 0x3f2e8, 0x3f304, 0x3f30f, 0x3f313, 0x3f32a,
+0x3f33f, 0x3f350, 0x3f355, 0x3f364, 0x3ed20, 0x3ed40, 0x3ed57,
+0x3ed5f, 0x3ed65, 0x3ed70, 0x3ee80, 0x3eeb5, 0x3ef28, 0x3ef51,
+0x3efe0, 0x3eff9, 0x3f010, 0x3f050, 0x3f070, 0x400b0, 0x3d1e0,
+0x44ec9, 0x44ee3, 0x44eec, 0x49fb0, 0x49ff0, 0x53770, 0x23930,
+0x23c60, 0x34730, 0x531b0, 0x749a0, 0x49580, 0xcef40, 0xa94ec,
+0x4dcc0, 0x54560
+NAMES: DRABINKA, LINA, KDRABINA, ask verb, ENTER verb, edge
+band, authored rectangle, 70% inset, AC_EDGE, AC_DRAB,
+AC_DRAB_CATCH, K_GEN1, path positioner, 13-byte path point,
+rope timer, animacje pool, +0x80 verb, OI-078, PR-235, PR-237,
+PR-241, PR-243, PR-291, PR-292, PR-294, PR-303
+CODE: no: image reading. Only two comments in ported/ll_level.c
+are corrected to what this leg read (the "(counted)" hedge on
+the state-1 arm of ladder_answer_core, and the "unknown +0x3c
+probe" of the acdrab_law note); no executable line changed and
+the file recompiles with no warning.
+HOOKS: PR-291 read the index-1 arm of 0x3f1c0 and called it
+"the object class's +0xac ENTER verb"; PR-292 read what the
+frame step passes there; the port's ladder_answer_core still
+hedges that arm as "the port models no child list, so it
+answers nothing (counted)" (ported/ll_level.c:5442-5449), and
+its PR-235 note says the AC_DRAB raise's engine scope is an
+"unknown +0x3c probe" (5528-5535); PR-294 measured the
+DRAB.SEQ top edge invariant at 512 in all 11 frames and asked
+why the lift never rises; PR-303 put the ladder class at
+0x97cdc and the lion's askability at +0x3c but read none of
+the verbs.
+MEASURED: (a) OWNERSHIP BY POINTER OCCURRENCE. Scanning the
+whole image for the little-endian dwords: 0x3f0f0 occurs
+EXACTLY TWICE, at 0x97cf4 = 0x97cdc+0x18 and 0xa1e14 =
+0xa1dfc+0x18; 0x3f1c0 exactly once, at 0x97d54 = 0x97cdc+0x78;
+0x3f390 once, at 0xa1e74 = 0xa1dfc+0x78; 0x3efe0 once, at
+0xa1fa8 = 0xa1dfc+0x1ac; 0x3f050 once, at 0xa2018 =
+0xa1dfc+0x21c; 0x3f070 four times (0x9dc90, 0x9f848, 0xa2024 =
+0xa1dfc+0x228, 0xa20e8); 0x3ee80 never as data at all, only
+the call at 0x3eff9. So the geometry verb is shared by exactly
+the ladder and the rope, their ask verbs differ, and the motion
+block belongs to the rope alone. Both ladder-family classes
+hold 0x531b0 in their +0x80 cell (0x97d5c, 0xa1e7c) and 0x23930
+at +0xac. The Kadmar ladder KDRABINA (name 0x910d7, factory
+branch 0x34e39, class-word store 0x34e62, companion 0x9d8a0 at
+0x34e69) has +0x18 = 0x23c60 and +0x78 = 0x34730: neither of
+this family's verbs. The rope's own name branch in the
+placement factory (compare 0x4e81d against the name 0x92005)
+installs 0x97cdc and 0x97cd4 at 0x4e8c4/0x4e8cb and then, with
+no branch between, overwrites both words with 0xa1dfc and
+0xa1df4 at 0x4e8d2: the code builds a rope ON the ladder table
+and re-tags it. (A walk that starts at each class word and
+keeps reading until a value stops looking like a code pointer
+finds nine "owners" of 0x3f0f0; eight of those are other
+tables' tails - the occurrence count is the measure to use.)
+(b) THE LADDER'S ASK VERB 0x3f1c0, END TO END, AND THE PORT
+ALREADY GETS IT RIGHT. The gate 0x3f1cc-0x3f1d6 is
+`call [[asker+8]+0x3c]`, i.e. the ladder answers only an
+ASKER that is askable = a lion (PR-303); that is the "unknown
++0x3c probe" of PR-235's note. 0x3f1dc switches on the
+ladder's own state index [self+0x5c]:
+ - index 1 (0x3f1e4-0x3f20f): asks the asker's +0x4c verb,
+   then 0x44ec0 over the list at [self+0xa5] - header count at
+   +0x04, entries at stride 0xc, each entry tested through its
+   own class +0x08 verb (0x44ee3-0x44eec). On a hit it does
+   `mov ah,[self+0x66]; or ah,0x40; mov [self+0x66],ah`
+   (0x3f203-0x3f20c write it as `add ecx,0x64` plus [+2]):
+   signal bit 54 = K_GEN1 on ITSELF, and the caller's answer
+   set is left untouched; both paths end at 0x3f364.
+ - index 2 (0x3f214-0x3f251): asks the asker's +0x68 verb,
+   which hands back the asker's own nested point object, tests
+   it against the edge band at [self+0xc5] through that
+   object's class +0x08 verb, and on a hit builds the answer
+   set with the EventSet ctor 0x749a0 (ecx = 0xc, edx = 0)
+   after zeroing the mode byte [set+0x0c], then sets
+   [set+0x1] bit 0x01 = bit 8 = AC_EDGE. On a MISS it does NOT
+   exit: 0x3f235 falls through to 0x3f256.
+ - 0x3f256-0x3f33e: copies [self+0xb1..bd] to the stack,
+   insets the COPY's x-words with 0x49fb0 at n = 0x46 (the 70%
+   probe; the object's own words are untouched), tests the
+   point against the object's FULL rect first (0x3f29f, miss
+   to the empty exit 0x3f364) and then against the inset copy
+   (0x3f2b1): outside the core it sets [set+0x1] bit 0x04 =
+   bit 10 = AC_DRAB at 0x3f355; inside the core it builds two
+   sets, bit 0x10 at byte 1 = AC_DRAB_CATCH (0x3f2dc/0x3f2e8)
+   and bit 0x04 at byte 1 = AC_DRAB (0x3f304/0x3f30f), merges
+   them through 0x49580 (0x3f313) and copies the result over
+   the answer (rep movs 0x3f32a).
+ - any other index: 0x3f217 -> 0x3f364, the empty answer.
+That is the port's ladder_answer_core, P1 then P2 then P3
+(ported/ll_level.c:5431-5462), line for line including the
+merged pair, so no port change is needed and the state-1
+hedge is now a read law rather than a modelling choice.
+(c) THE MOTION BLOCK ONLY THE ROPE HAS. In 0xa1dfc: +0xc8 =
+0x3ed20, +0x1a8 = 0x3ed70, +0x1ac = 0x3efe0, +0x20c = 0x3f010,
++0x21c = 0x3f050, +0x228 = 0x3f070. 0x3efe0 is `add eax,0x44;
+call 0x45120` (the sub-object at [obj+0x44]), then 0x3ed40,
+then 0x3ee80. 0x3ee80 is a PATH POSITIONER over an array of
+13-byte points: `imul ebx,[x+0x08],0xd` at 0x3eeb5, 0x3ef28,
+0x3ef51, with x = [[self+0x44]+0x04] the array and
+[[self+0x44]+0x08] the index; it picks the segment by
+comparing the current point with the next, sets the object's
+position from the chosen point, and adds deltas read through
+the record accessors. 0x3f070 stores 5 into [obj+0x50] and
+0x3f050 counts that word down and returns true at zero - the
+same word the record-array note names, so the offset is class-
+scoped, as the rules say. In the ladder class those slots are
+0x54560 (+0xc8), 0x400b0 (+0x1ac) and 0x3d1e0 (+0x1b0): a
+draw-path method (it reads the global at ds:0xcef40+0x394,
+calls its +0x68 verb, then the +0x4 verb of the first entry of
+[[self+0x106]] and the object's own +0xcc) and a store of
+0x4dcc0's result at [self+0x120]. Nothing in 0x97cdc indexes a
+13-byte path array or holds a timer.
+(d) 0x3ed40 IS A THIRD NAMED CALLER OF THE +0x80 VERB, AND IT
+LOADS THE `animacje` POOL INTO ebx FIRST. Its body: read
+ds:0xcef40, call 0x4dcc0 on it, store the answer at
+[self+0x3c], then `mov ebx,ds:0xa94ec` - the pool PR-303
+mapped to the `animacje` section key - then
+`call [[self+8]+0x80]` at 0x3ed5f, then zero [self+0x40]
+(0x3ed45-0x3ed65). For this family that cell is 0x531b0.
+0x3ed20 is two lines: if [edx+0x04] == 0x20 store 1 at
+[self+0x28] and return, else tail-call 0x53770.
+(e) CONSEQUENCE FOR FOCUS 1, AS A NEGATIVE. The ZARIA.01 lift
+is not a moving ladder: the class has no motion path (c), the
+art never moves (PR-294, top edge 512 in all 11 frames), and
+the ladder's only verbs of interest answer a lion (b). Whatever
+moves on a path in that level is one of the six LINA ropes
+PR-302 counted. The remaining FOCUS-1 step is therefore the
+lion side: its climb rows and the landing on the platform line
+518 that puts the lion at 489.
+OPENS: in order: (i) the lion's climb and landing model, the
+only route left for FOCUS 1; (ii) where a rope's 13-byte path
+array comes from - which authored text fills
+[[obj+0x44]+0x04]/+0x08 - and whether any ZARIA.01 placement
+carries one; (iii) 0x3ed70, the rope's other method, which
+calls the +0x28 and +0x84 verbs and tests [self+0x40]; (iv)
+the other three holders of the rope timer 0x3f070 (0x9dc90,
+0x9f848, 0xa20e8) and which classes they belong to; (v) the
+asker's +0x4c and +0x68 verbs, which hand 0x3f1c0 the point it
+tests; (vi) 0x23930, the +0xac cell the ladder family actually
+holds.
+CLOSES: the "(counted)" hedge on the state-1 arm of the port's
+ladder_answer_core comment (ported/ll_level.c:5442-5449): the
+child-list law (0x44ec9-0x44eec) and the untouched answer set
+are read now; and the "unknown +0x3c probe" that the PR-235
+acdrab_law note named as the engine's scope for an AC_DRAB
+raise - it is the asker's askability, i.e. a lion. Both
+comment edits ship in this commit; the executable code is
+unchanged, and PR-292's reading of 0x3f0f0's load-time calls
+stands.
+CORRECTS: PR-291's "it is the object class's +0xac ENTER verb
+0x3f1c0" (repeated in the OI-078 row at docs/OPEN_ITEMS.md
+lines 827-828): the only occurrence of 0x3f1c0 in the image is
+the cell 0x97cdc+0x78, PR-237's ask/answer slot, and the
++0xac cell of every ladder-family class holds 0x23930. The
+arm's law that PR-291 read - index 1 raises signal bit 54 =
+K_GEN1 on the ladder itself - is confirmed unchanged, and the
+"not a transition branch" half of its correction stands.
+GATE: light: verify-index verify-docs rc=0 (ok); no executable
+change, so no red leg by the rule PR-245 states, and no suite
+run. The last full no-Windows suite run (PR-298's, unchanged
+tree since) is rc=0 with 69 green verdict lines.
 ```

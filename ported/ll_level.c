@@ -5440,13 +5440,22 @@ static unsigned long long ladder_answer_core(int state, const ll_blk *edge,
                                         * at 1, 0x538ab. `cmp 1` =
                                         * the FIRST declared state:
                                         * the child ANY-test 0x44ec0
-                                        * over [self+0xa5], which
-                                        * only sets [self+0x66] bit
-                                        * 6 and ends at the same
-                                        * inert exit - the port
-                                        * models no child list, so
-                                        * it answers nothing
-                                        * (counted). Any other
+                                        * over [self+0xa5] (header
+                                        * count at +0x04, entries at
+                                        * stride 0xc, each entry
+                                        * asked through its own
+                                        * class +0x08 verb,
+                                        * 0x44ee3-0x44eec). Read in
+                                        * full by PR-304: on a hit
+                                        * it sets [self+0x66] bit 6
+                                        * = signal bit 54 = K_GEN1
+                                        * on the object itself and
+                                        * leaves the caller's answer
+                                        * set untouched, both paths
+                                        * ending at 0x3f364, so 0
+                                        * here IS the engine's
+                                        * answer and nothing is
+                                        * assumed away. Any other
                                         * index, including 0 = the
                                         * name is not declared,
                                         * falls to 0x3f217 ->
@@ -5532,7 +5541,9 @@ static ll_pt pt_of(const ll_player *p)
  * and calls the LION's vtable+0x10 (0x2885a) - the handler that
  * ORs the bit into [lion+0x60] (PR-225): a raise on the LION,
  * class-scoped here to the ladder family like the answer path
- * (the engine's own scope is that unknown +0x3c probe). */
+ * (PR-304 read that scope: the answer verb 0x3f1c0 opens with
+ * `call [[asker+8]+0x3c]`, so it answers only an ASKABLE asker,
+ * which PR-303 measured as a lion). */
 static int acdrab_law(int lion_id, int other_id)
 {
     return (lion_id == 6 || lion_id == 0x12) && other_id >= 0 &&

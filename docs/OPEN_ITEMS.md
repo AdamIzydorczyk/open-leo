@@ -2317,6 +2317,44 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     0x96960+0x78 = 0x50f80, UNREAD, and that is now the single
     named step between this row and the climb: whichever of
     those two answers with AC_DRAB is the ZARIA.01 lift.
+    PR-304 ANSWERS THAT QUESTION AND SETTLES THE SLOT QUESTION
+    TOO. It is the LADDER'S verb that answers AC_DRAB: 0x3f1c0
+    tests the asker's own point (handed back by the asker's
+    +0x68 verb) first against the edge band [self+0xc5] (a hit
+    sets bit 8 = AC_EDGE, 0x3f24d) and on a MISS does NOT exit:
+    0x3f235 falls through to 0x3f256, which tests the authored
+    rectangle [self+0xb1..bd] and then its 70% core - outside
+    the core sets bit 10 = AC_DRAB at 0x3f355, inside it merges
+    AC_DRAB with AC_DRAB_CATCH (0x3f2dc/0x3f304 through
+    0x49580). That is this port's ladder_answer_core P1/P2/P3
+    line for line, so the model needs no change and the
+    "(counted)" hedge on the state-1 arm is gone from the code
+    comment. The ask is gated on the ASKER's +0x3c (0x3f1cc),
+    which PR-303 measured as "is a lion": that is the scope
+    PR-235 left unknown.
+    MEASURED BY POINTER OCCURRENCE, 0x3f1c0 SITS AT +0x78. The
+    little-endian dword occurs exactly once in the whole image,
+    in the cell 0x97cdc+0x78, while every ladder-family class
+    holds 0x23930 at +0xac; 0x3f0f0 occurs exactly twice, in
+    the cells 0x97cdc+0x18 and 0xa1dfc+0x18. So PR-291's "it
+    is the object class's +0xac ENTER verb 0x3f1c0", repeated
+    above in this row, is wrong about the SLOT, and its reading
+    of the index-1 arm - it raises bit 54 = K_GEN1 on the
+    ladder itself - is confirmed unchanged. (A class-word walk
+    that reads past a table's end finds nine "owners" of
+    0x3f0f0; the occurrence count is the measure.)
+    THE LADDER CLASS CARRIES NO MOTION, WHICH MOVES THE LEAD
+    OUT OF THIS ROW. Only the rope class 0xa1dfc holds a path
+    positioner and its timer: +0x1ac = 0x3efe0, which walks a
+    13-byte-point array indexed through [obj+0x44] (0x3ee80,
+    `imul ...,0xd`), and +0x21c/+0x228 = the 5-tick counter at
+    the class-scoped word [obj+0x50]. The ladder's own cells
+    there are a draw method (0x400b0) and a store (0x3d1e0),
+    and nothing in 0x97cdc indexes a path array - the same
+    answer PR-294's 11 invariant frames gave from the art side.
+    So the lift is not the ladder moving, and what is left for
+    this row is the lion side: its climb rows and its landing
+    on the platform line 518 that puts it at 489.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
