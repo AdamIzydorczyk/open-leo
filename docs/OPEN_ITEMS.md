@@ -2565,6 +2565,23 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     +0x14 verb. The ZARIA.01 route stays the same: which arrays
     the level builds (0x44370 / 0x44540, not yet read) and what
     the queried objects answer.
+    PR-314 NAMES THE FIRST OF THOSE ARRAYS AND CLOSES A BRANCH.
+    ZAR.BLK is 76 bytes: `6` then six `x,y,len` walls (the level
+    edges at x 0 and 2240 spanning y 0..700, and four interior
+    walls at x 1299..1620) - the triple exactly matches the entry
+    0x45620 reads (x at +0x4, y at +0x8, len at +0x10), so
+    [world+0x70] is the `blokady=` array; ZARIA.01 asks for
+    `blokady = zar.blk` and `sufity = none.des` (no ceilings).
+    No wall is anywhere near the ladder column x 190..233, and the
+    level places NO carrier object (no WODA, STRUMIEN, KRY, PLATF,
+    WINDA), so no object carries the rider at the ladder: the only
+    floor-like data there is zaria_a.plt. The port parses the key
+    and models nothing from it - AC_BLOK is a table entry with no
+    raising site, and the sideways push into [obj+0xca] has no
+    counterpart. Also a limit on PR-312: +0xac is family-specific
+    (0x52a00 for the WSPRECT family is |dx|+|dy|, 0x35e20 for
+    KTRASA an accessor, 0x23930 a no-op held by the ladder family
+    and by WODA).
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -2596,6 +2613,14 @@ OI-082: the water surface as a floor (the lion walks WODA at pool
   level; zax37 t=305-307)
   status: OPEN
   origin: G-7
+  notes: PR-314 is a measured NEGATIVE for ZARIA.01: the level
+    places no WODA object at all (its own placements are DRABINKA,
+    two LINA, the KATAPULT, three PALMA, SEP2, POCISK, PICT and
+    NOSOROG), and WODA's class 0x96f20 holds the no-op 0x23930 at
+    +0xac - the water runs no physics. The floor-like data in that
+    level is only zaria_a.plt's polylines, the six ZAR.BLK walls
+    and the objects' answer verbs. The row stays open for the
+    levels that DO place WODA (the zax37 clip this row came from).
 
 OI-083: HUD display truth: both R3 clips start at 5 lives (the
   port prints a hard-coded 6) and the HUD energy at level start is

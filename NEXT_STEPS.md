@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-314.
+> at PR-315.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42642,6 +42642,100 @@ OI-079).
 CORRECTS: none. PR-312's reading of the same bits as "0x10
 (landed), 0x20 (kind != 0), 4 (airborne)" is unchanged as bytes;
 they are now named AC_DUP, AC_DUP_CD and AC_ONAIR.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last full
+no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
+since then only comments in ported/ have changed.
+```
+
+## PR-314 — ZARIA.01'S WALLS: THE `blokady=` FILE READ FROM THE
+## CONTAINER, ITS SHAPE MATCHING THE WALL QUERY, AND WHAT THE
+## LEVEL DOES (AND DOES NOT) PLACE
+```
+KIND: read
+SUBSYSTEM: the `blokady=` data file ZAR.BLK and the wall query
+PR-313 named; the descriptor key handlers that name the three
+level geometry files; this port's handling of that key; the +0xac
+census read by CLASS NAME; and ZARIA.01's placed-object inventory.
+ADDRESSES: 0x4b430, 0x45620, 0x4cf64, 0x4cf94, 0x4cfc7, 0x44370,
+0x44540, 0x52a00, 0x35e20, 0x23930, 0x546a0, 0x91e1e, 0x91e2c,
+0x91e38, 0x96f20, 0x96e94, 0x9ec8c, 0x97cdc
+NAMES: blokady, sufity, platformy, ZAR.BLK, wall, push, AC_BLOK,
+DRABINKA, LINA, KATAPULT, PALMA, WODA, STRUMIEN, KRY, PICT,
+NOSOROG, SEP2, no-op stub, distance metric, OI-078, OI-082,
+PR-312, PR-313, ll_plt_parse
+CODE: no: container and image reading, plus one grep over the
+port's own sources; nothing under `ported/` changed, so no red leg
+is owed and none was written.
+HOOKS: PR-313's first open ("which level-config block becomes
+which of the three arrays") and the FOCUS-1 need to know what can
+stand under the lion in this level.
+MEASURED: (a) THE DATA. ZAR.BLK is 76 bytes in the ETAPY
+container: a count line `6`, then six lines of `x,y,len` -
+0,0,700; 2240,0,700; 1299,341,118; 1462,244,28; 1540,194,27;
+1620,0,200. A vertical wall at x with a y span of len: the level
+edges at x 0 and x 2240 covering the whole 700 px height, and four
+interior walls, all of them at x >= 1299. None lies anywhere near
+the ladder's column x 190..233, so the walls cannot be part of the
+climb. The layout matches the wall entry 0x45620 reads - x at
+entry+0x4, y at entry+0x8, length at entry+0x10, i.e. a 4-byte
+header in front of the authored triple - which identifies the
+array PR-313 called [world+0x70] (count [world+0x7c]) as the
+`blokady=` array.
+(b) THE KEYS. The descriptor parser compares the name strings
+0x91e1e `platformy`, 0x91e2c `blokady`, 0x91e38 `sufity` at
+0x4cf64, 0x4cf94, 0x4cfc7 and on a match calls 0x57d30 with
+ebx = the descriptor and destination fields +0x7a, +0x8a, +0x9a
+each with its own extension string (0x91e28, 0x91e34, 0x91e3f).
+ZARIA.01's own descriptor asks for `platformy = zaria_a.plt`,
+`blokady = zar.blk`, `sufity = none.des` - the level has walls
+and NO ceilings.
+(c) THE PORT MODELS NONE OF IT. `blokady` appears in ported/
+ll_level.c once, in the comment that lists keys belonging to other
+features; AC_BLOK appears in ported/ll_play.c only as the name
+string in the signal table and in no raising site (grep over
+ported/*.c). The push 0x45620 writes into the pending-delta field
+[obj+0xca] - the same field the physics carry applies - has no
+counterpart in the port.
+(d) THE +0xac CENSUS BY NAME, AND ITS LIMIT. The 108 classes that
+hold 0x546a0 include every lion class and the platform, lift and
+stair classes. The 24 that hold the no-op 0x23930 include
+DRABINKA, SPLYW, KATAPULT, PALMA, WODA, ZARROW, KOLUMNA, SMIGLO,
+SWIATLO, LEW_SWT, OBJ_SWT, OBRECZ, PODMUCH and BUTLA_BL - the
+ladder family and the water run no physics at all. The 5 that hold
+0x52a00 are STRUMIEN, BICZRECT, WSPRECT, KRY and PICT, and
+0x52a00 is NOT a step: it is two calls of 0x52d30 and then
+|dx| + |dy| of the two returned points - a distance metric. The
+path and grab classes hold accessors (KTRASA's 0x35e20 is
+`mov eax,ds:0xced00; ret`). So the physics step is a family
+property, not a universal slot meaning.
+(e) WHAT ZARIA.01 PLACES. From this port's own wiring dump:
+DRABINKA (the ladder) and two LINA ropes from ANI2.DES, the
+KATAPULT and three PALMA from ANIPL2.DES, and from ZWIERZ1/2.DES
+SEP2, POCISK, PICT (an attached static), NOSOROG and the
+wall-adjacent props at x 1360..1460. There is NO WODA, STRUMIEN,
+KRY, PLATF or WINDA in the level. So OI-082's "water as a floor"
+has no water OBJECT to model in ZARIA.01 - the only floor-like
+data in the level is zaria_a.plt's polylines, the six walls, and
+the objects' own answer verbs.
+OPENS: 0x44370 / 0x44540 - the descriptor block to runtime array
+builder, still unread, and with it the exact entry layout of the
+other two arrays; then the AC_RECT / AC_BLOK_Y raisers, since
+AC_BLOK is now named but the port never raises it; then a [port]
+step for the wall push if FOCUS 1 needs it (it does not for the
+climb, by (a)); and F1's capture read, which the plan still puts
+first.
+CLOSES: PR-313's first open for the first array: [world+0x70] is
+the `blokady=` wall array, identified from the data grammar and
+the entry layout; and the FOCUS-1 branch "maybe a carrier object
+lifts the rider at the ladder" - the level places no carrier
+object, and no wall is near the ladder column.
+CORRECTS: PR-312 - its reading of the 0x546a0 body stands and its
+count of 108 holders stands, but the sentence that the class slot
++0xac IS the physics step holds only for those classes: the same
+slot is a distance metric for the WSPRECT family (0x52a00), an
+accessor for the path classes (0x35e20) and a no-op for the
+ladder family and the water (0x23930).
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
 red leg by the rule PR-245 states, and no suite run. The last full
 no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
