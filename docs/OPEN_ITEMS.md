@@ -349,6 +349,18 @@ OI-031: the ds:0xa94ec load-sites' per-consumer semantics
   layers - so ds:0xa94ec is that section's pool: the level's
   animation-platform objects. What is still open is which
   entries it holds per level and layer.
+  PR-303 MOVES THAT POOL TO ANOTHER SECTION. The key dispatch
+  0x4cd1d-0x4cdca compares the parsed key through 0x76d20
+  (0 = equal) against 'zwierzaki' (0x91dda), 'animacje'
+  (0x91de4) and 'ani_plat' (0x91ded), and on a match stores
+  [esi+0x40] into a global: 0x4cd85 = ds:0xcef44 for
+  'zwierzaki', 0x4cda6 = ds:0xa94ec for 'animacje', 0x4cdc7 =
+  ds:0xa94e8 for 'ani_plat'. The compare that GUARDS a store
+  is the one before it, not the one after, which is where
+  PR-302 read it. So the pool the pair verbs test is the
+  level's `animacje` object list, and the `ani_plat` pool this
+  row was re-pointed at is ds:0xa94e8, whose consumers are
+  still unread.
 
 OI-032: level-meta remainders: the 0x43fb0 result stored to
   [level+0x398] (7 readers, none individually read), the 0x5df2b
@@ -386,6 +398,22 @@ OI-036: which factory-template instance is which .des TYPE (class
   notes: PR-96 traced the structure; many classes named PR-155/156/
     157/176/185/187; the port still ships the 0x34103 dispatcher
     default 30 until the decode completes (PR-89 item 9.3).
+    PR-303 MEASURES THE WHOLE MAP, AND IT IS NOT A TABLE. A walk
+    of .text for `mov edx,<address of a printable name>` finds
+    781 compare branches, 177 of which allocate and install a
+    class word at [obj+0x08]; they are grouped per level family
+    (0x1f874 ZARIA, 0x24f8e/0x250d0 ENA, 0x29094/0x29631
+    KADMAR, 0x2ea2e SADES, 0x3339c RAN, 0x34cfe KARA, 0x383c4
+    LONA, 0x3a254 TUNGA/JUNCTION, plus the placement factory
+    0x4df15..0x4e934). Each branch names its type, mallocs a
+    per-class size, calls a base ctor and stores the class word
+    (and a companion table at [obj+0x0c]), so a TYPE IN THE
+    LEVEL TEXT is the class selector, one chain per family.
+    Named this way: DOMEK 0xa0150, KALUZA 0xa0070, WSPRECT
+    0x99ff0/0x99fe8, PALMA 0x96c38, KATAPULT 0x96d1c, LINA
+    0xa1dfc, DZWIGNIA 0xa1cb4, ANITAB 0xa1eb4, KORONA 0xa1924,
+    BAL 0xa17dc, and TLewZaria 0x96960 - the last named by the
+    shipped ZARIA.01 record's own `lew=` first token.
 
 OI-037: the 18 .MOV state blocks that open ATC_ON and never close
   it: what clears it in the engine
@@ -2274,6 +2302,21 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     animated object itself and the level's `ani_plat` set
     (anipl2.des) on the middle layer - and the pair-answer
     verb 0x287a0 turns out to test exactly that pool.
+    PR-303 NAMES BOTH SIDES AND LEAVES ONE FUNCTION TO READ.
+    The ladder's class is DRABINKA = 0x97cdc (name 0x906ff,
+    factory branch 0x1f8ac, class-word store 0x1f947) and its
+    +0x3c slot is 0x23c10: the ladder can never be asked. The
+    fourteen ASKABLE classes of PR-301 are the per-level lion
+    classes - TLewZaria 0x96960 (0x9078b, branch 0x1fef4),
+    TLewZariaB 0x97a98, TLewEna2 0x98f34, TLewKadmar2 0x9b4d4,
+    TLewKara 0x9e134, TLewTunga1 0x9f668, TLewJunction 0x9f540
+    and seven installed by the same construction path - and the
+    ZARIA.01 record names its own lion, so `askable` means
+    "is a lion". The ladder's ask verb is 0x97cdc+0x78 =
+    0x3f1c0 (the port's ladder_answer_for); the lion's is
+    0x96960+0x78 = 0x50f80, UNREAD, and that is now the single
+    named step between this row and the climb: whichever of
+    those two answers with AC_DRAB is the ZARIA.01 lift.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -3600,3 +3643,10 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
     addresses the same bytes (anchor 0x997fc vs the installed
     0x99828). What still has no immediate installer is the run
     at 0x99fe8 that holds 0x287a0, and [obj+0x00] itself.
+    PR-303 ADDS A NEAR MISS THAT IS NOT THE ANSWER. Factories
+    do install a second table by immediate store - every one of
+    the 177 name branches writes [obj+0x0c] beside [obj+0x08]
+    (for WSPRECT: 0x2967f installs 0x99ff0 at +0x8 and 0x29686
+    installs 0x99fe8 at +0x0c) - but that is the +0x0c field,
+    not [obj+0x00], and no site in that census writes +0x00.
+    What the +0x0c table is for is now an open item of its own.

@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-303.
+> at PR-304.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -41351,6 +41351,172 @@ PR-299's instruction-level record stands; only the roles were
 mislabelled. It also updates OI-072's wording: ZARIA.01 does
 carry an `ani_plat=` value (`none,anipl2.des,none`), so the
 port's missing parse is not limited to other levels.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run. The
+last full no-Windows suite run (PR-298's, unchanged tree
+since) is rc=0 with 69 green verdict lines.
+```
+
+## PR-303 — EVERY CLASS IS NAMED IN THE LEVEL TEXT: A FULL
+## NAME-TO-CLASS CENSUS NAMES THE CLASSES PR-301 COULD NOT NAME,
+## AND THE ASKABLE FLAG TURNS OUT TO BE THE LION'S OWN CLASS
+```
+KIND: read
+SUBSYSTEM: class identity. Which factory picks a class, what its
+name is in the level text, which classes the ZARIA.01 objects
+get, which classes the "askable" flag of PR-301 belongs to, and
+which level section each of the three pool globals comes from.
+ADDRESSES: 0x906ff, 0x90738, 0x9074a, 0x9078b, 0x90795, 0x908f6,
+0x90a4f, 0x90b36, 0x9112a, 0x9132c, 0x91337, 0x91371, 0x9137c,
+0x91dda, 0x91de4, 0x91ded, 0x1f874, 0x1f8ac, 0x1f947, 0x1fb32,
+0x1fc08, 0x1fef4, 0x1ff15, 0x1ff26, 0x1ff49, 0x24f8e, 0x269a1,
+0x269c2, 0x29631, 0x2967f, 0x29686, 0x2ad1a, 0x2ad21, 0x2bfa1,
+0x2bfd6, 0x35201, 0x35240, 0x3a434, 0x3a455, 0x3a466, 0x3a489,
+0x3af8a, 0x3afb1, 0x3b047, 0x3b06e, 0x4cd1d, 0x4cd36, 0x4cd4f,
+0x4cd6c, 0x4cd85, 0x4cd8d, 0x4cda6, 0x4cda9, 0x4cdae, 0x4cdc7,
+0x4cdca, 0x4e2d7, 0x4e81d, 0x5c320, 0x52860, 0x531f0, 0x53ff0,
+0x500b0, 0x76a69, 0x76d20, 0x97cdc, 0x96c38, 0x96d1c, 0xa1dfc,
+0xa1cb4, 0xa1eb4, 0xa1924, 0xa17dc, 0x96960, 0x97a98, 0x98f34,
+0x9b4d4, 0x9e134, 0x9f668, 0x9f540, 0x97970, 0x9a54c, 0x9c958,
+0x9d338, 0x9f170, 0xa0624, 0xa2218, 0xa0150, 0xa0070, 0x99ff0,
+0x99fe8, 0x9a068, 0x50f80, 0x3f1c0, 0x23c10, 0x287a0, 0x3c270,
+0x283e7, 0x283f0, 0x28412, 0x28423, 0x287ac, 0x287b1, 0x287bc,
+0x287c1, 0x287c7, 0x287ca, 0x287d6, 0x287d9, 0x287e4, 0x287ea,
+0x28805, 0x2880b, 0x28811, 0x28823, 0xa94ec, 0xa94e8, 0xcef44
+NAMES: type name, factory, per-family chain, TLewZaria,
+TLewZariaB, TLewEna2, TLewKadmar2, TLewKara, TLewTunga1,
+TLewJunction, DRABINKA, KATAPULT, PALMA, LINA, DZWIGNIA, DOMEK,
+KALUZA, WSPRECT, player class, lion class, askable, animacje,
+ani_plat, zwierzaki, OI-031, OI-036, OI-078, OI-118, PR-237,
+PR-238, PR-301, PR-302, factory.py, factory_all.py
+CODE: no: image and shipped-data reading; no behaviour changed,
+so no red leg.
+HOOKS: PR-301 (c) closed the askable set as "fourteen vtables"
+but its OPENS (ii) said their identity is unknown and named
+only their constructor sites; PR-302's OPENS (ii) and (iii)
+asked for the name-to-constructor map and for the class the
+animated objects use; PR-302 item (e) tied the pool global
+ds:0xa94ec to the 'ani_plat' section; OI-036 still asks which factory
+instance is which authored TYPE; PR-238 named a handful of
+classes through the same chain but never the whole census.
+MEASURED: (a) THE MAP IS PER-FAMILY COMPARE CHAINS, AND HERE IS
+THE WHOLE OF IT. Walking .text for `mov edx,<address of a
+printable name>` finds 781 such compare branches; 177 of them
+go on to allocate and install a class word, and every one of
+those has the same shape: compare through the helper 0x76a69,
+`mov eax,<size>; call 0x5c320` (sizes 0x40..0x1bad, one per
+class), a base constructor (0x52860, 0x531f0, 0x53ff0, 0x500b0,
+0x62e40, 0x63f30, 0x6cd40, ...), then `mov DWORD PTR [obj+0x8]
+,0x9xxxx` and usually a second `mov [obj+0x0c],0x9xxxx`. The
+branches are grouped by level family: 0x1f874.. (ZARIA),
+0x24f8e../0x250d0.. (ENA), 0x26864../0x269a1 (ENA2), 0x29094..
+/0x29631 (KADMAR), 0x2ba94../0x2bfa1, 0x2ea2e.. (SADES),
+0x3339c.. (RAN), 0x34cfe../0x35201 (KARA), 0x361e4../0x383c4..
+(LONA), 0x3a254../0x3b22d (TUNGA/JUNCTION) and the placement
+factory 0x4df15..0x4e934 of PR-302. That is the complete answer
+to PR-302's OPENS (ii): there is no kind-to-constructor table
+because the type is a WORD IN THE LEVEL TEXT, chosen by a chain
+of string compares that exists once per level family.
+(b) PR-301'S ANONYMOUS CLASSES NOW HAVE NAMES. 0xa0150 is the
+DOMEK class (name 0x91371, branch 0x3af8a, class-word store
+0x3afb1 - the same site PR-301 found), and 0xa0070 is KALUZA
+(0x9137c, branch 0x3b047, store 0x3b06e). So the pair-answer
+verb 0x3c270 that PR-301 put at +0x158 of 0xa0150 and +0x238
+of 0xa0070 belongs to the DOMEK and KALUZA classes - two
+authored types, not anonymous tables. 0x99ff0 is WSPRECT
+(0x90a4f, branch 0x29631), and its [obj+0x0c] companion table
+is 0x99fe8 (stores at 0x2967f/0x29686, repeated at 0x2ad1a/
+0x2ad21).
+(c) THE FOURTEEN ASKABLE CLASSES ARE THE LION. Reading the name
+that owns each of PR-301's fourteen constructor sites: 0x96960
+= TLewZaria (0x9078b, branch 0x1fef4, store 0x1ff15), 0x97a98
+= TLewZariaB (0x90795, 0x1ff49), 0x98f34 = TLewEna2 (0x908f6,
+0x269c2), 0x9b4d4 = TLewKadmar2 (0x90b36, 0x2bfd6), 0x9e134 =
+TLewKara (0x9112a, 0x35240), 0x9f668 = TLewTunga1 (0x9132c,
+0x3a455), 0x9f540 = TLewJunction (0x91337, 0x3a489); the other
+seven (0x97970, 0x9a54c, 0x9c958, 0x9d338, 0x9f170, 0xa0624,
+0xa2218) are installed in the same branches as the level's
+music-name string, i.e. by the same player-construction path.
+'TLewZaria' is not an internal name: the shipped ZARIA.01 level
+record of PR-302 reads `lew=TLewZaria,Lew.zar,lew.mov,lew.des`,
+so the level text names the class of its own lion. What the
++0x3c flag of PR-301 really says is therefore: only a LION
+object can answer a pair query.
+(d) AND NOTHING ELSE IN ZARIA.01 CAN BE ASKED. Measured through
+this census, the classes that level's names install are
+DRABINKA 0x97cdc (name 0x906ff, branch 0x1f8ac, store 0x1f947,
+allocation 0xd9), KATAPULT 0x96d1c (0x90738, 0x1fb32), PALMA
+0x96c38 (0x9074a, 0x1fc08), LINA 0xa1dfc (0x92005, 0x4e81d),
+ANITAB 0xa1eb4, KORONA 0xa1924, BAL 0xa17dc, and DZWIGNIA
+(which ZARIA.01 never places) 0xa1cb4. The +0x3c slot of every
+one of them holds 0x23c10 - `xor eax,eax; ret`. The ladder is
+never askable; the lion always is.
+(e) THE THREE POOL GLOBALS, ONE PER SECTION KEY. The key
+dispatch 0x4cd1d-0x4cdca compares the parsed key through 0x76d
+20 against the strings 'zwierzaki' (0x91dda), 'animacje'
+(0x91de4) and 'ani_plat' (0x91ded) and on a match stores
+`[esi+0x40]` into a global: 0x4cd85-0x4cd8c ds:0xcef44 for
+'zwierzaki', 0x4cda6-0x4cda9 ds:0xa94ec for 'animacje',
+0x4cdc7-0x4cdca ds:0xa94e8 for 'ani_plat'. PR-302 read the
+compare that FOLLOWS each store as the one that guards it; the
+guard is the compare that precedes it.
+(f) WHO CARRIES 0x287a0. Its pointer is written once, at image
+0x9a068 (PR-300); that address is +0x78 of the class word
+0x99ff0 and +0x80 of its companion 0x99fe8, both installed by
+the WSPRECT branch. PR-237 measured that slot +0x78 IS the
+ask/answer verb (0x553e0/0x4b500 walk objects, call it, and OR
+the returned sets), so 0x287a0 is the ASK verb of the WSPRECT
+class - not the +0x80 verb the sites 0x28412/0x2844b call:
+those load `esi = [self+0x8]` and call `[esi+0x80]`, which is
+0x531b0 in the sampled tables. Same method role, different
+slot. The ladder's own class confirms the +0x78 reading:
+0x97cdc+0x78 = 0x3f1c0, the answer verb the port already ships
+as ladder_answer_for (PR-237).
+(g) 0x287a0 RE-READ WITH THOSE ROLES, INSTRUCTION BY
+INSTRUCTION. eax = self is kept as ecx, edx (the caller's
+[self+0x10a] or [self+0x10e]) is saved at [esp+0x10], and the
+third argument ebx is the 'animacje' global. The gate and the
+record-head accessor run on THAT object (0x287ac-0x287b1,
+0x287bc-0x287c1); the accessor's result's +0x8 table is then
+called with `lea edx,[ecx+0x3c]` (0x287c7-0x287ca) - the
+point test of PR-235 against self's own +0x3c. If it holds:
+entry 1 of self's container (0x287d6-0x287d9, 0x55760), that
+entry's record array [x+0x50] indexed by [x+0x5c], its row
+cursor [rec+0x4] compared with 6 (0x287e4-0x287ea); on equal
+the answer is `or BYTE PTR [ecx+0x1],0x4` on the SAVED edx
+(0x287ef-0x28805), i.e. a bit on the companion object, not a
+signal. Otherwise it reads ebx's own record index [ebx+0x5c]
+against 0x12 and that record's row against 0x19 (0x2880b-
+0x28826) before raising anything.
+OPENS: in order: (i) FOCUS 1 now has one named step: the lion
+answers asks through 0x96960+0x78 = 0x50f80, unread, while the
+ladder answers through 0x97cdc+0x78 = 0x3f1c0 - which of those
+produces AC_DRAB for the ZARIA.01 climb, and what row/position
+condition the lion's answer uses; (ii) the [obj+0x0c] table:
+what it is for, since every factory installs one beside the
+class word; (iii) the per-class allocation sizes (0x40..0x1bad)
+as the field-extent evidence for the object layout; (iv) the
+consumers of ds:0xa94e8, the real 'ani_plat' pool, which is
+what PR-302's OI-072 reasoning should have pointed at; (v) the
+relationship between these name chains and the port's 0x34103
+type-number dispatcher (OI-036).
+CLOSES: PR-301 OPENS (ii) for the fourteen: they are the
+per-level lion/player classes, seven named directly from the
+level text and seven from the same construction path. PR-302
+OPENS (ii) and (iii): the name-to-class map is measured over
+the whole image, and the animated objects' classes are named
+with their types. And OI-036's question for every class
+reachable from the level text by name.
+CORRECTS: PR-302 item (e) and the OI-031 note it closed: the
+global ds:0xa94ec belongs to the 'animacje' section, not to
+'ani_plat' - 'ani_plat' writes ds:0xa94e8 and 'zwierzaki'
+writes ds:0xcef44. Its reading of 0x287a6-0x287ca itself is
+unaffected; only the pool identity moves. PR-301 item (d)'s
+last sentence is also wrong: 0x99fe8 IS installed by immediate
+stores (0x29686, 0x2ad21) and 0x287a0 does sit at +0x80 of it
+- the correct statement is that it is at +0x78 of the class
+word 0x99ff0 installed in the same branch, which is the ask
+slot, so the +0x80 call sites are not its callers.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run. The
 last full no-Windows suite run (PR-298's, unchanged tree
