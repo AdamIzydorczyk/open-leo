@@ -793,7 +793,8 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   after the coordinates are the object's OWN surface table -
   0x45120 reads a count and then N passes of one separator and
   one pair into N+1 13-byte records at the object's embedded
-  point [obj+0xa5] (class 0x98278). The separator after record
+  point [obj+0xa5] (class 0x98278) and 0x1e630 is its third
+  caller. The separator after record
   i IS record i's flag byte at +0xc: ';' 1 (0x451a6), '#' 2
   (0x451d4), any other character 0 (0x451db); NO separator ends
   the loop, only the count compare at 0x451c9, and the LAST
@@ -805,8 +806,9 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   (0x1e5c0 -> 0x45200(point, 0, ±1), 0x1e5f6) walks the seat
   one pixel a tick vertically. What the reader sees in the
   shipped install: 147 such lines in 15 .des files of 9 levels,
-  309 records, one line (ZARIA.01's KATAPULT) with a trailing
-  `-6300,-1350` no reader consumes. Counted apart from it, 338
+  309 records, and one line (ZARIA.01's KATAPULT) whose
+  trailing `-6300,-1350` 0x1e630 reads as a PAIR into
+  [obj+0xb1]/[obj+0xb5] with 0x4a0b0 (PR-336). Counted apart from it, 338
   lines of this shape sit in the 103 dumped .des members: 154
   after an entry line (this reader takes 147 - the other 7 hang
   off entries authored at 0,0), 153 after a bare count line or
@@ -823,11 +825,15 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   lines whose count is one past their pairs (LONA.05 ANI3's `23
   ...`/`20 ...`, TUNGA2.12 ZWIERZ's four GORYL paths) and what
   the engine's failed `%d,%d` read leaves there; the ask chain
-  that would make a record a lion's ground - 0x1e970 hands
-  [obj+0xa5] to 0x45320 with the asker's PREDICTED position
-  ([actor+0xca]/[+0xce] added at
-  0x45349) and 0x45400 answers the closest non-positive
-  clearance as the triple [actor+0xe6]/[+0xe2]/[+0xea] - and
+  the ask chain
+  that would make a record a lion's ground - PR-336 READ THAT
+  CHAIN END TO END and corrected its own sketch: 0x45320 adds
+  the truncated velocity step [obj+0xca]/[+0xce] to the
+  requester's OWN position (0x541f0 copies [obj]/[obj+4]),
+  0x45400 keeps the MOST negative clearance at that pair as
+  the triple [actor+0xe6]/[+0xe2]/[+0xea], and only after a
+  first test at the requester's anchor [obj+0x89] that no
+  shipped position passes - and
   the rider law PR-312 read at 0x54250/0x54827 applied to
   those seats; measured through PR-335, ZARIA.01's chain is the
   KATAPULT pad (307,633)-(340,633) and the PALMA spans
@@ -840,6 +846,43 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   holds; and whether a moving platform re-translates its table
   horizontally (0x45200 is called with the placement only at
   load, the runtime calls pass (0, ±1)).
+  PR-336 NARROWS THIS ROW TO TWO NAMED GAPS - now OI-122 and
+  OI-123 - and both are needed before any of the above can be
+  ported. (1) THE CLASS
+  BINDING: the classes the installer chain gives the two
+  shipped seat objects hold NO seat verb - 0x1fb32 names
+  KATAPULT (0x90738) with size 0xc5 and [obj+8] = 0x96d1c,
+  0x1fc08 names PALMA (0x9074a) with size 0xb5 and [obj+8] =
+  0x96c38, and 0x96d1c's +0x18/+0x78/+0xa4 are 0x23ba0 /
+  0x20230 / 0x53d80, 0x96c38's 0x1edb0 / 0x52570 / 0x20280 -
+  while 0x1e4a0, 0x1e510, 0x1e570, 0x1e5c0, 0x1e630, 0x1e970
+  and 0x1ea90 sit in runs at 0x95aa0, 0x95c50, 0x95cb0,
+  0x95cdc, 0x95d34, 0x95d94 and 0x95e54 that NO dword and no
+  immediate of the image names, unlike the eight rectangle
+  classes PR-328 found. (2) THE POSTER: the exemption of that
+  first test is [actor+0xa9] being the queried point itself,
+  and apart from the copies at 0x5478e/0x547bc and the
+  clearings at 0x547f0/0x54e6a/0x1f8e9 it is written at
+  exactly one place - 0x54624, the +0x88 verb 0x54560's case
+  [arg+4] == 0x1b, reached only through 0x53480's name-miss
+  path - and no instruction stores 0x1b into a dword slot.
+  WITH A LIVE PRODUCER THE TRIPLE IS ENOUGH: 0x54804-0x5482d
+  adds [obj+0xca] to x and [obj+0xce]+[obj+0xea] to y and
+  zeroes them, and since the clearance was taken at the
+  predicted position, that lands the position point exactly on
+  the seat line. MEANWHILE THREE THINGS ARE SETTLED AND THEY
+  RULE OUT EVERY SHORT CUT: no seat-owning state is SOLID
+  (none of the 290 states of the 22 seat-owning tokens names
+  it in its `flags=` line), so PR-92's push-out cannot stand
+  the lion on a seat; 0x1e570 answers only while its state's
+  ROW CURSOR [[rec]+4] is under 13 and 0x1e5c0 moves the
+  table (0,+1) below cursor 7 and (0,-1) from 7 on, so the
+  shipped state's row count IS the motion shape (ZARIA.01
+  KATAPULT 10 rows, PALMA PALM/PALML 14 each, TUNGA.11's
+  A_MOVE_DN/A_MOVE_UP pairs 5 each - which never reach 7, so
+  the authored direction of a short state is still unread);
+  and every one of the 153 grammar-matching shipped tables is
+  x-ascending, so 0x45380's endpoint gate never rejects.
 OI-073: the engine's grounded-y bookkeeping: the instruction that
   turns the shape bottom into the grounded y is unread; the port's
   `pos = line - contact` is an inference
@@ -4662,3 +4705,84 @@ OI-121: the ground query has no SURFACE IDENTITY in this port, so
     detach and +0xb8 verbs, and the [obj+0xe2] kind word read from
     the shipped data; then the ladder-foot landing, the A_SCIAG
     route and the AC_DUP_CD and fast-fall rules become testable.
+
+OI-122: the three class tables that hold the seat verbs are named
+  by no pointer and no immediate in the image, so no shipped
+  object is built from them
+  status: OPEN
+  origin: PR-336 (the seat-ask chain read)
+  notes: PR-336 read the tables slot by slot. 0x95c38 holds
+    +0x18 0x1e510, +0x78 0x1e570, +0xa4 0x1e5c0; 0x95d1c holds
+    +0x18 0x1e630, +0x78 0x1e970, +0xa4 0x1e690; 0x95ddc holds
+    +0x78 0x1ea90. That is the family's real verb layout, and it
+    confirms the slot map PR-334 used: 0x4b5b7 calls
+    [[cand+8]+0x78] with the requester in ebx, so +0x78 IS the
+    ask. The three carry a signature shared with 20 tables that
+    ARE installed: +0x4 0x23ea0, +0x8 0x23e00, +0x10 0x53770,
+    +0x84 0x23a90, +0x88 0x534c0, +0x8c 0x23a60 (the set with
+    +0x10 = 0x53770 and +0x88 = 0x534c0 is 23 tables, 0x96cdc,
+    0x9907c, 0x9c168 ... 0xa1498, plus these three) - and
+    0x534c0 is no event verb: it allocates 0x48 and calls
+    0x51770. The shipped seat objects are built from OTHER
+    tables: the installer chain 0x1fb32/0x1fc08 names the tokens
+    at 0x90738 'KATAPULT' and 0x9074a 'PALMA' and stores
+    [obj+8] = 0x96d1c and 0x96c38, whose +0x78 slots are 0x20230
+    and 0x52570 - no seat ask - while their +0x88 is the standard
+    event verb 0x54560 (one of 87 tables holding it). Right
+    before 0x95c38, at 0x95c1c-0x95c34, the image lays the
+    surface family out in one row: 0x45250, 0x452d0, 0x453d0,
+    0x45320, 0x45400, 0x45120. And NOTHING points at any of it:
+    no dword of the image holds 0x95c38, 0x95d1c or 0x95ddc; no
+    .text instruction loads any address of that 0x95a00-0x96000
+    blob as an immediate (the imm index filtered to prov='code'
+    stops at 0x95b49); the blob has no printable byte at all;
+    and the only code naming it is the guarded pair at
+    0x74980/0x74bb2, passing 0x95c20 and 0x95c40 to 0x77bdc,
+    which calls 0x7be36 and, when that answers 0, 0x7b8f1 - the
+    static-object init pattern, not a class install, and unlike
+    the eight rectangle classes PR-328 found stored by immediate.
+    WHAT WOULD CLOSE IT: the install path of this family - a
+    table of class pointers built at run time, a computed base,
+    or a second installer for these tokens (the level-object path
+    PR-270 models is the other half of that question). Until it
+    is found, no shipped object can answer a seat ask, and the
+    triple [obj+0xe2]/[obj+0xe6]/[obj+0xea] has no producer.
+
+OI-123: who posts the message whose opcode word is 0x1b and whose
+  payload word is a surface object - the only other writer of the
+  held-surface slot [obj+0xa9]
+  status: OPEN
+  origin: PR-336 (the seat-ask chain read)
+  notes: [obj+0xa9] is the surface an actor holds. PR-336
+    enumerated every writer over the full instruction index: the
+    physics tail copies it from the query result [obj+0xe6] at
+    0x5478e/0x547bc and clears it at 0x547f0/0x54e6a/0x1f8e9,
+    and apart from those it is written at ONE place - 0x54624,
+    inside the verb 0x54560's case `[arg+4] == 0x1b`. That case
+    is a full attach: 0x5460e calls the held surface's +0x4
+    (detach) when one is held, stores [arg+8] - the message's
+    payload dword IS the surface object - and calls its +0x0
+    (attach) when non-null. 0x54560 is a standard slot: 87 class
+    tables hold it at +0x88, KATAPULT's 0x96d1c among them, and
+    the seat family's own tables hold 0x534c0 there instead. The
+    dispatch that reaches it is 0x53480, which calls [class+0x88]
+    only when [class+0x84] finds no handler for the message NAME
+    (0x5348d-0x534ab), so the poster is a NAMED message with no
+    name handler. Nobody writes that opcode: the only two memory
+    stores of 0x1b in the image are 0x4a1fd, which writes it to
+    `[ebp+8]` as a payload with `[ebp+4] = 0` before posting a
+    named message (eax = 0xcf1a8, call 0x5b8f0), and 0x54ec8,
+    which builds {0, 0x1b, 0, 0} for the class +0x10 verb - the
+    same slot 0x1e5c0's {0, 1, 0, +-1} seat-move block uses, a
+    third opcode namespace. The `mov edx,0x1b` sites at
+    0x1ea47/0x1ead1 are the signal poster 0x52b10 (27 =
+    AC_BUTLA, then 13 = AC_DUP_CD with ecx 100), another
+    namespace again. WHY IT MATTERS: 0x45400's first test is
+    skipped only when [obj+0xa9] is the very point being asked
+    about, and PR-336 measured that at shipped coordinates that
+    test rejects every position ZARIA.01 can put the lion in -
+    so F6c needs either this attach path running first, or the
+    seat family installed so its own ask answers. WHAT WOULD
+    CLOSE IT: the poster of that message, or proof that the
+    opcode 0x1b here is the +0x10 namespace's, in which case
+    0x54624 is reachable through the seat move path instead.

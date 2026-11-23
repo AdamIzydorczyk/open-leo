@@ -5456,14 +5456,44 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         28 px short of the exit column at x 1020, so the seat
         has to move while the lion stands on it, which is what
         0x45200's per-tick (0,+-1) step of 0x1e5c0 is for.
-        PR-334 read that chain end to end (0x45120 builds the
-        object's own 13-byte surface table into [obj+0xa5] and
-        0x45200 places it; the ask verb 0x1e970 hands that
-        point to 0x45320 with the asker's predicted position;
-        0x45400 answers the closest non-positive clearance as
-        the surface triple [actor+0xe6]/[+0xe2]/[+0xea]) and
-        PR-335 parses it, so what is left there is F6c's end
-        leg: that ask chain in play code. What the ground/contact
+        PR-334 read that chain and PR-336 READ IT CORRECTLY
+        (0x45120 builds the object's own 13-byte surface table
+        into [obj+0xa5] and 0x45200 places it; the ask verb -
+        the +0x78 slot of the seat classes 0x95d1c and 0x95c38 -
+        hands that point to 0x45320, which presents the
+        requester's OWN position plus the truncated velocity step
+        [obj+0xca]/[+0xce]; 0x45400 keeps the MOST negative
+        clearance at that pair as the surface triple
+        [actor+0xe6]/[+0xe2]/[+0xea], and the physics tail
+        0x54804-0x5482d then lands the position point exactly on
+        the seat line) and PR-335 parses the table. PR-336 also
+        measured why that chain is NOT a play-code leg yet: its
+        first test is a clearance taken at the requester's own
+        anchor [obj+0x89] (0x53df0 copies [obj]/[obj+4] there),
+        and at ZARIA.01's coordinates that rejects the lion at
+        every position the level can put him in; it is skipped
+        only for a requester already attached to that same point,
+        and apart from the query's own copies the only writer of
+        that attachment is 0x54624, the case `[arg+4] == 0x1b` of
+        the event verb 0x54560 - a standard slot in 87 class
+        tables, reached through the name-miss path 0x53480, whose
+        poster is nowhere in the image (OI-123). Worse, the
+        classes the shipped installers give the two seat objects
+        (0x1fb32 -> 0x96d1c for 'KATAPULT', 0x1fc08 -> 0x96c38
+        for 'PALMA') hold NO seat verb: their +0x78 entries are
+        0x20230 and 0x52570, while the three tables that do hold
+        the seat verbs (0x95c38, 0x95d1c, 0x95ddc) are named by
+        no dword and no immediate anywhere (OI-122). And no
+        shipped state of the 22 seat-owning objects - 290 states
+        - carries SOLID, so the push-out path cannot stand the
+        lion on a seat either. F6c's end leg is therefore those
+        two named gaps. What IS portable now is F6d, the seat's
+        own move step: 0x1e5c0 shifts the whole table (0,+1)
+        while the state's ROW CURSOR [[rec]+4] is under 7 and
+        (0,-1) from row 7 on - the same cursor 0x1e570 gates its
+        ask on at 13 - and then moves the element itself through
+        the +0x10 verb of [obj+0xb1] with the block {0,1,0,+-1}.
+        What the ground/contact
         pass writes WHILE a lock holds is unread and named in
         PR-321's OPENS - it matters the moment that leg runs
         A_WPAD's fall into the locked pool.

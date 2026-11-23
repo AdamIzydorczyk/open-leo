@@ -46121,3 +46121,315 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named with
   PR-333's pair (its record named 21; the same command names 22
   here, counted as printed).
 ```
+
+## PR-336 - THE SURFACE TRIPLE HAS ONE WRITER, AND ITS OWN TEST REJECTS
+## EVERY ACTOR NOT ALREADY ATTACHED AT THE SHIPPED COORDINATES: THE ASK
+## CHAIN 0x1e570/0x1e970 -> 0x45320 -> 0x45400 BYTE FOR BYTE, AND THE
+## BRACKET LAW MEASURED OVER ALL 153 ENTRY-OWNED SEAT TABLES
+```
+KIND: read
+SUBSYSTEM: the seat-line ASK chain of OI-072 - the two seat ask verbs
+  0x1e970 and 0x1e570 with their answer composition (0x749a0), the
+  query entry 0x45320 with the presented-position provider 0x541f0, the
+  query itself 0x45400 with the x-bracket 0x45380 and the line
+  evaluator 0x455a0, the anchor-point block the requester's +0x6c verb
+  returns and its writer 0x53df0, the second seat record verb 0x1e630
+  with the pair reader 0x4a0b0, and the seat move step 0x1e5c0 with
+  its row-cursor gates - plus the class-binding census for those
+  verbs and the class the installer chain gives KATAPULT and PALMA.
+  It is the reading that decides whether the F6c crossing can run
+  through the ask at all; no code changed.
+ADDRESSES: 0x1e570
+  0x1e577 0x1e57c 0x1e57f 0x1e582 0x1e585 0x1e588 0x1e58a 0x1e58f 0x1e594
+  0x1e596 0x1e59b 0x1e59e 0x1e5a0 0x1e5a5 0x1e5a7 0x1e5ab 0x1e630 0x1e638
+  0x1e640 0x1e647 0x1e64a 0x1e64c 0x1e651 0x1e657 0x1e659 0x1e510 0x1e512
+  0x1e5c0 0x1e5ca 0x1e5cd 0x1e5d4 0x1e5d7 0x1e5da 0x1e5dd 0x1e5e0 0x1e5e2
+  0x1e5e7 0x1e5e9 0x1e5ee 0x1e5f4 0x1e5f6 0x1e5f8 0x1e5fd 0x1e603 0x1e605
+  0x1e60e 0x1e615 0x1e618 0x1e61c 0x1e620 0x1e624 0x1e4a0 0x1e4e0 0x1e970
+  0x1e974 0x1e977 0x1e979 0x1e97e 0x1e983 0x1e985 0x1e98a 0x1e98f 0x1e994
+  0x1e996 0x1e99a 0x1ea47 0x1ead1 0x1ea90 0x45320 0x45326 0x4532c 0x45338
+  0x4533e 0x45340 0x45345 0x45349 0x4534f 0x45355 0x45357 0x4535f 0x45363
+  0x45367 0x45369 0x4536b 0x4536f 0x45380 0x45388 0x4538e 0x45393 0x45395
+  0x45397 0x4539d 0x453a1 0x453b3 0x453b8 0x453bb 0x453bd 0x453c4 0x453d2
+  0x453e0 0x453ed 0x45400 0x4540c 0x4540f 0x45412 0x45417 0x45419 0x45423
+  0x45434 0x45439 0x4543c 0x45447 0x45458 0x45462 0x45468 0x4546d 0x45471
+  0x45477 0x45479 0x4547d 0x4547f 0x45481 0x4548d 0x4548f 0x45491 0x45496
+  0x45498 0x4549a 0x454a0 0x454a2 0x454a8 0x454b1 0x454ba 0x454c0 0x454c6
+  0x455a0 0x455a7 0x455aa 0x455b1 0x455b5 0x455be 0x455c1 0x455c3 0x455c5
+  0x455c8 0x455cb 0x455cd 0x45250 0x452d0 0x453d0 0x4a0b0 0x4a0bb 0x4a0ca
+  0x4a1fd 0x5b8f0 0xcf1a8 0x52b10 0x53480 0x534a7 0x534ab 0x534c0 0x53770
+  0x51770 0x541f0 0x541f6 0x541fd 0x54200 0x54226 0x53df0 0x53dfa 0x53e06
+  0x53e0d 0x53e2b 0x54560 0x54582 0x5460e 0x54621 0x54624 0x5460a 0x5478e
+  0x547bc 0x547f0 0x54e6a 0x54804 0x5480a 0x54810 0x5481b 0x54825 0x54827
+  0x54829 0x54830 0x54ec8 0x54eb0 0x54ebb 0x1f8e9 0x4b58e 0x4b5b7 0x4b5be
+  0x1fb32 0x1fb42 0x1fb60 0x1fb83 0x1fb94 0x1fc08 0x1fc3b 0x531f0 0x5c320
+  0x44fe0 0x23a60 0x23a90 0x23e00 0x23ea0 0x74980 0x74bb2 0x77bdc 0x7be36
+  0x7b8f1 0x91d0f 0x91d15 0x98278 0x95aa0 0x95c1c 0x95c2c 0x95c30 0x95c34
+  0x95c38 0x95c50 0x95cb0 0x95cdc 0x95d1c 0x95d34 0x95d94 0x95ddc 0x95e54
+  0x96c14 0x96c38 0x96cf0 0x96cf8 0x96d1c 0x90738 0x9074a 0xa5 0xb1 0xb5 0xb6
+  0xb9 0x2c 0x4 0x8 0xc 0xd 0x3c 0x48 0x50 0x5c 0x6c 0x78 0x84 0x88 0x89 0xa9
+  0xb0 0xbc 0xca 0xce 0xe2 0xe6 0xea 0x3b 0x23 0x7 0xd 0x1b 0xc5 0xb5
+NAMES: 0x45320, 0x45400, 0x45380, 0x455a0, 0x541f0, 0x53df0,
+  0x4a0b0, 0x1e970, 0x1e570, 0x1e5c0, 0x1e630, 0x1e510, 0x1e4a0,
+  0x52b10, 0x54560, 0x53480, 0x4b500, 0x96d1c, 0x96c38, 0x95d1c,
+  0x95c38, KATAPULT, PALMA, MOVEPLAT, KRA1, CEBRZYK, TMPLAT, TWINDA,
+  KATPLAT, EBECZKA, KPALMA, ANIPL2.DES, ZARIA.01, ZARIA.02, ENA2,
+  TUNGA.11, A_RUN, A_MOVE_DN, A_MOVE_UP, ROW CURSOR, TEventSet,
+  [obj+0xa5], [obj+0xa9], [obj+0xb1], [obj+0xca], [obj+0xce],
+  [actor+0xe2], [actor+0xe6], [actor+0xea], [obj+0x89],
+  [obj+0x50], [obj+0x5c], OI-072, OI-121, F6, F6c, F6d, T5
+CODE: no: nothing in ported/ or the Makefile moved. What this
+  unblocks is a decision, not a leg: F6c cannot be ported as
+  "the ask chain in play code" until the two gaps in OPENS are
+  closed, and F6d's seat move step is fully read and can be ported
+  now.
+HOOKS: none. Every claim below is machine code, the full-image
+  instruction index (leodb `sql` over insn), or the shipped data:
+  the 103 dumped .des members under /tmp/opencode/pr335/des and the
+  777 dumped .mov texts under /tmp/opencode/mov.
+MEASURED: (a) THE TWO SEAT ASK VERBS RAISE NOTHING. 0x1e970 is six
+  instructions of setup - `mov [esp],edx`, `mov edx,ebx` (the
+  requester), `mov ebx,0x2` (the mode), `add eax,0xa5`,
+  `xor ecx,ecx`, `call 0x45320` - and then the empty answer:
+  `xor edx,eax`, `mov ebx,0xc`, `mov BYTE PTR [ans+0xc],0`,
+  `call 0x749a0` (0x1e98a-0x1e99a): the PR-332 TEventSet with no
+  bit set. 0x1e570 ends the same way at 0x1e59b-0x1e5ab. A seat
+  answer carries NO signal; its whole output is the triple of
+  paragraph (c). 0x1e570's only test is on the state record:
+  `ebx = [[obj+0x50] + [obj+0x5c]*4]`, `mov ebx,[ebx+4]`,
+  `cmp ebx,0xd`, `jge` skips the ask (0x1e577-0x1e588). [[rec]+4]
+  is that state's ROW CURSOR, the same field the `( N )` of a
+  transition writes (PR-157/PR-181): the seat answers only while
+  its state has run fewer than 13 rows.
+  (b) WHAT 0x45320 PUTS ON THE TABLE. eax = the seat list
+  [obj+0xa5], edx = the requester, ebx = the mode; the callee pops
+  one stack slot (`ret 0x4`, 0x454c6) that the caller pushes at
+  0x45348. First 0x541f0 with a three-dword block whose third
+  dword is the point class 0x98278: 0x541f0 writes [edx] = [obj+0]
+  and [edx+4] = [obj+4] - the requester's OWN position, not a
+  stored presented point - and then, when [obj+0xb6] bit 2 is clear
+  and its class +0xbc verb answers 0 and bit 1 is clear, runs the
+  layer path +0x48 -> +0x50 -> [[+0x33]+0x4] (0x54209-0x5423a),
+  the same unmodelled transform PR-329 named. Then
+  0x45349-0x4536b adds [requester+0xca]/[+0xce] to that pair - the
+  integer step of the velocity register, PR-99's /100 output - and
+  hands 0x45400 the pair twice: as a pointer, `lea ebx,[esp+0x4]`,
+  and again through the caller's own slot, which 0x45400 reads at
+  0x4546d as `mov edx,[esp+0x18]` (the callee frame puts that
+  offset exactly on the caller's second pair dword).
+  (c) 0x45400, EVERY TEST IN ORDER, ITS ONLY CALL SITE IN THE IMAGE
+  (0x4536f). 0x4540f-0x45419 loads BYTE [rec[0]+0xc], `and 0xff`,
+  `cmp eax,ecx`, `jg` -> answer nothing: the mode gate reads the
+  FIRST record's flag byte only, never the candidate segment's;
+  mode 2 accepts 0, 1 and 2. 0x45380 (called 0x45423) is the x
+  bracket: count 0 -> nothing; pos.x < rec[0].x -> nothing;
+  pos.x > rec[count].x -> nothing; else the first k in 1..count
+  with rec[k].x >= pos.x, returned as k - a table whose first x
+  exceeds its last can never bracket, and a one-record table is
+  never a segment. 0x45434-0x45439 calls [[requester+8]+0x6c], the
+  REQUESTER's anchor verb (0x23a10 `add eax,0x89` for the lion,
+  PR-329); the class +0x14 verb 0x53df0 is what fills that block:
+  `esi = obj+0x89; [esi] = [obj]; [esi+4] = [obj+4]` plus the same
+  layer path - the anchor IS a copy of the object's own position.
+  0x455a0 is the line evaluator, and its arithmetic is exact:
+  `(pos.x-p0.x)*(p1.y-p0.y)/(p1.x-p0.x)` with `sar edx,0x1f` +
+  `idiv` as the truncating-divide pair, then `+ p0.y - pos.y` -
+  the segment's y at pos.x minus pos.y, a signed clearance,
+  negative when the segment is ABOVE the point (y grows downward).
+  It runs TWICE: 0x45468 on the ANCHOR, 0x45491 on the passed PAIR.
+  The first result is a gate only; the second is the answer. The
+  gate, 0x45477-0x4547f: `eax = clearance_at_anchor - pair.y`;
+  skipped when [requester+0xa9] is this very point object;
+  otherwise negative -> answer nothing. Then 0x45496 rejects a
+  clearance POSITIVE at the pair and 0x4549a rejects anything
+  GREATER than the stored [requester+0xea] - so among the surfaces
+  at or above the predicted position the one FARTHEST above wins,
+  not the closest. 0x454a2-0x454ba write [requester+0xe6] = the
+  point object, [requester+0xea] = that clearance, [requester+0xe2]
+  = rec[k-1]'s flag byte. The consumer PR-312 named,
+  0x54804-0x5482d, adds [obj+0xca] to x and [obj+0xce]+[obj+0xea]
+  to y and zeroes +0xea/+0xca/+0xce: since the clearance was taken
+  at the predicted position, pos.y + dy + clearance = seg_y, so the
+  law lands the POSITION POINT exactly on the seat line.
+  (d) THAT GATE CANNOT PASS AT SHIPPED COORDINATES. 0x53df0 makes
+  anchor.y = pos.y and the pair is pos.y + [obj+0xce], so the test
+  is `seg_y_at(pos.x) >= 2*pos.y + [obj+0xce]` - a y delta
+  compared against an absolute world y. Measured on ZARIA.01's four
+  shipped seats, a new attach needs pos.y <= 316 for the KATAPULT
+  pad at y 633, <= 237 for the PALMA at 475, <= 190 for 380, <=
+  160 for 320; the lion on the west ground sits at pos.y 622-654
+  (the ground is y 680-684, the shape-bottom contact is 30-58 px,
+  PR-97). So 0x45400 rejects the lion at every position that level
+  can put him in. And the exemption closes on itself: over the full
+  instruction index the ONLY writer of [actor+0xe6] is 0x454a2,
+  inside 0x45400; [actor+0xa9] is written from +0xe6 at
+  0x5478e/0x547bc, cleared at 0x547f0/0x54e6a/0x1f8e9, and written
+  from anything else at exactly one place - 0x54624, the verb
+  0x54560's case `[arg+4] == 0x1b`, whose payload dword [arg+8] IS
+  the surface object it stores: 0x5460e first calls the held
+  surface's +0x4 (detach), stores [arg+8], and if non-null calls
+  its +0x0 (attach). 0x54560 is a standard slot - 87 class tables
+  hold it at +0x88, KATAPULT's 0x96d1c among them - and it is
+  reached through the message dispatch 0x53480, which calls
+  [class+0x88] when [class+0x84] finds no handler for the message
+  NAME (0x5348d-0x534ab). Who sets `[arg+4] = 0x1b` is not in the
+  image: the only memory stores of 0x1b are 0x4a1fd, which writes
+  it to `[ebp+8]` as a PAYLOAD with `[ebp+4] = 0` before posting a
+  named message (eax = 0xcf1a8, call 0x5b8f0), and 0x54ec8, which
+  builds the block {0, 0x1b, 0, 0} for the class +0x10 verb - a
+  third opcode namespace, the same slot 0x1e5c0's {0, 1, 0, +-1}
+  block uses. The `mov edx,0x1b` at 0x1ea47/0x1ead1 is the SIGNAL
+  poster 0x52b10, another namespace again (27 = AC_BUTLA, 13 =
+  AC_DUP_CD). So either that message arrives from a poster this
+  pass did not find, or the seat-ask chain is dead in the shipped
+  set.
+  (e) THE BRACKET LAW OVER THE SHIPPED TABLES: 153 lines of the
+  dumped .des set follow an entry line and match 0x45120's grammar
+  EXACTLY - count, one pair, then count passes of one separator
+  character and one pair - and EVERY one of the 153 is x-ascending,
+  so 0x45380's endpoint gate never fails and no shipped table is a
+  single record. First-record flag byte: 142 are flag 1 (a ';'
+  follows record 0), 11 are flag 0, none is flag 2: over all 153
+  lines the separator characters are 157 ';' and 11 '!' and no '#'
+  at all, so the '#' branch at 0x451d4 is dead in the shipped set
+  and the 11 '!' lines - all of them LONA.05 ANIPL3's
+  `1 -5,0!67,0` - take the "any other character" branch at 0x451db
+  and store 0, which is what PR-335's reader does. The literal ';'
+  that 0x451e2 asks for is present on 59 of the 153 lines and
+  absent from 93; its
+  return value is never tested (0x451e8 is followed only by
+  `add esp,8`), so an absent terminator costs nothing and leaves
+  the stream on that character. Per entry token: MOVEPLAT 48, KRA1
+  21, CEBRZYK 11, TMPLAT 10, TWINDA 10, KATPLAT 8, KRA2 8, EBECZKA
+  6, KGARNEK 5, PTAKPLAT 5, KRA0 3, PALMA 3, PIASEK 2, KWINDA 2,
+  and CAMEL, ZOLW, faraon, winda, schody, mach_a, ZAPADNIA, GEJZER,
+  KATAPULT, BRANCH, TREE one each. This counts the GRAMMAR in all
+  103 members; PR-335's 147 is what this port's reader reaches, and
+  the difference is the property-line cut and the 0,0 entries it
+  already named.
+  (f) THE TRAILING PAIR IS READ DATA. 0x1e630, 0x45120's third
+  caller, is 0x45120 on [obj+0xa5] (0x1e640), then 0x45200 with the
+  object's own coordinates (0x1e64c), then `lea eax,[obj+0xb1]`,
+  `call 0x4a0b0` (0x1e651-0x1e659) - the pair reader, "%d,%d"
+  (0x91d0f) then the optional literal " , " (0x91d15) - storing
+  into [obj+0xb1]/[obj+0xb5]. 0x45120 leaves the stream exactly
+  there: 0x498f0's failed literal match consumes nothing. Of all
+  153 lines exactly ONE carries such text, ZARIA.01 ANIPL2's
+  `1 7,45;40,45 -6300,-1350`, so that pair is -6300,-1350, i.e.
+  -63 and -13.5 px per iteration in the 1/100 scale of PR-99's
+  velocity register. Which class reads it for KATAPULT is OPENS (1).
+  (g) THE SEAT'S OWN MOVE STEP, AND THE ROW CURSOR THAT DRIVES IT.
+  0x1e5c0: `eax = [[obj+0x50] + [obj+0x5c]*4]`, `eax = [eax+4]`,
+  `cmp eax,7` -> esi = +1 below 7 and -1 at or above
+  (0x1e5ca-0x1e5e9); then 0x45200([obj+0xa5], edx = 0, ebx = +-1)
+  (0x1e5ee-0x1e5f8) shifts EVERY record of the seat table by
+  (0,+-1); then when [obj+0xb1] is non-null, [[obj+0xb1]+8]+0x10
+  runs with the four-dword block {0, 1, 0, +-1} (0x1e5fd-0x1e624),
+  the same block shape 0x1e4e0 builds for the class +0x4 verb of
+  0x98278 - the element is moved by the same delta as its own
+  surface. Measured over the dumped .mov texts of the 22 of the 25
+  tokens of paragraph (e) that have a .mov in that set - a row
+  being a line that starts with an integer
+  (negative row numbers count: ZARIA.01 PALMA PALML is numbered
+  -1..-14) and a comma: ENA2 MOVEPLAT's A_RUN states are 28 rows
+  (7 of +1 then 21 of -1, ask off from row 13) and WINDA2's 33
+  rows (7 of +1, 26 of -1); TUNGA.11 MOVEPLAT's ED000001..7 pair
+  A_MOVE_DN and A_MOVE_UP with 5 rows each, which never reach 7,
+  so BOTH move +1 and the authored up/down distinction cannot come
+  from this gate; ZARIA.01 KATAPULT's only state A_RUN is 10 rows
+  BY_TIME (7 of +1, then 3 of -1, its ask stays on all cycle) and
+  ZARIA.01 PALMA's PALM and PALML are both 14-row A_RUN BY_TIME
+  (7 and 7, ask off from row 13). And over those 22 tokens' 290
+  shipped states, not one carries the SOLID flag in its `flags=`
+  line - so PR-92's solid push-out never puts the lion on one of
+  these objects either. That is the third independent reason the
+  F6c crossing cannot run through a path the port already has: the
+  seat objects are not SOLID, the ask chain's own gate rejects the
+  lion at shipped coordinates, and KATAPULT and PALMA's shipped
+  class tables hold no seat verb.
+  (h) THE SEAT VERBS DO HAVE A CLASS FAMILY - AND NO SHIPPED
+  OBJECT IS BUILT FROM IT. The installer chain PR-328 used does
+  name the two seat objects: 0x1fb32 compares the token at 0x90738
+  ('KATAPULT'), allocates 0xc5 bytes (0x1fb42 -> 0x5c320), runs
+  the base ctor 0x531f0, builds the embedded point object at
+  [obj+0xa5] with 0x44fe0, zeroes [obj+0xb1]/[obj+0xb5], stores
+  0x98278 at [obj+0xb9], then [obj+8] = 0x96d1c (0x1fb83),
+  [obj+0xa5] = 0x96cf8 and [obj+0xc] = 0x96cf0; 0x1fc08 does the
+  same for 'PALMA' (0x9074a) with size 0xb5, [obj+8] = 0x96c38
+  (0x1fc3b) and [obj+0xa5] = 0x96c14. But 0x96d1c's
+  +0x18/+0x78/+0xa4 are 0x23ba0 / 0x20230 / 0x53d80 and 0x96c38's
+  are 0x1edb0 / 0x52570 / 0x20280: neither of the two shipped
+  classes answers a seat ask. The seat verbs live in three tables
+  of their own, read slot by slot - 0x95c38 has +0x18 0x1e510,
+  +0x78 0x1e570, +0xa4 0x1e5c0; 0x95d1c has +0x18 0x1e630,
+  +0x78 0x1e970, +0xa4 0x1e690; 0x95ddc has +0x78 0x1ea90. So
+  PR-334's SLOT map holds - +0x78 is the ask, the slot 0x4b5b7
+  calls with the requester in ebx - only its TABLE was wrong.
+  Those three carry a family signature shared with 20 tables that
+  ARE installed by immediate (0x96cdc, 0x9907c, 0x9c168 ...
+  0xa1498): +0x4 0x23ea0, +0x8 0x23e00, +0x10 0x53770, +0x84
+  0x23a90, +0x88 0x534c0, +0x8c 0x23a60; and 0x534c0 is no event
+  verb, it allocates 0x48 and calls 0x51770. Immediately before
+  0x95c38, at 0x95c1c-0x95c34, the image lays out one row of the
+  surface family itself: 0x45250, 0x452d0, 0x453d0, 0x45320,
+  0x45400, 0x45120. And nothing points at any of it: no dword of
+  the image holds 0x95c38, 0x95d1c or 0x95ddc, no .text
+  instruction loads any address of that 0x95a00-0x96000 blob as
+  an immediate (the imm table filtered to prov='code' stops at
+  0x95b49), the blob holds no printable byte at all, and the only
+  code naming it is the guarded pair at 0x74980/0x74bb2, passing
+  0x95c20 and 0x95c40 to 0x77bdc - which calls 0x7be36 and, if
+  that answers 0, 0x7b8f1: the static-object init pattern, not a
+  class install. Two shipped objects are built from tables with no
+  seat verb, and the tables with the seat verbs are built by
+  nothing the image shows.
+OPENS: six gaps, and the first two are exactly what F6c is waiting
+  on: (1) how those three 0x95xxx tables are installed - which
+  shipped
+  object reads its seat line through 0x1e512/0x1e630 and answers an
+  ask through 0x1e570/0x1e970, when the classes the installer chain
+  names for KATAPULT and PALMA do not; the level-object path PR-270
+  models is the other half of that question - OI-122. (2) who
+  posts the message that reaches 0x54560's case 0x1b and writes
+  [actor+0xa9] at 0x54624: without it, or without a seat-class
+  ask, the triple of paragraph (c) has no live producer, and F6c
+  needs one. (3) what the block {0, 1, 0, +-1} is at the
+  [obj+0xb1] element's +0x10 verb, and what the pair
+  [obj+0xb1]/[obj+0xb5] of the 0x1e630 family feeds - the
+  -6300,-1350 scale suggests the velocity register of PR-99.
+  (4) the flag byte past the mode gate: 0x45400 tests only
+  rec[0]'s, and the LAST record's flag byte is never written, so
+  [actor+0xe2] reads allocation bytes from 0x76a64/0x76bb7, which
+  is what OI-121's kind word would carry. (5) TUNGA.11's 5-row
+  A_MOVE_DN/A_MOVE_UP pair shows the (0,+-1) sign is not the whole
+  motion law - where the authored direction of a short state comes
+  from is unread. (6) the layer path in 0x541f0/0x53df0, still
+  unmodelled (PR-329).
+CLOSES: nothing. It opens OI-122 (the three seat-verb class
+  tables and how they get installed) and OI-123 (the poster of
+  the 0x1b attach message), narrows OI-072 to exactly those two
+  gaps, and settles the F6d half: the
+  seat move step of 0x1e5c0 is read end to end and can be ported.
+CORRECTS: PR-334's "0x1e970, the +0x78 entry of the table 0x96d1c
+  (PR-311's)": the SLOT is right - 0x1e970 is the +0x78 entry of
+  0x95d1c - but 0x96d1c +0x78 is 0x20230 and its +0x18/+0xa4 are
+  0x23ba0/0x53d80; paragraph (h) is the slot-by-slot read of both
+  tables and of the three that hold the seat verbs.
+  PR-334's "0x45400 answers the closest non-positive clearance":
+  it keeps the most negative one, and only for a requester already
+  attached to that same point, which at shipped coordinates never
+  happens (paragraphs (c) and (d)). PR-335's "the trailing pair
+  `-6300,-1350` no reader consumes": 0x1e630 consumes it as a pair
+  at 0x1e659 (paragraph (f)). PR-334's "0x541f0 with a temporary
+  of class 0x98278" as a refresh of a stored presented point:
+  0x541f0 copies [obj+0]/[obj+4] (paragraph (b)).
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. The three censuses are reproducible:
+  /tmp/opencode/pr336_bracket2.py is the grammar, bracket, flag,
+  separator and terminator census over the 103 dumped .des members
+  of /tmp/opencode/pr335/des, /tmp/opencode/pr336_rows.py is the
+  row-count and row-cursor-threshold pass over the 777 dumped .mov
+  texts of /tmp/opencode/mov, and /tmp/opencode/pr336_solid.py is
+  the SOLID-flag census over the 290 states of the 22 seat-owning
+  tokens that have a .mov in that set.
+```
