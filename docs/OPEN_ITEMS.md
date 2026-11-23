@@ -716,6 +716,19 @@ OI-071: the PCX-backdrop vertical camera against a TALL level
   status: OPEN
   origin: HANDOFF 7 item 7.1 (the engine formula was adopted PR-65/
     84; the no-back_rect clamp source is settled)
+  notes: PR-325 tried again on the two ZARIA.01 captures and the
+    row stays open. Three more methods failed: registering the
+    temporal-median frame of ZARIA.01.mkv against the raw
+    PLAN3.PCX over the whole 640x276 field, matching silhouette
+    templates built from the level's own static art
+    (PICT/PLAN3.SEQ, PICT/PLAN5.SEQ), and registering the lower
+    half only. They disagree (anchor rows 260-275, 291, 276,
+    212) and none gets below rmse 19, because the authored
+    tlo= chain composites PLAN2.PCM and PLAN1.PCM over PLAN3.
+    The x-axis does register in ZARIA.01.mkv (camx 0, and the
+    HUD box reproduces to one pixel), but ZARIA.01_b's valley
+    is flat across camx 0..120. So no screen row in those
+    captures can be turned into a world row.
 
 OI-072: the ground SOURCE remainder (G-13): the port loads ground
   from `platformy=` only and never parses the ani_plat= LOCAL
@@ -2747,6 +2760,28 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     needs is the AC_ONAIR raise path on the hole's fall
     (PR-318 named the raisers, the port does not raise them
     yet) and the ly_exit leg end to end.
+    PR-325 CLOSES THE GROUND-TRUTH HALF of F1 for this row:
+    ZARIA.01's ladder is a route DOWN. The object script is a
+    chain, not a static prop - A_UP holds art frame 1 behind
+    `1,0,WAIT K_GEN1`, K_GEN1 (the lion's own rows, PR-257)
+    takes it to A_DROP, which walks art frames 2..10 with row
+    thresholds 500/400/400/300/300/200/200/200/200 and NO m
+    row, so the DRAWN ladder grows 48 px to 149 px (PR-294's
+    560 -> 680 boxes are those frames' own bottoms), then
+    A_DOWN (index 2, the only state that answers the lion)
+    holds frame 11 at 168 px behind `WAIT K_NEVER`. The authored
+    contact point is (213,507), five rows above the shape top
+    512, and the authored rectangle runs through the platform
+    hole ANI1.DES authors as `PICT,plan3.seq,180,515`. The
+    player's press is `A_SCIAG(1)=AC_EDGE,K_DOWN`; no state of
+    the lion's script rises (the only negative dy in the file
+    is A_KILOF's -80). What this row still needs: the same
+    AC_ONAIR raise path and the ly_exit leg; plus, from
+    PR-325's OPENS, which mechanism carries a descent at about
+    1.7 screen rows per video frame - A_SCIAG's six px per
+    24-iteration pass or A_DROP's 4 px per iteration unroll -
+    a question the captures cannot settle (the camera-y is
+    OI-071).
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

@@ -44073,3 +44073,172 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-323's pair, with DATA=/tmp/opencode/nope
   HD=/tmp/opencode/nope.
 ```
+
+## PR-325 — THE LADDER'S GROUND TRUTH IS A ROUTE DOWN: K_GEN1
+## UNROLLS IT, THE RIDER'S FEET LINE SITS ABOVE THE SHAPE TOP, AND
+## K_DOWN AT AC_EDGE RUNS THE SIX-STEP DESCENT
+```
+KIND: read
+SUBSYSTEM: the ladder thread of HANDOFF section 8 T5 (5): the two
+  ZARIA.01 capture windows re-read with shape and registration
+  methods, the authored placement and script texts behind them,
+  and the journal/OI rows.
+ADDRESSES: 0x23e00, 0x3f1c0, 0x3f214, 0x44e90, 0x4b970, 0x520c0,
+  0x54340
+NAMES: DRABINKA, drab.mov, ANI1.DES, ANI2.DES, plan3.seq, PICT,
+  A_UP, A_DOWN, A_DROP, A_SCIAG, A_PODCIAG, A_WSP, A_WSP_LIN,
+  A_DRAP, A_KILOF, AC_EDGE, AC_BREAK_NEXT, K_DOWN, K_GEN1,
+  K_NEVER, m 0,1, lock, unlock, lift art, drab art, z1_13_16,
+  z1b_199, NCC, F1, F1b, OI-078, OI-071
+CODE: no: only .md rows changed (this record, HANDOFF section 8,
+  OI-078, OI-071). No new machine-code reading: the answer is
+  authored text plus capture geometry, and every machine-code
+  half it leans on was read earlier - the answer verb and its
+  state gate (PR-142..PR-150, PR-216, PR-291), the contact test
+  at 0x23e00 and the authored-rectangle broad phase at 0x4b970
+  (PR-149, PR-308), the row-pull scale (PR-321).
+HOOKS: none new. The read used shipped read-only paths only:
+  ll_level's show/OBJPOS report (PR-57, PR-207) to print the
+  authored stack, tools/extract_record.py for the placement
+  texts, and tools/seq_parse.py + tools/seq_render.py
+  (PR-49/PR-65) to measure the picture-block and ladder art.
+MEASURED: (a) THE METHOD, AND WHY THE BACKDROP ANCHOR STILL FAILS.
+  Both windows were taken whole at game resolution (192 frames
+  of ZARIA.01.mkv t=13.0-16.2, 120 frames of ZARIA.01_b.mkv
+  t=199.6-201.6) and read three ways: the orange-component
+  trace PR-313 used; silhouette templates from the level's OWN
+  static art (PICT/PLAN3.SEQ 82x44, PICT/PLAN5.SEQ 74x49); and
+  NCC registration of the temporal-median frame against the raw
+  PLAN3.PCX (960x475), full-frame with a mean offset allowed,
+  and lower-half only. The three DISAGREE. The full-image
+  registration puts camx 0 with an anchor row between 260 and
+  275, SAD 15.5 as the minimum of the whole 640x276 field. The
+  picture-block templates put camy 291 and 276 for ZARIA.01,
+  191 and 227 for ZARIA.01_b - at best NCC 0.36-0.43, so they
+  are fits in name only. The lower half puts camx 530 / anchor
+  212 at rmse 18.8. None of them is below rmse 19, which says
+  the captures do not show PLAN3 alone: the tlo= chain
+  composites PLAN2.PCM and PLAN1.PCM over it. A screen row
+  still cannot be turned into a world row from the backdrop, so
+  OI-071 stands, now with three more failed methods named. R2
+  was re-extracted too (576x360 at 30 fps, not the 640x400
+  game view) and gives the same two rising bands PR-313
+  measured; nothing past his reading can be taken from it and
+  nothing below rests on it.
+  (b) WHAT DOES HOLD IS THE X-AXIS, IN ONE WINDOW. In
+  ZARIA.01.mkv the HUD box (x 4..31, y 156..197) reproduces to
+  within one pixel in every frame sampled, the median frame
+  registers at camx 0 as the best of the whole field, and the
+  orange in the ladder's x-window spans x 198..229 across the
+  window - inside the authored column, 190..233. That
+  identifies the ladder's PLACE with no colour test at all, the
+  separation PR-313(e) called impossible. In ZARIA.01_b the x
+  registration is DEGENERATE: the rmse valley is flat across
+  camx 0..120 (24.3 at every one), so that window's world x is
+  not pinned.
+  (c) THE LADDER'S OWN SCRIPT ANSWERS "DOES IT EXTEND".
+  ZARIA.01_DRABINKA_DRAB.MOV declares A_UP, A_DOWN, A_DROP and
+  is a three-state chain, not a static object. A_UP draws art
+  frame 1 (the 48 px stowed shape) behind `1,0,WAIT K_GEN1`;
+  K_GEN1 - raised by the lion's own rows, PR-257 - takes it to
+  A_DROP, which walks art frames 2..10 with row thresholds
+  500/400/400/300/300/200/200/200/200 (sum 2500 = 25
+  iterations on PR-110's 1/100-iteration unit) and NO m row at
+  all, then `A_DOWN(1)=AC_BREAK_NEXT`; A_DOWN sits at frame 11
+  behind `11,0,WAIT K_NEVER`, and it is state index 2, the ONLY
+  state whose answer verb (0x3f1c0, PR-216/PR-291) hands the
+  lion AC_EDGE. Those numbers are 1-based element numbers
+  (ll_mov_frame_ref, PR-49) and DRAB.SEQ's eleven elements
+  measure 48, 48, 48, 48, 74, 90, 105, 119, 134, 149, 168 px
+  tall, measured here through seq_render: the extension IS the
+  drawn ladder growing, and PR-294's boxes - top edge y 512
+  invariant in all 11 frames, bottom 560 at A_UP, 680 at A_DOWN
+  - are that chain to the pixel: 512 + 48 - 1 = 559, 512 + 149
+  - 1 = 660 across A_DROP's nine rows, 512 + 168 - 1 = 679 at
+  the frame A_DOWN holds. The top stays fixed because every
+  frame draws from the placement (180,510) and only the height
+  grows. So YES: the drawn ladder extends under the lion, its
+  lower edge running 101 px across A_DROP's 25 iterations, 4.0
+  px per iteration.
+  (d) THE FEET LINE IS ABOVE THE SHAPE TOP. The placement
+  (ANI2.DES) authors ONE contact point, the offset line
+  `1 33,-3` under the placement = absolute (213,507) - FIVE
+  rows ABOVE the shape top 512 - and that point is what the
+  answer verb puts through the edge test (0x44e90 makes it
+  absolute, 0x23e00 tests it, PR-149/PR-216). A ridden ladder
+  stands with its feet line above the top of the drawn ladder
+  by construction. The authored rectangle, `23,30;53,160`
+  against the placement = absolute (203,540)-(233,670), runs
+  130 rows UNDER that feet line, straight through the art of a
+  static block ANI1.DES authors as `PICT,plan3.seq,180,515` -
+  5 px right and 5 px below the ladder's own placement - drawn
+  82 px wide while the ladder's own art is 42-44 px: the
+  platform line is authored as a HOLE the ladder hangs through.
+  Both of F1's geometry questions answer YES from the data.
+  (e) THE PRESS, AND THE ABSENCE OF A RISE. The descent is
+  authored in the LION's script: A_DRAP's transition list
+  carries `A_SCIAG(1)=AC_EDGE,K_DOWN` (ZARIA.01_LEW.ZAR_LEW.MOV
+  line 459) - the player presses DOWN at the edge the ladder
+  answers. A_SCIAG (lines 413-430) runs `seq=lift` in ten rows
+  9,9,8,7,6,5,4,3,2,1 with thresholds 100/200/300/500/200/200/
+  200/300/300/300 (sum 2400 = 24 iterations) and carries
+  exactly the SIX `m 0,1` rows PR-309 counted (lines 424-429):
+  six px per pass, one step per row advance (apply_row_pull is
+  a row-close act, PR-309), with `lock` on its third row and
+  `unlock` on its last (PR-321's lock window). Counted state by
+  state here: A_PODCIAG, A_WSP, A_WSP_LIN and A_DRAP author
+  ZERO m rows, and the only negative dy in the whole lion
+  script is A_KILOF (-80, the hammer throw). ZARIA.01's ladder
+  is a route DOWN, not up - the plain statement F1's DONE
+  clause allows. The captures then show that column MOVING,
+  though not cleanly: in ZARIA.01.mkv the topmost orange in it
+  runs (205..224, y 20..45) at f18, (198..222, y 82..105) at
+  f60, (204..223, y 61..82) at f108 and (206..229, y 38..60)
+  at f114 - not monotone, because the same column also carries
+  the lion's own art (f12: (186..207, y 11..36)) and the
+  ladder's growing frames, and without the camera-y those
+  cannot be told apart. In ZARIA.01_b a 28 px column, its
+  width rigid across the whole window and with two small limbs
+  30-50 rows under its bottom edge, runs its top edge from
+  y 65 (f0) to y 105 (f72).
+OPENS: THE MEASURED RATE MATCHES NEITHER LAW. On PR-110's unit
+  (1/100-iteration thresholds; three video frames per iteration
+  at 60 fps over PR-135's 50 ms grid), the authored rider law
+  is 0.25 px per iteration (six `m 0,1` steps in the
+  24-iteration pass) and the authored unroll edge is 4.0 px per
+  iteration. The ZARIA.01_b band runs 1.7 px per iteration, the
+  ZARIA.01 column 1.3-2.5 px per iteration: closer to the
+  UNROLL than to the rider's own steps, which is a real lead -
+  the descent may be carried by the extending ladder, not by
+  A_SCIAG's motion rows. It cannot be settled from these
+  windows: the ZARIA.01_b x is unpinned (b), its 28 px width is
+  narrower than the stowed shape's 42 px, and a screen row
+  cannot become a world row without the camera-y, still OI-071.
+  Second: whether a shipped play run drives a placed ladder
+  through A_UP -> A_DROP -> A_DOWN at all (K_GEN1's raiser is
+  the lion's rows, PR-257, and the object row clock has run
+  since PR-324) - worth a leg in F6, claimed nowhere here.
+  OI-078's remaining halves are unchanged.
+CLOSES: the F1 step of the ladder thread as HANDOFF section 8
+  T5 named it, by its DONE clause: the plain statement that
+  ZARIA.01's ladder is a route DOWN, with its three questions
+  answered - the rider's feet line sits above the shape top
+  (the authored contact point (213,507) against 512), the drawn
+  ladder extends under him (A_UP -> A_DROP's art advance 2..10
+  -> A_DOWN, PR-294's 560 -> 680 boxes, the authored rectangle
+  through the authored platform hole), and the player presses
+  DOWN at the AC_EDGE edge into the six-step A_SCIAG descent.
+  The per-frame traces of both windows now exist in this
+  record.
+CORRECTS: PR-313. Its (e) said no method can tell the lion
+  from the ladder: in the ZARIA.01 window the discriminator is
+  not the colour but the authored column, and the band lands
+  inside x 190..233 at camx 0. Its (g) looked for "a mechanism
+  that is not a row tail"; section (c) redirects that: the
+  mechanism is the ladder's own row sequence. Its conclusion
+  that the camera cannot be pinned from the backdrop STANDS,
+  and (a) adds three failed methods to it.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+  red leg is owed and no suite run; the last full no-Windows
+  suite run is PR-324's, rc=0 with 71 green verdict lines.
+```

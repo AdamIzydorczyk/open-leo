@@ -5274,7 +5274,8 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
     in this port (PR-308: the +0xb0 point verb hands the asker
     the live position), and no row of A_WSP / A_WSP_LIN /
     A_PODCIAG / A_DRAP authorises a rise while A_SCIAG authors
-    its descent as six `m 0,1` steps (PR-309), and ZARIA.01's
+    its descent as six `m 0,1` steps (PR-309; the six are lines
+    424-429 of ZARIA.01_LEW.ZAR_LEW.MOV, PR-325), and ZARIA.01's
     own DRAB.MOV asks for NO solidity (257 other scripts do).
     "Playable ZARIA.01" also has an authored definition now: the
     level ends through A_WPAD -> A_WYJSCIE, whose rows carry the
@@ -5282,17 +5283,31 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
     ZAR_LEW.MOV has no `end_level`. The y 489 of PR-286/PR-294
     stays a measured standing height, not a target. In order:
 
-    F1. GROUND TRUTH FIRST [measure, no code]. Read the ladder
-        out of the captures already on disk - R2
-        `reference/video/ladder-DomCTOtx2rg.webm` t=46.0-49.0
-        (the climb PR-109 timed), `reference/video/levels/
-        ZARIA.01.mkv` t=13.3-15.7 (PR-131's "ridden down") and
-        `reference/video/levels/ZARIA.01_b.mkv` t=200.0-200.7
-        (mid-climb). Three questions: does the lion's feet line
-        ever rise above the ladder's shape top (512), does the
-        drawn ladder extend while he is on it, and what does the
-        player press. Done when: a per-frame trace, or the plain
-        statement that this ladder is a route DOWN, not up.
+    F1. CLOSED AS THE PLAIN STATEMENT (PR-325): ZARIA.01's
+        ladder is a ROUTE DOWN, not up. The three questions
+        answered: the ridden feet line sits ABOVE the shape top
+        (the authored contact point (213,507) is 5 rows above
+        512, and state 2 = A_DOWN answers AC_EDGE from exactly
+        that point, PR-216/PR-291); the drawn ladder extends
+        under the rider - A_UP waits K_GEN1, A_DROP walks art
+        frames 2..10 (48 px to 149 px, its lower edge 559 ->
+        660 across 25 iterations, which IS PR-294's 560 -> 680
+        pair), A_DOWN holds frame 11 at 168 px - and the
+        authored rectangle (203,540)-(233,670) runs through the
+        platform hole ANI1.DES authors as
+        `PICT,plan3.seq,180,515`; the player presses DOWN at
+        the edge (`A_SCIAG(1)=AC_EDGE,K_DOWN`, then ten rows /
+        six `m 0,1` steps through `seq=lift` frames 9..1). The
+        ZARIA.01.mkv window corroborates the x: the moving
+        orange lies inside the authored column x 190..233 at
+        camx 0, the ladder's place identified with no colour
+        test at all.
+        What the captures could NOT do (PR-325 MEASURED (a)):
+        pin a screen row to a world row - the backdrop chain
+        composites PLAN2/PLAN1.PCM over PLAN3.PCX, three more
+        registration methods failed, and the measured descent
+        rate matches neither authored law, so the rate question
+        is handed to F6, not answered here.
     F2. CLOSED (PR-322, all six by PR-316/317/320/321 + this):
         all six directive families are read and five are modelled;
         the goto family is now read end to end - parse stores a

@@ -40,9 +40,9 @@ token, never that the engine author WROTE it. A key with NO
 current - the ledger simply never wrote a correction for it; deciding
 whether an uncorrected claim still stands means reading its records.
 
-# entries: 1249 address keys (>=3 records) = 7747/13361 (57%)
+# entries: 1249 address keys (>=3 records) = 7754/13368 (58%)
 # of all address mentions; 225 field tokens (>=3) = 72%
-# of field mentions; 288 authored names (all of them). Built from 309 records.
+# of field mentions; 288 authored names (all of them). Built from 310 records.
 
 
 ## Addresses
@@ -104,6 +104,15 @@ whether an uncorrected claim still stands means reading its records.
                   PR-304 PR-311 PR-312 PR-313 PR-317 PR-318
         latest mention: PR-318
 
+### 0x23e00 - 37 records
+        mentions: PR-106 PR-149 PR-150 PR-154 PR-167 PR-169 PR-173 PR-176
+                  PR-177 PR-189 PR-190 PR-191 PR-192 PR-198 PR-209 PR-212
+                  PR-242 PR-243 PR-246 PR-247 PR-248 PR-254 PR-255 PR-257
+                  PR-267 PR-268 PR-269 PR-284 PR-286 PR-288 PR-290 PR-297
+                  PR-300 PR-305 PR-318 PR-320 PR-325
+        corrected in: PR-167
+        latest mention: PR-325
+
 ### 0x97cdc - 37 records
         mentions: PR-105 PR-153 PR-155 PR-156 PR-157 PR-160 PR-237 PR-238
                   PR-239 PR-240 PR-241 PR-242 PR-243 PR-244 PR-245 PR-246
@@ -113,14 +122,13 @@ whether an uncorrected claim still stands means reading its records.
         corrected in: PR-268
         latest mention: PR-317
 
-### 0x23e00 - 36 records
-        mentions: PR-106 PR-149 PR-150 PR-154 PR-167 PR-169 PR-173 PR-176
-                  PR-177 PR-189 PR-190 PR-191 PR-192 PR-198 PR-209 PR-212
-                  PR-242 PR-243 PR-246 PR-247 PR-248 PR-254 PR-255 PR-257
-                  PR-267 PR-268 PR-269 PR-284 PR-286 PR-288 PR-290 PR-297
-                  PR-300 PR-305 PR-318 PR-320
-        corrected in: PR-167
-        latest mention: PR-320
+### 0x520c0 - 36 records
+        mentions: PR-98 PR-100 PR-101 PR-102 PR-107 PR-115 PR-159 PR-160 PR-161
+                  PR-162 PR-167 PR-172 PR-198 PR-215 PR-219 PR-220 PR-221
+                  PR-224 PR-239 PR-240 PR-241 PR-242 PR-243 PR-244 PR-250
+                  PR-251 PR-287 PR-288 PR-289 PR-290 PR-293 PR-298 PR-322
+                  PR-323 PR-324 PR-325
+        latest mention: PR-325
 
 ### 0x536f0 - 36 records
         mentions: PR-100 PR-101 PR-103 PR-105 PR-133 PR-151 PR-153 PR-158
@@ -131,21 +139,13 @@ whether an uncorrected claim still stands means reading its records.
         corrected in: PR-226 PR-267
         latest mention: PR-324
 
-### 0x520c0 - 35 records
-        mentions: PR-98 PR-100 PR-101 PR-102 PR-107 PR-115 PR-159 PR-160 PR-161
-                  PR-162 PR-167 PR-172 PR-198 PR-215 PR-219 PR-220 PR-221
-                  PR-224 PR-239 PR-240 PR-241 PR-242 PR-243 PR-244 PR-250
-                  PR-251 PR-287 PR-288 PR-289 PR-290 PR-293 PR-298 PR-322
-                  PR-323 PR-324
-        latest mention: PR-324
-
-### 0x3f1c0 - 34 records
+### 0x3f1c0 - 35 records
         mentions: PR-149 PR-151 PR-153 PR-216 PR-237 PR-238 PR-240 PR-241
                   PR-244 PR-247 PR-249 PR-254 PR-257 PR-258 PR-259 PR-260
                   PR-267 PR-268 PR-271 PR-274 PR-277 PR-278 PR-282 PR-284
                   PR-286 PR-291 PR-292 PR-293 PR-303 PR-304 PR-305 PR-306
-                  PR-309 PR-311
-        latest mention: PR-311
+                  PR-309 PR-311 PR-325
+        latest mention: PR-325
 
 ### 0x98274 - 34 records
         mentions: PR-104 PR-106 PR-149 PR-150 PR-153 PR-154 PR-156 PR-173
@@ -696,6 +696,11 @@ whether an uncorrected claim still stands means reading its records.
                   PR-260 PR-291 PR-295 PR-304
         latest mention: PR-304
 
+### 0x3f214 - 12 records
+        mentions: PR-149 PR-158 PR-216 PR-240 PR-241 PR-244 PR-248 PR-254
+                  PR-291 PR-296 PR-304 PR-325
+        latest mention: PR-325
+
 ### 0x3f364 - 12 records
         mentions: PR-149 PR-150 PR-158 PR-216 PR-240 PR-241 PR-257 PR-267
                   PR-269 PR-291 PR-296 PR-304
@@ -804,11 +809,6 @@ whether an uncorrected claim still stands means reading its records.
                   PR-300 PR-301
         latest mention: PR-301
 
-### 0x3f214 - 11 records
-        mentions: PR-149 PR-158 PR-216 PR-240 PR-241 PR-244 PR-248 PR-254
-                  PR-291 PR-296 PR-304
-        latest mention: PR-304
-
 ### 0x4a050 - 11 records
         mentions: PR-154 PR-214 PR-237 PR-268 PR-269 PR-270 PR-282 PR-292
                   PR-294 PR-308 PR-310
@@ -818,6 +818,11 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-106 PR-108 PR-129 PR-132 PR-133 PR-178 PR-180 PR-185
                   PR-186 PR-188 PR-211
         latest mention: PR-211
+
+### 0x4b970 - 11 records
+        mentions: PR-106 PR-180 PR-189 PR-190 PR-247 PR-248 PR-254 PR-269
+                  PR-286 PR-292 PR-325
+        latest mention: PR-325
 
 ### 0x4c8b7 - 11 records
         mentions: PR-99 PR-100 PR-109 PR-110 PR-135 PR-165 PR-166 PR-168 PR-172
@@ -963,11 +968,6 @@ whether an uncorrected claim still stands means reading its records.
                   PR-290 PR-313
         latest mention: PR-313
 
-### 0x4b970 - 10 records
-        mentions: PR-106 PR-180 PR-189 PR-190 PR-247 PR-248 PR-254 PR-269
-                  PR-286 PR-292
-        latest mention: PR-292
-
 ### 0x4fef0 - 10 records
         mentions: PR-100 PR-101 PR-160 PR-161 PR-165 PR-166 PR-172 PR-289
                   PR-290 PR-293
@@ -1098,6 +1098,11 @@ whether an uncorrected claim still stands means reading its records.
                   PR-305
         corrected in: PR-244
         latest mention: PR-305
+
+### 0x44e90 - 9 records
+        mentions: PR-242 PR-243 PR-246 PR-247 PR-268 PR-282 PR-286 PR-292
+                  PR-325
+        latest mention: PR-325
 
 ### 0x453d0 - 9 records
         mentions: PR-123 PR-178 PR-185 PR-188 PR-229 PR-275 PR-279 PR-280
@@ -1290,10 +1295,6 @@ whether an uncorrected claim still stands means reading its records.
 ### 0x40400 - 8 records
         mentions: PR-59 PR-94 PR-99 PR-102 PR-162 PR-238 PR-249 PR-289
         latest mention: PR-289
-
-### 0x44e90 - 8 records
-        mentions: PR-242 PR-243 PR-246 PR-247 PR-268 PR-282 PR-286 PR-292
-        latest mention: PR-292
 
 ### 0x44f10 - 8 records
         mentions: PR-242 PR-243 PR-247 PR-268 PR-282 PR-291 PR-292 PR-305
@@ -2455,6 +2456,10 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-98 PR-256 PR-259 PR-284 PR-285
         latest mention: PR-285
 
+### 0x54340 - 5 records
+        mentions: PR-230 PR-252 PR-253 PR-321 PR-325
+        latest mention: PR-325
+
 ### 0x543a1 - 5 records
         mentions: PR-98 PR-99 PR-100 PR-130 PR-178
         corrected in: PR-98 PR-100
@@ -3328,10 +3333,6 @@ whether an uncorrected claim still stands means reading its records.
 ### 0x5433a - 4 records
         mentions: PR-98 PR-250 PR-251 PR-252
         latest mention: PR-252
-
-### 0x54340 - 4 records
-        mentions: PR-230 PR-252 PR-253 PR-321
-        latest mention: PR-321
 
 ### 0x54365 - 4 records
         mentions: PR-98 PR-99 PR-110 PR-120
@@ -6431,7 +6432,7 @@ whether an uncorrected claim still stands means reading its records.
 
 ## Authored names
 
-### K_GEN1 - 84 records
+### K_GEN1 - 85 records
         mentions: PR-69 PR-70 PR-82 PR-83 PR-88 PR-92 PR-94 PR-107 PR-114
                   PR-115 PR-149 PR-150 PR-151 PR-152 PR-153 PR-155 PR-156
                   PR-158 PR-161 PR-166 PR-173 PR-174 PR-177 PR-182 PR-192
@@ -6442,8 +6443,8 @@ whether an uncorrected claim still stands means reading its records.
                   PR-261 PR-262 PR-263 PR-264 PR-266 PR-267 PR-268 PR-271
                   PR-274 PR-282 PR-286 PR-287 PR-288 PR-290 PR-291 PR-292
                   PR-293 PR-294 PR-295 PR-296 PR-297 PR-298 PR-300 PR-304
-                  PR-309 PR-311 PR-317
-        latest mention: PR-317
+                  PR-309 PR-311 PR-317 PR-325
+        latest mention: PR-325
 
 ### control= - 47 records
         mentions: PR-43 PR-46 PR-49 PR-52 PR-58 PR-59 PR-79 PR-81 PR-88 PR-98
@@ -6454,14 +6455,14 @@ whether an uncorrected claim still stands means reading its records.
                   PR-309 PR-311 PR-312 PR-320
         latest mention: PR-320
 
-### AC_BREAK_NEXT - 44 records
+### AC_BREAK_NEXT - 45 records
         mentions: PR-69 PR-79 PR-85 PR-86 PR-87 PR-88 PR-91 PR-102 PR-107
                   PR-108 PR-110 PR-148 PR-150 PR-152 PR-173 PR-175 PR-206
                   PR-215 PR-216 PR-217 PR-218 PR-244 PR-260 PR-261 PR-262
                   PR-264 PR-266 PR-268 PR-271 PR-273 PR-274 PR-277 PR-278
                   PR-284 PR-285 PR-286 PR-287 PR-295 PR-309 PR-317 PR-321
-                  PR-322 PR-323 PR-324
-        latest mention: PR-324
+                  PR-322 PR-323 PR-324 PR-325
+        latest mention: PR-325
 
 ### AC_DRAB - 43 records
         mentions: PR-108 PR-109 PR-148 PR-149 PR-150 PR-152 PR-155 PR-156
@@ -6489,6 +6490,14 @@ whether an uncorrected claim still stands means reading its records.
                   PR-265 PR-273 PR-285 PR-298 PR-309 PR-317 PR-322 PR-323
         latest mention: PR-323
 
+### A_WSP - 41 records
+        mentions: PR-87 PR-102 PR-108 PR-109 PR-110 PR-131 PR-134 PR-148 PR-172
+                  PR-178 PR-182 PR-195 PR-244 PR-249 PR-256 PR-257 PR-258
+                  PR-259 PR-260 PR-262 PR-263 PR-268 PR-271 PR-272 PR-273
+                  PR-274 PR-277 PR-278 PR-279 PR-280 PR-281 PR-282 PR-283
+                  PR-284 PR-285 PR-286 PR-294 PR-309 PR-310 PR-315 PR-325
+        latest mention: PR-325
+
 ### AC_TIME - 40 records
         mentions: PR-69 PR-83 PR-88 PR-107 PR-110 PR-115 PR-134 PR-135 PR-152
                   PR-153 PR-157 PR-158 PR-159 PR-160 PR-161 PR-162 PR-163
@@ -6497,28 +6506,27 @@ whether an uncorrected claim still stands means reading its records.
                   PR-262 PR-264 PR-271 PR-287 PR-290 PR-295 PR-309
         latest mention: PR-309
 
-### A_WSP - 40 records
-        mentions: PR-87 PR-102 PR-108 PR-109 PR-110 PR-131 PR-134 PR-148 PR-172
-                  PR-178 PR-182 PR-195 PR-244 PR-249 PR-256 PR-257 PR-258
-                  PR-259 PR-260 PR-262 PR-263 PR-268 PR-271 PR-272 PR-273
-                  PR-274 PR-277 PR-278 PR-279 PR-280 PR-281 PR-282 PR-283
-                  PR-284 PR-285 PR-286 PR-294 PR-309 PR-310 PR-315
-        latest mention: PR-315
-
-### AC_EDGE - 33 records
+### AC_EDGE - 34 records
         mentions: PR-108 PR-149 PR-150 PR-238 PR-259 PR-260 PR-262 PR-263
                   PR-264 PR-265 PR-266 PR-267 PR-268 PR-269 PR-270 PR-271
                   PR-273 PR-274 PR-278 PR-282 PR-284 PR-285 PR-286 PR-287
                   PR-294 PR-295 PR-296 PR-297 PR-298 PR-304 PR-305 PR-309
-                  PR-311
-        latest mention: PR-311
+                  PR-311 PR-325
+        latest mention: PR-325
 
-### A_DRAP - 31 records
+### A_DRAP - 32 records
         mentions: PR-74 PR-83 PR-85 PR-86 PR-87 PR-91 PR-110 PR-134 PR-135
                   PR-235 PR-244 PR-249 PR-256 PR-257 PR-258 PR-261 PR-262
                   PR-263 PR-271 PR-272 PR-273 PR-274 PR-277 PR-284 PR-285
-                  PR-286 PR-309 PR-313 PR-320 PR-322 PR-323
-        latest mention: PR-323
+                  PR-286 PR-309 PR-313 PR-320 PR-322 PR-323 PR-325
+        latest mention: PR-325
+
+### A_DROP - 30 records
+        mentions: PR-149 PR-150 PR-153 PR-158 PR-161 PR-216 PR-217 PR-234
+                  PR-240 PR-241 PR-242 PR-243 PR-244 PR-246 PR-248 PR-249
+                  PR-254 PR-256 PR-257 PR-271 PR-282 PR-286 PR-287 PR-290
+                  PR-291 PR-292 PR-294 PR-309 PR-315 PR-325
+        latest mention: PR-325
 
 ### A_RUN - 30 records
         mentions: PR-69 PR-70 PR-78 PR-79 PR-81 PR-88 PR-90 PR-92 PR-98 PR-107
@@ -6533,13 +6541,6 @@ whether an uncorrected claim still stands means reading its records.
                   PR-286 PR-295 PR-309 PR-310 PR-312 PR-313 PR-317 PR-318
                   PR-319 PR-320 PR-321 PR-322
         latest mention: PR-322
-
-### A_DROP - 29 records
-        mentions: PR-149 PR-150 PR-153 PR-158 PR-161 PR-216 PR-217 PR-234
-                  PR-240 PR-241 PR-242 PR-243 PR-244 PR-246 PR-248 PR-249
-                  PR-254 PR-256 PR-257 PR-271 PR-282 PR-286 PR-287 PR-290
-                  PR-291 PR-292 PR-294 PR-309 PR-315
-        latest mention: PR-315
 
 ### K_JUMP - 29 records
         mentions: PR-43 PR-69 PR-71 PR-74 PR-86 PR-88 PR-108 PR-173 PR-176
@@ -6562,12 +6563,12 @@ whether an uncorrected claim still stands means reading its records.
                   PR-286 PR-287 PR-296
         latest mention: PR-296
 
-### A_PODCIAG - 26 records
+### A_PODCIAG - 27 records
         mentions: PR-108 PR-259 PR-260 PR-262 PR-263 PR-264 PR-265 PR-266
                   PR-267 PR-268 PR-271 PR-272 PR-273 PR-274 PR-275 PR-280
                   PR-281 PR-282 PR-283 PR-284 PR-285 PR-286 PR-296 PR-309
-                  PR-321 PR-322
-        latest mention: PR-322
+                  PR-321 PR-322 PR-325
+        latest mention: PR-325
 
 ### AC_DUP - 25 records
         mentions: PR-69 PR-74 PR-108 PR-110 PR-115 PR-152 PR-173 PR-174 PR-178
@@ -6581,17 +6582,17 @@ whether an uncorrected claim still stands means reading its records.
                   PR-254 PR-256 PR-257 PR-262 PR-272 PR-273 PR-277
         latest mention: PR-277
 
+### K_DOWN - 24 records
+        mentions: PR-43 PR-85 PR-108 PR-173 PR-192 PR-217 PR-225 PR-234 PR-236
+                  PR-244 PR-258 PR-259 PR-260 PR-261 PR-263 PR-268 PR-274
+                  PR-277 PR-278 PR-284 PR-285 PR-287 PR-296 PR-325
+        latest mention: PR-325
+
 ### K_FWD - 24 records
         mentions: PR-43 PR-82 PR-83 PR-85 PR-88 PR-102 PR-110 PR-173 PR-192
                   PR-215 PR-225 PR-226 PR-228 PR-229 PR-234 PR-236 PR-258
                   PR-260 PR-261 PR-263 PR-264 PR-271 PR-279 PR-295
         latest mention: PR-295
-
-### K_DOWN - 23 records
-        mentions: PR-43 PR-85 PR-108 PR-173 PR-192 PR-217 PR-225 PR-234 PR-236
-                  PR-244 PR-258 PR-259 PR-260 PR-261 PR-263 PR-268 PR-274
-                  PR-277 PR-278 PR-284 PR-285 PR-287 PR-296
-        latest mention: PR-296
 
 ### K_FIRE - 23 records
         mentions: PR-43 PR-69 PR-71 PR-74 PR-83 PR-87 PR-88 PR-173 PR-174
@@ -6599,11 +6600,11 @@ whether an uncorrected claim still stands means reading its records.
                   PR-260 PR-261 PR-263 PR-266 PR-267 PR-296
         latest mention: PR-296
 
-### K_NEVER - 21 records
+### K_NEVER - 22 records
         mentions: PR-88 PR-115 PR-150 PR-173 PR-217 PR-218 PR-219 PR-222 PR-234
                   PR-249 PR-257 PR-260 PR-261 PR-263 PR-264 PR-266 PR-271
-                  PR-286 PR-287 PR-294 PR-309
-        latest mention: PR-309
+                  PR-286 PR-287 PR-294 PR-309 PR-325
+        latest mention: PR-325
 
 ### A_FALL_DOWN - 19 records
         mentions: PR-90 PR-108 PR-134 PR-148 PR-174 PR-235 PR-244 PR-257 PR-259
@@ -6621,6 +6622,11 @@ whether an uncorrected claim still stands means reading its records.
                   PR-186 PR-191 PR-192 PR-234 PR-258 PR-263 PR-266 PR-296
         latest mention: PR-296
 
+### A_DOWN - 16 records
+        mentions: PR-150 PR-158 PR-216 PR-217 PR-234 PR-244 PR-249 PR-257
+                  PR-259 PR-271 PR-282 PR-286 PR-287 PR-294 PR-309 PR-325
+        latest mention: PR-325
+
 ### K_BKWD - 16 records
         mentions: PR-82 PR-83 PR-85 PR-173 PR-192 PR-215 PR-217 PR-226 PR-234
                   PR-236 PR-258 PR-260 PR-261 PR-263 PR-266 PR-295
@@ -6630,11 +6636,6 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-74 PR-87 PR-173 PR-295 PR-296 PR-309 PR-310 PR-312 PR-313
                   PR-316 PR-317 PR-318 PR-319 PR-320 PR-321
         latest mention: PR-321
-
-### A_DOWN - 15 records
-        mentions: PR-150 PR-158 PR-216 PR-217 PR-234 PR-244 PR-249 PR-257
-                  PR-259 PR-271 PR-282 PR-286 PR-287 PR-294 PR-309
-        latest mention: PR-309
 
 ### A_JUMP_S - 15 records
         mentions: PR-73 PR-74 PR-86 PR-90 PR-98 PR-108 PR-134 PR-174 PR-249
@@ -6661,6 +6662,11 @@ whether an uncorrected claim still stands means reading its records.
                   PR-316 PR-317 PR-320 PR-321 PR-322
         latest mention: PR-322
 
+### A_WSP_LIN - 14 records
+        mentions: PR-98 PR-102 PR-108 PR-109 PR-134 PR-148 PR-172 PR-178 PR-249
+                  PR-256 PR-259 PR-268 PR-309 PR-325
+        latest mention: PR-325
+
 ### AC_ENEMY - 13 records
         mentions: PR-88 PR-91 PR-92 PR-94 PR-173 PR-175 PR-177 PR-179 PR-238
                   PR-241 PR-258 PR-265 PR-295
@@ -6675,11 +6681,6 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-72 PR-73 PR-86 PR-98 PR-108 PR-249 PR-251 PR-253 PR-277
                   PR-309 PR-313 PR-317 PR-320
         latest mention: PR-320
-
-### A_WSP_LIN - 13 records
-        mentions: PR-98 PR-102 PR-108 PR-109 PR-134 PR-148 PR-172 PR-178 PR-249
-                  PR-256 PR-259 PR-268 PR-309
-        latest mention: PR-309
 
 ### AC_BLOK - 12 records
         mentions: PR-88 PR-94 PR-173 PR-177 PR-179 PR-199 PR-238 PR-266 PR-295
@@ -6716,6 +6717,11 @@ whether an uncorrected claim still stands means reading its records.
                   PR-222 PR-295 PR-309
         latest mention: PR-309
 
+### A_SCIAG - 11 records
+        mentions: PR-108 PR-268 PR-273 PR-278 PR-284 PR-285 PR-286 PR-309
+                  PR-310 PR-315 PR-325
+        latest mention: PR-325
+
 ### K_GEN2 - 11 records
         mentions: PR-43 PR-69 PR-88 PR-172 PR-173 PR-174 PR-177 PR-234 PR-267
                   PR-268 PR-295
@@ -6731,11 +6737,6 @@ whether an uncorrected claim still stands means reading its records.
                   PR-220 PR-295
         latest mention: PR-295
 
-### A_SCIAG - 10 records
-        mentions: PR-108 PR-268 PR-273 PR-278 PR-284 PR-285 PR-286 PR-309
-                  PR-310 PR-315
-        latest mention: PR-315
-
 ### zwierzaki= - 10 records
         mentions: PR-44 PR-45 PR-60 PR-61 PR-208 PR-212 PR-213 PR-254 PR-271
                   PR-302
@@ -6744,6 +6745,10 @@ whether an uncorrected claim still stands means reading its records.
 ### A_DOSTAL - 9 records
         mentions: PR-89 PR-91 PR-98 PR-134 PR-135 PR-206 PR-253 PR-256 PR-273
         latest mention: PR-273
+
+### A_KILOF - 9 records
+        mentions: PR-94 PR-134 PR-174 PR-257 PR-273 PR-284 PR-322 PR-323 PR-325
+        latest mention: PR-325
 
 ### A_STAY - 9 records
         mentions: PR-43 PR-74 PR-82 PR-83 PR-85 PR-86 PR-98 PR-135 PR-199
@@ -6773,10 +6778,6 @@ whether an uncorrected claim still stands means reading its records.
 ### AC_DUP_CD - 8 records
         mentions: PR-178 PR-179 PR-181 PR-295 PR-313 PR-318 PR-319 PR-320
         latest mention: PR-320
-
-### A_KILOF - 8 records
-        mentions: PR-94 PR-134 PR-174 PR-257 PR-273 PR-284 PR-322 PR-323
-        latest mention: PR-323
 
 ### A_WALK_FWD - 8 records
         mentions: PR-43 PR-82 PR-83 PR-85 PR-97 PR-98 PR-199 PR-256
