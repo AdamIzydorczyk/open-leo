@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-290.
+> at PR-291.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -39607,6 +39607,167 @@ right - BY_X matches at 0x51b49 and the arm jumps to the next
 token with the word clear at 0x51b2e, so BY_X is mode 0 and
 0x51b6f's 0x1 belongs to BY_Y. No port code stands on those
 two sentences.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-290 — THE `control=` QUERY BITS ASK NEIGHBOURING OBJECTS
+## FOR THEIR SET; A ROW WITHOUT THOSE BITS IS MATCHED AGAINST
+## ITS OWN SET ALONE, WHICH IS WHY THE LIFT'S `K_GEN1` HAS ONE
+## POSSIBLE SOURCE
+```
+KIND: read
+SUBSYSTEM: the world query PR-290 named in PR-289: the three
+query calls 0x4bd30 / 0x4b890 / 0x4b870 behind the record
+class's composition verb 0x52790, the answer verb 0x23920 they
+call on each candidate, and what happens for a record whose
+`control=` line sets none of those bits - the DRABINKA lift of
+FOCUS 1.
+ADDRESSES: 0x4bd30, 0x4bd5e, 0x4bd64, 0x4bd71, 0x4bd81,
+0x4bd8c, 0x4bd9c, 0x4bda9, 0x4bdb6, 0x4bdf6, 0x4be09,
+0x4b500, 0x4b510, 0x4b522, 0x4b552, 0x4b561, 0x4b581,
+0x4b59a, 0x4b5a1, 0x4b5be, 0x4b870, 0x4b890, 0x23920,
+0x23900, 0x23a30, 0x23ea0, 0x23e00, 0x53d80, 0x5c320,
+0x56620, 0x56510, 0xa26c8, 0xa92d4, 0xa94ec, 0xcef40,
+0xcef44, 0xcf0e4, 0x97ca8, 0x98278, 0x968b8, 0x924f4,
+0x52790, 0x527a2, 0x527ae, 0x527b3, 0x5282f, 0x52849,
+0x52853, 0x520e4, 0x520f2, 0x520f6, 0x52100, 0x52103,
+0x5210f, 0x52118, 0x749a0, 0x49580, 0x495b0
+NAMES: CHECK_LEW, CHECK_ANI, CHECK_ZW, CHECK_ALL_PLANE,
+K_GEN1, DRABINKA, world query, answer verb, movrec,
+ll_mov_row_gate, OI-111, OI-118, OI-041, OI-078, PR-99,
+PR-241, PR-287, PR-288, PR-289
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: PR-289 OPENS (i) named 0x4bd30 / 0x4b890 / 0x4b870 and
+the object at [0xcef40] as unread; PR-287 OPENS (iv) and
+PR-288 had left the row step's caller argument (0x521f0's
+[esp+0x68], the set 0x522bc OR-s with [obj+0x60]) without an
+origin. PR-99's control-word map says which authored keywords
+turn each query on; the DRABINKA script of OI-078 / FOCUS 1 is
+the row this port most needs answered.
+MEASURED: (a) THE RECORD CLASS TABLE 0x97ca8, ALL OF IT: +0x00
+= the row step 0x521f0, +0x0c = the row walk 0x520c0, +0x10 =
+the ENTER 0x4fef0, +0x08 = 0x52570, +0x14 = 0x52660, +0x20 =
+0x52680, +0x1c = 0x52470, +0x24 = 0x4ff80, +0x28 = the
+composition verb 0x52790, +0x44..+0x5c = 0x53770 / 0x536f0 /
+0x3f0f0 / 0x52c70 / 0x52a00 / 0x52a50 / 0x52a90, +0x60 =
+0x53d80, +0x78 = 0x23920 - and at +0x34 / +0x38 / +0x3c sit
+0x20280 / 0x23ea0 / 0x23e00, the SAME three verbs the
+standalone table 0x98278 holds at +0x00 / +0x04 / +0x08. So
+0x98278 is the geometry BASE class of the movement-record
+class, exactly the class the base ctor embeds at
+[obj+0xd6..0xde] (OI-118) - it is neither a signal set (the
+PR-218/PR-219 reading) nor a free-standing "POINT class" the
+walk happens to use (PR-288's wording): it is the record's own
+base. (b) THE WALK'S BUFFER IS A BASE OBJECT FILLED WITH A
+SET: 0x520e4-0x520ef read [rec+0x00] and then its +0x00/+0x04
+words, 0x520f2 stores the class word 0x98278 at [buf+8],
+0x520f6 calls the base's +0x04 verb 0x23ea0 (`mov [eax],edx`
+/ `mov [eax+4],ebx` / ret) to write those two words, and
+0x52100 hands the buffer to 0x52790, which 0x5282f-0x52849
+overwrite with twelve bytes plus a mode byte at [buf+0xc] and
+0x52853 return in eax. PR-289's claim that the words are not
+coordinates is wrong about the CONSTRUCTION and right about
+the RESULT. (c) THE THREE QUERIES. 0x527b3 tests CHECK_LEW
+([rec+0x13] bit 0x2) and calls 0x4bd30; 0x527db tests
+CHECK_ANI ([rec+0x12] bit 0x40) and calls 0x4b890; 0x52805
+tests CHECK_ZW (bit 0x80) and calls 0x4b870. All three get
+`eax = [0xcef40]` (the level's query object), `ebx = [rec+0]`
+(the record's OWNER object), `edx = a scratch buffer` and
+`ecx = [rec+0x12] & 0x8000` = CHECK_ALL_PLANE. 0x4b870 and
+0x4b890 are three-instruction thunks into one shared body
+0x4b500, differing only in the `this` they load: [0xcef44]
+for CHECK_ZW, [0xa94ec] for CHECK_ANI. (d) WHAT A QUERY DOES:
+it walks the objects the level keeps - a container list at
+[[owner+0x24]+0x64] with next-links at +0x34 in 0x4bd30, a
+bucket array at [this+0x58] indexed while a counter is below
+[this+0x44] in 0x4b500 - and for each candidate calls its
++0x60 verb as a gate (0x53d80: allocate 0x28 bytes through
+0x5c320, whose failure path prints "Mem Out: %d, mem: %d,
+max: %d" (0x924f4) against the pool 0xa92d4, then build
+through 0x56620, which stores the class word 0xa26c8 at +0x08
+and 0xff / 0x80 / -1 at +0xc / +0x10 / +0x20, and cache the
+result at [obj+0x54]); it skips a candidate whose container
+[entry+0x24] equals the owner's UNLESS CHECK_ALL_PLANE is set,
+and skips the owner itself. For a survivor it calls the
+candidate's +0x78 verb - 0x23920, in 186 class tables, and it
+is four instructions: `edx = [obj+0x5c]`, `eax =
+[obj+0x50]`, `eax = [eax + edx*4]`, `return [eax+0x12]` - a
+POINTER to the twelve-byte set plus mode byte the query wants.
+0x4bd30 copies those thirteen bytes (0x4bdb2-0x4bdb5), tests
+them empty with 0x495b0, and on the FIRST non-empty answer
+copies the set and its mode into the caller's buffer and
+returns; 0x4bdf6 handles the no-list case by asking the object
+at [[level]+0x394] the same +0x78 question. 0x4b500 instead
+accumulates through a set whose ctor size at 0x4b522 is
+`ecx*4` from that same modifier. So the caller's set is built
+from a NEIGHBOURING object's set, not from a bus: CHECK_LEW
+asks about the lion, CHECK_ANI about animated objects,
+CHECK_ZW about creatures, and CHECK_ALL (0x1c0 = CHECK_ANI |
+CHECK_ZW | CHECK_LN, PR-99) switches on two of them. (e) AND
+FOR THE LIFT THERE IS NO SUCH SOURCE. ZARIA.01_DRABINKA_DRAB
+.MOV sets `control=BY_TIME` on all three states and nothing
+else, so CHECK_LEW, CHECK_ANI and CHECK_ZW are all clear and
+0x52790 composes an EMPTY set (constructed at 0x527a2-0x527ae
+and never added to), which 0x522bc then OR-s with the object's
+own [obj+0x60] - a no-op. The lift's `1,0,WAIT K_GEN1` row
+and its `A_DROP(1)=K_GEN1` transition are therefore matched
+against the lift's own raised bits ONLY. Measured across the
+corpus: 193 shipped texts mention K_GEN1 and 171 raise it in a
+transition or a `GEN` row, but in ZARIA.01 the only raiser is
+ZAR_LEW (the lion) in its fight and throw states
+(`4,600,GEN K_GEN1` and friends), which is the far side of the
+level. The FOCUS-1 route for the lift narrows to the ONE
+writer this port already models - PR-241's ask, which sets
+bit 54 = K_GEN1 in the target's own set ([eax+0x66] |= 0x40
+at 0x44e70, the field PR-287 proved the gate reads) - so the
+question is not "what bus carries K_GEN1 to the lift" but
+"what makes the engine ask the lift": OI-078's remaining
+question, restated. (f) THE PORT'S EXPOSURE: ll_play.c
+implements neither query nor the answer verb; its
+`ll_mov_row_gate` reads o->sig alone, which (d)/(e) show is
+EXACTLY right for records with no CHECK_* keyword - the lift,
+the stones, the catapult - and incomplete only for the 535
+CHECK_LEW / 168 CHECK_ANI / 47 CHECK_ZW rows, whose set the
+port never widens. Its `GEN` arm (PR-69/PR-83) does apply
+K_GEN* and AC_TIME raises into the owner's own set, matching
+the shape (e) requires.
+OPENS: in order: (i) what writes the lift's [obj+0x60] bits in
+the engine - the ask of PR-241 is the only writer found, so
+what makes an object ask the DRABINKA is FOCUS 1's question
+again, and 0x52103-0x5210f (the walk calling the OWNER class's
++0x04 verb with the composed set's first two words, then
+writing [owner+0xa1] from [esp+0x14] at 0x52118) is the
+nearest unread code; (ii) the [obj+0x50] / [obj+0x5c] pair
+that 0x23920 indexes - PR-288 noted [obj+0x5c] = 1 from the
+ctor 0x5389e and the record clone 0x533b0, and its +0x12 field
+is the set the whole query reads; (iii) the +0x60 gate's real
+meaning (0x53d80 allocates and caches at [obj+0x54] a 40-byte
+object of class 0xa26c8 - what that object is, and what the
+185 other tables' +0x60 verbs do); (iv) the three query
+`this` globals [0xcef40] / [0xcef44] / [0xa94ec] and the
+[level+0x394] fallback; (v) whether the row step's caller
+argument really is the buffer 0x52790 fills (PR-289 (ii) still
+unseen - no call site of 0x521f0 and no image reference to
+0x97ca8 outside its own table).
+CLOSES: PR-289 OPENS (i) in shape: the three queries are named
+and read down to their answer verb, CHECK_ALL_PLANE's role
+(same-container candidates, and the ctor size in 0x4b500) is
+measured, and the answer verb 0x23920 is named; and it closes
+the "level-wide signal set" hypothesis for the FOCUS-1 lift by
+(e) - no query runs for a `control=BY_TIME` record, so no
+external set can reach that row.
+CORRECTS: PR-289's sentence "the buffer the class-0x98278
+setter initialises is [not] a POINT ... 0x5282f-0x52849
+overwrite those dwords wholesale": the overwrite is real, but
+0x98278 IS the geometry base class of the record class itself
+(its verbs at 0x97ca8+0x34/+0x38/+0x3c), so the walk really
+does construct a point-object of that base first; and
+PR-288's calling of 0x98278 a standalone "POINT class" is
+narrowed the same way. OI-041's "CAMEL/0x98278 role (a generic
+decor/mover in NEITHER key lineage)" is corrected by (a): it is
+a base-class table that 144 class tables inherit and the record
+class carries. No port code stands on those sentences.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```

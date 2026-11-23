@@ -398,8 +398,12 @@ OI-040: are PICT/.SEQ statics ANIMATED?
 OI-041: class-name remainders: 0x98078/0x9815c/0x981e8 semantics
     mapped but names pending, the 'XxXx' pair strings, parser-class
     table 0xa1310, TLewEna/TLewSades/TLewLona/TLewTunga2 class
-    tables, the 15 class names, the CAMEL/0x98278 role (a generic
-    decor/mover in NEITHER key lineage)
+    tables, the 15 class names, the CAMEL/0x98278 role - no
+    longer "a generic decor/mover": PR-290 reads it as the
+    geometry BASE class, whose verbs 0x20280 / 0x23ea0 /
+    0x23e00 reappear at the movement-record class table
+    0x97ca8+0x34/+0x38/+0x3c and which the base ctor embeds
+    at [obj+0xd6..0xde] (OI-118)
   status: OPEN
   origin: PR-176/187/190/191/192 counts
 
@@ -759,7 +763,11 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     lion is index 2 = A_DOWN; A_DROP, the unrolling rope, is
     index 3 = inert. PR-150's row-cursor gate is gone, and the
     "binding order / encrypted pool" blocker of PR-157/158 is
-    gone with it. Census: 172 of the 777 shipped .MOV texts
+    gone with it. (PR-290 narrows the one question left here:
+    a row's match set comes from the record's `control=` query
+    bits, and DRAB.MOV sets none of them, so no external set
+    can reach that row - see this row's PR-290 item.) Census:
+    172 of the 777 shipped .MOV texts
     differ between the two orders, 54 sites compare [obj+0x5c]
     with a literal (21 of them `== 1`, the initial state), and
     the pinned ZARIA.01 walk probe is unchanged, as expected:
@@ -1962,6 +1970,25 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     .plt-grounded fall. The ladder chain is now pinned
     three ways; the ONE thing ZARIA.01 still lacks is the
     lift itself.
+    PR-290 CLOSES THE WRONG-DOOR HALF of that. The set a
+    `Wait` clause is matched against is composed per record
+    from its own `control=` keywords (OI-111 item (5), the
+    record class's +0x28 verb 0x52790): CHECK_LEW asks a
+    neighbouring object for its set through 0x4bd30, CHECK_ANI
+    and CHECK_ZW through the shared body 0x4b500 behind
+    0x4b890 / 0x4b870, and the answer verb 0x23920 hands back
+    field +0x12 of `[obj+0x50] + [obj+0x5c]*4`. DRAB.MOV's
+    three states carry only `control=BY_TIME`, so all three
+    queries are skipped and the composed set stays EMPTY: the
+    lift's `1,0,WAIT K_GEN1` and `A_DROP(1)=K_GEN1` are
+    matched against the lift's own raised bits alone - exactly
+    what PR-287's `ll_mov_row_gate` reads, so that gate is
+    right for this record. A signal bus is therefore no longer
+    a candidate explanation; what remains is which code
+    performs the ASK that sets bit 54 in the lift's own set
+    (PR-241's 0x44e70 shape is the only writer found) and why
+    the engine performs it there and this port's probe does
+    not.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -2665,7 +2692,14 @@ OI-111: which row-step path the port's row clock models -
     the scene queries 0x4bd30 / 0x4b890 / 0x4b870 on the object
     at [0xcef40] - so the argument is most likely that set, but
     the call into 0x521f0 is still not seen and the link stays
-    inferred.
+    inferred. PR-290 read those three queries: each walks the
+    objects the level keeps, gates every candidate through its
+    +0x60 verb, skips self and (unless CHECK_ALL_PLANE) same-
+    container entries, and copies the FIRST candidate's answer
+    - its +0x78 verb 0x23920, four instructions returning
+    field +0x12 of `[obj+0x50] + [obj+0x5c]*4` - into the
+    caller's buffer. With no CHECK_* keyword the composed set
+    stays empty, which is the DRABINKA case of OI-078.
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port
