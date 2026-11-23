@@ -5449,18 +5449,21 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         port's walk (2 px per iteration) or jump (measured: the
         jump is vertical - x moves 400 to 403, apex y 551, see
         /tmp/opencode/f6c_j1.log). The authored crossing is the
-        ANIPL2 seat-line chain - the KATAPULT pad segment
-        307..340 at y 633 and the three PALMA seats at y 475,
-        380 and 320, the last one spanning the 64 px exit hole
-        - and the port never parses those lines. PR-334 read
-        that chain end to end (0x45120 builds the object's own
-        13-byte surface table into [obj+0xa5] and 0x45200
-        places it; the ask verb 0x1e970 hands that point to
-        0x45320 with the asker's predicted position; 0x45400
-        answers the closest non-positive clearance as the
-        surface triple [actor+0xe6]/[+0xe2]/[+0xea]), so what
-        is left there is a port gap with no unknown in it:
-        PR-335. What the ground/contact
+        ANIPL2 seat-line chain - measured through PR-335's
+        reader, the KATAPULT pad (307,633)-(340,633) and the
+        PALMA spans (838,475)-(900,475), (885,380)-(947,380)
+        and (930,320)-(992,320): a rising chain whose top ends
+        28 px short of the exit column at x 1020, so the seat
+        has to move while the lion stands on it, which is what
+        0x45200's per-tick (0,+-1) step of 0x1e5c0 is for.
+        PR-334 read that chain end to end (0x45120 builds the
+        object's own 13-byte surface table into [obj+0xa5] and
+        0x45200 places it; the ask verb 0x1e970 hands that
+        point to 0x45320 with the asker's predicted position;
+        0x45400 answers the closest non-positive clearance as
+        the surface triple [actor+0xe6]/[+0xe2]/[+0xea]) and
+        PR-335 parses it, so what is left there is F6c's end
+        leg: that ask chain in play code. What the ground/contact
         pass writes WHILE a lock holds is unread and named in
         PR-321's OPENS - it matters the moment that leg runs
         A_WPAD's fall into the locked pool.

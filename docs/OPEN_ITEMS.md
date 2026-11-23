@@ -780,37 +780,66 @@ OI-071: the PCX-backdrop vertical camera against a TALL level
     captures can be turned into a world row.
 
 OI-072: the ground SOURCE remainder (G-13): the port loads ground
-  from `platformy=` only and never parses the ani_plat= LOCAL
+  from `platformy=` only and never ACTS on the ani_plat= LOCAL
   ground lines (ANIPL2: KATAPULT/PALMA)
   status: OPEN
   origin: PR-136/138/140
   PR-302 SHARPENED THIS INTO A CONCRETE FILE: the section key
   'ani_plat' at 0x91dd1/0x91ded, and ZARIA.01's shipped record
   (LEVELDES +0x19b9c5c6) `ani_plat=none,anipl2.des,none`.
-  PR-334 ANCHORS THE ENGINE SIDE COMPLETELY, so what is left
-  here is a port gap, not a read gap. The .des entry's lines
-  after the coordinates are the object's OWN surface table:
-  the element method 0x45120 parses `N x,y;...` into N+1
-  13-byte records (x, y, flag byte at +0xc from the
-  separator: ';' flag 1, '#' flag 2, anything else flag 0)
-  stored INTO the object's embedded point at [obj+0xa5]
-  (class 0x98278), and 0x45200 translates every record by
-  the placement, so the table is stored absolute, exactly
-  like the ladder's contact points. The ask verb 0x1e970
-  feeds that point to 0x45320 with the asker's PREDICTED
-  position ([actor+0xca]/[+0xce] added at 0x45349), and
-  0x45400 answers the closest non-positive clearance as the
-  triple [actor+0xe6]/[+0xe2]/[+0xea] - so the KATAPULT pad
-  segment 307..340 at y 633 and the three PALMA seats at
-  y 475/380/320 are candidate ground for every lion state
-  that names those classes, and the rider moves by the
-  attach law PR-312 read at 0x54250/0x54827. NOT YET
-  PORTED: that parse (the port's place parser counts the
-  four ANIPL2 lines as polyline noise), the predicted-point
-  insert, and the triple write; and the KATAPULT line's
-  trailing `-6300,-1350` stays unacted data that no found
-  reader consumes (PR-334 OPENS).
-
+  PR-334 ANCHORED THE ENGINE SIDE and PR-335 PORTED THE PARSE,
+  so what is left here is the USE of the records, nothing else.
+  The parsed law (PR-335, byte-exact): the .des entry's lines
+  after the coordinates are the object's OWN surface table -
+  0x45120 reads a count and then N passes of one separator and
+  one pair into N+1 13-byte records at the object's embedded
+  point [obj+0xa5] (class 0x98278). The separator after record
+  i IS record i's flag byte at +0xc: ';' 1 (0x451a6), '#' 2
+  (0x451d4), any other character 0 (0x451db); NO separator ends
+  the loop, only the count compare at 0x451c9, and the LAST
+  record carries no flag byte at all; a zero count allocates
+  nothing (0x45141-0x45143) and 0x451e2 then asks for one
+  literal ';'. 0x45200 at 0x1e52a adds the placement to every
+  record, so the table is stored ABSOLUTE, exactly like the
+  ladder's contact points, and the same verb at run time
+  (0x1e5c0 -> 0x45200(point, 0, ±1), 0x1e5f6) walks the seat
+  one pixel a tick vertically. What the reader sees in the
+  shipped install: 147 such lines in 15 .des files of 9 levels,
+  309 records, one line (ZARIA.01's KATAPULT) with a trailing
+  `-6300,-1350` no reader consumes. Counted apart from it, 338
+  lines of this shape sit in the 103 dumped .des members: 154
+  after an entry line (this reader takes 147 - the other 7 hang
+  off entries authored at 0,0), 153 after a bare count line or
+  continuing another table line (KADMAR2 ANI1's `76` and its 76
+  `0 x,y;` rows, TUNGA2.12 PLATF's `66`, SADES.06 PLATF's `8`),
+  23 after a `bounds=`/`koniec=`/`R=`/`frame=` property line, 8
+  after a `TRASA`/`SOUNDSOURCE,` group line. Separators: ';' 467
+  / '!' 11 / '#' 0 - flag 2 is a grammar no shipped object uses.
+  STILL OPEN HERE: whether a property line cuts the record - those
+  23 lines behind `bounds=`/`koniec=`/`R=`/`frame=` include
+  ZARIA.02's four JBRANCH and JROPE tables, and this port reads a
+  continuation only while such lines run on directly (which verb
+  reads those words, and where does it leave the stream?); the six
+  lines whose count is one past their pairs (LONA.05 ANI3's `23
+  ...`/`20 ...`, TUNGA2.12 ZWIERZ's four GORYL paths) and what
+  the engine's failed `%d,%d` read leaves there; the ask chain
+  that would make a record a lion's ground - 0x1e970 hands
+  [obj+0xa5] to 0x45320 with the asker's PREDICTED position
+  ([actor+0xca]/[+0xce] added at
+  0x45349) and 0x45400 answers the closest non-positive
+  clearance as the triple [actor+0xe6]/[+0xe2]/[+0xea] - and
+  the rider law PR-312 read at 0x54250/0x54827 applied to
+  those seats; measured through PR-335, ZARIA.01's chain is the
+  KATAPULT pad (307,633)-(340,633) and the PALMA spans
+  (838,475)-(900,475), (885,380)-(947,380) and
+  (930,320)-(992,320), so its top ends 28 px short of the
+  authored exit column x 1020 and the crossing needs that
+  per-tick seat motion as well as the surface; the meaning of
+  the flag byte inside the query (0x45417's first-record mode
+  compare) and what the last record's unwritten flag byte
+  holds; and whether a moving platform re-translates its table
+  horizontally (0x45200 is called with the placement only at
+  load, the runtime calls pass (0, ±1)).
 OI-073: the engine's grounded-y bookkeeping: the instruction that
   turns the shape bottom into the grounded y is unread; the port's
   `pos = line - contact` is an inference

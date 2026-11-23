@@ -45888,3 +45888,236 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   leg is owed and no suite run; the last full no-Windows suite run
   is PR-333's, rc=0 with 71 green verdict lines.
 ```
+
+## PR-335 - THE ENTRY'S OWN SURFACE TABLE IS A GRAMMAR, NOT NOISE: THE
+## SEPARATOR IS THE PRECEDING RECORD'S FLAG BYTE, THE COUNT ALONE ENDS THE
+## LOOP, AND 0x45200 AT 0x1e52a MAKES EVERY RECORD ABSOLUTE WITH ITS OBJECT
+```
+KIND: port
+SUBSYSTEM: place_seat_table in ported/ll_level.c and the fields it
+  fills (lvl_obj's nseat/seat_x/seat_y/seat_flag, obj_stats' six seat
+  counters), its hook in des_place_file's continuation loop after
+  place_points/place_rect/place_pair, the per-file load report, the
+  reworded "moving ground: needs the AC_* signal bus" line, the new
+  L13 leg place_seat_selftest inside --mov-selftest, the TUNGA.11
+  authored-scene leg of the Makefile, which now pins that level's 36
+  ANIPL1 seat lines and their 87 records, and the F6 paragraph of
+  HANDOFF section 8 T5, whose seat geometry this PR measured. It is
+  the port step PR-334's record named as its own successor in that
+  thread: the seat-line chain that crosses ZARIA.01's first chasm.
+  Nothing in ll_play.c moved - no surface acts yet, only the data is
+  now read.
+ADDRESSES: 0x45120, 0x45130, 0x45136, 0x4513b, 0x45141, 0x45143,
+  0x45149, 0x4514a, 0x4514d, 0x45152, 0x45155, 0x4515a, 0x45166,
+  0x45169, 0x4516e, 0x45171, 0x45177, 0x4517e, 0x45183, 0x45189,
+  0x45191, 0x45196, 0x45198, 0x4519d, 0x451a1, 0x451a4, 0x451a6,
+  0x451ad, 0x451b0, 0x451bb, 0x451be, 0x451c2, 0x451c3, 0x451c6,
+  0x451c9, 0x451cb, 0x451cd, 0x451cf, 0x451d2, 0x451d4, 0x451db,
+  0x451dd, 0x451e0, 0x451e2, 0x451e8, 0x451f0, 0x45200, 0x45205,
+  0x45209, 0x4520c, 0x4520e, 0x45210, 0x45214, 0x45217, 0x4521a,
+  0x4521f, 0x45222, 0x45225, 0x45227, 0x45229, 0x49920, 0x498f0,
+  0x498d0, 0x4a0b0, 0x45320, 0x45400, 0x1e512, 0x1e51c, 0x1e521,
+  0x1e524, 0x1e526, 0x1e52a, 0x1e560, 0x1e577, 0x1e57f, 0x1e582,
+  0x1e585, 0x1e588, 0x1e58a, 0x1e58f, 0x1e596, 0x1e59b, 0x1e5a7,
+  0x1e5c0, 0x1e5ca, 0x1e5d4, 0x1e5da, 0x1e5dd, 0x1e5e0, 0x1e5e2,
+  0x1e5e7, 0x1e5e9, 0x1e5ee, 0x1e5f4, 0x1e5f6, 0x1e5fb, 0x1e603,
+  0x1e970, 0x9182d, 0x91830, 0x91834, 0x91836, 0x91839, 0x91d0f,
+  0x98278, 0x96d1c, 0xa5, 0xb1, 0x8, 0x4, 0xc, 0xd, 0x3b, 0x23,
+  0x5c, 0x2e8, 0x12c, 0x50, 0x6e, 0x14
+NAMES: place_seat_table, place_seat_selftest, place_points,
+  place_rect, place_pair, des_place_file, lvl_obj, obj_stats,
+  OBJ_MAXSEAT, L13, seat_lines, seat_read, seat_extra, seat_short,
+  seat_trail, seat_norec, 0x45120, 0x45200, 0x45320, 0x45400,
+  0x1e5c0, 0x1e970, KATAPULT, PALMA, MOVEPLAT, CEBRZYK, JBRANCH,
+  JROPE, GORYL, EBECZKA, TRASA, SOUNDSOURCE, bounds=, koniec=,
+  ANIPL1.DES, ANIPL2.DES, ANIPL3.DES, ANI2.DES, ANI3.DES,
+  PLAT.DES, PLATF.DES, ZWIERZ.DES, ZARIA.01, ZARIA.02, TUNGA.11,
+  LONA.05, ENA2, KADMAR.07, KADMAR2, KARA.07, TUNGA2.12, SADES.06,
+  OI-072, F6, T5, lv_tick8.log
+CODE: yes: one new reader (place_seat_table, 85 lines, 112 with its
+  comment), four new lvl_obj fields plus OBJ_MAXSEAT 24, six new
+  obj_stats counters, one new hook in the continuation loop, one new
+  load-report line, the reworded polyline-noise line, one new
+  selftest leg (L13, 11 cases plus the ordering test), and two new
+  greps in the Makefile's authored-scene leg. No runtime path
+  reads the records yet, which is why no play leg moved.
+HOOKS: ./ll_level --mov-selftest runs L13; make verify-level's
+  authored-scene leg greps TUNGA.11's seat-table report line
+  (36 lines, 87 records) in /tmp/opencode/lv_tick8.log; every
+  level's load log prints its own seat counts.
+MEASURED: (a) THE LOOP, BYTE FOR BYTE - 0x45120 is not the grammar
+  PR-334 recorded. `%d` (0x9182d) writes the count at [point+8]
+  (0x4512c-0x4513b); count 0 jumps to the epilogue, so NO table is
+  allocated (0x45141-0x45143); otherwise (N+1)*0xd+4 bytes are
+  allocated (0x45149-0x4515a) and record 0's pair is read first
+  (0x45169). The loop at 0x4517e runs EXACTLY N times and each pass
+  reads one ` %c` (0x91830) and then one `%d,%d` pair: the character
+  is the flag byte of the record that came BEFORE it - ';' 0x3b
+  stores 1 (0x451a6), '#' 0x23 stores 2 (0x451d4), anything else
+  stores 0 (0x451db) - and control then joins the SAME store-and-
+  continue tail (0x451cf → 0x451dd → 0x451ad), so NO separator ends
+  the table: only `cmp ebp,[point+8]; jg` at 0x451c9-0x451cb does.
+  The last record therefore has no flag byte written at all, and the
+  allocation's +4 bytes and initial contents stay unread. After the
+  loop 0x451e2 asks the stream for one literal ';' (the format at
+  0x91834 through 0x498f0), which is why the shipped `N x,y;..;`
+  lines end clean and why ZARIA.01's `1 7,45;40,45 -6300,-1350`
+  leaves its trailing pair where it is: the count says one pair
+  after the first, and the literal ';' does not match a '-'. The
+  parse is a stream walk, not a pointer walk: 0x49920/0x498d0 work
+  on a stream object (0x498d4 reads [obj+1], 0x498d9 calls its
+  vtable slot 0), which is why every call site passes the same
+  register.
+  (b) THE TABLE IS ABSOLUTE FROM LOAD, AND IT MOVES. The record verb
+  calls 0x45200 right after the parse with edx = [obj+0] and
+  ebx = [obj+4] (0x1e521-0x1e52a) - the placement itself, which
+  closes PR-334's open question about that pair's source - and
+  0x45217-0x4521a adds that pair to EVERY record, count+1 of them
+  (the loop at 0x45225 runs while edx <= [point+8]). So the seat
+  lines are stored exactly like the ladder's contact points
+  (PR-246's law), not kept relative. The same verb is also the
+  runtime step: 0x1e5c0 reads the current state record's field +4
+  (0x1e5da-0x1e5e0), takes +1 when it is below 7 and -1 otherwise,
+  and calls 0x45200(point, 0, ±1) at 0x1e5f6 - the platform's seat
+  walks one pixel a tick vertically, and 0x1e585-0x1e596 shows the
+  same verb family asking its own surface (the state field compared
+  with 0xd, then 0x45320 with mode 2).
+  (c) WHAT THE SHIPPED DATA HOLDS. FIRST THROUGH THIS READER: 147
+  table lines in 15 .des files of 9 levels; 309 records stored
+  absolute; 1 line with text after its records; 0 over the cap, 0
+  stale counts, 0 zero-count entry continuations. Per level:
+  ENA2 PLAT.DES 25/50, KADMAR.07 4 files 1/2 each, KADMAR2
+  PLAT1.DES 4/8, KARA.07 ANIPL2.DES 7/14, LONA.05 ANIPL2 32/64 +
+  ANIPL22 5/10 + ANIPL3 11/22, TUNGA.11 ANIPL1 36/87, TUNGA2.12
+  ZWIERZ 6/12 + ANIM 11/22, ZARIA.01 ANIPL2 4/8, ZARIA.02 ANIPL2
+  2/4. Those lines were noise before this PR: the same load runs
+  counted them as polyline lines at HEAD and count them now -
+  ZARIA.01 4 → 0, TUNGA.11 44 → 8, LONA.05 41 → 4, ENA2 37 → 12,
+  TUNGA2.12 35 → 18. THEN WITH A RAW SCANNER, over all 103 dumped
+  .des members and sorted by the line that stands IN FRONT of it:
+  338 lines have this shape. 154 follow an entry line - this reader
+  takes 147 and the other 7 hang off entries authored at 0,0 that
+  PR-93 does not instantiate (ENA2 PLAT.DES's six EBECZKA barrels,
+  TUNGA2.12 ZWIERZ.DES's GORYL); 150 continue another table line
+  and 3 start right after a bare count line, so no record verb
+  owns them (KADMAR2 ANI1's `76` then 76 `0 x,y;` rows, TUNGA2.12
+  PLATF.DES's `66`, SADES.06 PLATF.DES's `8`); 23 follow a
+  per-entry property line - `bounds=` (KARA.07 ANIPL2, 7),
+  `koniec=` (KARA.07 ANI2 4, TUNGA.11 ANI2 8), `R=`/`frame=`
+  (ZARIA.02 ANIPL2, 4) - and this walk stops at a property line
+  instead of stepping over it; 8 follow a group line (`TRASA` 6 in
+  ENA2 PLAT, `SOUNDSOURCE,` 2 in LONA.05 ANI3). Six lines hold one
+  pair FEWER than their count asks for (count + 1): LONA.05 ANI3's
+  `23 999,354;...` and `20 89,216;...` and the four GORYL patrol
+  paths of TUNGA2.12 ZWIERZ.DES - none of them is in the 147, so
+  the port's stale-count count really is 0. The widest line of the
+  whole set is that LONA.05 ANI3 `23 ...` (count 23, 23 pairs, and
+  it follows a `SOUNDSOURCE,` line); the widest this reader reaches
+  is TUNGA.11 ANIPL1's `3 0,0;30,0;63,-1;135,10;`, 4 records.
+  Separators in that text: ';' 467, '!' 11 (all of them LONA.05
+  ANIPL3's CEBRZYK `1 -5,0!67,0`), '#' 0 - so flag 2 is a grammar
+  the engine owns and no shipped object uses.
+  (d) ZARIA.01, MEASURED. The four ANIPL2 entries are read: the
+  KATAPULT pad is the segment (307,633)-(340,633), and the PALMA
+  seats are (838,475)-(900,475), (885,380)-(947,380) and
+  (930,320)-(992,320) - a rising chain whose top
+  ends 28 px short of the level's authored exit x = 1020, so the
+  chain reaches the exit column only if the seat also MOVES while
+  the lion stands on it, which is what (b)'s (0,±1) step is for.
+  (e) THE LEGS AND THEIR MUTATIONS. L13 holds eleven cases: ten
+  shipped lines quoted verbatim, eight of them tables at their own
+  authored positions (the three ZARIA.01 seats above, ZARIA.02's
+  JBRANCH `3 0,16;26,2;44,-2;62,-2;` at 1140,440 as four records,
+  the TUNGA.11 MOVEPLAT at 110,131 with `2 -3,0;42,9;45,12;`,
+  LONA.05's CEBRZYK `!` line at 389,61, and KADMAR2 ANI1's
+  zero-count line), two of them refusals of lines that belong to
+  the rect and pair grammars (ZARIA.01 ANI2's `23,30;53,160` and
+  `30,50`); plus one case with no shipped instance, the flag-2 '#'.
+  Where something is a fixture rather than shipped data, the case
+  says so - the zero-count line's placement (that block hangs off a
+  count line, so it belongs to no entry) and the third case of the
+  ordering test. That test is the order of the four continuation
+  grammars: `1 33,-3` and `1 0,200` are ZARIA.01 ANI2's DRABINKA
+  and LINA lists and must reach place_points, never the table
+  reader. Eight mutations were run and all eight are caught, each
+  by its first failing CHECK: treating '!' as flag 1; dropping the
+  0x45200 placement add (the seats come back relative); flagging
+  the record after the separator instead of before it; letting a
+  count of 0 author one record; not consuming the literal ';' of
+  0x451e2; making '#' an ordinary flag-0 character; reading N
+  records instead of N+1; and stopping the loop at any separator
+  that is not ';' - exactly PR-334's reading of 0x45120, and the
+  CEBRZYK leg is what answers it.
+  (f) THE NEGATIVES, COUNTED. No play behaviour changed: no surface
+  in ll_play.c reads these records, no object count changed (the
+  authored-scene pins of TUNGA.11 and RAN.01 stand), and the
+  trailing pair of ZARIA.01's KATAPULT is reported as text with no
+  reader rather than guessed at as motion.
+OPENS: whether a property line cuts a record at all - 23 shipped
+  table lines sit behind `bounds=`/`koniec=`/`R=`/`frame=` words,
+  ZARIA.02's four JBRANCH and JROPE tables among them, and this
+  port reads a continuation only while such lines run on directly:
+  which record verb reads those property words, and does it leave
+  the stream where the next verb expects it?; whether the 0,0
+  children of PR-93 own tables at all (the 7 lines above, every one
+  a barrel or a GORYL at 0,0); the six lines whose count is one
+  past their pairs, and what the engine's failed `%d,%d` read
+  leaves in that last record; the chain that would make one of
+  these records a lion's ground - 0x1e970 hands [obj+0xa5] to
+  0x45320, which refreshes the
+  asker's presented point, adds [actor+0xca]/[+0xce] and calls
+  0x45400, whose answer is the triple [actor+0xe6]/[+0xe2]/[+0xea]
+  (PR-334 (d)) - is still not ported, and no collision path in
+  ll_play.c consults seat records; the per-tick (0,±1) shift of
+  0x1e5c0/0x45200 and the state-record field +4 it reads (0x1e5da:
+  what IS that word, and why 7 and 0xd as its thresholds?); the
+  flag byte's meaning inside the query (0x45417's first-record mode
+  compare, and PR-312's "kind 2 ignored while [obj+0xc6] < 0x58c")
+  against flags 0/1/2, including what the LAST record's unwritten
+  flag byte holds in the engine (the allocator at 0x76a64/0x76bb7
+  was not read); whether the platformy= .PLT lines reach 0x45120 at
+  all (their counts match the same count+1 law but the port reads
+  them through ll_plt_parse, and the .PLT '!' separator is exactly
+  what 0x45120 would flag rather than obey); the other 0x45120
+  families PR-334 listed (the [obj+0xee] tables of 0x3dd60 and the
+  WSPRECT answer 0x288d5), and which class tables actually install
+  a record verb that calls 0x45120 - this port gates on the
+  GRAMMAR, not on the class, because 15 shipped files of 35 class
+  tokens use it; and whether a seat's own object position ([obj+0])
+  moving re-translates the table (0x45200 is called with the
+  placement only at load; the runtime calls pass (0,±1), so a
+  horizontally moving platform must move its records some other way
+  - read 0x1e638/0x1e6ce/0x1e733/0x1e798/0x1e803/0x1e896).
+CLOSES: nothing. It lands the parse half of OI-072 and narrows that
+  row to the use of the records; it supplies the surface data the
+  F6c exit leg of HANDOFF section 8 T5 needs; and it closes
+  PR-334's open question about 0x45200's dx,dy source.
+CORRECTS: PR-334's reading of 0x45120, in three parts. (i) "';'
+  stores flag 1 and continues, '#' stores flag 2 and ends, any other
+  character stores flag 0 and ends" - nothing ends the loop; the
+  count does (0x451c9). So `1 -5,0!67,0` is a two-record table with
+  flag 0 on the first record, not a one-record table with a trailing
+  pair. (ii) the flag byte belongs to the record the separator
+  FOLLOWS, and the final record carries no flag at all - PR-334
+  wrote the KATAPULT pad as "(307,633) flagged 1, (340,633) flagged
+  0", which is wrong twice over. (iii) the trailing pair survives
+  because the count is 1 and 0x451e2's literal ';' does not match
+  it, not because the loop stopped early. It also corrects the
+  geometry PR-334 put in the HANDOFF F6 paragraph: no PALMA seat
+  "spans the 64 px exit hole" - measured, the seats are
+  838..900/475, 885..947/380 and 930..992/320, and the top one
+  stops 28 px short of the exit column at x 1020. And the port's
+  own load-log phrase for these lines, "moving ground: needs the
+  AC_* signal bus", is replaced: they are the object's own surface
+  tables and no signal bus is involved.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; the new leg is new-code, so its red
+  evidence is the eight mutations of (e), all reported, and the
+  before/after classification counts of (c); no Windows legs
+  (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 22 named with
+  DATA=/tmp/opencode/nope HD=/tmp/opencode/nope - the same shape as
+  PR-333's pair (its record named 21; the same command names 22
+  here, counted as printed).
+```

@@ -432,6 +432,19 @@ int ll_level_anims(const char *dir, const char *level)
                             * over-run is counted, never dropped silently. */
 #define OBJ_MAXART 16      /* distinct seq= names one .MOV selects; 10 is
                             * the measured maximum (PLAN 8g) */
+#define OBJ_MAXSEAT 24     /* PR-335: surface records one entry's OWN
+                            * surface table authors (0x45120's record
+                            * array). Measured over the 103 .des members
+                            * dumped from the shipped ETAPY: the widest
+                            * line of this shape is LONA.05 ANI3's `23
+                            * 999,354;...`: its count asks 24 records,
+                            * the line holds 23 pairs, and it sits
+                            * after a `SOUNDSOURCE,` line, so no record
+                            * verb owns it. The widest table this reader
+                            * DOES reach is TUNGA.11 ANIPL1's `3
+                            * 0,0;30,0;63,-1;135,10;`, 4 records. So
+                            * nothing the reader reaches is cut; an
+                            * over-run is still counted. */
 
 typedef struct {           /* one .SEQ art table, owned by its script    */
     char name[24];                    /* the seq= name, .SEQ form        */
@@ -573,6 +586,53 @@ typedef struct {                     /* one placement of a script        */
     unsigned char nrect, npair;
     short arx0, arx1, ary0, ary1;
     short apx, apy;
+    /* PR-335: the entry's OWN SURFACE TABLE, the continuation line the
+     * animated-platform record verbs read through the element method
+     * 0x45120 (called at 0x1e51c/0x1e640 with eax = [obj+0xa5], the
+     * object's own embedded point object, class word 0x98278). Its
+     * grammar is `%d` then, for every record, one ` %c` separator and a
+     * `%d,%d` pair (the formats at 0x9182d/0x91830/0x91836): a count of
+     * N allocates N+1 13-byte records (0x45149-0x4515a) and the loop
+     * runs N times whatever the separator says - the character after
+     * record i is record i's FLAG byte (0x451a1-0x451e0: ';' 1, '#' 2,
+     * any other character 0), and the LAST record's flag byte is never
+     * written (0x451cb ends the loop before storing one). A zero count
+     * allocates NO table at all: 0x45141-0x45143 returns after the
+     * count. After the loop 0x451e2 expects one literal ';' (0x91834),
+     * which is why the shipped `N x,y;..;` lines end clean and ZARIA.01's
+     * KATAPULT `1 7,45;40,45 -6300,-1350` leaves its trailing pair with
+     * no reader (the only such line in the shipped set). The record verb
+     * follows the parse with 0x45200(point, dx = [obj+0], dy =
+     * [obj+4]) (0x1e521-0x1e52a), which adds that pair to EVERY record
+     * (0x45217-0x4521a), so the table is stored ABSOLUTE like the
+     * contact points; the same verb is also the runtime shift - 0x1e5c0
+     * calls it per tick with (0, +1) or (0, -1) from the state record's
+     * own field +4 (0x1e5dd-0x1e5f6). This port stores the load-time
+     * table only; nothing acts on it yet. nseat = 0 is the engine's no
+     * table. Measured through this reader over the shipped install:
+     * 147 lines in 15 .des files of 9 levels, 309 records stored
+     * absolute, one line with text after its records (ZARIA.01 ANIPL2's
+     * KATAPULT), none over the cap, none with a stale count, none with a
+     * zero count. What is NOT read, counted over the 338 lines of this
+     * shape in the 103 dumped .des members by the line that stands in
+     * front of them: 154 follow an entry line - this reader takes 147
+     * and the other 7 hang off entries authored at 0,0, which PR-93
+     * does not instantiate (ENA2 PLAT.DES's six EBECZKA barrels,
+     * TUNGA2.12 ZWIERZ.DES's GORYL); 150 continue another table line
+     * and 3 follow a bare count line, so no record verb owns them
+     * (KADMAR2 ANI1's `76` and its 76 `0 x,y;` rows, TUNGA2.12
+     * PLATF.DES's `66`, SADES.06 PLATF.DES's `8`); 23 follow a
+     * per-entry property line - `bounds=`, `koniec=`, `R=`, `frame=` -
+     * and this walk stops at a property line instead of stepping over
+     * it; 8 follow a group line (`TRASA`, `SOUNDSOURCE,`). Separators
+     * in that text: ';' 467 times, '!' 11 -
+     * all of them LONA.05 ANIPL3's CEBRZYK `1 -5,0!67,0` - and '#'
+     * nowhere. 6 lines hold one pair FEWER than their count (LONA.05
+     * ANI3's `23 ...` and `20 ...`, TUNGA2.12 ZWIERZ.DES's four GORYL
+     * patrol paths); none of the 147 read here is one of them. */
+    unsigned char nseat;
+    short seat_x[OBJ_MAXSEAT], seat_y[OBJ_MAXSEAT];
+    unsigned char seat_flag[OBJ_MAXSEAT];
     unsigned char atc;
     unsigned char atc_hit;          /* PR-90: this object's window has    *
                                      * already landed its one hit (mirror  *
@@ -4749,7 +4809,9 @@ static int plany_selftest(void);
 static int contact_model_selftest(void);
 static int ladder_answer_selftest(void);
 static int place_points_selftest(void);  /* L9 (PR-243): defined with the
-                                            * placement reader it tests */
+                                          readers it belongs to */
+static int place_seat_selftest(void);    /* L13 (PR-335): the entry's own
+                                            surface table, 0x45120 */
 
 /* FIX-13 (X-11) selftest, test-only entry point (ll_level.h): proves the
  * two .MOV duration invariants without any window or game data:
@@ -5041,7 +5103,18 @@ int ll_mov_selftest(void)
            " name the comparator 0x48000 does not know), with"
            " the clause ENDED by the `;` the engine's row text"
            " puts there, so `WAIT K_NEVER ;,smpauto` is the"
-           " K_NEVER clause and not an unknown name (ok)\n");
+           " K_NEVER clause and not an unknown name; and PR-335"
+           " the entry's OWN SURFACE TABLE - 0x45120's record"
+           " grammar (a count, then one separator and a pair per"
+           " record: the separator after record i is record i's"
+           " flag byte, ';' 1 '#' 2 any other character 0, and"
+           " the last record carries none; a zero count allocates"
+           " nothing; the literal ';' of 0x451e2 ends the line"
+           " and ZARIA.01's KATAPULT trailing pair has no"
+           " reader), 0x45200's placement step making the table"
+           " ABSOLUTE like the contact points, and the order of"
+           " the four continuation grammars, ladder list first"
+           " (ok)\n");
     return 0;
 }
 
@@ -7326,6 +7399,8 @@ static int ladder_answer_selftest(void)
         }
         if (place_points_selftest())      /* L9 (PR-243), with the reader */
             return 1;
+        if (place_seat_selftest())        /* L13 (PR-335), 0x45120 */
+            return 1;
         {   /* L12 (PR-270, the other half of the OI-117 law): the
              * EDGE block is the FOURTH authored line, read through
              * 0x4a0b0 (the format at 0x91d0f is `%d,%d`, the tail at
@@ -8928,6 +9003,16 @@ typedef struct {                    /* counted while reading, never guessed */
      * Consumed lines are no longer counted as polyline/group
      * noise: every shipped rect line was in st->poly before. */
     int rect_lines, pair_lines;
+    /* PR-335: the entry's OWN SURFACE TABLE (0x45120's record array,
+     * see the lvl_obj fields): lines = entries that author one, read =
+     * records stored absolute, extra = records past OBJ_MAXSEAT (counted,
+     * kept out), short = lines whose pairs run out before the count says
+     * they should (a stale count: the engine reads what is there), trail
+     * = table lines whose text is not consumed by the record grammar
+     * (ZARIA.01's KATAPULT `-6300,-1350`), norec = a zero count, which
+     * allocates no table at all (0x45141-0x45143). */
+    int seat_lines, seat_read, seat_extra, seat_short, seat_trail,
+        seat_norec;
     /* PR-328: the standalone rectangle-class placement line,
      * `TOKEN,x0,y0;x1,y1` - the eight class tables of PR-327 whose +0x18
      * verb is the one record verb 0x40c90. One such line IS an object:
@@ -9595,6 +9680,119 @@ static const char *place_pair(const char *p, const char *end,
     return eol;
 }
 
+/* PR-335: the entry's OWN SURFACE TABLE - the fourth continuation line,
+ * the one the animated-platform family reads (0x1e4a0/0x1e560 call the
+ * element method 0x45120 on the object's own point [obj+0xa5]). Every
+ * claim here is 0x45120's own code, byte for byte:
+ *   `%d` (0x9182d) into [point+8] is the record count N;
+ *   N == 0 allocates NOTHING and returns (0x45141-0x45143);
+ *   otherwise (N+1)*0xd+4 bytes are allocated (0x45149-0x4515a) and the
+ *   first `%d,%d` pair (0x4a0b0, 0x45169) fills record 0;
+ *   the loop at 0x4517e runs EXACTLY N times, each pass reading one
+ *   ` %c` (0x91830) and then one pair: that character is record i's
+ *   flag byte - ';' 0x3b stores 1, '#' 0x23 stores 2, any other
+ *   character stores 0 (0x451a1-0x451e0) - and it does NOT end the
+ *   loop, which is gated only by `cmp ebp,[point+8]` (0x451c9). So the
+ *   separator between two points is a flag on the point before it, and
+ *   the last record carries no flag at all (nothing writes [block +
+ *   N*0xd + 0xc]); this port stores 0 there and says so.
+ *   After the loop 0x451e2 asks the stream for one literal ';'
+ *   (0x91834), which is why the shipped lines end in ';' cleanly; any
+ *   other text is left where it is, with no reader found for it.
+ * Then the record verb calls 0x45200(point, [obj+0], [obj+4]) at
+ * 0x1e521-0x1e52a and 0x45217-0x4521a adds that pair to every record,
+ * so the table is stored ABSOLUTE, exactly like the contact points
+ * (PR-246's law, not PR-311's "kept relative").
+ * A line this reader cannot parse stays classified the way it was:
+ * place_points, place_rect and place_pair are tried first, so ZARIA.01's
+ * ladder and rope lists (`1 33,-3`) still go to the contact-point
+ * grammar and not here. Returns the end of the consumed line, or p. */
+static const char *place_seat_table(const char *p, const char *end,
+                                    lvl_obj *o, obj_stats *st)
+{
+    const char *eol = p;
+    while (eol < end && *eol != '\n' && *eol != '\r')
+        eol++;
+    const char *b = p;
+    while (b < eol && (*b == ' ' || *b == '\t'))
+        b++;
+    const char *e = eol;
+    while (e > b && (e[-1] == ' ' || e[-1] == '\t' || e[-1] == '\r'))
+        e--;
+    if (e == b)
+        return p;
+    int n = 0;
+    const char *q = place_int(b, e, &n);
+    if (!q)
+        return p;
+    const char *sp = q;
+    while (sp < e && (*sp == ' ' || *sp == '\t'))
+        sp++;
+    if (sp == q || sp == e)
+        return p;                   /* no count + records: not this line */
+    q = sp;
+    st->seat_lines++;
+    if (n <= 0) {                   /* zero: 0x45141-0x45143 allocates no
+                                     * table at all and returns after the
+                                     * count. Nothing in the shipped data
+                                     * authors a negative count; the
+                                     * engine's allocation at 0x4514a
+                                     * would run away on one, so the port
+                                     * takes no records for it either. */
+        st->seat_norec += n == 0;
+        goto rest;
+    }
+    for (int i = 0; i <= n; i++) {
+        int vx = 0, vy = 0;
+        const char *s1 = place_int(q, e, &vx);
+        const char *s2 = s1 ? place_comma(s1, e) : NULL;
+        const char *s3 = s2 ? place_int(s2, e, &vy) : NULL;
+        if (!s3) {                  /* the count is longer than the
+                                     * pairs: the engine reads what is
+                                     * there and stops. Six shipped
+                                     * lines do this - LONA.05 ANI3's
+                                     * `23 999,354;...` and `20 ...`
+                                     * and TUNGA2.12 ZWIERZ's four
+                                     * GORYL paths - and not one of
+                                     * them is a line this reader
+                                     * reaches. */
+            st->seat_short++;
+            break;
+        }
+        q = s3;
+        int keep = o->nseat < OBJ_MAXSEAT;
+        int at = o->nseat;
+        if (keep) {
+            o->seat_x[at] = (short)(o->x + vx);
+            o->seat_y[at] = (short)(o->y + vy);
+            o->seat_flag[at] = 0;   /* the last record carries no flag:
+                                     * 0x451cb ends the loop first */
+            o->nseat++;
+            st->seat_read++;
+        } else
+            st->seat_extra++;
+        if (i < n) {                /* the ` %c` before the NEXT pair is
+                                     * THIS record's flag byte */
+            while (q < e && (*q == ' ' || *q == '\t'))
+                q++;
+            char c = q < e ? *q++ : '\0';
+            if (keep)
+                o->seat_flag[at] =
+                    (unsigned char)(c == ';' ? 1 : c == '#' ? 2 : 0);
+        }
+    }
+    while (q < e && (*q == ' ' || *q == '\t'))
+        q++;
+    if (q < e && *q == ';')        /* 0x451e2: the literal ';' at 0x91834 */
+        q++;
+rest:
+    while (q < e && (*q == ' ' || *q == '\t'))
+        q++;
+    if (q < e)                      /* text no reader claims: counted */
+        st->seat_trail++;
+    return eol;
+}
+
 /* L9 (PR-243): the authored contact-point grammar, tested next to
  * the reader it belongs to. */
 static int place_points_selftest(void)
@@ -9741,6 +9939,184 @@ static int place_points_selftest(void)
         }
     }
 
+    return 0;
+}
+
+/* L13 (PR-335): the entry's OWN surface table, tested next to the reader
+ * (0x45120's record grammar, 0x45200's placement step). Every text line
+ * below is quoted verbatim from the .des member named, at that entry's
+ * own authored position. The cases that are NOT shipped say so: the '#'
+ * separator (no shipped line uses it), the smallest-case ladder list of
+ * the ordering test, and the placement of the zero-count block, which
+ * belongs to no entry at all. */
+static int place_seat_selftest(void)
+{
+    static const struct { const char *text; int x, y;
+                         int want; int px[4], py[4], flag[4];
+                         int trail, shortc, norec; const char *what; } sl[] = {
+        { "1 7,45;40,45 -6300,-1350\n", 300, 588, 2,
+          { 307, 340, 0, 0 }, { 633, 633, 0, 0 }, { 1, 0, 0, 0 },
+          1, 0, 0,
+          "ZARIA.01 ANIPL2's KATAPULT seat: the only line in the"
+          " shipped set whose text continues after its records" },
+        { "1 -80,45;-18,45\n", 965, 335, 2,
+          { 885, 947, 0, 0 }, { 380, 380, 0, 0 }, { 1, 0, 0, 0 },
+          0, 0, 0,
+          "ZARIA.01 ANIPL2's second PALMA seat (placement 965,335)" },
+        { "1 18,40;80,40\n", 820, 435, 2,
+          { 838, 900, 0, 0 }, { 475, 475, 0, 0 }, { 1, 0, 0, 0 },
+          0, 0, 0,
+          "ZARIA.01 ANIPL2's first PALMA seat" },
+        { "1 -80,45;-18,45\n", 1010, 275, 2,
+          { 930, 992, 0, 0 }, { 320, 320, 0, 0 }, { 1, 0, 0, 0 },
+          0, 0, 0,
+          "ZARIA.01 ANIPL2's top PALMA seat (placement 1010,275):"
+          " its high end, 992, is 28 px short of the level's authored"
+          " exit x = 1020" },
+        { "1 -5,0!67,0\n", 389, 61, 2,
+          { 384, 456, 0, 0 }, { 61, 61, 0, 0 }, { 0, 0, 0, 0 },
+          0, 0, 0,
+          "LONA.05 ANIPL3's CEBRZYK seat: '!' is NOT a table end,"
+          " it is the flag-0 character (0x451cf-0x451db), and the"
+          " loop keeps going (0x451c9 gates on the count only)" },
+        { "2 -3,0;42,9;45,12;\n", 110, 131, 3,
+          { 107, 152, 155, 0 }, { 131, 140, 143, 0 }, { 1, 1, 0, 0 },
+          0, 0, 0,
+          "TUNGA.11 ANIPL1's MOVEPLAT at 110,131 and its path:"
+          " three records, and the trailing ';' is the literal"
+          " 0x451e2 asks for" },
+        { "3 0,16;26,2;44,-2;62,-2;\n", 1140, 440, 4,
+          { 1140, 1166, 1184, 1202 }, { 456, 442, 438, 438 },
+          { 1, 1, 1, 0 }, 0, 0, 0,
+          "ZARIA.02 ANIPL2's JBRANCH at 1140,440: four records"
+          " from a count of 3 (count + 1, exactly as the .PLT"
+          " lines are counted). Its text is shipped; in the file it"
+          " sits past `id=`/`R=`/`frame=` lines, which the entry"
+          " walk does not step over - see OI-072" },
+        { "23,30;53,160\n", 180, 510, -1,
+          { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 },
+          0, 0, 0,
+          "the authored rect is NOT a table: no count + records" },
+        { "30,50\n", 180, 510, -1,
+          { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 },
+          0, 0, 0,
+          "the bare pair is NOT a table either" },
+        { "0 21,1445;\n", 100, 1400, 0,
+          { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 },
+          1, 0, 1,
+          "a zero count, the first line of KADMAR2 ANI1's block of"
+          " 76: 0x45141-0x45143 allocates NO table and what follows"
+          " has no reader (that block hangs off the file's `76`"
+          " count line, so the (100,1400) here is a fixture, not a"
+          " placement)" },
+        { "1 0,0#20,0\n", 50, 70, 2,
+          { 50, 70, 0, 0 }, { 70, 70, 0, 0 }, { 2, 0, 0, 0 },
+          0, 0, 0,
+          "the flag-2 separator '#' (0x451cf-0x451d4): NOT in any"
+          " shipped line - counted here so the grammar stays tested" },
+    };
+    for (unsigned q = 0; q < sizeof sl / sizeof sl[0]; q++) {
+        obj_stats stt;
+        lvl_obj o5;
+        size_t len = strlen(sl[q].text);
+        const char *r;
+
+        memset(&stt, 0, sizeof stt);
+        memset(&o5, 0, sizeof o5);
+        o5.x = o5.bx = sl[q].x;
+        o5.y = o5.by = sl[q].y;
+        r = place_seat_table(sl[q].text, sl[q].text + len, &o5, &stt);
+        if (sl[q].want < 0) {           /* this shape belongs to another
+                                         * grammar: it must be refused,
+                                         * not re-classified here */
+            if (r != sl[q].text || stt.seat_lines || o5.nseat) {
+                fprintf(stderr, "surface-table parse selftest: FAILED %s:"
+                                " the table reader took a line that is not"
+                                " its grammar\n", sl[q].what);
+                return 1;
+            }
+            continue;
+        }
+        if (r == sl[q].text) {
+            fprintf(stderr, "surface-table parse selftest: FAILED %s:"
+                            " the line was refused\n", sl[q].what);
+            return 1;
+        }
+        if (o5.nseat != sl[q].want ||
+            stt.seat_trail != sl[q].trail ||
+            stt.seat_short != sl[q].shortc ||
+            stt.seat_norec != sl[q].norec) {
+            fprintf(stderr, "surface-table parse selftest: FAILED %s:"
+                            " nseat %d want %d, trail %d want %d, short"
+                            " %d want %d, norec %d want %d\n",
+                    sl[q].what, o5.nseat, sl[q].want, stt.seat_trail,
+                    sl[q].trail, stt.seat_short, sl[q].shortc,
+                    stt.seat_norec, sl[q].norec);
+            return 1;
+        }
+        for (int k = 0; k < sl[q].want; k++) {
+            if (o5.seat_x[k] != (short)sl[q].px[k] ||
+                o5.seat_y[k] != (short)sl[q].py[k] ||
+                o5.seat_flag[k] != (unsigned char)sl[q].flag[k]) {
+                fprintf(stderr, "surface-table parse selftest: FAILED"
+                                " %s: record %d is (%d,%d) flag %d,"
+                                " want (%d,%d) flag %d\n", sl[q].what,
+                        k, o5.seat_x[k], o5.seat_y[k],
+                        o5.seat_flag[k], sl[q].px[k], sl[q].py[k],
+                        sl[q].flag[k]);
+                return 1;
+            }
+        }
+        if (sl[q].want == 0 && stt.seat_lines != 1) {
+            fprintf(stderr, "surface-table parse selftest: FAILED %s:"
+                            " the line was not counted as a table\n",
+                    sl[q].what);
+            return 1;
+        }
+    }
+
+    /* The order of the four continuation grammars is part of the law:
+     * the engine's record verbs read the contact list, the rect and the
+     * pair FIRST (0x3f0f0: 0x44f10, then 0x49f90, then 0x4a0b0), so
+     * ZARIA.01's ladder list `1 33,-3` belongs to place_points and never
+     * reaches the table reader, even though its text is a degenerate
+     * table shape. */
+    {
+        /* ZARIA.01 ANI2 lines 7 and 11: `1 33,-3` is the DRABINKA's
+         * ladder list (authored at 180,510 - the position this
+         * fixture uses for all three) and `1 0,200` the LINA's; the
+         * third takes the same grammar to its smallest case, which
+         * no shipped line uses. */
+        static const char *const first[] = {
+            "1 33,-3\n", "1 0,200\n", "1 0,0\n",
+        };
+        static const int fdx[] = { 33, 0, 0 }, fdy[] = { -3, 200, 0 };
+        for (unsigned q = 0; q < sizeof first / sizeof first[0]; q++) {
+            obj_stats stt;
+            lvl_obj o5;
+            size_t len = strlen(first[q]);
+
+            memset(&stt, 0, sizeof stt);
+            memset(&o5, 0, sizeof o5);
+            o5.x = o5.bx = 180;
+            o5.y = o5.by = 510;
+            if (place_points(first[q], first[q] + len, &o5,
+                             &stt) == first[q]) {
+                fprintf(stderr, "surface-table parse selftest: FAILED:"
+                                " the contact-point list %s was not taken"
+                                " by its own grammar\n", first[q]);
+                return 1;
+            }
+            if (o5.npts != 1 || o5.nseat != 0 ||
+                o5.cpx[0] != 180 + fdx[q] || o5.cpy[0] != 510 + fdy[q]) {
+                fprintf(stderr, "surface-table parse selftest: FAILED:"
+                                " %s gave npts %d nseat %d first"
+                                " (%d,%d)\n", first[q], o5.npts,
+                        o5.nseat, o5.cpx[0], o5.cpy[0]);
+                return 1;
+            }
+        }
+    }
     return 0;
 }
 
@@ -10241,6 +10617,8 @@ static void des_place_file(place_ctx *pc, const char *fname,
                         if (nx == ne)
                             nx = place_pair(ne, end, o, st);
                         if (nx == ne)
+                            nx = place_seat_table(ne, end, o, st);
+                        if (nx == ne)
                             break;
                         ne = nx;
                         while (ne < end && (*ne == '\n' || *ne == '\r'))
@@ -10292,6 +10670,21 @@ next:
                " model keeps\n",
                fname, st->pts_lines, st->rect_lines, st->pair_lines,
                st->pts_read, st->pts_extra, OBJ_MAXPTS);
+    if (st->seat_lines)
+        printf("ll_level: placement %s: %d entry line(s) carry an OWN"
+               " surface table (0x45120: a count, then one separator"
+               " character and a pair per record - the separator after"
+               " record i is record i's flag byte, ';' 1, '#' 2, any"
+               " other character 0, and the last record has no flag);"
+               " %d record(s) stored absolute as the placement plus the"
+               " authored pair (0x45200 at 0x1e52a), %d beyond the %d"
+               " the model keeps, %d line(s) whose count is longer than"
+               " their pairs, %d line(s) whose text continues after the"
+               " records with no reader for it, %d line(s) author a zero"
+               " count: no table at all (0x45141-0x45143)\n",
+               fname, st->seat_lines, st->seat_read, st->seat_extra,
+               OBJ_MAXSEAT, st->seat_short, st->seat_trail,
+               st->seat_norec);
     st->files++;
 }
 
@@ -10860,7 +11253,9 @@ static void des_placement(place_ctx *pc, llrs *hd_ety,
                " (damage/energy/bounds/scope), %d group header line(s),"
                " %d comment line(s) (';' or '//'), %d object-class token(s)"
                " (no .ANI record exists in any container), %d polyline"
-               " line(s) (moving ground: needs the AC_* signal bus), %d"
+               " line(s) outside an entry (the .PLT shape written inside"
+               " a .des: not an entry's OWN table, which the 0x45120"
+               " reader above takes), %d"
                " entry line(s) with parameters beyond the coordinates"
                " (listed above), %d entry line(s) whose fields are written"
                " with spaces around the commas (parsed as the same names), %d"

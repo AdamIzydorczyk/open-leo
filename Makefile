@@ -498,6 +498,16 @@ ifeq ($(PX_DATA),1)
 # `RECT,-10,200;50,500`). They are class placements of the record verb
 # 0x40c90, not polyline noise, so they are placed and named; they are NOT
 # counted as animated (no script, no art), which is why 68 stays 68.
+# PR-335 adds the fourth continuation grammar, the one the animated
+# platforms read (0x45120, called by the record verbs 0x1e51c/0x1e640 on the
+# object's own point [obj+0xa5]): TUNGA.11 ANIPL1.DES carries `N x,y;...`
+# seat lines after 36 of its entries, and the counts author N+1 records - 87
+# records for those 36 lines, including the count-3 line `3 0,0;30,0;63,-1;
+# 135,10;`. 0x45200 at 0x1e52a then adds the placement to every record, so
+# the seat is ABSOLUTE at load exactly like the ladder's contact points
+# (PR-246's law). The separator after record i is record i's flag byte, and
+# nothing walks on these surfaces yet: the ask chain that would make one a
+# lion's ground (0x1e970 -> 0x45320 -> 0x45400) is the next step.
 	@grep -q 'show TUNGA.11: bg PLAN3.PCX 640x359, 68 animated object(s), 18 static image(s)' \
 	    /tmp/opencode/lv_tick8.log \
 	  && grep -q 'authored scene TUNGA.11: 2 rectangle-class line(s)' \
@@ -514,12 +524,16 @@ ifeq ($(PX_DATA),1)
 	      /tmp/opencode/lv_tick8.log \
 	  && grep -q "the ani_plat list carries the bare 'none' keyword" \
 	      /tmp/opencode/lv_tick8.log \
+	  && grep -q 'placement ANIPL1.DES: 36 entry line(s) carry an OWN' \
+	      /tmp/opencode/lv_tick8.log \
+	  && grep -q '87 record(s) stored absolute as the placement plus the' \
+	      /tmp/opencode/lv_tick8.log \
 	  && grep -q 'obj ANIBACK/strum2.mov\[mov\]: art STRUM2.SEQ, 1 state(s), bbox 230x187 at (1494,503)' \
 	      /tmp/opencode/lv_tick8.log \
 	  && grep -q 'its seq= names ogien_m.SEQ in that ANIMACJE leaf: no such record' \
 	      /tmp/opencode/lv_tick8.log \
 	  && grep -q 'hud: belka.des: 5 item(s)' /tmp/opencode/lv_tick8.log \
-	  && echo "authored scene: .des placement files -> placed objects, art chosen by each script's own seq=, stale count lines and data holes named exactly (ok)" \
+	  && echo "authored scene: .des placement files -> placed objects, art chosen by each script's own seq=, stale count lines and data holes named exactly, and PR-335 the animated platforms' OWN surface tables read as records stored absolute with their object (ok)" \
 	  || { echo "authored scene grep FAILED"; cat /tmp/opencode/lv_tick8.log; exit 1; }
 # the scripts really run: the engine's OWN record step, ONE per tick,
 # advances the cycle, and the proof lines name the script (not a guessed
