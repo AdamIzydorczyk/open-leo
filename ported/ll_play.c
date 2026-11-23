@@ -1618,6 +1618,10 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
 {
     const ll_mov_st *st = &p->mov->st[p->sti];
     int ev = 0;
+    /* PR-331: was the object ATTACHED to a surface when this iteration
+     * began? The engine's surface-link tail reads exactly this: [obj+0xa9]
+     * before the query results are applied. */
+    const int was_att = p->grounded;
     /* PR-256: this body is 0x54250 + the row clock + the position step,
      * and every number in it is in that pass's units: the velocity
      * register's (a signed integer, hundredths of a px per ITERATION) and
@@ -2431,6 +2435,49 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
         double gl = p->y + (double)cont;
         p->prev_line = (int)(gl >= 0 ? gl + 0.5 : gl - 0.5);
     }
+    /* PR-331: the surface-link raises of the engine's physics step, the
+     * tail 0x54760-0x54803 that runs right after the ground queries
+     * (0x4b430/0x4b600/0x4b7f0 through 0x49580, PR-312/313). Its input
+     * is the query result [obj+0xe6] and the attachment [obj+0xa9]; the
+     * port's counterpart of "the query found a surface" is p->grounded.
+     * Read at the tail:
+     *   no surface found (0x54760 je 0x547d7): if a surface was held,
+     *     call its detach ([sur+0x0]+0x4), clear [obj+0xa9], call the
+     *     class +0xb8 verb - and in BOTH cases 0x54800 raises AC_ONAIR
+     *     (`or BYTE PTR [edi+0x2],0x4` = bit 18 of the signal mask the
+     *     clause resolver 0x47d60 reads = LL_SIG_AC_ONAIR here). So
+     *     AC_ONAIR is the ground query FAILING, posted every iteration
+     *     it fails - the fact the authored `A_FALL_DOWN(1)=AC_ONAIR`
+     *     waits on (109 such lines in 11 of the 777 texts; 208
+     *     clause lines name AC_ONAIR, in 23 texts in all).
+     *   a surface found: from NO attachment 0x54785 raises AC_DUP
+     *     (`or BYTE PTR [edi],0x10` = bit 4 = LL_SIG_AC_DUP), stores
+     *     [obj+0xe6] into the slot, and calls the surface's +0 verb and
+     *     the class +0xb4 verb. A surface ALREADY held is compared at
+     *     0x547a7: the same one changes nothing and raises no signal, a
+     *     different one detaches through +0x4 and attaches, again with
+     *     NO signal. Then the kind word the query leaves at
+     *     [obj+0xe2]: non-zero posts AC_DUP_CD on every such step
+     *     (0x547d1, bit 13). And a kind-2 surface together with the
+     *     object's OWN y velocity register [obj+0xc6] - the pair
+     *     PR-326 read - at or over 0x58c takes the NO-surface branch
+     *     instead (0x54766-0x54779): falling fast, it does not hold.
+     * This port's polyline ground carries no surface identity and no kind
+     * word, so the SWITCH/NO-signal arm, AC_DUP_CD and the kind-2 fast-
+     * fall exception have no input here - OI-121. What IS modelled is
+     * the pair the port can see: AC_ONAIR while the query fails
+     * (grounded == 0), and AC_DUP on the attach EDGE ([obj+0xa9] empty
+     * -> filled), the fact behind the 13 `A_JUMP(11)=AC_DUP` lines in 7
+     * texts and the 79 clause lines that name AC_DUP in 21. The
+     * AC_DUP those
+     * blocks' own ladder and rope rows wait on is a DIFFERENT producer -
+     * an object's ask raising it through 0x3df00 -> the asked's +0xd8
+     * verb -> 0x45320 with [asked+0xee] (PR-275) - and is not ported.
+     */
+    if (!p->grounded)
+        p->sig |= 1ull << LL_SIG_AC_ONAIR;
+    else if (!was_att)
+        p->sig |= 1ull << LL_SIG_AC_DUP;
     return ev;
 }
 
@@ -5337,6 +5384,113 @@ int ll_play_selftest(void)
         CHECK(sn->st[0].nfr == 1 && sn->st[0].seq_switch == 0);
         free(sd);
         free(sn);
+    }
+
+    /* PR-331, the SURFACE-LINK raises of the engine's physics step
+     * (the tail 0x54760-0x54803, after the ground queries 0x4b430/
+     * 0x4b7f0 of PR-312/313): when the query finds NO surface the
+     * engine detaches whatever [obj+0xa9] held and raises AC_ONAIR
+     * (0x54800 `or BYTE PTR [edi+0x2],0x4`, bit 18); attaching when
+     * nothing was held raises AC_DUP (0x54785 `or BYTE PTR [edi],0x10`,
+     * bit 4); SWITCHING surfaces raises NEITHER; and a surface whose
+     * kind word the query leaves at [obj+0xe2] is not 0 posts
+     * AC_DUP_CD every step (0x547d1, bit 13). That word is not
+     * modelled here - no
+     * shipped .plt surface carries one - and that gap is OI-121. The
+     * port's counterpart of the query result is p->grounded. The
+     * clauses this makes live are the authored ones:
+     * `A_FALL_DOWN(1)=AC_ONAIR` is 109 lines in 11 of the 777
+     * extracted texts (208 clause lines name AC_ONAIR, in 23 files),
+     * and `A_JUMP(11)=AC_DUP` 13 lines in 7 - the legs below are the
+     * first time any of them RUN in this port. Timing follows the
+     * pulse model exactly: a raise at the end of iteration N is seen
+     * by the transition block of iteration N+1 (the FIRST block of
+     * player_iterate, before the clear). */
+    {
+        static const char OA_MOV[] =
+            "A_STAY\nA_FALL\nA_BACK\n\n"
+            "[A_STAY]\ncontrol=BY_TIME|CHECK_LN\nF=0,0\nT=0,0\nG=0,0\n"
+            "A_FALL(1)=AC_ONAIR\nseq=a\n1,100\n\n"
+            "[A_FALL]\ncontrol=BY_TIME|CHECK_LN\nF=0,0\nT=0,0\nG=0,0\n"
+            "A_BACK(1)=AC_DUP\nseq=a\n1,100\n\n"
+            "[A_BACK]\ncontrol=BY_TIME|CHECK_LN\nF=0,0\nT=0,0\nG=0,0\n"
+            "seq=a\n1,100\n";
+        static const char OA_PLT[] = "1\r\n1 0,100;700,100;\r\n";
+        ll_mov_t *oa = calloc(1, sizeof *oa);
+        ll_plt oplt;
+        ll_player op;
+        ll_play_keys ok_ = { 0 };
+        CHECK(oa);
+        CHECK(ll_mov_parse(OA_MOV, oa) == 3);
+        CHECK(ll_plt_parse(OA_PLT, &oplt) == 0);
+
+        /* T1: a player STANDING on the shelf. The first physics step
+         * ATTACHES (nothing was held) - that one iteration posts
+         * AC_DUP, exactly like the engine's first query after spawn -
+         * and every later one posts NOTHING: a held surface does not
+         * re-raise AC_DUP, and a found surface never raises AC_ONAIR
+         * (the found path 0x5477b-0x54798 is the attach branch). The
+         * start carries grounded = 0: the engine's ctor zeroes
+         * [obj+0xa9] too, and the ATTACHING is the first physics
+         * step's own act. */
+        ll_player_start(&op, oa, 100, 100, 0);
+        for (int t = 0; t < 3; t++) {
+            ll_player_step(&op, &oplt, &ok_, 0, 2000, LL_ITER_MS);
+            CHECK(!(op.sig & (1ull << LL_SIG_AC_ONAIR)));
+            CHECK((op.sig & (1ull << LL_SIG_AC_DUP)) ==
+                  (t == 0 ? (1ull << LL_SIG_AC_DUP) : 0ull));
+            CHECK(op.grounded);
+        }
+        CHECK(op.sti == 0);                  /* no clause fired        */
+
+        /* T2: a player DROPPED above the shelf, in the air. Every
+         * airborne iteration posts AC_ONAIR (the query finds nothing,
+         * 0x547d7-0x54803); the authored `A_FALL(1)=AC_ONAIR`
+         * transition - inert in every earlier PR - runs on the
+         * iteration AFTER the first raise; AC_DUP is never posted
+         * while in the air. On the landing iteration the attach edge
+         * posts AC_DUP exactly once and AC_ONAIR stops; the authored
+         * `A_BACK(1)=AC_DUP` then runs, and the step after that
+         * posts neither. */
+        ll_player_start(&op, oa, 450, 60, 1);
+        int first_onair = -1, dup_at = -1, n_onair = 0, n_dup = 0;
+        int fell_at = -1, back_at = -1;
+        for (int t = 0; t < 200 && back_at < 0; t++) {
+            ll_player_step(&op, &oplt, &ok_, 0, 2000, LL_ITER_MS);
+            int on = !!(op.sig & (1ull << LL_SIG_AC_ONAIR));
+            int dp = !!(op.sig & (1ull << LL_SIG_AC_DUP));
+            if (on) {
+                n_onair++;
+                if (first_onair < 0)
+                    first_onair = t;
+                CHECK(op.sti != 2);         /* never reached A_BACK
+                                             * while still airborne   */
+            }
+            if (dp) {
+                n_dup++;
+                dup_at = t;
+            }
+            if (op.sti == 1 && fell_at < 0)
+                fell_at = t;
+            if (op.sti == 2)
+                back_at = t;
+        }
+        CHECK(first_onair == 0);            /* the first airborne
+                                             * iteration raises it    */
+        CHECK(fell_at == 1);                /* the next one runs the
+                                             * authored clause        */
+        CHECK(n_onair == dup_at);           /* onair every airborne
+                                             * iteration, and none
+                                             * from the landing on    */
+        CHECK(n_dup == 1);                  /* AC_DUP exactly once,
+                                             * at the attach          */
+        CHECK(back_at == dup_at + 1);       /* the AC_DUP clause runs
+                                             * one iteration later    */
+        CHECK(op.grounded);
+        ll_player_step(&op, &oplt, &ok_, 0, 2000, LL_ITER_MS);
+        CHECK(!(op.sig & ((1ull << LL_SIG_AC_ONAIR) |
+                          (1ull << LL_SIG_AC_DUP))));
+        free(oa);
     }
 
     return rc;

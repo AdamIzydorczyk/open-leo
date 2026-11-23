@@ -336,6 +336,26 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     0x239f0 = [obj+0x6d], PR-321's facing word - so BICZRECT
     answers only a left-facing lion and KILOF_PL only a
     right-facing one.
+    PR-331 READS THE SURFACE-LINK TAIL AND PORTS THE TWO EDGES. The
+    physics body 0x54250 ends at 0x54760-0x54803, branching on the
+    query result [obj+0xe6] against the held surface [obj+0xa9]. NO
+    surface: detach through [sur+0x0]+0x4 if one was held, clear the
+    slot, call the class +0xb8 verb, and in BOTH paths 0x54800 raises
+    AC_ONAIR - so it is the ground query FAILING, posted EVERY
+    iteration it fails, not an edge. A surface: from no attachment
+    0x54785 raises AC_DUP and attaches (the surface's +0 verb, then
+    the class +0xb4); SWITCHING surfaces raises NOTHING; the kind
+    word the query leaves at [obj+0xe2], if not 0, posts AC_DUP_CD
+    every such step (0x547d1); and with a kind-2 surface the
+    object's own y velocity register [obj+0xc6] - OI-119's pair, read
+    here at rest - at or over 0x58c takes the no-surface branch
+    (0x54766-0x54779). The three bits are 4, 13 and 18 of the same
+    mask the clause resolver 0x47d60 compiles against, which is what
+    this port's LL_SIG_* table already says. So AC_ONAIR/AC_DUP's
+    raisers are CLOSED as read and ported; what stays open is
+    AC_EDGE's semantics, and the surface IDENTITY and kind word a
+    .plt polyline cannot carry, named at OI-121. AC_DRECT's gate is
+    untouched by this.
 
 OI-019: what the object-side AC_ENEMY consumers do (A_DEAD(1)/
   A_AWAY/A_SHOW class conditions)
@@ -4431,3 +4451,54 @@ OI-120: the `s <seq>` row field names a SEQUENCE - the art that
     a row and not a counted item because it spans the play work:
     it is the draw half of what PR-330 read, and the 36 states
     include the states of the level this project is aimed at.
+
+OI-121: the ground query has no SURFACE IDENTITY in this port, so
+  only the two edges of the engine's surface-link tail are
+  modelled - and the authored rows that wait on the rest stay
+  unrun
+  status: OPEN
+  origin: PR-331 (the AC_ONAIR/AC_DUP surface-link raises)
+  notes: The engine's physics body 0x54250 ends with a tail at
+    0x54760-0x54803 that reads the query result [obj+0xe6] and the
+    held surface [obj+0xa9]. No surface: if one was held, call its
+    detach ([sur+0x0]+0x4), clear the slot, call the class +0xb8
+    verb, and in BOTH cases raise AC_ONAIR (0x54800 `or BYTE PTR
+    [edi+0x2],0x4`, bit 18). A surface: from no attachment, raise
+    AC_DUP (0x54785 `or BYTE PTR [edi],0x10`, bit 4) and attach;
+    SWITCHING from one surface to another detaches and attaches
+    with NO signal; and the kind word the query leaves at
+    [obj+0xe2], if not 0, posts AC_DUP_CD every step (0x547d1, bit
+    13). A kind-2 surface with the object's OWN y velocity register
+    [obj+0xc6] at or over 0x58c is treated as NO surface at all
+    (0x54766-0x54779): falling fast, it does not hold you. PR-331
+    models the pair this port can see: AC_ONAIR while the polyline
+    query fails, AC_DUP on the attach edge. What it cannot model is
+    the IDENTITY the tail switches on: the port's ground is a .plt
+    polyline with no surface object, no kind word and no detach
+    verb, so the SWITCH
+    arm, AC_DUP_CD and the kind-2 exception have no input; and a
+    surface ASK that raises AC_DUP (0x3df00 -> the asked's +0xd8
+    verb -> 0x45320 with [asked+0xee], PR-275) is a second
+    producer no port code calls. Two shipped consequences, both
+    measured in PR-331's own re-pinned legs. (a) At the foot of
+    ZARIA.01's ladder the port lands in A_WSP, whose row list has
+    no AC_BREAK_NEXT line, and the PR-86 fallback in ll_play.c
+    hands the state to A_DRAP; the authored line for that moment is
+    A_WSP's `A_TURN_BACK(1)=AC_DUP,K_DOWN` - 3 of the 777 texts
+    author it, ZARIA.01 among them - and it needs the ASK-raised
+    AC_DUP, so it never runs. (b) A_SCIAG's entry rows (`A_WALK`'s
+    and `A_DRAP`'s `A_SCIAG(1)=AC_EDGE,K_DOWN`, 6 texts) need a
+    state that survives mid-air inside the edge band; with AC_ONAIR
+    posted every airborne iteration and `A_FALL_DOWN(1)=AC_ONAIR`
+    in those same blocks, that window is one iteration, and the
+    only leap that reaches the band - the ladder jump - is ended
+    one iteration in by the jump states' own
+    `A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR` row (5 of the 777 texts
+    author it in A_JUMP, A_FALL_DOWN and A_JUMP_S). The PR-278
+    A_SCIAG port work - the state and its `m 0,1` per-admit law -
+    is unchanged and untested end to end now. WHAT WOULD CLOSE IT:
+    a surface record with identity and kind in place of the bare
+    polyline (the object asks, the answer names the surface), the
+    detach and +0xb8 verbs, and the [obj+0xe2] kind word read from
+    the shipped data; then the ladder-foot landing, the A_SCIAG
+    route and the AC_DUP_CD and fast-fall rules become testable.

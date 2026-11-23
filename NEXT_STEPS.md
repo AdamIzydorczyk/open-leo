@@ -45089,3 +45089,205 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-328's/PR-329's pair, with DATA=/tmp/opencode/nope
   HD=/tmp/opencode/nope.
 ```
+
+## PR-331 — THE PHYSICS STEP ENDS WITH A SURFACE-LINK TAIL: NO SURFACE
+## RAISES AC_ONAIR AND THE ATTACH EDGE RAISES AC_DUP, SO 208 AUTHORED
+## CLAUSES GO LIVE AND EVERY JUMP OVER A LADDER COLUMN IS CAUGHT BACK
+## IN ONE ITERATION
+```
+KIND: port
+SUBSYSTEM: the end of the physics step in ported/ll_play.c's
+  player_iterate - the was_att read at its top, the AC_ONAIR/AC_DUP
+  raise pair at its end, and the T1/T2 legs added to --play-selftest -
+  plus the six ZARIA.01 play legs of the Makefile whose pins that
+  changes. It is the step PR-330's record named as its own successor
+  in the F6 exit thread of HANDOFF section 8 T5 (ladders, vines,
+  climbing): AC_ONAIR is the fact the authored A_FALL_DOWN(1)=AC_ONAIR
+  waits on, and with it the fall and catch chains of the level this
+  project is aimed at become reachable.
+ADDRESSES: 0x54250, 0x54760, 0x54766, 0x5476d, 0x5476f, 0x54776,
+  0x54779, 0x5477b, 0x54781, 0x54783, 0x54785, 0x54788, 0x5478e,
+  0x54794, 0x54796, 0x54798, 0x5479a, 0x5479d, 0x5479f, 0x547a5,
+  0x547a7, 0x547ad, 0x547af, 0x547b1, 0x547b3, 0x547b6, 0x547bc,
+  0x547c2, 0x547c4, 0x547c6, 0x547c8, 0x547cf, 0x547d1, 0x547d5,
+  0x547d7, 0x547dd, 0x547df, 0x547e1, 0x547e4, 0x547e6, 0x547e8,
+  0x547eb, 0x547ee, 0x547f0, 0x547f7, 0x547fa, 0x54800, 0x54804,
+  0x58c, 0xa9, 0xb4, 0xb8, 0xc2, 0xc6, 0xe2, 0xe6, 0x3df00, 0x45320,
+  0xee, 0x47d60, 0x47e63, 0x49580, 0x4b430, 0x4b600, 0x4b7f0
+NAMES: AC_ONAIR, AC_DUP, AC_DUP_CD, AC_DRAB_CATCH, LL_SIG_AC_ONAIR,
+  LL_SIG_AC_DUP, LL_SIG_AC_DUP_CD, was_att, player_iterate, grounded,
+  cond_true, A_FALL_DOWN, A_JUMP, A_JUMP_S, A_PRE_JUMP, A_WSP,
+  A_WSP_LIN, A_PODCIAG, A_DRAP, A_WALK, A_TURN_BACK, A_LOOKDOWN,
+  A_SCIAG, DRABINKA, ZARIA.01, K_JUMP, K_UP, K_DOWN, F6, OI-121,
+  OI-119, OI-111, OI-078, OI-073
+CODE: yes: ported/ll_play.c (the was_att read, the two raises at the
+  end of player_iterate, and the T1/T2 legs of --play-selftest).
+  Makefile: six ZARIA.01 legs re-pinned - the PR-140 traverse probe,
+  the PR-86/PR-253/PR-256 jump-and-land leg, the PR-274/PR-285/PR-287
+  climb chain, the PR-277 ladder-jump leg, the PR-278 ladder-descend
+  leg and the PR-286 hang-and-hop leg; the last two also have their
+  key-press times moved (292:NONE 294:JUMP 296:NONE) because the
+  pull-up they start from now begins four iterations later. No leg
+  added or removed, so the fixture count stays 71.
+HOOKS: none new. The re-pinned legs run under the existing
+  LEO_PLAY_SCRIPT / LEO_PLAY_ASK / LEO_LEVEL_PPM / LEO_LEVEL_PPM_TICK
+  knobs; the data-free legs ride --play-selftest, which verify-play
+  already requires.
+MEASURED: (a) THE TAIL, BRANCH BY BRANCH, AS THE BYTES READ IT. The
+  physics body 0x54250 runs the ground queries (0x4b430, 0x4b600,
+  0x4b7f0 merged through 0x49580, PR-312/PR-313) and ends with this
+  block. 0x54760 je 0x547d7 is the NO-SURFACE branch. On the found
+  path: 0x54766 compares the kind word [esi+0xe2] with 2, and a
+  kind-2 surface with the object's own velocity register [esi+0xc6]
+  (the pair PR-326 read at [obj+0xc2]/[obj+0xc6]) at or over 0x58c
+  is sent to the no-surface branch by 0x54779 jge - falling fast, it
+  does not hold you. 0x5477b reads the held surface [esi+0xa9]: with
+  NOTHING held, 0x54785 or BYTE PTR [edi],0x10 raises AC_DUP, 0x5478e
+  stores the query result [esi+0xe6] into the slot, and the surface's
+  own vtable +0 verb (0x54798) and the class verb [edx+0xb4] (0x5479f)
+  run. With a surface ALREADY held, 0x547a7 compares it: the same one
+  jumps to 0x547c8 raising NOTHING, a different one detaches through
+  [ebx+0x4] (0x547b3), stores the new one and calls its +0 verb -
+  again no signal. 0x547c8 then tests the kind word: non-zero raises
+  AC_DUP_CD at 0x547d1 (or BYTE PTR [edi+0x1],0x20), zero jumps to
+  the end. The no-surface branch 0x547d7-0x54803 reads the slot: if a
+  surface was held it calls the detach verb [ebp+0]+0x4 (0x547e8),
+  zeroes the slot (0x547f0) and calls the class verb [edx+0xb8]
+  (0x547fa) - and BOTH paths reach 0x54800 or BYTE PTR [edi+0x2],0x4,
+  so AC_ONAIR is posted on EVERY iteration the query finds no surface,
+  whether or not a surface was held. It is not an edge signal.
+  (b) THE THREE BITS LAND ON THE PORT'S OWN VERIFIED INDEXES. [edi] is
+  the signal mask the clause resolver 0x47d60 compiles against
+  (PR-263), so or [edi],0x10 is bit 4, or [edi+0x1],0x20 is bit 13
+  and or [edi+0x2],0x4 is bit 18 - and ported/ll_play.h's enum gives
+  AC_DUP = 4, AC_DUP_CD = 13, AC_ONAIR = 18, the last confirmed
+  independently by the standalone mov dl,0x12 constant PR-70 read for
+  AC_ONAIR. Raising sites and clause names are the same three bits.
+  (c) WHAT THE PORT MODELS, AND WHAT IT CANNOT. p->grounded is the
+  query result, and its value at the top of the iteration - was_att -
+  is the attachment slot, so the raise pair is exactly the two edges
+  the tail can be seen to raise: AC_ONAIR while the query fails,
+  AC_DUP on the edge from unattached to attached, and NOTHING for a
+  surface that is merely still held. The .plt polyline carries no
+  surface object, no kind word and no detach verb, so the SWITCH arm,
+  AC_DUP_CD and the kind-2 exception have no input here - OI-121.
+  (d) WHAT WENT LIVE, COUNTED OVER THE 777 EXTRACTED TEXTS. 208
+  clause lines name AC_ONAIR, in 23 of the files; of those, exactly
+  A_FALL_DOWN(1)=AC_ONAIR is 109 lines in 11. 79 clause lines name
+  AC_DUP (the word, not AC_DUP_CD) in 21 files, and
+  A_JUMP(11)=AC_DUP is 13 of them in 7 files. The row that rewrote
+  this PR's own legs - A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR - stands in 5
+  files, 15 lines, in three states each: A_JUMP, A_FALL_DOWN,
+  A_JUMP_S. The clause operator of those lines is the plain one, the
+  0x47e63 SUBSET arm this port's cond_true implements, so BOTH bits
+  are needed: at a ladder the answer raises AC_DRAB_CATCH (PR-235) and
+  AC_ONAIR is this PR's raise. Before this PR not one of those lines
+  could ever match.
+  (e) THE CAUGHT-BACK LADDER JUMP, MEASURED IN ZARIA.01. The PR-277
+  leg presses JUMP at 200 mid-climb: A_PRE_JUMP's rows run, its
+  A_JUMP(4)=AC_BREAK_NEXT hands to A_JUMP at 203 (frame 3, 213,608);
+  that iteration finds no surface, so AC_ONAIR is posted, the ladder
+  holds AC_DRAB_CATCH, and A_JUMP's own A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR
+  row - which stands BEFORE its A_JUMP(11)=AC_DUP and
+  A_WALK(7)=AC_BREAK_NEXT lines - is taken at 204 (213,603). ONE
+  iteration of flight, then the climb again; the leg reaches 626 at
+  318. The PR-286 leg's hop is netted the same way:
+  A_PODCIAG(1)=AC_BREAK_NEXT runs at 293 (210,562), the JUMP press
+  takes A_DRAP's A_JUMP_S(1)=K_JUMP at 294 (210,566) - that line
+  stands BEFORE A_FALL_DOWN(1)=AC_ONAIR in the same block, so the key
+  wins the order race - and A_JUMP_S carries the same catch row, so it
+  is out at 295 (210,570) before its 2,150,I 120,-1200 launch row is
+  EVER admitted. The 27 px arc and the 553 apex that leg pinned do not
+  run; the lowest position anywhere in that run is 560, the band edge,
+  71 px above the platform line's 489, and the negative is now pinned
+  on every x. Over a ladder column, every authored jump state
+  ZARIA.01 has hands the lion back to the climb within one iteration.
+  (f) THE OTHER CHAINS THE RAISER STARTS. In the traverse probe,
+  A_WALK's airborne iteration at 281 ends one iteration later in
+  A_FALL_DOWN through A_FALL_DOWN(1)=AC_ONAIR, and PR-330's authored
+  three-row list runs: 282-288, then its AC_BREAK_NEXT into A_DRAP at
+  289, whose own A_WALK(7)=AC_BREAK_NEXT returns at 290 and is
+  airborne again at 291 - a bottomless pit is a THREE-STATE CYCLE in
+  the shipped data, and the lion passes below lew_rect at (412,1016)
+  and comes back at 312 as A_WALK at (50,648). In the jump-and-land
+  leg the same clause takes
+  A_WALK out at 64 and A_FALL_DOWN's rows carry the lion to the ground
+  catch at 75 (121,650). At the foot of the ladder the slide down
+  the column ends where the PR-86 fallback hands A_WSP to A_DRAP at
+  294 (213,654 = 682 - A_WSP's own 28 px contact), and A_DRAP's
+  A_LOOKDOWN(1)=K_DOWN follows at 295 (213,652 = 682 - the
+  look_dn pose's 30 px contact) and the A_DRAP <-> A_LOOKDOWN loop
+  runs to the end of the run: holding DOWN at the foot of a ladder.
+  In the climb chain the pull-up no longer strands the lion:
+  A_PODCIAG(1)=AC_BREAK_NEXT runs at 293, AC_ONAIR posts on that
+  airborne iteration, A_DRAP's own A_FALL_DOWN(1)=AC_ONAIR takes it
+  at once, and A_FALL_DOWN's A_WSP(3)=... row puts him back ON the
+  column - the stand-in walks him down it and the ground holds him
+  at 648 from 316.
+  (g) RED FIRST, AND THE MUTATIONS. The T1/T2 legs of --play-selftest
+  are the data-free pair, on a synthetic three-state .MOV whose
+  clauses are A_FALL(1)=AC_ONAIR and A_BACK(1)=AC_DUP over a flat
+  shelf. T1: a body STANDING on the shelf raises AC_DUP on its first
+  iteration, the attach, and NOTHING after - a held surface does not
+  re-raise it - and never AC_ONAIR. T2: a body DROPPED above the
+  shelf raises AC_ONAIR on every airborne iteration and none from the
+  landing on, raises AC_DUP exactly once at the attach, runs the
+  AC_ONAIR clause one iteration after the first raise and the AC_DUP
+  clause one iteration after the attach. Against the code as it was -
+  neither raise - the pair is RED at the standing leg's first
+  AC_DUP check. Seven mutations, every one caught, each named with
+  the check it fails FIRST: M1 neither raise, the pre-PR-331 state,
+  6 failures on T1's `AC_DUP == (t == 0 ? ... : 0)` expectation; M2
+  AC_ONAIR posted on the attach edge instead of the failure, 8, first
+  on T1's `!(op.sig & AC_ONAIR)`; M3 AC_DUP posted on every grounded
+  step instead of on the edge, 13, first on an OLDER leg's row-clock
+  check `u.sti == 1 && u.fi == 9 && u.row_t == 200` - that law was
+  pinned before this PR; M4 the AC_ONAIR bit off by one, 4, first on
+  `first_onair == 0`; M5 the AC_DUP bit off by one, 4; M6 was_att
+  read after the position update instead of before, 4; M7 AC_ONAIR
+  only on the detach edge rather than while unattached, 5, first on
+  `n_onair == dup_at`.
+  (h) THE LEGS THAT HAD TO MOVE, AND WHAT DID NOT. Six legs, two of
+  their scripts. Nothing about the port's arithmetic moved: every
+  re-pinned number is the same authored words - the 1 px/t climb pair,
+  the 2700-unit A_PODCIAG hold, PR-97's contact seating, the 100-unit
+  row floor - reached from a different state. Two claims that were
+  measured before any AC_ONAIR existed are superseded and listed under
+  CORRECTS.
+OPENS: OI-121, the surface identity this port's ground cannot carry -
+  the SWITCH arm, the kind word [obj+0xe2], AC_DUP_CD, the kind-2
+  fast-fall exception at 0x54766-0x54779, and the AC_DUP an object's
+  ask raises (0x3df00 -> the asked's +0xd8 verb -> 0x45320 with
+  [asked+0xee], PR-275): that last one is what A_JUMP(11)=AC_DUP and
+  A_WSP's A_TURN_BACK(1)=AC_DUP,K_DOWN wait on, so neither runs here,
+  and the same gap decides the ladder-foot landing, where this port
+  takes the PR-86 A_STAY/A_DRAP fallback instead; whether the engine
+  evaluates its transitions AFTER this tail (this port raises at the
+  end of iteration N and its transition block is the first block of
+  N+1 - at the 294 above the two orders differ observably);
+  A_SCIAG's descent route, which needs a state that survives mid-air
+  inside the edge band and is closed off by the very raiser this PR
+  ships; and OI-111's Wait tail, still unconsulted by the player's
+  row admit.
+CLOSES: none. It raises the two signals the authored fall and catch
+  chains wait on, which is the precondition for the F6 end-to-end legs
+  that follow, and it answers the AC_ONAIR/AC_DUP half of OI-018 in
+  that row's own notes.
+CORRECTS: PR-277's statement that this fixture's A_JUMP(11)=AC_DUP
+  row shows AC_DUP raised by a surface ask and is therefore the same
+  word A_WSP's A_TURN_BACK(1)=AC_DUP,K_DOWN needs - AC_DUP has TWO
+  producers, the attach edge at 0x54785 (now ported) and the surface
+  ask (not ported); PR-286's apex-553 arc and its 324 landing;
+  PR-278's A_SCIAG descent chain; PR-274's claim that the A_FALL_DOWN
+  row cursor parks on a self-target; and the single-state fall curve
+  0,3,6,9,13,15,18,21,23 in the PR-231/PR-272 traverse note - all of
+  them measured before any AC_ONAIR existed.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/iso_stage/LEO
+  HD=/tmp/opencode/hd_files; red first, then green, with the seven
+  mutations above reported in MEASURED (g); no Windows legs
+  (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-329's/PR-330's pair, with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope.
+```
