@@ -5276,9 +5276,13 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         (PR-198/199 read its `end_level` sibling 0xa1048). This
         is also the only mechanism left that could move a rider
         whose state authors no motion.
-    F3. [read] what ends THIS level: who writes [level+0x4]
-        (PR-194's counted item), since the level's own lion
-        script has no `end_level`.
+    F3. CLOSED AS A MIS-SCOPE (PR-316). Who writes
+        [level+0x4] is OI-046, closed by PR-198/PR-199 - the
+        end_level node's 0x45750 writes that exit word and the
+        port implements the contract. The open half, kept as
+        F3b: what that exit word drives, and what ends a level
+        whose lion script has no `end_level` row at all -
+        ZARIA.01 is one.
     F4. [read] the AC_ONAIR / AC_DRECT raisers (OI-018) - the
         exit chain is gated on exactly those two signals.
     F5. [read] the water as a floor (OI-082): A_WPAD and

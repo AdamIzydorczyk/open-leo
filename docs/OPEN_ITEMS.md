@@ -506,6 +506,12 @@ OI-046: the end_level contract: authored node -> apply method
   notes: engine side read end to end (PR-198, correcting PR-194's
     ruled-out claim); the port implements the contract (PR-199).
     Row kept: several records cite this thread.
+    PR-316 confirms the contract from the node-class side: the
+    end_level node class 0xa1048 differs from its sibling
+    directive classes at slots +0x4 and +0x1c, and its +0x4 body
+    is 0x45750, which stores [node+0x8] into [world+0x4]. No new
+    fact about the contract, and the executor's call site is
+    still not read.
 
 OI-047: what the reset pair 0x5da60/0x5d050 does, and what the
   per-stage edx 0/1 (wrappers 0x5d3c8/0x5d436) selects - until
@@ -2600,6 +2606,24 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     authored side is now counted: only three ladder scripts exist
     (ZARIA.01 DRAB.MOV, ZARIA.02 DRAB.MOV and DRABK.MOV) and not
     one of them has an `m` row.
+    PR-316 READS THE EXIT'S OWN MECHANISM, WHICH IS THE SHORTEST
+    ROUTE TO A GREEN ZARIA.01. The directive parser's node classes
+    (0xa11b0 pos, 0xa10d8 lock, 0xa0f70 rdir, 0xa10f0, and
+    0xa1048 for end_level) differ at slots +0x4 and +0x1c, and
+    each +0x4 body starts with the shared helper 0x457e0, which
+    calls the OWNING object's class +0x4 verb - a directive is
+    bound to an object, not to the level. `pos x,y` (parsed via
+    the format at 0x91944 into [node+0x8]/[node+0xc]) calls the
+    target's class +0x4 verb, which for the lion classes is
+    0x23850: `mov [eax],edx; mov [eax+0x4],ebx; call
+    [class+0x54]` - write the position, then run the row verb. No
+    carry, no clearance, no signal: it bypasses the physics step
+    of PR-312 entirely. `lock`/`unlock` are the pair
+    0x54f40/0x54f90 guarded by the class +0xbc verb and the
+    [obj+0xb6] bit-1 flag (the physics skip is bit 2), and `rdir`
+    writes [obj+0x6d] = 1. So a port step exists that needs no
+    physics at all: apply the authored `pos 1020,692` of
+    A_WYJSCIE.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

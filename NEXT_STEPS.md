@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-316.
+> at PR-317.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42825,6 +42825,114 @@ ladder scripts.
 CORRECTS: none. PR-131's "ridden down" reading of the ZARIA.01
 clip is corroborated, not changed: the band descends ~42 px in
 under a second there.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last full
+no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
+since then only comments in ported/ have changed.
+```
+
+## PR-316 — PLAN STEP F2 AND F3 ANSWERED AT ONCE: `pos` SETS THE
+## POSITION THROUGH THE OBJECT'S CLASS +0x4 VERB, `lock`/`unlock`
+## ARE A FLAGGED PAIR, AND `end_level` IS THE WRITER OF
+## [world+0x4] - THE LAST OF WHICH OI-046 HAD ALREADY CLOSED
+```
+KIND: read
+SUBSYSTEM: the .MOV state-directive node classes - the apply of
+`pos`, `lock`, `unlock`, `rdir` and `end_level`, which this port
+counts and acts on none of - read through the parser's dispatch,
+the node classes, and the object verbs they call.
+ADDRESSES: 0x466d6, 0x46ef0, 0x45a30, 0x457e0, 0x45c50, 0x54f40,
+0x54f90, 0x45a10, 0x45750, 0xa11b0, 0xa10d8, 0xa0f70, 0xa1048,
+0xa10f0, 0x91940, 0x91901, 0x9190c, 0x9193b, 0x9198e, 0x23850,
+0x23ea0, 0x53df0, 0x55070, 0x5c320, 0x49920, 0x57a00, 0xcef40,
+0x96874, 0x96960, 0x97cdc
+NAMES: pos, lock, unlock, rdir, ldir, end_level, set position,
+locked flag, direction word, level end, node class, apply verb,
+A_WPAD, A_WYJSCIE, OI-078, PR-194, PR-198, PR-199, PR-305,
+PR-309, PR-312, ll_player_step
+CODE: no: machine-code reading only; nothing under `ported/`
+changed, so no red leg is owed and none was written.
+HOOKS: plan step F2 (the apply of the directives the exit needs)
+and F3 (who writes [level+0x4]). PR-309 named the exit chain and
+the two `pos` lines; PR-312 named [obj+0xb6] bit 2 as a physics
+skip and PR-305 named the class +0x54 cell.
+MEASURED: (a) THE DISPATCH. One parser function compares the
+directive names and, for each match, allocates a node and stores
+its class word, then appends it with 0x57a00. `lock` (the name at
+0x91901, compared at 0x46408) allocates 12 bytes and stores
+0xa10d8; `rdir` (0x9193b, compared at 0x4668e) allocates 8 bytes
+and stores 0xa0f70; `pos` (0x91940, compared at 0x466d6)
+allocates 16 bytes, stores 0xa11b0 at [node+0xc] and then calls
+0x49920 with the format string at 0x91944 and two output slots at
+[node+0x8] and [node+0xc] - the authored `pos 1020,692` pair.
+(The end_level node 0xa1048 and its table were read at
+PR-198/199.)
+(b) THE NODE SHAPE AND THE APPLY SLOT. A node is {link at +0x0,
+class word at +0x4, payload at +0x8}. Each node class differs
+from its siblings at exactly two slots, +0x4 and +0x1c, and the
++0x4 bodies are the semantic ones (0x45750 end_level, 0x45c50
+lock, 0x45a10 rdir, 0x45a30 pos); every one of them first calls
+the shared helper 0x457e0, which walks [node+0x0] and calls the
+OWNING object's class +0x4 verb - so a directive runs against a
+specific object, and that object is reached from the node. That
++0.4-is-the-apply reading is INFERRED from this shape and from
+the bodies; the executor's call site in the level loop was not
+read, and PR-198/199 point at other verbs of 0xa1048 (0x45d90 as
+its sixth), so a [port] step must re-confirm the call site.
+(c) `pos` IS A POSITION SETTER. 0x45a30 reads the target object
+from the context ([ecx] then [that+0x8] = its class word), takes
+edx = [node+0x8] and ebx = [node+0xc], and calls the target's
+class +0x4 verb. For the lion classes (0x96874 and TLewZaria
+0x96960) that cell is 0x23850, five instructions: `mov [eax],edx`
+- [obj+0x0], the x the physics step and the ask protocol both
+read - `mov [eax+0x4],ebx`, then `call [class+0x54]`: the
+row/animation verb PR-305 named (0x55070 for the lion family,
+0x53df0 for the ladder family). So `pos x,y` teleports the object
+and refreshes its row - with no carry, no clearance and no
+signal: it does not go through the physics step at all. The
+DRABINKA class holds a different setter, 0x23ea0.
+(d) `lock` AND `unlock` ARE A FLAGGED PAIR. 0x45c50 branches on
+[node+0x8] (the authored `lock` / `unlock` argument) to 0x54f40 or
+0x54f90. Both first call the class +0xbc verb as a guard and
+check [obj+0xb6] bit 1; 0x54f40 proceeds only when that bit is
+clear, and at the end sets `or BYTE [obj+0xb6],0x1`; 0x54f90
+proceeds only when it is set. In both, the body is the same trio:
+the class +0x48 verb, the class +0x50 verb, and then the class
++0x4 verb of the holder read at [[+0x48 result]+0x33]. Note the
+neighbouring bit: PR-312 found the physics step skipping its
+queries on [obj+0xb6] bit 2 - bit 1 is this authored lock.
+(e) `rdir` sets a direction word: its apply 0x45a10 writes
+[obj+0x6d] = 1 (the same field 0x545e5 writes from [edx+0x8]).
+`ldir` was not opened further than its name at 0x91936.
+(f) `end_level`, AND PLAN STEP F3 WAS ALREADY CLOSED. The body
+at 0x45750 - the +0x4 slot of the end_level node class 0xa1048 -
+loads the world object ds:0xcef40 and stores the node's
+[node+0x8] argument into [world+0x4]. This is the same site and
+field PR-198 read ("0x45750 -> the exit word at [mgr+0x4]"), so
+this confirms OI-046's contract from the node-class side and adds
+nothing to it: the plan step F3 that PR-310 wrote was a duplicate
+of a CLOSED row. What is new here is only that ZARIA.01's own
+lion script has no `end_level` row, so that node never runs for
+this level.
+OPENS: the port's apply for these five first - the smallest
+honest one is `pos`, five instructions with an obvious test: the
+authored `pos 1020,692` must put the lion at x 1020, y 692 and
+then run the class +0x54 verb. Second, what [world+0x4] drives in
+the level loop (F3b). Third, the [obj+0xbc] guard verb and the
++0x48 / +0x50 / +0x33 trio behind lock. Fourth, AC_DRECT, still
+unnamed (F4).
+CLOSES: plan step F2 for pos/lock/unlock/rdir, and PR-309's "this
+port counts pos, lock, unlock, ldir, rdir and goto without acting
+on any of them" now has the engine side measured for four of the
+six. It also closes plan step F3 as a mis-scope: that question is
+OI-046, CLOSED by PR-198/PR-199.
+CORRECTS: PR-310 - its plan list item "F3 read what ends THIS
+level: the writer of [level+0x4]" restates OI-046, which PR-198
+and PR-199 closed and the port implements; the item is replaced in
+T5 by the open half, what the exit word drives. PR-305's cell map
+is used as measured: its +0x4 object slot is now named the
+position setter, and its +0x54 frame/row verb is exactly what the
+setter calls after moving.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
 red leg by the rule PR-245 states, and no suite run. The last full
 no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
