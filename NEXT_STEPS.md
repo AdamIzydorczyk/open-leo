@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-291.
+> at PR-292.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -39768,6 +39768,135 @@ narrowed the same way. OI-041's "CAMEL/0x98278 role (a generic
 decor/mover in NEITHER key lineage)" is corrected by (a): it is
 a base-class table that 144 class tables inherit and the record
 class carries. No port code stands on those sentences.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-291 — ENTERING STATE 1 RAISES K_GEN1: THE OBJECT CLASS'S
+## +0xac VERB 0x3f1c0 TESTS ITS OWN AUTHORED ZONE AND SETS THE
+## VERY BIT THE LIFT'S `WAIT` ROW WAITS FOR
+```
+KIND: read
+SUBSYSTEM: the state-change pass PR-262 named (0x53520) and the
+ENTER verb it calls on the object; the object-side raise of
+signal bit 54 = K_GEN1, which OI-078 needs for the ZARIA.01
+lift. PR-290 closed the external-set route; this reads the
+in-object route.
+ADDRESSES: 0x535db, 0x535e1, 0x535e7, 0x535ed, 0x535f0,
+0x535f7, 0x53602, 0x53616, 0x53620, 0x3f1c0, 0x3f1d1,
+0x3f1dc, 0x3f1e4, 0x3f1e9, 0x3f1f6, 0x3f203, 0x3f214,
+0x3f222, 0x3f3b0, 0x3f3d3, 0x44ec0, 0x44ee3, 0x44eec,
+0x3f0f0, 0x3f104, 0x3f154, 0x1e510, 0x1e51c, 0x1e52a,
+0x1e540, 0x1e546, 0x3b6b0, 0x3b6c1, 0x3c312, 0x3c321,
+0x3dcb0, 0x54560, 0x24a20, 0x24a38, 0x2f47d, 0x2f48f,
+0x97ca8, 0x97d54, 0x97cf4, 0x97cb0, 0x91828, 0x98278,
+0x45120, 0x45200, 0x44f10, 0x49f90, 0x4bc40, 0x44e70
+NAMES: K_GEN1, ENTER verb, state index, zone, child-ANY,
+DRABINKA, A_UP, signal bit 54, ll_mov_row_gate, OI-078,
+OI-111, OI-118, PR-257, PR-262, PR-279, PR-287, PR-290
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: OI-078's one open question is "what raises K_GEN1 on a
+DRABINKA, whose only authored exit is `A_DROP(1)=K_GEN1`";
+PR-290 closed the external-set route for that record (no
+CHECK_* keyword). OI-078 also carries a PR-25x sentence that
+this pass "sets [self+0x66] bit 6, signals nothing" - the
+bit-numbering claim is what this leg re-reads. PR-262 named
+the pass 0x53520 as the signal-clear/transition pass; PR-279
+named 0x45120 as the `platformy=` surface element method.
+MEASURED: (a) THE PASS CALLS AN ENTER VERB ON THE OBJECT.
+0x535e1-0x535ed reads the object's record array [obj+0x50],
+takes record [esi], loads ITS class word [rec+0x44] and calls
+that verb +0x1c, and then stores the new state index:
+`mov [obj+0x5c], esi`. Two instructions later (0x535f0-
+0x535f7) it loads `esi = [obj+0x08]` - the OBJECT's own class
+word, the field OI-118 counts as unwritten - and calls
+`[esi+0xac]` with eax = the object and edx = the transition
+argument. The same call is made again at 0x53620 after the
+record's field +0x4 is rewritten (0x53616), i.e. whenever the
+current record changes. (b) THE +0xac VERB OF THIS CLASS FAMILY
+IS 0x3f1c0: the word 0x3f1c0 appears exactly ONCE in the image,
+at 0x97d54 = 0x97ca8+0xac - the same table block PR-290 mapped
+through [rec+0x44] (+0x00 the row step, +0x28 the world-query
+composer). Only three sites in the image call `[…+0xac]`
+(0x52416, 0x535f7, 0x53620), and 0x535f7/0x53620 are the two
+above. So the record-dispatch view and the object-dispatch view
+resolve into one table block: the class whose records run the
+row step also owns this pass. (c) WHAT IT DOES. `ecx = this`;
+first a gate through the class's +0x3c verb (0x3f1d1), and if
+that answers, it branches on the CURRENT STATE INDEX
+`edx = [obj+0x5c]`: index 1 → 0x3f1e4, index 2 → 0x3f214,
+anything else → done (0x3f364). In the index-1 branch it calls
+the class's +0x4c verb (0x3f0f0, installed at 0x97cf4) for a
+value, then calls 0x44ec0 with eax = &[obj+0xa5] and edx =
+that value, and on a true answer raises the signal: 0x3f203
+`mov ah,[obj+0x66]` / `or ah,0x40` / `mov [obj+0x66],ah`. Bit
+6 of the byte at +0x66 is bit 54 of the 96-bit set at [obj+
+0x60], and 54 is K_GEN1 - PR-257's own numbering. (d) THE TEST
+IS ON THE OBJECT'S OWN AUTHORED ZONE. 0x44ec0 walks the object
+at [obj+0xa5] as a {array at +0x00, count at +0x04} pair
+(0x44ee3-0x44eec: `eax = [[obj+0xa5]] + i*0xc`, `ebp =
+[elem+8]` the element's class word, `call [ebp+0x08]` with
+edx = the value) and returns 1 on the first element that
+answers true. The same [obj+0xa5] is built at 0x1e510-0x1e52a
+by `lea ecx,[obj+0xa5]` + `call 0x45120` - the element method
+PR-279 identified as the parser of `platformy=` surface lines -
+followed by 0x45200; and the small method at 0x1e540 stores
+[obj+0xb1] = edx and then raises the SAME K_GEN1 bit. 0x3f0f0
+itself works entirely inside that authored geometry: it sorts
+the [obj+0xa5] list through 0x44f10 (its key string is "%d" at
+0x91828), normalises the [obj+0xb1] rectangle through 0x49f90
+(x0,y0,x1,y1 min/max), offsets those by the object's [obj+0]/
+[obj+4], builds a point of the geometry base 0x98278 on the
+stack, and calls 0x4a0b0 - the zone test of PR-279/PR-280's
+ground-line family. (e) THE OTHER K_GEN1 WRITERS, CENSUSED: the
+idiom `mov ah, BYTE PTR [reg+0x66]` … `or ah,0x40` …
+`mov BYTE PTR [reg+0x66], ah` occurs at exactly 18 addresses -
+0x1e546, 0x1ec96, 0x24836, 0x24a38, 0x24f07, 0x2ca41,
+0x2f48f, 0x2f5cc, 0x2f628, 0x2fac7, 0x306da, 0x3b5f3,
+0x3b6c1, 0x3bba1, 0x3c321, 0x3f203, 0x3f3d3, 0x6ebf7. Two of
+them are contact-kind tests: 0x3b6b0 calls 0x54560 and 0x3c312
+calls 0x3dcb0 - the ride/attach handlers, which switch on the
+contact record's kind at [rec+0x4] over 6..0x1b - and then
+`cmp [rec+0x4],0x19` and raise K_GEN1 on the object. 0x24a38
+raises it on `|Δx| < 0x96` (150 px), and 0x2f48f on the pair
+identity test [obj+0xf2] == [other+0x8], in the [obj+0xee]
+family PR-277 named. 0x3b5f3 raises it and then immediately
+calls 0x4bc40 with the set address. (f) WHY THIS IS OI-078's
+ANSWER CANDIDATE: the object ctor writes [obj+0x5c] = 1
+(0x538ab), so a freshly placed object IS in state index 1, and
+the DRABINKA's first block - the one its `1,0,WAIT K_GEN1` row
+belongs to - is that index. The lift therefore has a code-side
+producer of exactly the bit its row waits for, evaluated on
+ENTER from its own authored zone, with no authored `GEN` line
+needed. What must hold is the 0x3f0f0 → 0x44ec0 test, which
+this read did not complete.
+OPENS: in order: (i) the exact condition of the index-1 test:
+what 0x3f0f0's value is (a point? an index?), and what an
+element's +0x08 verb answers - the single reading that decides
+whether the ZARIA.01 lift really self-raises K_GEN1 when the
+lion boards it; (ii) who fills [obj+0xa5] for a DRABINKA: the
+0x1e510 builder is a level/des-parsing path and no ZARIA.01
+placement line is known to carry a zone for it (PR-276); (iii)
+the class's +0x3c gate (0x3f1d1) and +0x4c verb pairing, and
+what the index-2 branch (0x3f214, through +0x68 and [obj+
+0xc5]) does; (iv) whether [obj+0x08] and [rec+0x44] hold the
+same pointer in a live object (the shared-table reading of (b)
+is inferred from the single instance of 0x3f1c0, not seen);
+(v) the other 16 K_GEN1 sites' conditions, in particular the
+contact kind 0x19 of 0x3b6c1/0x3c321 - what kind 25 is.
+CLOSES: the OI-078 sentence that this branch "signals nothing"
+- it sets the K_GEN1 bit; and with it, the search-for-a-
+producer is narrowed from "authored GEN rows or a level bus"
+(both closed by PR-218 and PR-290) to this one code path.
+CORRECTS: PR-216 (its naming of the placed ladder's state
+index 1 as "the child-ANY branch, which answers nothing",
+carried verbatim into OI-078's first item): the arm is the
+object class's +0xac ENTER verb's state-index-1 branch, and
+"answers nothing" is wrong on the signal - `or ah,0x40` on the
+byte at [self+0x66] sets bit 54 of the set at [self+0x60],
+which is K_GEN1 in the engine's own name table, exactly the
+signal the same row waits for. Nothing in ported/ stands on
+that sentence, so no code changes.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```

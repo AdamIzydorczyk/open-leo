@@ -758,8 +758,12 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     (0x538ab). Block order is not that order: ZARIA.01's
     DRAB.MOV declares A_UP,A_DOWN,A_DROP but writes the blocks
     A_UP,A_DROP,A_DOWN - so a placed ladder sits at index 1 =
-    the child-ANY branch (0x3f1e4/0x44ec0, sets [self+0x66]
-    bit 6, signals nothing) and the ONLY state that answers the
+    the ENTER pass's state-index-1 arm (0x3f1e4/0x44ec0 -
+    PR-216 named it "the child-ANY branch, which answers
+    nothing", and PR-291 corrects both halves: it raises
+    signal bit 54 = K_GEN1, and it is the object class's +0xac
+    ENTER verb 0x3f1c0, not a transition branch) and the ONLY
+    state that answers the
     lion is index 2 = A_DOWN; A_DROP, the unrolling rope, is
     index 3 = inert. PR-150's row-cursor gate is gone, and the
     "binding order / encrypted pool" blocker of PR-157/158 is
@@ -1989,6 +1993,30 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     (PR-241's 0x44e70 shape is the only writer found) and why
     the engine performs it there and this port's probe does
     not.
+    PR-291 FINDS A CODE-SIDE PRODUCER. The state-change pass
+    (0x53520, PR-262) writes the new state index at 0x535ed
+    and then calls `[[obj+0x08]+0xac]` - the object's own
+    class word, the OI-118 field - whose entry for this class
+    family is 0x3f1c0 (installed at 0x97d54 = 0x97ca8+0xac,
+    the record-table block of PR-290). That verb branches on
+    `[obj+0x5c]`; at index 1 - the state a placed object
+    starts in (the ctor writes 1 at 0x538ab), and for the lift
+    that is A_UP - it calls its own +0x4c verb 0x3f0f0, which
+    works over the object's AUTHORED ZONE ([obj+0xa5], built
+    by the `platformy=` element method 0x45120 at 0x1e51c; the
+    rectangle at [obj+0xb1], the base-class point of 0x98278,
+    the zone test 0x4a0b0 of PR-279/PR-280), and asks every
+    element of that zone through 0x44ec0 (element +0x08 verb);
+    on the first true answer it sets `[obj+0x66] |= 0x40` =
+    signal 54 = K_GEN1 - the bit the `1,0,WAIT K_GEN1` row and
+    the `A_DROP(1)=K_GEN1` transition test. A census of that
+    raise idiom finds exactly 18 sites (0x1e546, 0x1ec96,
+    0x24836, 0x24a38, 0x24f07, 0x2ca41, 0x2f48f, 0x2f5cc,
+    0x2f628, 0x2fac7, 0x306da, 0x3b5f3, 0x3b6c1, 0x3bba1,
+    0x3c321, 0x3f203, 0x3f3d3, 0x6ebf7); two raise it from a
+    contact record of kind 0x19, one at |Δx| < 150. The next
+    reading is the test itself: what value 0x3f0f0 passes and
+    what a zone element's +0x08 verb answers.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -2700,6 +2728,15 @@ OI-111: which row-step path the port's row clock models -
     field +0x12 of `[obj+0x50] + [obj+0x5c]*4` - into the
     caller's buffer. With no CHECK_* keyword the composed set
     stays empty, which is the DRABINKA case of OI-078.
+    PR-291 adds one more entry to this row's table block: the
+    word at 0x97ca8+0xac = 0x97d54 is 0x3f1c0, called by the
+    state-change pass at 0x535f7/0x53620 through the OBJECT's
+    class word [obj+0x08] right after the state index
+    [obj+0x5c] is written (0x535ed); only three sites in the
+    image call `[…+0xac]`. So the block PR-290 reached through
+    [rec+0x44] is also what [obj+0x08] points at - one class,
+    two dispatch words (sharpening OI-118's question; inferred
+    from the single instance of 0x3f1c0, not seen).
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port
