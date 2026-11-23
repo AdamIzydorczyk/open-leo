@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-301.
+> at PR-302.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -41048,6 +41048,164 @@ class-scoping of that law to the collision walk rests on a
 caller that does not exist; the law's own numbers are
 untouched and its behaviour is unchanged (a counted model
 choice, now with its caller named as unsupported).
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run. The
+last full no-Windows suite run (PR-298's, unchanged tree
+since) is rc=0 with 69 green verdict lines.
+```
+
+## PR-301 — WHAT MAKES AN OBJECT ASKABLE IS A CLASS CONSTANT:
+## THE +0x3c VERB IS `xor eax,eax` IN 146 CLASSES AND `mov eax,1`
+## IN EXACTLY 14, AND THE CLASS WORDS ARE INSTALLED BY PLAIN
+## IMMEDIATE STORES IN THE CONSTRUCTORS
+```
+KIND: read
+SUBSYSTEM: class identity. Which pointer really is the class
+word, who writes it, what the +0x3c gate verb of PR-297 and
+PR-299 actually computes, and which classes can answer a pair
+query at all.
+ADDRESSES: 0x23c10, 0x230a0, 0x23a10, 0x23b50, 0x531b0,
+0x3dcb0, 0x45250, 0x45255, 0x45260, 0x45264, 0x4526e,
+0x45280, 0x45293, 0x452c4, 0x3caf0, 0x3caf5, 0x53ff0,
+0xa0150, 0xa0070, 0x99fe8, 0x99828, 0x997fc, 0x9a778,
+0x9a07c, 0x9a134, 0x99668, 0x9e8bc, 0x98f34, 0x9a54c,
+0x96960, 0x97970, 0x97a98, 0x9b4d4, 0x9c958, 0x9d338,
+0x9e134, 0x9f170, 0x9f540, 0x9f668, 0xa0624, 0xa2218,
+0x1ff15, 0x1e0a6, 0x269c2, 0x2703e, 0x2bfd6, 0x2e960,
+0x3204d, 0x33dcd, 0x3624d, 0x3a489, 0x3a455, 0x3b22d,
+0x5011b, 0x3afb1, 0x3b06e, 0x3ca25, 0x98278, 0xa02a8,
+0xa03d0, 0x9a068, 0x287a0, 0x3c270, 0x3c310
+NAMES: class word, constructor, vtable, askable flag, class
+capability, empty override, record-head accessor, message
+handler, attach test, askable fourteen, OI-035, OI-078,
+OI-118, PR-235, PR-293, PR-296, PR-297, PR-299, PR-300,
+classid.py, classtabs.py
+CODE: no: two image censuses and readings; no behaviour
+changed, so no red leg.
+HOOKS: PR-297 left "which class owns these verbs" and "what
+makes an object askable" open (its OPENS (i) and (iii)), and
+reported that no immediate in the image names the table
+addresses it had found; PR-300 turned that into a 26-member
+"table family" with a shared slot map and still no installer;
+OI-118 has asked since PR-112 what installs [obj+0x00]'s
+sibling pointers; PR-235 named a "+0x6c accessor 0x23a10"
+from a single call site.
+MEASURED: (a) THE CLASS WORDS ARE WRITTEN AS IMMEDIATES. A
+search for `mov DWORD PTR [<reg>+0x8],0x9...` finds 408 sites
+storing 188 distinct values, 176 of them code-table addresses
+in 0x91000..0xb0000. A constructor looks like 0x3caf0-0x3caf5:
+`call 0x53ff0` (the allocator), then `mov DWORD PTR
+[eax+0x8],0xa0150`. So OI-118's "no installer" is answered for
+this field: it is a plain store in every constructor of every
+class that is constructed directly, and the class's identity is
+the constructor site. PR-297's negative result was not a
+missing installer - the addresses it searched for are not class
+words (see (d)).
+(b) THE +0x3c VERB IS A BOOLEAN CLASS FLAG, AND IT IS READ
+FROM THE VTABLE. For those 176 installed class words the slot
++0x3c holds 0x23c10 in 146 of them and 0x230a0 in 14. The two
+functions are four bytes each: 0x23c10 is `xor eax,eax; ret`
+and 0x230a0 is `mov eax,1; ret`. That is the whole of the gate
+PR-297 and PR-299 both met at 0x3c29d and 0x287b1: whether an
+object can be asked at all is decided at compile time by which
+of two empty overrides its class carries, and nothing in the
+object, its state, its rows or its position can change it. It
+also settles why PR-296 found the shipped ladder's own answer
+path inert: with a 0-flag class every pair query against it
+returns the empty set before any test runs.
+(c) THE FOURTEEN ASKABLE CLASSES, AS A CLOSED LIST. Bases and
+constructor sites: 0x96960 (0x1ff15, 0x20495), 0x97970
+(0x1e0a6), 0x97a98 (0x1ff49, 0x22ee5), 0x98f34 (0x269c2,
+0x26a75), 0x9a54c (0x2703e, 0x2743f), 0x9b4d4 (0x2bfd6,
+0x2dc79), 0x9c958 (0x2e960), 0x9d338 (0x3204d), 0x9e134
+(0x33dcd, 0x35240, 0x360c3), 0x9f170 (0x3624d, 0x363ad),
+0x9f540 (0x3a489, 0x3a545), 0x9f668 (0x3a455, 0x3a5f5),
+0xa0624 (0x3b22d), 0xa2218 (0x5011b, 0x5019d). All 14 carry
+the record-head accessor 0x23a10 at slot +0x6c - PR-235's
+accessor, now confirmed as a fixed slot of the askable family,
+and the sampled vtables also carry 0x531b0 at +0x80, which is
+the verb whose call sites load the global ds:0xa94ec (PR-300
+item (e)). Their +0x10 message handlers differ per class
+(0x1e130, 0x50d60, 0x27470, 0x2e8e0, 0x32130, 0x33e60,
+0x365f0, 0x39de0), so the class hierarchy is real and the
+capability flag is one bit of it.
+(d) PR-300's TABLE FAMILY WAS MIS-ANCHORED. Its 26 bases are
+not class words: for the anchor 0x997fc the installed class
+word covering the same bytes is 0x99828 - 0x2c higher - and
+reading from THAT base, the function PR-300 put at "+0x3c"
+(0x3dcb0) is at +0x10 and the one it put at "+0x98" (0x23a10)
+is at +0x6c, exactly where PR-235 had found it. The rest of
+PR-300's slot claims shift the same way or fall away: no
+installed class word has 0x45250 at +0x10 (0x45250 sits at
+class-specific late slots +0x130, +0x210, +0x258, +0x2bc in
+five of the fourteen), the "five gate overrides at +0x3c"
+(0x27700, 0x52bb0, 0x34620, 0x3c310) are values at slots of a
+structure that begins before the vtable, not overrides, and
+0x3c270 and 0x3c310 are real virtuals of two other classes:
+0x3c270 at +0x158 of the class word 0xa0150 (ctors 0x3afb1,
+0x3caf5) and +0x238 of 0xa0070 (ctors 0x3b06e, 0x3ca25),
+0x3c310 at +0x280 of 0xa0150 and +0x360 of 0xa0070. 0x287a0
+is at no slot of any immediately-installed class word: the run
+at 0x99fe8 that contains it is not a class word at all.
+(e) SO 0x3dcb0 IS THE +0x10 MESSAGE HANDLER - which is the
+slot the collision loop 0x3eaf1 calls - for two of the fourteen
+(0x98f34 and 0x9a54c). Its argument is the loop's four-dword
+block, and its first test `cmp DWORD PTR [edx+0x4],0x1` reads
+the block's second dword, which the loop fills from its own
+ebp (0x3eadb) - a message kind, not a class word. That fixes
+the tension PR-300 recorded as open (ii).
+(f) 0x45250, THE ATTACH TEST, READ THROUGH. eax = the object,
+and the object's +0x04 is used as a POINTER P (0x45255): the
+byte [P+0x0c] is compared with ecx and a larger value returns
+at once (0x4525c). ebx is a pair of numbers x,y; the first
+candidate is [P+0x00],[P+0x04] and if [ebx] < [P] the object
+R in edx gets [R+0x89],[R+0x8d] = that candidate and
+[R+0xca] = [ebx+0x00]-[R+0x89], [R+0xce] = [ebx+0x04]-
+[R+0x8d] (0x4526e-0x45291); the other branch first re-anchors
+the candidate at P + 52 * [this+0x08] (0x45293 `imul esi,
+[esi+0x8],0xd`) and requires [ebx] >= [candidate] instead.
+So the verb picks between two candidate positions and records
+the pair's deltas into the +0x89/+0x8d record head and the
++0xca/+0xce pair - the same head PR-235 read through +0x6c and
+the same head PR-298 found being written at 0x53616. Which
+class's layout makes [obj+0x04] a position-block pointer is
+not established here.
+OPENS: in order: (i) which of the fourteen (if any) is the
+ZARIA.01 DRABINKA's class - the port's level loader reads a
+per-object kind, so the missing step is the kind-to-constructor
+mapping, which is now the one thing standing between this list
+and FOCUS 1; (ii) the fourteen classes' identity: their
+constructor bodies (0x1ff15, 0x1e0a6, 0x269c2, ...) and any
+name strings they compare; (iii) the message kind at
+[args+0x04] in the loop's ebp, and 0x3dcb0's other kinds
+through 0x54560; (iv) 0x531b0 at +0x80 of the sampled
+vtables - named before as taking (global ds:0xa94ec, self,
+companion) and still unread; (v) whether any non-immediate
+installer of a class word exists (a search for `lea
+<reg>,0x9....` followed by a +0x8 store), since 0x287a0's
+table has none; (vi) 0x45250's candidate pair: what array is
+indexed by 52 * [obj+0x08] and what [obj+0x04] points at for
+that class.
+CLOSES: PR-297 OPENS (iii) and PR-299 OPENS (iii) - the gate
+is 0x23c10 or 0x230a0, a compile-time class flag, and the
+askable set is exactly the fourteen of (c). PR-297 OPENS (i)
+for the general case - class words are installed by immediate
+stores in constructors, and the class is identified by its
+constructor site. And PR-300's open (ii) about the gate's
+argument: 0x3dcb0 is a message handler reached through +0x10,
+not the +0x3c gate.
+CORRECTS: PR-300, structurally. Its "26 class tables share one
+slot map" is a mis-anchored read: the anchors sit 0x2c below
+the class words that address those bytes, so its +0x10, +0x28,
++0x34, +0x3c, +0x4c and +0x98 slot numbers are 0x2c too low
+(the real slots of 0x3dcb0 and 0x23a10 are +0x10 and +0x6c),
+its "+0x3c gate holds 0x3dcb0 in 21 of 26 classes" and its
+five "gate overrides" are readings of the structure that
+precedes the vtable, and 0x287a0, 0x3c270 and 0x3c310 must be
+placed through real class words, where (d) puts them. Its
+measurements of the collision loop (its item (a)) and of the
++0x80 call sites (its item (e)) are unaffected, and the
+ds:0xa94ec facts of OI-031 stand.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run. The
 last full no-Windows suite run (PR-298's, unchanged tree

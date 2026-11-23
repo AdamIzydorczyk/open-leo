@@ -2219,6 +2219,23 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     stopped at self, and calls the +0x10 slot, which for these
     classes is 0x45250. Its numbers stay; its caller is now
     named as unsupported.
+    PR-301 CLOSES THE GATE QUESTION AND HANDS FOCUS 1 A HANDLE.
+    The +0x3c verb is a four-byte constant: 146 of the 176
+    installed class words hold 0x23c10 (`xor eax,eax; ret`,
+    never askable) and exactly 14 hold 0x230a0 (`mov eax,1;
+    ret`, always askable). Nothing about an object's state,
+    rows or position can change the answer, so the askable set
+    is a closed list of fourteen vtables - 0x96960, 0x97970,
+    0x97a98, 0x98f34, 0x9a54c, 0x9b4d4, 0x9c958, 0x9d338,
+    0x9e134, 0x9f170, 0x9f540, 0x9f668, 0xa0624, 0xa2218 -
+    each named by its constructor sites (0x1ff15/0x20495,
+    0x1e0a6, 0x269c2/0x26a75, 0x2703e/0x2743f, and so on), all
+    fourteen carrying 0x23a10 at slot +0x6c. Pair answers can
+    only come from those classes, so the remaining step for
+    this row is the level loader's per-object kind to
+    constructor mapping: with that, the ZARIA.01 DRABINKA's
+    class word is computable and its answer path is either in
+    the list or provably not.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -3532,3 +3549,16 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
     them, so the objects that use them get their class word
     from computed values. Any answer to this row has to
     account for those instances too, not only for [obj+0x00].
+    PR-301 ANSWERS THE INSTALLER HALF, AND THE ABSENCE WAS AN
+    ARTEFACT. `mov DWORD PTR [<reg>+0x8],0x9...` occurs at 408
+    sites installing 188 distinct values, 176 of them code
+    tables in 0x91000..0xb0000, and a constructor is exactly
+    the shape 0x3caf0-0x3caf5: `call 0x53ff0` then `mov
+    [eax+0x8],0xa0150`. So the class word IS a plain immediate
+    store wherever a class is constructed directly, and a class
+    is identified by its constructor sites. The addresses
+    PR-297 searched for are absent because they are not class
+    words: PR-300's anchors sit 0x2c BELOW the class word that
+    addresses the same bytes (anchor 0x997fc vs the installed
+    0x99828). What still has no immediate installer is the run
+    at 0x99fe8 that holds 0x287a0, and [obj+0x00] itself.
