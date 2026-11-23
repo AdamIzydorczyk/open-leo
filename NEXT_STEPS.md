@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-308.
+> at PR-309.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42035,4 +42035,114 @@ no red leg by the rule PR-245 states, and no suite run. The
 last full no-Windows suite run is PR-298's, rc=0 with 69 green
 verdict lines; since then only comments in ported/ have
 changed (PR-304, PR-305).
+```
+
+## PR-308 — THE +0xb0 VERB IS THE POINT PROVIDER: THE LION'S
+## HANDLER COPIES ITS LIVE POSITION INTO THE ASKER'S BUFFER, THE
+## LADDER'S HANDLER IGNORES THE BUFFER, AND PR-306'S "STALE
+## POINT" CONSEQUENCE IS WRONG
+```
+KIND: read
+SUBSYSTEM: the class verb +0xb0 - what it hands back, which
+callers ask for it, and what each family's handler writes; this
+is the field the ask protocol of PR-305 tests, so it settles
+what PR-306 and PR-307 left as the ask path's model question.
+ADDRESSES: 0x544f0, 0x544f6, 0x544fa, 0x54500, 0x5450e, 0x54518,
+0x54526, 0x5452e, 0x54533, 0x5453a, 0x96874, 0x96960, 0x232e0,
+0x4f6f0, 0x52a50, 0x52a55, 0x52a5a, 0x52a6d, 0x55070, 0x5507e,
+0x55084, 0x5508c, 0x55096, 0x53df0, 0x3e980, 0x3e9aa, 0x3e9ba,
+0x3e9cd, 0x3e9fb, 0x3ea1f, 0x3ea2b, 0x3ea3c, 0x4a050, 0x2b864,
+0x2b881, 0x2b8e0, 0x2b900, 0x4552f, 0x98274, 0x98278,
+0x97cdc, 0xa1dfc, 0x99ff0, 0xcee8c, 0xcef40
+NAMES: point provider verb, contact point, live box, askable
+gate, contact list, rect class, frame step, OI-078, PR-305,
+PR-306, PR-307, pt_of, live_box
+CODE: no: image reading; no behaviour changed, so no red leg.
+HOOKS: PR-306 (c) concluded that the ask point is written only
+by the +0x1c verb, so "the engine asks with the position as of
+the last +0x1c run" and this port is "wrong about the MOMENT";
+PR-307 closed that row's open by calling +0x1c a notify/select
+verb, and left the frame step's +0xb0 call (PR-306 (e)) unread.
+MEASURED: (a) WHAT +0xb0 IS. Five sites call through it: the
+frame step's +0x54 verb 0x55070 at 0x5507e, with edx = the
+address of the object's OWN point at [obj+0xd6] (PR-306 (e)),
+and four ask-side sites 0x2b881, 0x2b900, 0x4552f and 0x3e9ba.
+The three ask-side ones all pre-seed a caller buffer first:
+0x2b864-0x2b881 and 0x2b8e0-0x2b900 push {0, 0, 0x98278} -
+zero x, zero y, and 0x98278 = the rect class 0x98274 found by
+PR-305 at the authored rect's +0x10 - and pass edx = that
+buffer's address; 0x3e9ba passes edx = the object itself. In
+every case the return value is tested for zero and a zero
+return makes the caller bail (0x3e9c0, 0x3e9c2).
+(b) THE LION FAMILY COPIES ITS LIVE POSITION. The cell of both
+the lion base 0x96874 and TLewZaria 0x96960 at their +0xb0 is
+0x544f0, and it opens `mov ebx,eax; mov eax,[eax]; mov
+[edx],eax; mov eax,[ebx+4]; mov [edx+4],eax` (0x544f6-0x54500):
+the caller's buffer gets [obj+0x00] and [obj+0x04] - the live
+position - as its first two words. Only after that does it test
+[obj+0xb6] bit 2 (0x54500), call the class's +0xbc verb
+(0x5450e) and, behind a test of that result and of bit 1
+(0x54514-0x5451f), run the record path: +0x48 (0x54526), its
+[+0x33] word (0x5452e), the +0x50 verb (0x54533) and the
++0x08 verb of THAT class (0x5453a).
+(c) THE LADDER FAMILY DOES NOT FILL IT. DRABINKA 0x97cdc holds
+0x232e0 at +0xb0: `mov eax,ds:0xcee8c; ret` - it ignores the
+buffer and hands back one global (zero in the image, so a
+runtime value). The LINA cell 0x4f6f0 ends in `ret` at 0x4f6f5,
+and the whole ladder family's frame step is a different verb
+(0x53df0 at [0x97cdc+0x54], not 0x55070), so a DRABINKA never
+runs the 0x55070 point call at all. WSPRECT 0x99ff0 is the
+third shape: its handler 0x52a50 takes [[ds:0xcef40]+0x394] -
+the pool global of PR-303 - calls THAT object's +0x68 point
+accessor (0x52a63) and then the asker's own (0x52a6d) and
+compares the two.
+(d) THE ASK PATH USES IT AS ONE SIDE OF A PAIR. In the function
+at 0x3e980: it calls the +0x3c gate of one object (0x3e9aa, the
+askable test of PR-304), then the OTHER object's +0xb0 (0x3e9ba)
+and bails if it returns zero, then reads the first object's rect
+through its +0x4c (0x3e9cd) into a stack record stamped with the
+class word 0x98274 (0x3e9e9, 0x3e9f2), then the second object's
+rect through the same accessor (0x3e9fb) into a second record
+with the same class word, then takes [obj+0xa5] - the contact
+list of PR-305 - and calls 0x4a050 twice, once with the list
+doubled (0x3ea2b `add edx,edx`) and once with the point
+address (0x3ea32).
+(e) THE CONSEQUENCE, WHICH OVERRIDES PR-306 (c). For the lion
+family the point an ask tests is supplied by +0xb0 AT ASK TIME,
+copied from the live position words, not from the [obj+0xd6]
+value the +0x1c verb wrote: 0x55070 keeps [obj+0xd6] in step at
+the head of every frame too (0x5507e), and the ask-side callers
+pass their own buffer instead. So this port's pt_of is right
+about BOTH the value and the moment for a lion asker, and no
+stale-point effect is available to explain the ZARIA.01 climb
+stop; the ladder side is unchanged, since the ladder's own
+point verb hands back a global and its frame step never calls
+0x55070. FOCUS 1's remaining route stays the one PR-304 named:
+the lion's climb rows and its landing on the platform line 518.
+OPENS: in order: (i) what 0x4a050 does with a contact list and
+a point or a doubled list index - the last unread step of the
+pair test at 0x3e980, and the direct test of whether the
+ladder's shape geometry (PR-294) enters an ask at all; (ii) the
+ladder's global point ds:0xcee8c - who writes it; (iii) the
+frame step of the ladder family, 0x53df0, which no PR has
+opened; (iv) the +0xbc verb of the lion family, called by
+0x544f0's gate at 0x5450e; (v) PR-307's other opens stand.
+CLOSES: PR-307's OPENS (ii) in part - the +0xb0 verb is now
+read for the lion, ladder and WSPRECT families - and OI-078's
+ask-point question: the port's model of what point is tested
+needs no change.
+CORRECTS: PR-306 (c) and the OI-078 note PR-306 added, which
+said the engine "asks with the position as of the last +0x1c
+run" and that this port is "wrong about the MOMENT". The +0x1c
+verb does write [obj+0xd6], and 0x55070 refreshes it each
+frame, but the ask protocol does not read that field: it calls
++0xb0, and the lion's handler copies the live position into the
+asker's buffer. PR-306's (a)/(b)/(d)/(e) measurements stand.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run. The
+ZARIA.01 wiring dump was re-taken at this HEAD with
+LEO_LEVEL_PPM and is byte-identical to the cached baseline
+except the PPM path line; the last full no-Windows suite run is
+PR-298's, rc=0 with 69 green verdict lines, and since then only
+comments in ported/ have changed.
 ```

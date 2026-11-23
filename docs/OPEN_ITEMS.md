@@ -2420,6 +2420,24 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     the live position instead - the divergence is bounded and
     measurable, and the next named question is who calls
     0x564a0 and whether the ZARIA.01 climb ever does.
+    PR-308 ENDS THIS THREAD WITH A NEGATIVE FOR THE PORT. The
+    ask protocol does not read [obj+0xd6] at all: it calls the
+    class's +0xb0 verb, whose lion handler 0x544f0 (the cell of
+    0x96874 and of TLewZaria 0x96960) opens by copying
+    [obj+0x00]/[obj+0x04] - the LIVE position - into the
+    asker's buffer. Three ask-side callers 0x2b881/0x2b900/
+    0x4552f pre-seed that buffer as {0, 0, 0x98278} - the rect
+    class word of PR-305 - and 0x3e9ba passes the object
+    itself; a zero return makes them bail. The ladder family
+    hands back a global instead (DRABINKA's cell is 0x232e0 =
+    `mov eax,ds:0xcee8c; ret`), and its frame step is a
+    different verb (0x53df0), so it never runs 0x55070;
+    WSPRECT's handler 0x52a50 compares the point of
+    [[ds:0xcef40]+0x394] with the asker's. So this port's
+    pt_of is right about the value AND the moment for a lion
+    asker: no stale-point effect can explain the climb stopping
+    at 560, and FOCUS 1's route is the one PR-304 named - the
+    lion's climb rows and the landing on the platform line 518.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
