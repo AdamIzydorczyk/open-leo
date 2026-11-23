@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-311.
+> at PR-312.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42329,4 +42329,122 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
 red leg by the rule PR-245 states, and no suite run. The last
 full no-Windows suite run is PR-298's, rc=0 with 69 green
 verdict lines; since then only comments in ported/ have changed.
+```
+
+## PR-311 — ZARIA.01'S SECOND ANSWERER: THE KATAPULT REGISTERS
+## THE ASKER AND RAISES NOTHING, THE `.des` POLYLINE CHANNEL IS
+## REAL AND UNREAD, AND MY OWN "`.PLT` TYPE WORD" HUNCH IS WRONG
+```
+KIND: read
+SUBSYSTEM: the other object in ZARIA.01 that answers an ask -
+the KATAPULT at (300,588) under the same platform line the climb
+was aimed at - its class verbs and its one-state script; the
+authored `ani_plat` placement file ANIPL2.DES, whose entries each
+carry a polyline line; and the .PLT line grammar, measured across
+the shipped set to settle a hunch this thread raised in prose.
+ADDRESSES: 0x1e970, 0x1e985, 0x1e98a, 0x1e99a, 0x96d1c, 0x97cdc,
+0x99ff0, 0x45320, 0x749a0, 0x3f1c0, 0x287a0, 0x22df0, 0x232e0,
+0x52a50, 0x23c10, 0x23a20, 0x23b60, 0x23930, 0x53df0, 0x531b0
+NAMES: KATAPULT, kat.mov, kat.ani, PALMA, palm.mov, ANIPL2.DES,
+ani_plat, contact list, empty set, polyline, segment count,
+K_GEN1, OI-078, OI-072, PR-250, PR-296, PR-304, PR-309, PR-310,
+ll_plt_parse, ladder_answer_core
+CODE: no: image and container reading; nothing under `ported/`
+changed, so no red leg is owed and none was written.
+HOOKS: PR-309 named the climb family exhausted and pointed FOCUS 1
+at the level's own end chain; the analysis written with PR-310 put
+a further hunch in prose - that .PLT line lead numbers are a
+dropped TYPE word and that the "489" figure might rest on it - and
+named 0x45120/0x4a0b0 as the nearest read. This record tests that
+hunch and reads the object the level actually places under that
+platform.
+MEASURED: (a) THE HUNCH IS WRONG, AND THE PORT IS RIGHT. The ten
+.PLT records in the ETAPY container (ZARIA_A 45 lines, ZARIA_B 25,
+ENA 1, ENA2 24, LONA 24, KADMAR 51, KADMAR2 114, RAN 153, KARA 14,
+TUNGA 7 - 458 lines in all, and KADMAR.PLT is one line over its own
+declared 50, the same stale-count pattern the .des reader reports)
+were parsed with whitespace and the `!` separator allowed. EVERY one
+of the 458 lines has its leading number equal to the point count
+minus one: it is the SEGMENT COUNT, exactly as ported/ll_play.c's
+ll_plt_parse comment says, and that parser's decision to scan every
+`x,y` pair and ignore the count is confirmed safe. There is no line
+type word, so no line-kind behaviour is missing from the port's
+ground model and the "489" figure is not resting on an unread field.
+(The 0x45120/0x4a0b0 lead is left unread on purpose: it was chosen
+from that hunch.)
+(b) THE POLYLINE CHANNEL IS REAL AND LIVES IN THE `ani_plat`
+PLACEMENT FILES. ZARIA.01's ANIPL2.DES is a four-entry file, and
+every entry line is followed by a polyline line whose points are
+RELATIVE to the placement point:
+
+    4
+    KATAPULT,kat.ani,kat.mov,300,588
+    1 7,45;40,45 -6300,-1350
+    PALMA,palm.ani,palm.mov,820,435
+    1 18,40;80,40
+    PALMA,palm.ani,palml.mov,965,335
+    1 -80,45;-18,45
+    PALMA,palm.ani,palml.mov,1010,275
+    1 -80,45;-18,45
+
+The KATAPULT line is the only one of the four with a trailing pair
+after the polyline, `-6300,-1350`. This port counts those polyline
+lines ("moving ground: needs the AC_* signal bus") and acts on none
+of them. Note the geometry: the catapult is placed at (300,588),
+inside the x span of ZARIA_A.PLT's line 5 (98,514;288,520;379,503;
+453,504;...), i.e. directly under the platform the climb was aimed
+at.
+(c) THE KATAPULT ANSWERS, BUT RAISES NOTHING. Its class 0x96d1c
+holds the never-askable stub 0x23c10 at +0x3c like the ladder and
+the WSPRECT, 0x23a20 (+0x75 self rect) at +0x4c, 0x23b60 (the
+object itself) at +0x68, the ladder family's frame step 0x53df0 and
+the empty +0xac stub 0x23930 - and at +0x78, the ask verb, its own
+function 0x1e970, not the ladder's 0x3f1c0 or the WSPRECT's 0x287a0.
+Read end to end it is eight instructions: `add eax,0xa5` (the
+object's contact list, PR-305) then `call 0x45320` with edx = the
+argument and ebx = 2, then `mov BYTE PTR [set+0xc],0` and
+`call 0x749a0` - the set composer PR-296 measured, n = 0xc - and
+`ret`. So the catapult takes the asker into its contact list and
+hands back an EMPTY set: no AC_* bit at all, on any state index,
+with no rectangle and no band test. Its +0xb0 point verb is a
+different stub again, 0x22df0.
+(d) ITS SCRIPT IS A GATE AND A WALK, NOTHING ELSE. kat.mov declares
+one state, A_RUN: `control=BY_TIME`, `seq=nr`, `sample=3`, rows
+`1,0,WAIT K_GEN1` then `2,300 ... 10,300` with `7,300,smpauto`. It
+has no transition lines at all - no exit row, no signal raised, no
+`m`, no SOLID word - so it waits for a K_GEN1 that something else
+raises, plays ten frames with a sample, and re-enters. In this port
+the whole exchange is inert: the answer model has the
+DRABINKA-only class scope PR-250 shipped.
+(e) WHAT THAT LEAVES FOR FOCUS 1. The level places exactly two
+objects that answer an ask: the ladder (raises AC_EDGE / AC_DRAB /
+AC_DRAB_CATCH, PR-304) and this catapult (raises nothing, records
+the asker). Whatever the catapult does to a rider is therefore not
+in its answer verb: it is in 0x45320's list insert with ebx = 2, in
+the `-6300,-1350` pair on its own placement line, or in its own
+frame walk of seq=nr - three named reads, none of them the climb
+states.
+OPENS: in order: (i) 0x45320 - what writing a contact-list entry
+with mode 2 does to the listed object, and who reads that list
+back; (ii) the `-6300,-1350` trailing pair on an entry's polyline
+line - which parser reads it and what it drives (the same grammar
+appears on the PALMA lines without a pair, so it is optional);
+(iii) who raises the catapult's K_GEN1 gate; (iv) the .des polyline
+consumer in the engine, which the port has never opened (the port's
+own counter for these lines is the only handle on it); (v) F1's
+video read of the ladder and of this catapult's scene stands as
+step one of the plan either way.
+CLOSES: the `.PLT` type-word hunch from the PR-310 analysis -
+measured away in (a), with the port's reading confirmed; and it
+closes the "is there another answerer in ZARIA.01" question with a
+measured yes and a measured empty answer set.
+CORRECTS: none of the records. The claim it retracts is prose this
+thread wrote while preparing PR-310 and is in no record: that .PLT
+lines carry a dropped type word (values 1,2,3,5 in ZARIA_A.PLT).
+Those numbers are segment counts, and ZARIA_A.PLT's own 45 lines
+match its declared 45.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last full
+no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
+since then only comments in ported/ have changed.
 ```

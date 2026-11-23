@@ -2470,6 +2470,33 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     water-as-floor question (OI-082, since the exit point
     1020,692 sits below the main ground line), and the seven
     ZARIA_A.PLT "moving ground" polylines.
+    PR-311 CHANGES WHAT "MOVING GROUND" MEANS AND MEASURES AWAY
+    A HUNCH. The ten .PLT records in ETAPY hold 458 polyline
+    lines (ZARIA_A 45, ZARIA_B 25, RAN 153, KADMAR2 114, ...);
+    parsed with whitespace and the `!` separator allowed, EVERY
+    line's leading number equals its point count minus one - it
+    is the SEGMENT COUNT, as ll_plt_parse's own comment says, so
+    nothing was read as a line-type word and no ground-line kind
+    is missing from the port. The polyline channel is real but is
+    NOT in .PLT: it is in the `ani_plat` placement files, and
+    each entry's polyline points are RELATIVE to the placement
+    point. ZARIA.01's ANIPL2.DES is four entries: the KATAPULT at
+    (300,588) - directly under the x span of the platform line the
+    climb was aimed at - plus three PALMA, and only the catapult's
+    line carries the trailing pair `-6300,-1350`. Its class
+    0x96d1c is in the same family as the ladder's (0x23c10
+    never-askable, 0x23a20 own rect, 0x23b60 self, frame step
+    0x53df0, empty +0xac stub) but its ask verb +0x78 is its own
+    0x1e970: `add eax,0xa5` then 0x45320 with ebx=2, then the
+    empty set (mode byte cleared, PR-296's n=0xc composer) - it
+    registers the asker in its contact list and raises NO signal on
+    any state. Its kat.mov declares one state A_RUN, `1,0,WAIT
+    K_GEN1` then ten frames, with no transitions at all. So
+    ZARIA.01 has exactly two answerers, the ladder and this one,
+    and the catapult's effect on a rider can only be in 0x45320's
+    list insert with mode 2, in the `-6300,-1350` pair, or in its
+    own seq=nr walk - three named reads, none of them the climb
+    states.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
