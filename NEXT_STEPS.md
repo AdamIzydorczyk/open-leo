@@ -44242,3 +44242,173 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
   red leg is owed and no suite run; the last full no-Windows
   suite run is PR-324's, rc=0 with 71 green verdict lines.
 ```
+
+## PR-326 — THE [obj+0xc2]/[obj+0xc6] PAIR IS THE ENGINE'S VELOCITY
+## REGISTER, AND THE ONLY DIFFERENCE BETWEEN AC_DRECT AND AC_DRECT2 IS
+## ITS SIGN: DRECT ANSWERS ONLY AN ASKER THAT IS FALLING
+```
+KIND: read
+SUBSYSTEM: OI-119, the object field pair the AC_DRECT ask verb gates
+  on, read through the physics step that writes it; the rectangle-class
+  ask verbs DRECT/DRECT2/RECT; and the ZARIA.01 exit leg of HANDOFF
+  section 8 T5 (6) that all of it blocks.
+ADDRESSES: 0x54250, 0x5425c, 0x54266, 0x5426c, 0x54275, 0x5427c,
+  0x54286, 0x54292, 0x542ab, 0x542b2, 0x542c7, 0x542cd, 0x542fa,
+  0x54304, 0x5430a, 0x5431b, 0x54325, 0x54330, 0x5433a, 0x5434d,
+  0x54365, 0x54372, 0x54170, 0x54174, 0x541a8, 0x541e2, 0x54560,
+  0x54590, 0x545a7, 0x545c6, 0x545d2, 0x545de, 0x545f4, 0x5460e,
+  0x54649, 0x5465d, 0x54680, 0x54766, 0x5476f, 0x54779, 0x54785,
+  0x547d1, 0x547f0, 0x54800, 0x50420, 0x5042e, 0x50438, 0x50442,
+  0x50d60, 0x50e53, 0x40cf0, 0x40d23, 0x40d50, 0x40d5e, 0x40d65,
+  0x40d6d, 0x40d74, 0x40d82, 0x40d99, 0x40dc0, 0x40dff, 0x23900,
+  0x23e00, 0x749a0, 0x96874, 0x91f75, 0x91f7a, 0x91f80
+NAMES: AC_DRECT, AC_DRECT2, AC_RECT, AC_ONAIR, AC_DUP, AC_DUP_CD,
+  DRECT, DRECT2, RECT, KILOF_PL, BICZRECT, obj+0xc2, obj+0xc6,
+  obj+0xca, obj+0xce, obj+0xba, obj+0xbe, obj+0x6d, obj+0xb6,
+  obj+0xa9, obj+0xe6, obj+0xe2, obj+0x3c, obj+0x10, obj+0x78,
+  obj+0x68, obj+0x8, obj+0xbc, ll_play_v_step, ll_play_pull,
+  ll_play_v_raw, LL_PLAY_RAW_VDIV, A_WPAD, A_WYJSCIE, A_JUMP,
+  A_JUMP_S, A_FALL_DOWN, A_TURN, A_PRE_JUMP, A_DRAP, A_WALK, OI-119,
+  F6, OI-078
+CODE: no: only .md rows changed (this record, HANDOFF section 8 T5
+  (6), OI-119, OI-078). No new tool: every reading is leodb dis over
+  exact bytes, and the data lines are tools/extract_record.py output.
+HOOKS: none new. Shipped read-only paths only: leodb dis/sql
+  (PR-106 index), tools/extract_record.py for ZARIA.01 ANI2.DES, and
+  this port's own LL_SIG_* enum to number the bits the engine raises.
+MEASURED: (a) THE PAIR IS A VELOCITY, AND THE PHYSICS STEP WRITES IT.
+  0x54250 (eax = the object, edx = a per-class parameter block, held
+  in ebx) runs one integration pass over exactly this pair. verbatim:
+  a class +0xbc guard answers first (0x5425c), and when it answers
+  true and the block word [ebx+8] is under 20 and bit 2 of [obj+0xb6]
+  is clear, that word is raised to 20 (0x54266-0x54275). Then, at
+  0x5427c: edi = ([ebx+8] * [obj+0xc2]) / 100 and esi = ([ebx+0xc] *
+  [obj+0xc6]) / 100 (the divisor is loaded as 0x64 at 0x54286) - the
+  two drag terms. Then the two force terms: eax = ([ebx+0x0] *
+  [obj+0xba]) / 20 + [obj+0x6d] * [ebx+0x10] and [obj+0xc2] is
+  INCREMENTED by it (0x542ab-0x542c7); [obj+0xc6] is incremented by
+  ([ebx+0x4] * [obj+0xbe]) / 20 + [ebx+0x14] (0x542cd-0x542fa) -
+  [obj+0x6d], the facing word of ldir/rdir, scales the x side only,
+  and [obj+0xba]/[obj+0xbe] are the intent words PR-147/PR-148 read.
+  Then the drag is subtracted and a sign flip is killed: [obj+0xc2] =
+  old - edi, and if old * new < 0 it is set to 0 (0x54300-0x54322),
+  the same for y at 0x54325-0x54337. Finally 0x54170 ramps the pair
+  toward the block's ceiling words [ebx+0x18] (mirrored) and
+  [ebx+0x1c] - the not-an-assignment law this port already ships as
+  ll_play_pull. This is the body PR-253/PR-256 read for the player and
+  shipped as ll_play_v_step: drag = v*T/100, post = v + add, out =
+  post - drag, out = 0 when post * out < 0 - an instruction-for-
+  instruction match with 0x5427c-0x54337.
+  (b) THE UNIT IS 1/100 px PER ITERATION, AND THREE SITES SAY SO.
+  (i) The same function ends by storing [obj+0xc2]/100 to [obj+0xca]
+  and [obj+0xc6]/100 to [obj+0xce] (0x5434d-0x54372) - the very
+  per-iteration step words PR-98's mode switch at 0x543a0 consumes and
+  that PR-320 already traced into the point at [obj+0x14a]. (ii) The
+  surface pass compares the pair against a constant: 0x5476f is
+  `cmp DWORD PTR [obj+0xc6],0x58c` (1420) inside the branch that
+  decides whether to attach the object to a found surface, reached only
+  when [obj+0xe2] is 2 - a fall speed of 14.2 px per iteration above
+  which the attach is skipped. (iii) The point-provider verbs PR-319
+  read offset a point by `[obj+0xc2] * 15 / 100`, a velocity scale,
+  not an offset scale. And the pair's other two writers are the ramp
+  0x54170 and the command handler, not a position store.
+  (c) WHO ELSE TOUCHES IT, EXACTLY. The command handler 0x54560 is the
+  base class +0x10 verb, and the opcode test is a tree, not a table:
+  opcode 2 assigns both (0x54590-0x5459c, reached through 0x54680),
+  opcode 0xd adds to both (0x545a7-0x545bb, reached through 0x54577),
+  opcode 8 zeroes both (0x545f4, reached through 0x54649), opcode 6
+  writes [obj+0x6d] and [obj+0x71] (0x545de), opcodes 3 and 4 set
+  bits 4 and 8 of [obj+0xb6] (0x545c6/0x545d2), opcode 0x1b swaps the
+  surface link [obj+0xa9] (0x5460e), and everything else falls to
+  0x53770. The level-script dispatcher 0x50d60 posts into it at
+  0x50e53; the lion's own class 0x96874 chains to it (PR-319's
+  0x3d8f0 at 0x3d906). And every state entry zeroes the pair:
+  0x5042e/0x50438 sit immediately after the [class+0x4] state call of
+  0x50420 and immediately before the [obj+0x6d] = 1 facing default at
+  0x50442, which is the same block PR-321 read for ldir/rdir.
+  (d) THE THREE RECTANGLE ASK VERBS DIFFER BY ONE TEST, AND IT IS THE
+  SIGN. All three take eax = the placed rectangle object (its authored
+  box is [self+0x3c], written by the +0x18 verb 0x40c90 through the
+  `%d,%d;%d,%d` format at 0x91d00, PR-318), ebx = the asker, edx =
+  the answer buffer, and all three build the buffer through 0x749a0
+  with ebx = 0xc and raise into it. RECT at 0x40cf0 runs ONLY the
+  geometry test - the asker's +0x68 getter, for the lion 0x23900 which
+  returns the block at [lion+0xd6], and that block's class +0x8 verb,
+  0x23e00, against `lea edx,[self+0x3c]` - and raises byte 2 mask 0x2
+  at 0x40d23 (bit 17, LL_SIG_AC_RECT). DRECT2 at 0x40dc0 adds the
+  asker's ASKABLE probe ([asker+8]+0x3c at 0x40dce) and raises byte 2
+  mask 0x10 at 0x40dff (bit 20, AC_DRECT2). DRECT at 0x40d50 runs the
+  SAME two tests and ONE more: 0x40d65 loads [asker+0xc6], 0x40d6b
+  tests it and 0x40d6d refuses when it is <= 0, before raising byte 2
+  mask 0x8 at 0x40d99 (bit 19, AC_DRECT). So AC_DRECT is
+  AC_DRECT2-plus-falling: the verb answers only while the asker's own
+  y-velocity is positive, and PR-99's sign makes positive y DOWN.
+  (e) THE DATA AND WHO ASKS IT. ZARIA.01 ANI2.DES carries the shipped
+  set's only DRECT (line 18, `DRECT,988,645;1340,750`) next to a
+  RECT (line 19) and a KILOF_PL (line 20); that box contains the
+  A_WYJSCIE exit point 1020,692 of PR-317 and spans the three
+  ZWODOSPD mushroom platforms. SEVEN states of the ZARIA.01 lion
+  script ask it, all with the same transition and no others in the
+  file: A_JUMP_S line 53, A_JUMP 78, A_FALL_DOWN 105, A_WALK 131,
+  A_TURN 219, A_PRE_JUMP 402, A_DRAP 473, each `A_WPAD(1)=AC_ONAIR,
+  AC_DRECT` (the ZAR_LEWPL.MOV twin carries the same seven at lines
+  52/76/102/128/216/399/470). AC_DRECT appears in 5 of the 777 .MOV
+  files in the extracted script set and AC_DRECT2 in 2 (SADES.06,
+  TUNGA.11 - the two levels PR-318 found place DRECT2 objects), so the
+  velocity-gated verb is the rare one and it belongs to this level's
+  exit. A_WPAD then runs eleven rows behind `lock`/`unlock` (PR-321's
+  window) and its list end feeds AC_BREAK_NEXT into A_WYJSCIE, whose
+  first rows are `lock`, `ldir`, `pos 1020,692`, `wait AC_TIME`.
+  (f) WHY THIS IS A PORT GAP, NOT AN ENGINE ONE. The gate's input
+  already exists in this port under a name: ll_play.c keeps exactly
+  this register (p->vx/p->vy in px per second, ll_play_v_raw converting
+  to the 1/100 integer, PR-256) and ll_play_v_step is the pass of
+  section (a). What the port has NO path for is the other side of the
+  ask: a DRECT placement line becomes st->poly (ll_level.c:9807,
+  counted as a polyline, exactly as PR-318 (g) reported), so no object
+  with an authored box at [obj+0x3c] exists for the walk 0x4b500 to
+  ask, and nothing in the port raises bits 17/19/20. F6's port half
+  is now named without a guess in it: place the rectangle-class objects
+  the `.des` lines name, run the 0x40d50 verb's three tests against
+  them, and raise AC_DRECT into the lion's live set.
+OPENS: the parameter block of 0x54250 - which authored words its
+  +0x0/+0x4/+0x8/+0xc/+0x10/+0x14/+0x18/+0x1c are (the F and T words
+  are named for the x pair by PR-132, the rest is not), and what the
+  class +0xbc guard at 0x5425c asks (PR-132's conditional T-raise
+  question, unchanged); which classes reach 0x54250 at all - the three
+  call sites 0x24731/0x321fe/0x33348 were never named by class; the
+  0x54860 decay block OI-119 already names; the surface words
+  [obj+0xa9]/[obj+0xe6]/[obj+0xe2] and their kinds, which decide when
+  AC_ONAIR (0x54800), AC_DUP (0x54785) and AC_DUP_CD (0x547d1) fire
+  and are the second half of the exit chain's AC_ONAIR term; and on
+  the port side, whether a DRECT object is askable in the sense of the
+  +0x3c probe, which decides whether gate (1) of 0x40d50 ever passes.
+CLOSES: OI-119. The pair is the object's velocity register in 1/100
+  px per iteration, x at +0xc2 and y at +0xc6, written by the physics
+  step, the ramp verb and the command opcodes, zeroed at every state
+  entry; and the AC_DRECT gate's `[asker+0xc6] > 0` is "the asker is
+  moving down", which is the whole difference between DRECT and
+  DRECT2. That unblocks the F6 leg of HANDOFF section 8 T5 (6): the
+  exit chain A_JUMP/A_JUMP_S/A_FALL_DOWN/A_WALK/A_TURN/A_PRE_JUMP/
+  A_DRAP -> A_WPAD -> A_WYJSCIE is now walkable in the port as far as
+  its missing DRECT object. OI-119's remaining halves are named above
+  and none of them is load-bearing for that leg.
+CORRECTS: PR-319, twice. Its "THE PAIR IS A COMMAND-WRITTEN (x,y)
+  OFFSET, NOT A PHYSICS FIELD" is wrong in the second half: the
+  physics step IS a writer - 0x542c7 `add [obj+0xc2],eax` and 0x542fa
+  `mov [obj+0xc6],ebp` sit inside the 0x54250 body - and the port's
+  own ll_play_v_step is that same arithmetic, so the value the DRECT
+  gate reads is normally the integrated velocity rather than a posted
+  offset. Its opcode table is right (2 assign, 0xd add, 8 zero, 6 the
+  facing pair, 3/4 the [obj+0xb6] bits, 0x1b the surface swap) and is
+  re-derived here from the branch tree. PR-318's opcode numbers (7 and
+  6) stay corrected by PR-319. PR-318's (h) called 0x54800 "a
+  candidate only" because edi's set base was not established: the
+  three raises in that one window address [edi], [edi+1] and [edi+2]
+  with masks 0x10, 0x20 and 0x4, which are exactly LL_SIG_AC_DUP,
+  LL_SIG_AC_DUP_CD and LL_SIG_AC_ONAIR in this port's verified enum,
+  so edi is a signal set; live or answer buffer is still not pinned.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg is owed and no suite run; the last full no-Windows suite run is
+  PR-324's, rc=0 with 71 green verdict lines.
+```

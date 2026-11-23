@@ -5413,12 +5413,27 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         row-pull/FC x sides). All four legs red first, four
         mutations reported, full suite plus fixture-free half
         rc=0. The ly_exit leg itself is still open and it is
-        now purely a PORT gap: the AC_ONAIR/AC_DRECT raise path
-        (PR-318 named the raisers, the port raises neither) and
-        the leg end to end; what the ground/contact pass writes
-        WHILE a lock holds is unread and named in PR-321's
-        OPENS - it matters the moment that leg runs A_WPAD's
-        fall into the locked pool.
+        now a PORT gap with no unknown in it. PR-326 closed
+        OI-119: [obj+0xc2]/[obj+0xc6] is the velocity register
+        in 1/100 px per iteration, written by the physics step
+        0x54250 this port already runs as ll_play_v_step, and
+        the DRECT ask verb 0x40d50 differs from DRECT2 0x40dc0
+        by ONE test, `[asker+0xc6] > 0` - AC_DRECT is
+        AC_DRECT2-plus-falling. Seven ZARIA.01 states ask it
+        (`A_WPAD(1)=AC_ONAIR,AC_DRECT` in A_JUMP_S, A_JUMP,
+        A_FALL_DOWN, A_WALK, A_TURN, A_PRE_JUMP, A_DRAP), and
+        ANI2.DES line 18 authors the shipped set's only DRECT,
+        (988,645)-(1340,750), over PR-317's exit point. The
+        port side is what is missing: ll_level.c counts that
+        line as polyline data (st->poly), so the ask walk has
+        no rectangle-class object to ask and nothing raises
+        AC_RECT/AC_DRECT/AC_DRECT2; and the AC_ONAIR term
+        needs the surface-link pass (AC_DUP on attach,
+        AC_DUP_CD by surface kind, AC_ONAIR when [obj+0xa9] is
+        dropped, 0x5476x-0x54800). What the ground/contact
+        pass writes WHILE a lock holds is unread and named in
+        PR-321's OPENS - it matters the moment that leg runs
+        A_WPAD's fall into the locked pool.
     F7. [gate] the standing end pass only (OI-096): the Windows
         legs once, at the end, never per PR.
 

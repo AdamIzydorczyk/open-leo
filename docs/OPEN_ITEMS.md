@@ -2782,6 +2782,24 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     24-iteration pass or A_DROP's 4 px per iteration unroll -
     a question the captures cannot settle (the camera-y is
     OI-071).
+    PR-326 REMOVES THE LAST UNKNOWN ON THE EXIT LEG. SEVEN states of
+    the ZARIA.01 lion script - A_JUMP_S, A_JUMP, A_FALL_DOWN, A_WALK,
+    A_TURN, A_PRE_JUMP, A_DRAP - carry the SAME transition
+    `A_WPAD(1)=AC_ONAIR,AC_DRECT`; A_WPAD's list end feeds
+    AC_BREAK_NEXT into A_WYJSCIE, whose rows are `lock`, `ldir`,
+    `pos 1020,692`, `wait AC_TIME`. OI-119's answer makes the second
+    term checkable: AC_DRECT is raised by the DRECT ask verb 0x40d50
+    only when the asker's own velocity y is positive (falling, PR-99's
+    sign) inside the authored box, and ZARIA.01 ANI2.DES line 18
+    authors the shipped set's only DRECT, (988,645)-(1340,750), over
+    the exit point and the three ZWODOSPD platforms. The remaining
+    gap is now only a PORT gap with no unknown in it: ll_level.c
+    counts that line as polyline data (st->poly), so no object with an
+    authored box exists for the ask walk, and nothing in the port
+    raises AC_RECT, AC_DRECT or AC_DRECT2. The AC_ONAIR term still
+    needs the surface-link half (the pass at 0x5476x-0x54800:
+    AC_DUP on attach, AC_DUP_CD by surface kind, AC_ONAIR when
+    [obj+0xa9] is dropped), named in OI-119's closed note.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -4233,7 +4251,7 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
 
 OI-119: what the object field pair [obj+0xc2] / [obj+0xc6] is -
   the value the AC_DRECT ask verb gates on
-  status: PARTIAL
+  status: CLOSED BY PR-326
   origin: PR-318 (the F4 read of OI-018's raisers)
   notes: The DRECT ask verb 0x40d50 refuses to answer unless
     `[asker+0xc6] > 0` (0x40d65-0x40d6d), so ZARIA.01's exit
@@ -4310,3 +4328,27 @@ OI-119: what the object field pair [obj+0xc2] / [obj+0xc6] is -
     +0xa8 verb 0x23940 returns the index word itself. WHO WRITES
     [row_node+0x8]/[row_node+0xc] is this row's open half, with
     0x53ae0 the open half on the unit.
+    PR-326 CLOSES THIS ROW. THE PAIR IS THE VELOCITY REGISTER, x at
+    +0xc2 and y at +0xc6, in 1/100 px per iteration. The physics step
+    0x54250 integrates it every pass - force `([rec+0x0]*[obj+0xba])/20
+    + [obj+0x6d]*[rec+0x10]` added at 0x542c7 and
+    `([rec+0x4]*[obj+0xbe])/20 + [rec+0x14]` at 0x542fa, drag
+    `v*[rec+8]/100` subtracted with a sign-flip kill at
+    0x54300-0x54337, then the ceiling ramp through 0x54170 - and it
+    ends by storing `v/100` into the step words [obj+0xca]/[obj+0xce]
+    (0x54365/0x54372), which is the unit proof; 0x5476f's
+    `cmp [obj+0xc6],0x58c` (14.2 px per iteration) is the second one.
+    PR-319's "never written by the physics step" is corrected: the two
+    adds above sit inside that body, and this port's ll_play_v_step is
+    the same arithmetic, so the register the gate reads is normally the
+    integrated velocity. THE GATE: 0x40d50 tests ASKABLE, then
+    `[asker+0xc6] > 0`, then the geometry; 0x40dc0 (DRECT2) is the
+    SAME verb without the velocity test and 0x40cf0 (RECT) is the
+    geometry alone. AC_DRECT is therefore AC_DRECT2-plus-falling
+    (positive y is down, PR-99). What this row still holds open, in
+    PR-326's OPENS and none of it load-bearing for the exit leg: the
+    0x54250 parameter block's remaining words and its class +0xbc
+    guard, which classes reach 0x54250 (the call sites
+    0x24731/0x321fe/0x33348), the 0x54860 block above, and the
+    surface words [obj+0xa9]/[obj+0xe6]/[obj+0xe2] that decide when
+    AC_ONAIR, AC_DUP and AC_DUP_CD fire.
