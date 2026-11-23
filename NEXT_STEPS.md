@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-288.
+> at PR-289.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -39362,4 +39362,118 @@ Mesa/EGL driver's, not the compiler's.
 GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - identical to
 PR-286's pair; the hermetic selftest half is where the new
 gate leg runs, so it is exercised in this configuration too.
+```
+
+## PR-288 — THE ROW WALK BUILDS A POINT, NOT A SIGNAL BUS:
+## 0x98278 IS THE SHARED POINT CLASS, SO THE ROW GATE HAS NO
+## LEVEL-WIDE SET, AND THE CALLER'S ARGUMENT IS THE OPEN HALF
+```
+KIND: read
+SUBSYSTEM: the object row walk 0x520c0 - the six instructions
+at 0x520e4-0x520f6 PR-101 marked "unread" and PR-190 listed
+as its open item 4 - and the live-set picture of the row
+step's clause match (0x52251-0x522e6) that PR-287 shipped.
+ADDRESSES: 0x520c0, 0x520cf, 0x520da, 0x520e4, 0x520e6,
+0x520eb, 0x520f2, 0x520f6, 0x52100, 0x52103, 0x5210f,
+0x52114, 0x52118, 0x98278, 0x98274, 0x9827c, 0x23ea0,
+0x23e00, 0x23ed0, 0x23e30, 0x53ff0, 0x54004, 0x5400b,
+0x54030, 0x53692, 0x5369b, 0x534e0, 0x52251, 0x52290,
+0x522bc, 0x5230c, 0x97ca8, 0x97c9c, 0x97cd4, 0x97cdc,
+0x52570, 0x52790, 0x527b3, 0x527d6, 0x4bd30, 0xcef40
+NAMES: POINT class 0x98278, 0x23ea0 the two-dword point
+setter, 0x23e00 the point-in-rectangle test, TEventSet,
+ll_mov_row_gate, WAIT K_GEN1, KAMIEN, OI-111, OI-118,
+OI-041, PR-101, PR-190, PR-218, PR-219, PR-261, PR-287
+CODE: no: a reading, no behaviour to catch red.
+HOOKS: three open questions are the same question. PR-101's
+note leaves "`mov ecx,0x98278; call [ecx+4]`, with the
+owner's two table views in edx/ebx and 0x98278 itself pushed
+as an argument - unread"; PR-190 lists "the 0x98278-indirect
+call inside 0x520c0 (0x520e4-0x520f6)" as item 4 of what the
+class-table census could not settle; PR-287 OPENS (iv) asked
+whether a level-wide signal set feeds the row it shipped.
+MEASURED: (a) THE SIX INSTRUCTIONS, READ AS CODE. 0x520e4
+`mov ebx,[esi]` (esi = the motion object: 0x520cf reads the
+row list at [obj+0x2e] indexed by [obj+4], and 0x520da takes
+the row's class at [row+4] - the shape PR-216/PR-261
+established); 0x520e6 `mov ecx,0x98278`; 0x520eb `mov
+eax,esp`; 0x520ed `mov edx,[ebx]`; 0x520ef `mov ebx,
+[ebx+4]`; 0x520f2 `mov [esp+8],ecx`; 0x520f6 `call [ecx+4]`.
+The callee is 0x23ea0 - three instructions, `{ [eax]=edx;
+[eax+4]=ebx; ret }` - so what is built at esp is a
+three-dword object: two dwords taken from the table the
+object's own [obj+0] points at, and the word 0x98278 in the
+third slot. (b) WHAT THAT CLASS IS, FROM ITS OWN VERBS. The
+image at 0x98274-0x9827c is a run of code addresses (0x23e30,
+0x23ed0, 0x23ea0, 0x23e00), and 0x98278 is the base+8 word
+of it, the same convention PR-261 named. Its +0x04 verb is
+the setter above; its +0x08 verb, 0x23e00, is a
+point-in-rectangle test: it reads [eax] against [edx] and
+[edx+8] and [eax+4] against [edx+4] and [edx+0xc], rejecting
+outside with `jl`/`jg` and answering 1 inside - the inclusive
+bounds the port's own column and edge-band legs pin (PR-269,
+PR-270); its +0x00 verb 0x23ed0 is a debug/format path over
+the static 0x96858. The base ctor 0x53ff0 installs the same
+object inside every object: 0x54004-0x5400b writes x = 0,
+y = 0 and the class word 0x98278, the second initializer
+0x54030 repeats it, and 144 class tables hand the member out
+through the +0x68 verb 0x23900 (`add eax,0xd6; ret`) - the
+nested point at [obj+0xd6] that OI-118 recorded. (c) SO THE
+WALK COMPOSES A POSITION, NOT A SIGNAL. It takes the object's
+two coordinates through its [obj+0] table, puts them in a
+stack POINT, and hands that to the record verb `[[rec]+0x28]`
+at 0x52100; 0x52103-0x5210f then call `[[[obj]]+8]+0x04` with
+the same two values in edx/ebx. No 0x49580 - the three-dword
+OR - appears anywhere in 0x520c0. The only set OR-s in the
+row path are inside the row step itself: 0x522bc, the union
+of the caller's argument with the object's own set at
+[obj+0x60] that PR-287 gates on, and 0x5230c, the execute
+slot's result OR-ed back into the caller's argument. (d) THE
+NEIGHBOURHOOD IS THE GEOMETRY FAMILY, which is why the
+"level-global EventSet" label was wrong: the sibling word
+0x98274 is used at 0x53692 to build a five-dword local
+(0x5369b `mov eax,0x98274` stored at [esp+0x10], the four
+dwords zeroed), pass it to 0x534e0, and compare what comes
+back field by field against [ebx+0x00]/+0x04/+0x08/+0x0c with
+`jl`/`jg` before writing the answer to [obj+0x2c] - a box
+test, not an event set. (e) WHERE A ROW'S OWN FLAGS DO BUILD
+A SET: 0x52790 (the +0x28 entry of the same class family,
+0x97ca8) constructs a 12-byte set with the EventSet ctor
+0x749a0, then tests the row's control bits - 0x527b3 `test
+BYTE [row+0x13],0x2` → 0x527cb `call 0x4bd30` with the global
+0xcef40 and an index `[[row+0x12]] & 0x8000`, OR-ed in at
+0x527d6; 0x527db `test BYTE [row+0x12],0x40` → two more
+OR-s at 0x52800 and 0x5282a. That is the engine giving a row
+signals from its own authored bits - a second unread path,
+named here and not followed.
+OPENS: in order: (i) the row step's OWN caller argument - the
+edx 0x521f0 keeps at [esp+0x68] and 0x52251 copies - is
+still unidentified: findcall sees no direct call site, and no
+immediate anywhere in the image names the class table at
+0x97ca8 (the image scan finds 0x97c9c, 0x97cd4 and 0x97cdc
+referenced and 0x97ca8 and 0x97cb0 by nothing at all), so
+that class is installed by data this read has not found;
+(ii) what [obj+0x00] is - OI-118's question, and now the row
+walk itself dereferences it and hands out its first two
+entries, so "nothing writes [obj+0x00]" and "the walk reads
+the object's coordinates through it" cannot both stand; (iii)
+the (e) path: which row bits, which table at 0xcef40, and
+which signals a row gets from its own flags.
+CLOSES: PR-287 OPENS (iv) and OI-111's level-wide half, and
+with them PR-101's "unread" note and PR-190 open item 4: the
+global 0x98278 is not a signal set and the row gate reads no
+level-wide set. The measured consequence PR-287 reported
+stands on its own terms - ZARIA.01's stones stay held because
+nothing raises K_GEN1 on them, and the port's only K_GEN1
+producer is the contact ask of PR-241.
+CORRECTS: PR-218 (the phrase "composes the key with the
+global 0x98278" for 0x520e6-0x520f6, at OI-111 item (5), and
+repeated verbatim in PR-287's OPENS (iv) and in that row's
+item (c)) - the walk composes a POINT, not a key; and PR-219
+(the label of 0x98278 as a level-global EventSet - OI-041
+hedged its role as "a generic", OI-118 found it embedded at
+[obj+0xde], and PR-288 (b) reads its verbs as the point
+class). The two OI-111 sentences are corrected in place.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
 ```

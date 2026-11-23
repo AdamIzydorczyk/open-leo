@@ -2543,8 +2543,12 @@ OI-111: which row-step path the port's row clock models -
     reached as `call [esi+0x18]` with esi = [rec+0x44] = the
     record's own class word (the vtables here are the base+8
     kind, which is also why 0xa11c8 = 0xa11c0+8 and
-    0xa11e0 = 0xa11d8+8); it clones the row, composes the key
-    with the global 0x98278, runs the row through its class's
+    0xa11e0 = 0xa11d8+8); it clones the row, builds a stack
+    POINT from the object's two coordinates with the shared
+    POINT class 0x98278 - "composes the key with the global
+    0x98278" was PR-218's wording for those six instructions
+    and PR-288 corrects it - and runs the row through its
+    class's
     +0x10 with edx = 6 (0x5213d), tests the answer against 6
     (0x52140), and does the list-end/wrap: 0x521b6-0x521d4
     compares [list+0x8] - 1 with the cursor and OR-s bits 4 and
@@ -2627,19 +2631,30 @@ OI-111: which row-step path the port's row clock models -
     the 201 `Wait` rows a line-anchored grep matches (the
     port's parser captures 251) are in lion scripts, ZAR_LEW's
     `8,0,WAIT AC_DUP` and `8,200,WAIT !K_UP` among them; and
-    (c) the OTHER half of the set match is handed. 0x52251
-    copies the CALLER's key set, and the row walk 0x520c0
-    composes that with the level-global set at 0x98278
-    (0x520e6-0x520f6, named by PR-219) - so a clause can be
-    answered by a LEVEL-wide signal, not only by the object's
-    own raised bits. This port has no level-wide signal set;
-    its gate reads o->sig alone. Measured consequence: with
-    the gate in, a 200-tick ZARIA.01 probe traces ZERO
-    `KAMIEN [A_STOP]->[A_GO]` where the same probe on the
-    pre-fix build traced three - the stones are held by their
-    own `1,0,WAIT K_GEN1` row, because nothing in this port
-    raises K_GEN1 on a KAMIEN. Whether the engine's global set
-    carries K_GEN1, and who writes it, is unread.
+    (c) the OTHER half of the set match is the caller's
+    argument, and its origin is open - NOT a level-wide set.
+    PR-287 repeated PR-218's phrase that the row walk 0x520c0
+    composes the caller's set "with the level-global set at
+    0x98278"; PR-288 read those six instructions (0x520e4-
+    0x520f6) and 0x98278 turned out to be the engine's shared
+    POINT class - its +0x04 verb 0x23ea0 writes two dwords,
+    its +0x08 verb 0x23e00 is a point-in-rectangle test, and
+    the base ctor 0x53ff0 embeds one at [obj+0xd6..0xde]
+    (OI-118) - so the walk builds a stack POINT from
+    [[obj+0]] and [[obj+0]+4] and hands it to the record verb
+    [[rec]+0x28]; no three-dword OR 0x49580 appears in the
+    walk at all. Inside the row step the only OR-s are
+    0x522bc (the caller's argument unioned with the object's
+    own [obj+0x60], which is what the gate reads) and 0x5230c
+    (the execute result back into the argument). Measured
+    consequence unchanged: with the gate in, a 200-tick
+    ZARIA.01 probe traces ZERO `KAMIEN [A_STOP]->[A_GO]`
+    where the same probe on the pre-fix build traced three -
+    the stones are held by their own `1,0,WAIT K_GEN1` row,
+    because nothing in this port raises K_GEN1 on a KAMIEN
+    except the contact ask of PR-241. What is open is the
+    argument, not a bus: 0x521f0 has no direct caller and the
+    image names no reference to its class table 0x97ca8.
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port
@@ -3124,7 +3139,16 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
     so the reading has been harmless so far. But the machine
     code loads the table through [obj+0x00], the only such
     dereference in the step path, and no factory or ctor in
-    the image ever writes [obj+0x00]: the three base ctors
+    the image ever writes [obj+0x00]: [PR-288: it is NOT the
+    only such dereference - the row walk 0x520c0 does the
+    same thing at 0x520e4-0x520ef, `mov ebx,[esi]` then
+    `mov edx,[ebx]` / `mov ebx,[ebx+4]`, and hands those two
+    dwords to the shared POINT class 0x98278's setter 0x23ea0
+    as x and y. Read together with OI-118's own finding that
+    0x54e0a refreshes the embedded point's x,y from
+    [obj+0]/[obj+4], the natural reading is that [obj+0]
+    points at the object's own coordinates; what installs it
+    is still unfound.] the three base ctors
     (0x52860, 0x531f0, 0x53ff0) and all 218 named classes
     leave it alone. Either every object self-points through a
     path this read did not find, or the +0xa8/+0xac verbs run
