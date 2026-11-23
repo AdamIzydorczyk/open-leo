@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-310.
+> at PR-311.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42281,4 +42281,52 @@ red leg by the rule PR-245 states, and no suite run. The last
 full no-Windows suite run is PR-298's, rc=0 with 69 green
 verdict lines; since then only comments in ported/ have changed
 (PR-304, PR-305).
+```
+
+## PR-310 — THE FOCUS-1 PLAN, WRITTEN DOWN: SEVEN ORDERED STEPS,
+## AND THE "489" FINISH MOVED FROM THE PLAN TO A QUESTION THE
+## CAPTURES ANSWER
+```
+KIND: docs
+SUBSYSTEM: HANDOFF section 8, task T5: an ordered remaining-work
+list for the ZARIA.01 climb, written where the plan lives. No
+engine reading, no code, no fixture.
+ADDRESSES: 0x917c0, 0xa1048, 0x9198e, 0x3f0f0, 0x4a050, 0x550c0
+NAMES: A_WYJSCIE, A_WPAD, A_WSP, A_SCIAG, pos, lock, unlock,
+AC_ONAIR, AC_DRECT, OI-078, OI-082, OI-018, OI-096, T5, T6,
+ly_climb, ly_exit, R2, R3, OI-072, PR-286, PR-294, PR-304,
+PR-308, PR-309, FOCUS 1
+CODE: no: one section of HANDOFF.md and this record; nothing
+under `ported/` or `tools/` changed, so the compile check and the
+red leg are both not applicable.
+HOOKS: the plan rule (HANDOFF section 8, "one task = one or a
+few PRs", and PR-203's one-home note) and the FOCUS-1 chain the
+last ten records carry in the register: PR-304 named "the lion's
+climb rows and the landing on the platform line 518" as the step
+left; PR-308 closed the ask-point thread; PR-309 closed the
+row-tail thread from the authored side and named what is left.
+MEASURED: nothing - a plan step states no measurement. What it
+does state is what the last three records settled about the plan:
+the route PR-304 named is CLOSED as an authored route (no rise in
+the climb family's rows, and the level's own script asks for no
+solidity for its ladder), so the steps below are the ones the
+open threads actually name, in the order their dependencies
+force. The step list itself is in HANDOFF section 8 T5.
+OPENS: the seven steps are the open items; they also change what
+"ZARIA.01 playable" means, and that definition is step 1, not an
+assumption of the list.
+CLOSES: the plan question "what is left for FOCUS 1" as an
+unstated list - it is written down where the plan lives, with
+each step's done-when.
+CORRECTS: PR-304's OPENS (i) and the register sentence it left
+("the lion's climb rows and the landing on the platform line
+518") are superseded as the next step, not as measurements:
+PR-308 closed the ask-point half and PR-309 closed the row-tail
+half, both negatively. PR-304's own readings - the ladder class
+has no motion path, and the ask verb is the port's model - are
+unchanged.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last
+full no-Windows suite run is PR-298's, rc=0 with 69 green
+verdict lines; since then only comments in ported/ have changed.
 ```

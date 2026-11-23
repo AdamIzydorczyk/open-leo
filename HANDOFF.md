@@ -5244,6 +5244,56 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
     No T5 observable moved here either: no port file was touched,
     so the ladder/vine/BY_TY/energy verdicts stand as (3) left them.
 
+(5) THE LADDER THREAD, WHERE IT STANDS AND WHAT IS LEFT, IN
+    ORDER (PR-310, after PR-308 and PR-309). The two routes this
+    task named for years are now CLOSED as authored routes, both
+    by measurement, so they are not steps: the ask path is right
+    in this port (PR-308: the +0xb0 point verb hands the asker
+    the live position), and no row of A_WSP / A_WSP_LIN /
+    A_PODCIAG / A_DRAP authorises a rise while A_SCIAG authors
+    its descent as six `m 0,1` steps (PR-309), and ZARIA.01's
+    own DRAB.MOV asks for NO solidity (257 other scripts do).
+    "Playable ZARIA.01" also has an authored definition now: the
+    level ends through A_WPAD -> A_WYJSCIE, whose rows carry the
+    only two `pos` directives in the shipped set (1020,692), and
+    ZAR_LEW.MOV has no `end_level`. The y 489 of PR-286/PR-294
+    stays a measured standing height, not a target. In order:
+
+    F1. GROUND TRUTH FIRST [measure, no code]. Read the ladder
+        out of the captures already on disk - R2
+        `reference/video/ladder-DomCTOtx2rg.webm` t=46.0-49.0
+        (the climb PR-109 timed), `reference/video/levels/
+        ZARIA.01.mkv` t=13.3-15.7 (PR-131's "ridden down") and
+        `reference/video/levels/ZARIA.01_b.mkv` t=200.0-200.7
+        (mid-climb). Three questions: does the lion's feet line
+        ever rise above the ladder's shape top (512), does the
+        drawn ladder extend while he is on it, and what does the
+        player press. Done when: a per-frame trace, or the plain
+        statement that this ladder is a route DOWN, not up.
+    F2. [read] the apply of the six directives that exit needs -
+        `pos`, `lock`/`unlock`, `ldir`/`rdir`, `goto`/`GOTO_REL`
+        - through the engine's own table 0x917c0 node classes
+        (PR-198/199 read its `end_level` sibling 0xa1048). This
+        is also the only mechanism left that could move a rider
+        whose state authors no motion.
+    F3. [read] what ends THIS level: who writes [level+0x4]
+        (PR-194's counted item), since the level's own lion
+        script has no `end_level`.
+    F4. [read] the AC_ONAIR / AC_DRECT raisers (OI-018) - the
+        exit chain is gated on exactly those two signals.
+    F5. [read] the water as a floor (OI-082): A_WPAD and
+        A_WYJSCIE choose `seq=wet`/`seq=dry` and the authored
+        exit point 1020,692 sits below ZARIA_A.PLT's main ground
+        line 680/684; measure the WODA placements, and the seven
+        ZARIA_A.PLT polylines this port counts as moving ground.
+    F6. [port] only what F1 supports, red test first - either
+        ly_climb re-pinned, or a new ly_exit leg that walks
+        A_WPAD -> A_WYJSCIE and ends the level. At that PR: the
+        full no-Windows suite (the last full run is PR-298's)
+        and its fixture-free half.
+    F7. [gate] the standing end pass only (OI-096): the Windows
+        legs once, at the end, never per PR.
+
 **T6. Level flow.** `end_level` directive, `AC_LEAVE`, the vulture ride of
 ZARIA I, the map -> level -> map loop, TUNGA I <-> II exchange
 (`AC_XCHG_LEVEL`), lives/energy persistence, game over. STATUS.LEO progress is
