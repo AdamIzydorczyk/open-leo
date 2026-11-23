@@ -2079,6 +2079,22 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     which point the ask is made with: the port asks with the
     rider's position point and its stop at 212,560 follows
     directly from that.
+    PR-295 REMOVES ONE HYPOTHESIS FROM THIS ROW BY CENSUS. The
+    engine's signal-name table is at 0x91a0e..0x91c5e (69
+    names, index = bit, matching the port's LL_SIG_* order),
+    and the inline bit-set idiom PR-291 used for K_GEN1 exists
+    at exactly 24 places in the image, for 7 signals only:
+    AC_TIME, AC_ENEMY_ATC, AC_KOREK, K_GEN1 (18), K_GEN2,
+    K_GEN3, AC_XCHG_LEVEL. AC_EDGE, AC_DRAB, AC_DRABK,
+    AC_DRAB_CATCH, AC_ONAIR, AC_LINA and AC_LINA_CATCH have NO
+    inline raise site anywhere, and there is no 32-bit form of
+    the idiom. So the answer signals this row is about can only
+    arrive as SETS - through the EventSet OR 0x49580 (69 call
+    sites), the mechanism PR-292/PR-293 found in the frame step
+    and in the set composer. Which of those call sites feeds a
+    rider's set is now the named FOCUS-1 reading; the port's
+    inline AC_EDGE/AC_DRAB raises stay the counted model
+    choices they are documented as.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -2174,7 +2190,28 @@ OI-092: the transition-apply SIGNAL legs stay unread: the
   negative test (0x53616; the refusal at 0x52381 is the
   cross-state setter), so what a -1 cursor does on the next
   step (wrap 0x521c5) is unread; the player and object paths
-  differ there today
+  differ there today.
+  PR-295 CLOSES THE AC_TIME CLAUSE. The authored `time=lo
+  [,hi]` is read into record +0x8/+0xa by the scanner at
+  0x51944 (formats `%hi` 0x9211e and `,%hi` 0x92122, the
+  keyword `time` at 0x9211b - PR-102 confirmed), and the
+  record verb at 0x52072-0x520b7 rolls a gate into record
+  +0x0c: it zeroes the owner's counter [owner+0x9d] (0x52077),
+  and for hi != 0 computes gate = rand()*(hi-lo)/32767 + lo
+  with 0x76bcc = Borland's rand (state*0x41C64E6D+0x3039,
+  (state>>16)&0x7FFF); for hi == 0 it stores lo with no roll at
+  all, which answers PR-163's open max=min case exactly.
+  0x53626-0x53659 then reads [obj+0x9d], increments it and
+  stores it back, and raises bit 9 when the (non-zero) gate at
+  [rec+0x0c] is <= that counter: AC_TIME is the engine's own
+  passes-since-the-state-was-entered timeout, the counter
+  cleared at 0x535c2 on a state change and at 0x52077. The same
+  pass answers this row's second half in part: 0x53616 is
+  reached when [rec+0x04] differs from the caller's argument,
+  and 0x53620 then calls the OBJECT class's +0xac verb with
+  edx = [obj+0x60] - a third call site of the ENTER verb
+  (after 0x535f7 and 0x52416). The -1 cursor's next step is
+  still unread, so the row stays open.
   status: OPEN
   origin: PR-107/172/174/215
 

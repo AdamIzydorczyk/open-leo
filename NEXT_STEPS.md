@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-295.
+> at PR-296.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -40262,6 +40262,155 @@ on, so the search was in the wrong field. Its measurements -
 the 27 px K_JUMP arc, the platform line 518, the grounded 489,
 the state walk of the ladder script - are unchanged and are
 used as-is above.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-295 — A CENSUS OF EVERY SIGNAL-RAISE SITE IN THE IMAGE:
+## THE INLINE RAISE idiom EXISTS AT 24 PLACES FOR 7 SIGNALS
+## ONLY, AND AC_TIME IS THE ENGINE'S OWN COUNTER-VERSUS-ROLL
+## TEST, THE ROLL STORED AT [rec+0x0c]
+```
+KIND: read
+SUBSYSTEM: the 69-signal set at [obj+0x60] - the engine's own
+name table, the inline raise idiom, and which signals are ever
+raised inline; then the whole AC_TIME mechanism, from the
+authored `time=` line to the raise.
+ADDRESSES: 0x91a0e, 0x91c5e, 0x92115, 0x9211b, 0x9211e,
+0x92122, 0x92127, 0x9212e, 0x49920, 0x517f6, 0x51800,
+0x51808, 0x51810, 0x51817, 0x5181a, 0x51944, 0x51948,
+0x5196d, 0x52059, 0x52072, 0x52077, 0x52081, 0x52088,
+0x5208a, 0x52093, 0x52098, 0x5209b, 0x520a2, 0x520a4,
+0x520a8, 0x520ac, 0x520b0, 0x76bc6, 0x76bcc, 0x76bd6,
+0x76be6, 0x535a2, 0x535b2, 0x535bf, 0x535c2, 0x53602,
+0x53612, 0x53616, 0x53620, 0x53626, 0x53629, 0x53636,
+0x5363a, 0x53640, 0x53643, 0x5364c, 0x53650, 0x53659,
+0x536f0, 0x49580, 0x3f203, 0x24a38, 0x33ea3, 0x3badf,
+0x2f555, 0x3a069, 0x241d3, 0x327a1, 0x327cd
+NAMES: signal name table, raise idiom, AC_TIME, AC_EDGE,
+AC_DRAB, AC_DRAB_CATCH, AC_ONAIR, AC_LINA, K_GEN1, K_GEN2,
+K_GEN3, AC_ENEMY_ATC, AC_KOREK, AC_XCHG_LEVEL, time=,
+time_scale=, sample=, gate, roll, row clock, EventSet,
+LL_SIG_*, OI-092, OI-078, PR-102, PR-110, PR-163, PR-215,
+PR-291, PR-292, PR-293, sig_raise_census.py
+CODE: no: a reading plus a whole-image census with a detector
+validated against a published result; no behaviour changed, so
+no red leg.
+HOOKS: PR-291 found 18 K_GEN1 raise sites by hand and named
+the idiom; OI-092 has carried "the AC_TIME count arm 0x53626"
+as unread since PR-107; PR-163 modelled `time=<min>[,max]` as
+a gate rolled at ENTER and left its max=min case open; PR-102
+fixed the authored fields at record +0x8/+0xa/+0xe; PR-292 and
+PR-293 found the set-merge 0x49580 but never asked which
+signals it merges.
+MEASURED: (a) THE BIT TABLE IS IN THE IMAGE. 0x91a0e..0x91c5e
+is 69 NUL-terminated names in one run: AC_BLOK, AC_BLOK_Y,
+AC_BREAK_NEXT, AC_BREAK_PREV, AC_DUP, AC_OFF, AC_DEADDUP,
+AC_ENEMY, AC_EDGE, AC_TIME, AC_DRAB, AC_DRABK, AC_DRAB_CATCH,
+AC_DUP_CD, AC_STONE, AC_PUSH, AC_ENEMY_ATC, AC_RECT, AC_ONAIR,
+AC_DRECT, AC_DRECT2, AC_LINA, AC_LINA_CATCH, AC_LEAVE,
+AC_ATAK, AC_UP_DUP, AC_SPOKUJ, AC_BUTLA, AC_BECZKA, AC_START,
+AC_MRECT, AC_TABLICZKA, AC_KILOF, AC_KOREK, AC_KOLO, K_BKWD,
+K_FWD ... K_JUMP, K_GEN1..K_GEN5, AC_PLAT_OFF ... AC_EV_MAX.
+That is index 0..68 and it is exactly the port's LL_SIG_*
+order - K_BKWD 35, K_JUMP 53, K_GEN1 54 - which independently
+confirms PR-291's bit 54 and the port's bit indexes (its
+probe prints AC_EDGE as 0x100 = bit 8 and AC_DRAB|AC_DRAB_CATCH
+as 0x1400 = bits 10|12). (b) THE RAISE idiom, exactly, and it
+re-bases the pointer between the load and the store, which is
+why a naive search for `mov [x+0x66],reg8` finds 1 of 18:
+`mov ah,BYTE PTR [ecx+0x66]; add ecx,0x64; or ah,0x40;
+mov BYTE PTR [ecx+0x2],ah` at 0x3f203, and the same shape at
+0x24a38 with ebx. A detector for that shape (load from a byte
+in 0x60..0x6b, then `or` the same 8-bit register, then store
+it back) finds exactly PR-291's 18 K_GEN1 sites - 0x1e546,
+0x1ec96, 0x24836, 0x24a38, 0x24f07, 0x2ca41, 0x2f48f, 0x2f5cc,
+0x2f628, 0x2fac7, 0x306da, 0x3b5f3, 0x3b6c1, 0x3bba1, 0x3c321,
+0x3f203, 0x3f3d3, 0x6ebf7 - no more and no fewer, which is the
+cross-check on everything below. (c) THE FULL CENSUS OVER ALL
+69 SIGNALS: 24 raise sites in the whole image, covering 7
+signals and nothing else - AC_TIME 1 (0x53650), AC_ENEMY_ATC 1
+(0x33ea3), AC_KOREK 1 (0x3badf), K_GEN1 18, K_GEN2 1 (0x2f555),
+K_GEN3 1 (0x3a069), AC_XCHG_LEVEL 1 (0x241d3). No 32-bit form
+exists: `or DWORD PTR [x+0x60]`, `+0x64`, `+0x68` appear zero
+times. (d) THE NEGATIVE, and it is the FOCUS-1-relevant half.
+AC_EDGE (8), AC_DRAB (10), AC_DRABK (11), AC_DRAB_CATCH (12),
+AC_ONAIR (18), AC_LINA (21) and AC_LINA_CATCH (22) - every
+signal the port's ladder and rope answer models produce - have
+NO inline raise site anywhere. The only other merge mechanism
+found is the EventSet OR 0x49580, with 69 call sites, which is
+the call PR-292 saw in the frame step at 0x5370c/0x53725 and
+PR-293 saw as the composer's return path: those answer signals
+travel as SETS, not as bit sets, so the port's inline raises
+are model choices with no inline engine counterpart, as its own
+notes call them. (e) AC_TIME END TO END. The authored line:
+0x51944 `lea eax,[esi+0x8]` with the format 0x9211e `%hi`, and
+the sibling format 0x92122 `,%hi` (the keyword string `time` is
+at 0x9211b) - PR-102's pair at record +0x8/+0xa, confirmed;
+the next keyword in the same scanner chain is `sample` 0x92127
+with `%d` 0x9212e into [esi+0x16] (0x5196d-0x5198f). The
+record-copy ctor 0x517f6-0x5181d copies +0x00, +0x04, +0x8,
++0xa, +0xc, +0xe (as a DWORD) and +0x12 - so +0x0c is a real
+per-record field between the authored pair and PR-110's
+time_scale word. (f) THE ROLL, at 0x52072-0x520b7 (a record
+verb: 0x52059 calls `[[rec+0x44]+0x04]`, so this is that slot,
+inferred from the call and the matching entry shape). It first
+zeroes the OWNER's counter, `mov DWORD PTR [[rec+0x00]+0x9d],0`
+(0x52077); reads time_hi as a WORD at [rec+0x0a] and if it is
+0 jumps to the no-roll path (0x52081-0x52088); otherwise span =
+hi-lo (0x5208a-0x52091), calls 0x76bcc, and 0x76bcc-0x76bef IS
+Borland's rand: state*0x41C64E6D + 0x3039, result (state>>16)
+& 0x7FFF, from the generator object at [0x76bc6]; then
+gate = rand*span/32767 + lo (0x52098-0x520a8, unsigned div by
+0x7fff), and in both paths `mov WORD PTR [ebx+0xc],ax` stores
+it (0x520ac loads lo alone, 0x520b0 stores). (g) THE RAISE, at
+0x53626-0x53659, inside the pass PR-292 read: the counter is
+[obj+0x9d] - read at 0x53629, incremented at 0x53636, stored
+back at 0x5363a - and it is ZEROED whenever the state index
+changes (0x535b2 compares the argument with [obj+0x5c]; the
+not-equal path calls the record class's +0x20 verb at 0x535bf
+and stores 0 at 0x535c2) and also by the roll verb at 0x52077.
+The current record is `[[obj+0x50]+[obj+0x5c]*4]` (0x5362f-
+0x53637), its WORD at +0x0c is read sign-extended (0x53643):
+a zero gate never raises, a gate above the counter does not
+raise, and at gate <= the counter bit 9 is OR-ed in at 0x53650.
+So AC_TIME is the engine's own per-state timeout: authored
+`time=lo[,hi]` -> rolled once into [rec+0x0c] -> compared
+against the passes since the state was entered. PR-163's model
+is confirmed in code including its open case: `time=350` leaves
+hi == 0, the no-roll path is taken and gate == lo exactly, so
+the deterministic N-pass wait the port's selftest pins is what
+the bytes do. The same pass also answers OI-092's second half:
+0x53602-0x53620 reads [rec+0x04], and when it differs from the
+caller's argument it stores it (0x53616 - PR-215's raw -1
+store) and calls the OBJECT class's +0xac verb with edx = the
+object's own set at [obj+0x60] - a third call site of the
+ENTER verb, after 0x535f7 (PR-292) and 0x52416 (PR-293).
+OPENS: in order: (i) which of the 69 0x49580 call sites puts
+AC_EDGE/AC_DRAB into a RIDER's set - the only remaining route
+for the FOCUS-1 answer signals, and the direct successor to
+PR-293's five composer sources; (ii) the six non-K_GEN1 raise
+sites 0x33ea3, 0x3badf, 0x2f555, 0x3a069, 0x241d3 and their
+gates, unread; (iii) everything else that reads or clears
+[obj+0x9d], and whether the port's row clock (PR-172's
+zeroing) is the same counter; (iv) the bound on this census: it
+keys on byte offsets 0x60..0x6b, and that offset is class-
+dependent - 0x327a1/0x327cd read [obj+0x60] as a scalar and do
+index arithmetic (*220) on it - so a same-shaped raise in
+another class would be counted here; none of the 24 sites has
+that shape and PR-291's K_GEN1 semantics corroborate the set
+reading; (v) whether 0x52072 is the record class's +0x04 verb
+(the call at 0x52059 says so, the table entry was not read).
+CLOSES: OI-092's first clause - the AC_TIME count arm at
+0x53626 is read end to end, with its authored source, its
+storage field, its counter and its clear points - and PR-163's
+open item on `time=N` with no comma (gate = N, no roll). It
+also replaces PR-291's hand count with a machine census over
+all 69 signals, and names [rec+0x0c] as the rolled gate: the
+field PR-102's list (0x8, 0xa, 0xe, 0x12) did not mention.
+CORRECTS: none. PR-102's field offsets, PR-110's scaling law,
+PR-163's model and PR-291's 18 sites are all confirmed by this
+leg, not changed by it.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```
