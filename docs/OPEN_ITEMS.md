@@ -3744,6 +3744,50 @@ OI-111: which row-step path the port's row clock models -
     it. The walk is therefore reached with that buffer, and the
     row step 0x521f0's [esp+0x68] has no other candidate. The
     walk-to-step call is still unseen.
+    PR-332 SETS THE BRANCH BYTE-EXACT AND INVERTS THE ASSIGNMENT above.
+    0x5223c calls 0x495b0, which answers 12 when all three data dwords
+    are zero (its loop 0x495bd-0x495cc) and 0 the moment one is not
+    (0x495ce); 0x52241-0x5224b then do `test eax,eax / sete al / and
+    eax,0xff / je 0x522fc`, so the jump to 0x522fc - the execute slot
+    +0xc, the OR into the caller's set, the class +0xa0 verb, and the
+    frame/clock compare at 0x52320-0x5232b with the budget clock minus
+    threshold handed to the record's +0x18 at 0x52334-0x52338 - is
+    taken by the EMPTY answer, the clause-LESS row. A row that DOES
+    carry a `Wait` clause falls through to 0x52251, which copies the
+    caller's set (0x52255-0x52278) and the object's [obj+0x60]
+    (0x52279-0x522a6), merges them at 0x522bc and calls
+    TEventSet::match 0x47e40 at 0x522e6; the mode byte that drives
+    0x47e40's table is read from [eax+0xc] at 0x47e4b - the CLAUSE's
+    own mode. No match: `je 0x52354` at 0x522ed leaves the whole step -
+    no execute slot, no clock compare, no [obj+0x95] admit flag (set to
+    1 at 0x5234a, zeroed at entry 0x52217). Match: `xor ebx,ebx` at
+    0x522f8 and `jmp 0x52338` - the row runs with a ZERO budget, so
+    the threshold compare at 0x52329 is never reached. PR-219's
+    parenthetical ("clock - frame on the clause path, 0 on the
+    clause-less path") is exactly the other way round, and so is the
+    question at this row's head. The node's answer is its clause:
+    0x45970 copies [node+0x8]'s 12 data bytes and its mode byte
+    (0x45981-0x4598f) and never calls the operand, so only a bit-less
+    clause - the one tokenless `Wait ;` - is EMPTY. And the two
+    special names are MASKS, not meanings: the resolver 0x48000 matches
+    the strings AC_K_ANY (0x919ec) / K_ANY (0x919f5) and OR-s
+    0x2001f8 into data dword 1 (0x48029-0x48048); AC_K_NEVER (0x919fb)
+    / K_NEVER (0x91a06) OR-s 0x60 into data byte 4 (0x4806f-0x4807d);
+    both return 1 through 0x49543 and both are NON-EMPTY, so both take
+    the match path. In this port's bit indexes that is K_ANY = bits
+    35..40, the six arrows, plus bit 53, and K_NEVER = bits 37,38 =
+    K_UP and K_DOWN together. What a name means is the mode byte's
+    business: plain subset (0x47e63), `!` shares nothing (0x47edc),
+    `*` identical (0x47fb2), `|` shares anything (0x47f42), PR-218's
+    table unchanged - so `|K_ANY` is "an arrow is held", plain K_ANY is
+    "all six at once" and plain K_NEVER is "UP and DOWN at once", both
+    in practice never, which is the idiom the 115 `WAIT K_NEVER` rows
+    are written with. WHAT IS LEFT OPEN HERE is the port's own use of
+    the two paths, not the reading: ll_play.c's player row clock never
+    asks ll_mov_row_gate, and PR-287's object-side gate keeps the
+    threshold compare on the match path, which PR-287 itself named and
+    which only shows on a gated row with a non-zero threshold - 170 of
+    the 203 Wait rows counted in PR-332's record.
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port

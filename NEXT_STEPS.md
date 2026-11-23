@@ -45291,3 +45291,150 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-329's/PR-330's pair, with DATA=/tmp/opencode/nope
   HD=/tmp/opencode/nope.
 ```
+
+## PR-332 - THE ROW STEP HAS TWO PATHS AND THE EMPTY ANSWER TAKES THE CLOCK
+## COMPARE: A `Wait` CLAUSE MATCHES OR THE STEP RETURNS WITHOUT ADMITTING,
+## AND K_ANY / K_NEVER ARE MASKS WHOSE MEANING IS THE MODE BYTE'S
+```
+KIND: read
+SUBSYSTEM: the branch structure of the engine's row step 0x521f0, the
+  empty test 0x495b0 it runs on the row node's answer, and the two
+  special names in the clause resolver 0x48000. It settles the question
+  OI-111 opened - which of the two paths a row with a `Wait` tail takes
+  - and it is the reading that ported/ll_play.c's player row clock
+  (section 7 of player_iterate) and PR-287's object-side gate
+  ll_mov_row_gate in ll_level.c both have to answer before the
+  row-driven states of HANDOFF section 8 T5's exit thread can be
+  trusted. No code changed here; this record is the ground the next
+  step ports.
+ADDRESSES: 0x521f0, 0x52214, 0x52217, 0x52221, 0x52224, 0x52227,
+  0x52229, 0x5222c, 0x5222f, 0x52233, 0x52235, 0x52238, 0x5223c,
+  0x52241, 0x52243, 0x52246, 0x5224b, 0x52251, 0x52255, 0x5225e,
+  0x52265, 0x5226f, 0x52276, 0x52279, 0x5228d, 0x52290, 0x5229d,
+  0x522bc, 0x522c1, 0x522de, 0x522e2, 0x522e6, 0x522eb, 0x522ed,
+  0x522ef, 0x522f3, 0x522f8, 0x522fa, 0x522fc, 0x52303, 0x52306,
+  0x5230c, 0x52311, 0x52317, 0x5231d, 0x52320, 0x52323, 0x52329,
+  0x5232b, 0x5232d, 0x52334, 0x52336, 0x52338, 0x5233b, 0x52341,
+  0x52347, 0x5234a, 0x52354, 0x520c0, 0x495b0, 0x495bd, 0x495c7,
+  0x495ce, 0x495d5, 0x49580, 0x47e40, 0x47e4b, 0x47e5b, 0x47e63,
+  0x47edc, 0x47f42, 0x47fb2, 0x47fd8, 0x48000, 0x48010, 0x48020,
+  0x48029, 0x48032, 0x48037, 0x4803d, 0x48048, 0x4804f, 0x48056,
+  0x48066, 0x4806f, 0x48075, 0x4807d, 0x49543, 0x45970, 0x45981,
+  0x45986, 0x4598f, 0x749a0, 0x76a69, 0x919ca, 0x919ec, 0x919f5,
+  0x919fb, 0x91a06, 0x2e, 0x44, 0x95, 0xa1, 0xa0, 0xa4, 0x60,
+  0x6c, 0x8, 0xc, 0x10, 0x18, 0x2001f8, 0x60
+NAMES: TEventSet::match, ll_mov_row_gate, K_ANY, K_NEVER, AC_K_ANY,
+  AC_K_NEVER, AC_TIME, K_GEN1, K_UP, K_DOWN, WAIT, LL_GOP_ANY,
+  ll_mov_fr, gsig_id, gop, player_iterate, OI-111, OI-112, F6, T5
+CODE: no: nothing in ported/ or the Makefile moved. The port step this
+  grounds is named in OPENS; the reading is load-bearing for it, so it
+  is written to the register in the same commit (OI-111).
+HOOKS: none - no code, so nothing to hook.
+MEASURED: (a) THE QUESTION IS DECIDED BY THREE INSTRUCTIONS. The row
+  step 0x521f0 zeroes [obj+0x95] at 0x52217, takes the row node at
+  [ebp+0x2e][[ebp+0x4]*4] (0x52221-0x5222c), calls its test slot
+  +0x8 with edx = a 12-byte scratch set (0x52235), then calls 0x495b0
+  on that set (0x5223c). 0x495b0 walks the three DATA dwords: any one
+  non-zero jumps 0x495ce and returns 0; all three zero leaves eax at 12
+  (0x495bd-0x495d5). Back at 0x52241: `test eax,eax / sete al / and
+  eax,0xff / je 0x522fc`. The `sete` is the whole point: sete AL
+  writes 1 exactly when the flags say EQUAL, i.e. when 0x495b0
+  returned 0, and `and eax,0xff` then makes ZF the test of that byte
+  - so `je` fires when 0x495b0 returned NON-ZERO, which is the EMPTY
+  set. The clause-LESS row is the one that reaches 0x522fc. PR-218
+  wrote this the other way round in OI-111's notes and PR-219
+  repeated it there.
+  (b) THE CLAUSE-LESS PATH, 0x522fc-0x52351, IS THE CLOCK PATH. It
+  runs the node's execute slot +0xc (0x52303), OR-s the returned set
+  into the caller's set through 0x49580 (0x5230c), calls the class verb
+  [edx+0xa0] (0x52317), then compares the node's authored threshold
+  [ebx+0x10] against the object's clock [obj+0xa1]: `cmp eax,ebx / jge
+  0x52354` at 0x52320-0x5232b, so the row admits only when the
+  threshold is BELOW the clock, and the budget handed on is the
+  difference - `sub ebx,eax` at 0x52334 - passed in edx to the record
+  verb [esi+0x18] (0x52338; esi = [ebp+0x44], the row-record class -
+  PR-219 named 0x520c0 as that verb, the one that writes [obj+0xa1]
+  from the budget). Then the class verb [edx+0xa4] (0x52341) and
+  [obj+0x95] = 1 (0x5234a): that flag is the step's admit report, and
+  it is the only writer of it in this body.
+  (c) THE CLAUSE PATH, 0x52251-0x522fa, HAS NO CLOCK IN IT. It copies
+  the caller's EventSet - 12 data bytes by `rep movs` and the MODE byte
+  from [set+0xc] (0x52255-0x52278) - then the object's own [obj+0x60]
+  with its mode from [obj+0x6c] (0x52279-0x522a6), merges the two with
+  0x49580 (0x522bc), and calls TEventSet::match 0x47e40 at 0x522e6
+  with eax = the node's answer and edx = that union. 0x47e4b reads the
+  MODE byte from [eax+0xc] - the CLAUSE's own mode, the byte the clause
+  parser wrote from the `!`/`*`/`|` prefix (PR-218) - and jumps the
+  table at 0x47e30: mode 0 subset 0x47e63, 1 shares-nothing 0x47edc, 2
+  identical 0x47fb2, 3 shares-anything 0x47f42, above 3 the error arm
+  0x47fd8 whose string is 0x919ca, the source of the method's name. A
+  NO answer takes `je 0x52354` at 0x522ed and leaves the whole step: no
+  execute slot, no clock compare, no budget, no [obj+0x95]. A YES
+  answer takes `xor ebx,ebx` at 0x522f8 and `jmp 0x52338` - the row
+  runs, with a ZERO budget, and the threshold compare at 0x52329 is
+  never reached. That is PR-287's unmodelled half, byte-exact: a gated
+  row ignores its threshold.
+  (d) THE NODE'S ANSWER IS ITS CLAUSE. 0x45970 copies 12 bytes from
+  [node+0x8] plus the mode byte at [node+0x8+0xc] (0x45981-0x4598f)
+  and never calls the operand, so the answer is empty exactly when the
+  clause carries no bits. On the shipped texts that happens once, the
+  tokenless `Wait ;` (PR-218's census), and it means "no gate".
+  (e) THE TWO SPECIAL NAMES ARE BIT MASKS; THE MODE BYTE IS THE
+  MEANING. The resolver 0x48000 compares the token through 0x76a69
+  against 0x919ec AC_K_ANY and 0x919f5 K_ANY (0x48010-0x48027) and on
+  a hit zeroes the set with 0x749a0 then OR-s 0x2001f8 into DATA DWORD
+  1 (0x48037-0x48048); against 0x919fb AC_K_NEVER and 0x91a06 K_NEVER
+  (0x4804f-0x4806d) and on a hit OR-s 0x60 into DATA BYTE 4
+  (0x4806f-0x4807d). Both return 1 through 0x49543, and both leave a
+  NON-EMPTY set, so both take the clause path of (c) - a `Wait` with
+  either name is never the plain path. PR-263's masks and their
+  attribution stand; what is new is what they are. In this port's
+  verified bit indexes 0x2001f8 in dword 1 is bits 35,36,37,38,39,40 -
+  K_BKWD, K_FWD, K_UP, K_DOWN, K_FIRE, K_ALT - plus bit 53, and 0x60
+  in byte 4 is bits 37 and 38 = K_UP and K_DOWN together. Read with
+  the plain subset arm, K_ANY means all six arrows at once and
+  K_NEVER means UP and DOWN held together: both, in play, never -
+  which is why an author writes `WAIT K_NEVER` to park a state. Read
+  with the `|` arm, K_ANY is simply "an arrow is held", and with `!`,
+  K_NEVER is "neither arrow". So the name does not decide whether the
+  row admits: the clause's mode byte does, and the port's
+  LL_GOP_ANY-style reading of these two names as always/never is a
+  shortcut, not the engine's rule.
+  (f) THE BLAST RADIUS, COUNTED. Over the 777 extracted .MOV texts,
+  using PR-330's row-line test: 203 row lines carry a `WAIT` tail, in
+  124 of the files. By operand: K_NEVER 115, K_GEN1 24, AC_DUP 19,
+  AC_TIME 15, `!K_UP` 7, `!K_DOWN` 7, `!AC_ENEMY_ATC` 7, K_GEN2 2,
+  AC_START 2, `K_NEVER ;` 2, AC_BECZKA 1, AC_BUTLA 1, K_BKWD 1. The
+  K_NEVER rows are NOT written as zero-threshold stops: their second
+  field is 200 in 26 of them, 1000 in 18, 1500 in 15, 0 in 33, 500 and
+  100 in 6 each, 300 in 4, 5000 in 3, 400 in 2, 4 in 1, 10000 in 1 -
+  the author is writing a hold, and under (c) the hold is indefinite:
+  the row never admits and the list never moves. 170 of the 203 carry
+  a non-zero threshold, which is exactly the set where PR-287's
+  threshold-skip gap and a faithful clock path differ. And none of it
+  reaches the LION today: ll_play.c section 7 compares the threshold
+  with `row_t` and never calls ll_mov_row_gate, so all 203 run
+  ungated for the player.
+OPENS: the port half - the player's row admit does not consult
+  ll_mov_row_gate at all, and PR-287's object-side gate keeps the
+  threshold compare on the match path where the engine skips it; what
+  the class verbs [obj+0x8]+0xa0 and +0xa4 (0x52317, 0x52341) do, and
+  whether either touches the clock; bit 53 inside K_ANY's mask, the one
+  bit of it this port has no name for; OI-112's row TIME number and
+  the row descriptor's +0x10 verb; and OI-111's remaining half, which
+  is no longer which path but what the port does with them.
+CLOSES: nothing. It answers the question OI-111 opened, and writes that
+  answer into OI-111's own notes.
+CORRECTS: PR-218's branch assignment in OI-111's notes ("je 0x522fc
+  sends the NON-EMPTY answer to the execute slot +0xc" - it sends the
+  EMPTY one there) and the question framing at that row's head;
+  PR-219's parenthetical there, "clock - frame on the clause path, 0
+  on the clause-less path", exactly inverted; PR-287's note that
+  "K_ANY is the mask operand ... and always matches, K_NEVER carries no
+  bit and never does" - neither carries no bit, and whether either
+  matches is the mode byte's doing; and PR-218's census phrase "161
+  no-bit operands - all 161 K_NEVER", where K_NEVER is a two-bit mask.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg is owed and no suite run; the last full no-Windows suite run is
+  PR-331's, rc=0 with 71 green verdict lines.
+```
