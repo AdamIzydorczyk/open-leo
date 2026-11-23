@@ -2582,6 +2582,24 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     (0x52a00 for the WSPRECT family is |dx|+|dy|, 0x35e20 for
     KTRASA an accessor, 0x23930 a no-op held by the ladder family
     and by WODA).
+    PR-315 ATTEMPTS PLAN STEP F1 AND REPORTS A METHOD NEGATIVE.
+    A colour-band read of R2 t=45.5-48.9 and levels/ZARIA.01_b
+    t=199.9-200.8 (game resolution, the R3 crop recipe) finds one
+    band 25-35 px wide and 56-65 px tall that translates UP about
+    60 px in 2.1 s in R2 (top 126->63, bottom 182->120 - the
+    whole structure, not a rider sliding along a fixed rope) and
+    DOWN about 42 px in 0.93 s in the level cut, at 0.5-1.4 px
+    per game frame - the row-step magnitudes, not a fall. But the
+    fixed-looking band at x 6..31 y 159..197 is HUD (it is there
+    in TUNGA.11 too), and the ladder region contains two oranges
+    35 apart in one channel, (253,94,0) and (250,129,0), so the
+    lion and the ladder cannot be separated and screen motion
+    cannot be turned into level motion. F1's three questions need
+    SHAPE templates: tools/seq_render.py already returns a
+    touched-pixel mask per .SEQ frame - that is F1b. And the
+    authored side is now counted: only three ladder scripts exist
+    (ZARIA.01 DRAB.MOV, ZARIA.02 DRAB.MOV and DRABK.MOV) and not
+    one of them has an `m` row.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

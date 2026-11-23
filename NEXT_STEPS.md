@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-315.
+> at PR-316.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42736,6 +42736,95 @@ count of 108 holders stands, but the sentence that the class slot
 slot is a distance metric for the WSPRECT family (0x52a00), an
 accessor for the path classes (0x35e20) and a no-op for the
 ladder family and the water (0x23930).
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last full
+no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;
+since then only comments in ported/ have changed.
+```
+
+## PR-315 — PLAN STEP F1, ATTEMPTED AND PARTLY ANSWERED: WHAT A
+## COLOUR-BAND READ OF THE LADDER CAPTURES DOES AND DOES NOT
+## SETTLE, AND THE THREE LADDER SCRIPTS AUTHOR NO `m` AT ALL
+```
+KIND: read
+SUBSYSTEM: plan step F1 - the ladder captures on disk:
+reference/video/ladder-DomCTOtx2rg.webm (R2) t=45.5-48.9,
+reference/video/levels/ZARIA.01_b.mkv t=199.8-200.8 and
+reference/video/levels/ZARIA.01.mkv t=12.0-17.0, read with a
+colour-band tracker at game resolution; plus the shipped ladder
+scripts, counted for motion rows.
+ADDRESSES: none - a capture and data reading, no machine code
+NAMES: R2, A_SCIAG, A_DROP, A_WSP, DRAB.MOV, DRABK.MOV, DRABINKA,
+m directive, HUD, belka, ladder-DomCTOtx2rg, ZARIA.01_b, OI-078,
+PR-109, PR-131, PR-309, seq_render, ll_plt_parse, F1
+CODE: no: captures, container data and the extracted .MOV texts;
+nothing under `ported/` changed, so no red leg is owed.
+HOOKS: plan step F1 (HANDOFF section 8 T5 (5)), which asks three
+questions of the captures: does a rider's feet line rise above the
+ladder's shape top (512), does the drawn ladder extend under a
+rider, and what does the player press.
+MEASURED: (a) THE METHOD. Frames were taken at game resolution -
+`crop=1152:720:0:0,scale=320:200:flags=neighbor` for the 1280x720
+level cuts and `scale=320:200` for R2 (576x360) - and an
+"orange" mask (r>140, g>80, r-b>60, g-b>20) was reduced to
+column bands and the row extent of each band. Frame numbering is
+the clip's own seconds.
+(b) THE HUD, MEASURED. A band at screen x 6..31, y 159..197,
+identical in size and position across 3.4 s of R2 and across the
+ZARIA.01_b frames, also appears in TUNGA.11.mkv at t=30.0 (579
+mask pixels in the same box) - so it is part of the HUD, not
+level art. It confirms the crop mapping is the same for all the
+levels/ cuts, and it does NOT show that the camera is fixed.
+(c) R2, t=45.5-48.9. One band at x 82..116 (25-35 px wide, 56-65
+px tall). Its top edge runs 126 -> 121 (t=45.8) -> 116 (46.7) ->
+98 (47.0) -> 85 (47.5) -> 76 (47.6) -> 78 (48.3) -> 63 (48.8)
+and its bottom edge runs 182 -> 170 (47.0) -> 149 (47.5) -> 146
+(48.0) -> 132 (48.6) -> 120 (48.8): the WHOLE structure moves up
+by about 60 px in 2.1 s, monotonically after t=46.7, at about 0.5
+px per video frame at 30 fps. A second band enters at x 160..188
+around t=47.5 and rises too.
+(d) ZARIA.01_b, t=199.9-200.8: the same kind of band at x 85..111
+with a steady height of 62-74 px moves DOWN from y 60..127 to y
+102..166 - about 42 px in 0.93 s. ZARIA.01.mkv t=12.0-17.0 gives
+the same kind of band but the frame differences there also light
+up the water and the foliage, as PR-310 found.
+(e) WHAT CANNOT BE SEPARATED. Sampling the real colours in the
+ladder region of R2 at t=47.8 (x 88..140, y 90..200) gives two
+oranges 35 apart in one channel - (253,94,0) as the most common
+bright colour and (250,129,0) next - and both pass the broad
+mask; the level art contains both as well. So a colour band
+cannot tell the lion from the ladder, and screen motion cannot be
+turned into level motion because the camera offset is unknown.
+F1's three questions are therefore NOT answered this way: the
+method cannot see a shape top or a rider's feet line.
+(f) THE AUTHORED SIDE, COUNTED. There are exactly THREE ladder
+scripts in the shipped set - ZARIA.01_DRABINKA_DRAB.MOV,
+ZARIA.02_DRABINKA_DRAB.MOV and ZARIA.02_DRABINKA_DRABK.MOV - and
+NONE of them contains a single `m` motion row (grep over all
+three). The ladder is placed only in ZARIA.01 and ZARIA.02.
+(g) WHAT THE NUMBERS DO SUPPORT. A translation of a drawn
+structure by about 60 px up (R2) and 42 px down (ZARIA.01_b) at
+about 0.5-1.4 px per game frame, i.e. at the step magnitudes the
+row tails use (PR-309: `m 0,1` x39, `m 0,2` x66, `m 0,-2` x65),
+and not at the rate of a jump or a fall. Since no ladder script
+authors any motion row (f), whatever moves in the R2 window is
+either the lion's own walk/climb rows or a mechanism that is not
+a row tail.
+OPENS: F1b, the version of F1 that can answer it: build the
+ladder and lion SILHOUETTES with tools/seq_render.py (it already
+reconstructs .SEQ bitmaps and returns a touched-pixel mask) and
+match those shapes, not colours, against the same frames; then
+F1's three questions can be asked in level coordinates. Second,
+F2's read of `pos` / `lock` / `ldir` (the exit's real mechanism).
+Third, whether the second rising band at x 160..188 in R2 is a
+second object (a raft, SPLYW, which has no physics step either).
+CLOSES: F1 as scoped in PR-310 is closed as attempted-and-negative
+for the colour method, and the "does the ladder script move"
+question is closed with a counted negative for all three shipped
+ladder scripts.
+CORRECTS: none. PR-131's "ridden down" reading of the ZARIA.01
+clip is corroborated, not changed: the band descends ~42 px in
+under a second there.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
 red leg by the rule PR-245 states, and no suite run. The last full
 no-Windows suite run is PR-298's, rc=0 with 69 green verdict lines;

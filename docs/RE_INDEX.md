@@ -42,7 +42,7 @@ whether an uncorrected claim still stands means reading its records.
 
 # entries: 1191 address keys (>=3 records) = 7373/12895 (57%)
 # of all address mentions; 223 field tokens (>=3) = 71%
-# of field mentions; 280 authored names (all of them). Built from 299 records.
+# of field mentions; 281 authored names (all of them). Built from 300 records.
 
 
 ## Addresses
@@ -6209,6 +6209,14 @@ whether an uncorrected claim still stands means reading its records.
                   PR-262 PR-264 PR-271 PR-287 PR-290 PR-295 PR-309
         latest mention: PR-309
 
+### A_WSP - 40 records
+        mentions: PR-87 PR-102 PR-108 PR-109 PR-110 PR-131 PR-134 PR-148 PR-172
+                  PR-178 PR-182 PR-195 PR-244 PR-249 PR-256 PR-257 PR-258
+                  PR-259 PR-260 PR-262 PR-263 PR-268 PR-271 PR-272 PR-273
+                  PR-274 PR-277 PR-278 PR-279 PR-280 PR-281 PR-282 PR-283
+                  PR-284 PR-285 PR-286 PR-294 PR-309 PR-310 PR-315
+        latest mention: PR-315
+
 ### AC_BREAK_NEXT - 39 records
         mentions: PR-69 PR-79 PR-85 PR-86 PR-87 PR-88 PR-91 PR-102 PR-107
                   PR-108 PR-110 PR-148 PR-150 PR-152 PR-173 PR-175 PR-206
@@ -6225,14 +6233,6 @@ whether an uncorrected claim still stands means reading its records.
                   PR-265 PR-273 PR-285 PR-298 PR-309
         latest mention: PR-309
 
-### A_WSP - 39 records
-        mentions: PR-87 PR-102 PR-108 PR-109 PR-110 PR-131 PR-134 PR-148 PR-172
-                  PR-178 PR-182 PR-195 PR-244 PR-249 PR-256 PR-257 PR-258
-                  PR-259 PR-260 PR-262 PR-263 PR-268 PR-271 PR-272 PR-273
-                  PR-274 PR-277 PR-278 PR-279 PR-280 PR-281 PR-282 PR-283
-                  PR-284 PR-285 PR-286 PR-294 PR-309 PR-310
-        latest mention: PR-310
-
 ### AC_EDGE - 33 records
         mentions: PR-108 PR-149 PR-150 PR-238 PR-259 PR-260 PR-262 PR-263
                   PR-264 PR-265 PR-266 PR-267 PR-268 PR-269 PR-270 PR-271
@@ -6240,6 +6240,13 @@ whether an uncorrected claim still stands means reading its records.
                   PR-294 PR-295 PR-296 PR-297 PR-298 PR-304 PR-305 PR-309
                   PR-311
         latest mention: PR-311
+
+### A_DROP - 29 records
+        mentions: PR-149 PR-150 PR-153 PR-158 PR-161 PR-216 PR-217 PR-234
+                  PR-240 PR-241 PR-242 PR-243 PR-244 PR-246 PR-248 PR-249
+                  PR-254 PR-256 PR-257 PR-271 PR-282 PR-286 PR-287 PR-290
+                  PR-291 PR-292 PR-294 PR-309 PR-315
+        latest mention: PR-315
 
 ### K_JUMP - 29 records
         mentions: PR-43 PR-69 PR-71 PR-74 PR-86 PR-88 PR-108 PR-173 PR-176
@@ -6261,13 +6268,6 @@ whether an uncorrected claim still stands means reading its records.
                   PR-263 PR-271 PR-272 PR-273 PR-274 PR-277 PR-284 PR-285
                   PR-286 PR-309 PR-313
         latest mention: PR-313
-
-### A_DROP - 28 records
-        mentions: PR-149 PR-150 PR-153 PR-158 PR-161 PR-216 PR-217 PR-234
-                  PR-240 PR-241 PR-242 PR-243 PR-244 PR-246 PR-248 PR-249
-                  PR-254 PR-256 PR-257 PR-271 PR-282 PR-286 PR-287 PR-290
-                  PR-291 PR-292 PR-294 PR-309
-        latest mention: PR-309
 
 ### A_RUN - 28 records
         mentions: PR-69 PR-70 PR-78 PR-79 PR-81 PR-88 PR-90 PR-92 PR-98 PR-107
@@ -6447,6 +6447,11 @@ whether an uncorrected claim still stands means reading its records.
                   PR-253
         latest mention: PR-253
 
+### A_SCIAG - 10 records
+        mentions: PR-108 PR-268 PR-273 PR-278 PR-284 PR-285 PR-286 PR-309
+                  PR-310 PR-315
+        latest mention: PR-315
+
 ### zwierzaki= - 10 records
         mentions: PR-44 PR-45 PR-60 PR-61 PR-208 PR-212 PR-213 PR-254 PR-271
                   PR-302
@@ -6459,11 +6464,6 @@ whether an uncorrected claim still stands means reading its records.
 ### A_DOSTAL - 9 records
         mentions: PR-89 PR-91 PR-98 PR-134 PR-135 PR-206 PR-253 PR-256 PR-273
         latest mention: PR-273
-
-### A_SCIAG - 9 records
-        mentions: PR-108 PR-268 PR-273 PR-278 PR-284 PR-285 PR-286 PR-309
-                  PR-310
-        latest mention: PR-310
 
 ### A_STAY - 9 records
         mentions: PR-43 PR-74 PR-82 PR-83 PR-85 PR-86 PR-98 PR-135 PR-199
@@ -6498,6 +6498,10 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-44 PR-45 PR-60 PR-208 PR-212 PR-213 PR-271 PR-302
         latest mention: PR-302
 
+### crop= - 8 records
+        mentions: PR-108 PR-111 PR-124 PR-131 PR-134 PR-205 PR-206 PR-315
+        latest mention: PR-315
+
 ### damage= - 8 records
         mentions: PR-68 PR-90 PR-94 PR-95 PR-100 PR-126 PR-131 PR-139
         latest mention: PR-139
@@ -6525,10 +6529,6 @@ whether an uncorrected claim still stands means reading its records.
 ### A_LOOKDOWN - 7 records
         mentions: PR-90 PR-102 PR-103 PR-104 PR-134 PR-186 PR-187
         latest mention: PR-187
-
-### crop= - 7 records
-        mentions: PR-108 PR-111 PR-124 PR-131 PR-134 PR-205 PR-206
-        latest mention: PR-206
 
 ### scope= - 7 records
         mentions: PR-68 PR-90 PR-95 PR-100 PR-125 PR-126 PR-134
@@ -6906,6 +6906,10 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-28 PR-33
         latest mention: PR-33
 
+### scale= - 2 records
+        mentions: PR-124 PR-315
+        latest mention: PR-315
+
 ### this= - 2 records
         mentions: PR-96 PR-105
         latest mention: PR-105
@@ -7218,6 +7222,10 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-28
         latest mention: PR-28
 
+### flags= - 1 record
+        mentions: PR-315
+        latest mention: PR-315
+
 ### format= - 1 record
         mentions: PR-158
         latest mention: PR-158
@@ -7309,10 +7317,6 @@ whether an uncorrected claim still stands means reading its records.
 ### samples= - 1 record
         mentions: PR-17
         latest mention: PR-17
-
-### scale= - 1 record
-        mentions: PR-124
-        latest mention: PR-124
 
 ### selector= - 1 record
         mentions: PR-225
