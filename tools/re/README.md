@@ -124,6 +124,23 @@ census measures 162, so `slots` prints counts over detected tables
 (+0x60 = 0x23b80 in 129/158, and 26 distinct non-default targets, the same
 26 PR-106 recorded). NEXT_STEPS.md, tooling addendum.
 
+`signal_raise_census.py` - `python3 tools/re/signal_raise_census.py
+[SIGNAL ...]` - over the leodb `insn` table, every place the engine writes
+a CONSTANT mask into a signal set, decoded to this port's own signal names.
+Bit N is byte N/8 of the set at bit N%, and the names are read out of the
+`LL_SIG_*` enum in `ported/ll_play.h` (PR-88 verified that table against the
+engine's name block), so the output cannot drift from the port's numbers.
+A site is kept only if its base is one of the two shapes a set has: an
+answer buffer (displacement 0x0..0xb, the 12-byte buffer `0x749a0` builds
+with `ebx=0xc`) or the live field `[obj+0x60..0x6b]`. It prints the
+enclosing function of every site and a per-signal group count when called
+with no arguments (measured: 194 candidate sites over the whole `.text`;
+AC_DRECT has 2, AC_RECT 3, AC_DRECT2 1). SCOPE: constant-mask writes only.
+A bit can also arrive by merging a whole set from a register
+(`0x49580`/`0x53725`, PR-313) and the shape test cannot tell an answer
+buffer from any other small-displacement field, so every printed site is a
+CANDIDATE to be read, not a conclusion. NEXT_STEPS.md PR-318.
+
 ## Reference video (outside git; yt-dlp + ffmpeg + numpy + Pillow)
 
 | file | what it does |

@@ -267,6 +267,29 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     those three queries - still open, as is AC_EDGE's full
     semantics. The kind byte, the mode argument and the per-point
     flag byte of PR-312 are the unmodelled half of the semantics.
+    PR-318 NAMES THE AC_DRECT RAISERS AND READS THEIR GATES, and
+    the raiser half of this row is CLOSED. A census of every
+    immediate-mask set-write in the image
+    (tools/re/signal_raise_census.py, 194 candidate sites, names
+    read from this port's own LL_SIG_* table) gives AC_DRECT
+    exactly TWO: 0x40d99 and 0x286ec. Both are class +0x78 ASK
+    VERBS of the rectangle family the placement factory 0x4df10
+    installs by name - `DRECT` -> the table at 0xa1638 (installed
+    0x4e1aa, again 0x4ec6a), `BICZRECT` -> 0x99f64 through the
+    delegated factory 0x29090 (installed 0x295d0) - and the verbs
+    0x40d50 / 0x286a0 answer bit 19 only when the asker's own
+    geometry overlaps the instance's AUTHORED rectangle at
+    [self+0x3c], which the class +0x18 verb parses from the
+    placement line with the format at 0x91d00. The siblings raise
+    the neighbouring bits by the same shape: AC_RECT (byte 2 mask
+    0x2) at 0x40d23 from the RECT verb 0x40cf0, AC_DRECT2 (byte 2
+    mask 0x10) at 0x40dff from 0x40dc0. The census also adds a
+    THIRD candidate for AC_ONAIR, 0x54800, in the object command
+    dispatcher 0x54560 next to the attach/detach of [obj+0xa9] -
+    not confirmed as a raiser, the set base is set before the
+    window that was read. What stays open here is the semantics,
+    not the raisers: the gate's second condition is
+    `[asker+0xc6] > 0`, and what that word is is OI-119.
 
 OI-019: what the object-side AC_ENEMY consumers do (A_DEAD(1)/
   A_AWAY/A_SHOW class conditions)
@@ -2693,6 +2716,17 @@ OI-082: the water surface as a floor (the lion walks WODA at pool
     level is only zaria_a.plt's polylines, the six ZAR.BLK walls
     and the objects' answer verbs. The row stays open for the
     levels that DO place WODA (the zax37 clip this row came from).
+    [CORRECTED BY PR-318 ON THE PLACEMENT HALF.] ZARIA.01 DOES
+    place WODA: its own ANI2.DES line 29 is
+    `WODA,woda.ani,woda.mov,955,651`, and the HD install carries
+    the script it names (the ANIMACJE leaf ZARIA.01/WODA, with
+    WODA.MOV, 174 bytes) - the placement file's inventory PR-314
+    listed was incomplete, and this port's own reader already
+    parses that line as an entry and resolves that script. The
+    other half of the paragraph stands: WODA's class holds the
+    no-op 0x23930 at +0xac, so the water runs no physics, and the
+    floor question is still open - it is now a question about an
+    object the level really places, not about a missing one.
 
 OI-083: HUD display truth: both R3 clips start at 5 lives (the
   port prints a hard-coded 6) and the HUD energy at level start is
@@ -4003,3 +4037,30 @@ OI-118: 0x523f0 raises signals through a SECOND object: the
     installs 0x99fe8 at +0x0c) - but that is the +0x0c field,
     not [obj+0x00], and no site in that census writes +0x00.
     What the +0x0c table is for is now an open item of its own.
+
+OI-119: what the object field pair [obj+0xc2] / [obj+0xc6] is -
+  the value the AC_DRECT ask verb gates on
+  status: OPEN
+  origin: PR-318 (the F4 read of OI-018's raisers)
+  notes: The DRECT ask verb 0x40d50 refuses to answer unless
+    `[asker+0xc6] > 0` (0x40d65-0x40d6d), so ZARIA.01's exit
+    chain cannot be walked to its end without knowing what that
+    word means. Measured here, as a census of the image: the two
+    words are always written as a pair. The object command
+    dispatcher 0x54560 assigns both from the request
+    (0x54593/0x5459c, the opcode-7 case), adds to both
+    (0x545aa/0x545bb, the opcode-6 case) and zeroes both
+    (0x545f4/0x545fe); the same pair is zeroed at every state
+    start (0x5042e/0x50438, right after the `[class+0x4]` state
+    call of PR-238's 0x50420 block) and zeroed then copied
+    +0xc6 -> +0xc2 at 0x27bde/0x27bee, in the window that reads
+    the float position shadow at [obj+0x122] and writes the
+    deltas [obj+0xca]/[obj+0xce] into the point at [obj+0x14a].
+    Readers of the pair: 0x27366/0x273d6, 0x3674b/0x367bb,
+    0x5020c/0x5025c, 0x50753/0x50764, 0x4cb28/0x4cb5d (both by
+    `lea`), and this gate at 0x40d65. What is NOT decided: the
+    unit (a position offset? a distance since leaving a surface?
+    a frame count?), and whether the lion's own value can be
+    non-zero at all while it stands on a platform. That question
+    is load-bearing for the exit chain of the level this project
+    is aimed at, so it is a row, not a counted item.

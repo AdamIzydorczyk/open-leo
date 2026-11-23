@@ -43067,3 +43067,183 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
 PR-287's pair; the hermetic half is where the new `pos` block
 runs, so it is exercised in that configuration too.
 ```
+
+## PR-318 — AC_DRECT HAS TWO RAISERS IN THE ENGINE, BOTH RECTANGLE-CLASS
+## ASK VERBS; THE ONE `DRECT` THE SHIPPED DATA PLACES IS IN ZARIA.01 AND
+## ITS RECTANGLE COVERS THE EXIT
+```
+KIND: read
+SUBSYSTEM: the signal bus - who raises AC_DRECT, the rectangle-family
+  placement classes and their `.des` grammar, and the `[obj+0xc6]` word
+  the AC_DRECT ask verb gates on
+ADDRESSES: 0x40d50, 0x40d99, 0x40d65, 0x40cf0, 0x40d23, 0x40dc0,
+  0x40dff, 0x286a0, 0x286ec, 0x286ba, 0x286c7, 0x40c90, 0xa15ac,
+  0xa1624, 0xa1638, 0xa1648, 0xa1650, 0xa16b0, 0xa16c4, 0xa173c,
+  0x99f64, 0x99fdc, 0x99668, 0x996e0, 0x28710, 0x4ebb0, 0x4e147,
+  0x4e1aa, 0x4e20d, 0x4eb9a,
+  0x4ec6a, 0x4ed3a, 0x4df10, 0x4e971, 0x4e99a, 0x4ea10, 0x4d7e4,
+  0x4d7f1, 0x1f870, 0x1fba6, 0x29090, 0x2956d, 0x295bb, 0x295cf,
+  0x2961d, 0x2ac4a, 0x90a40,
+  0x49f90, 0x49920, 0x91d00, 0x91f75, 0x91f7a, 0x91f80, 0x90741,
+  0x90a46, 0x749a0, 0x23e00, 0x98280, 0x54560, 0x54590, 0x5459c,
+  0x545aa, 0x545bb, 0x545f4, 0x545fe, 0x54785, 0x547d1, 0x54800,
+  0x5042e, 0x50438, 0x27bde, 0x27bee, 0x36b12
+NAMES: AC_DRECT, AC_DRECT2, AC_RECT, AC_ONAIR, AC_DUP, AC_DUP_CD,
+  DRECT, DRECT2, RECT, BICZRECT, KILOF_PL, WODA, ZONE, ZWODOSPD,
+  class verbs +0x78, +0x18, +0x3c, +0x68, +0x6c, +0x70, +0x8,
+  `[obj+0x3c]`, `[obj+0xc2]`, `[obj+0xc6]`, `x0,y0;x1,y1`,
+  `%d,%d;%d,%d`, ANI2.DES, ZARIA.01/WODA, signal_raise_census.py
+CODE: yes: one new read-only tool, tools/re/signal_raise_census.py,
+  a census over the leodb `insn` table; nothing under ported/,
+  Makefile or .github changes.
+HOOKS: none
+MEASURED: (a) THE TOOL, AND WHAT IT CAN AND CANNOT SEE.
+  tools/re/signal_raise_census.py reads the signal names from THIS
+  port's own LL_SIG_* enum in ported/ll_play.h (PR-88 verified that
+  table 68/68 against the engine's name block), so its output
+  cannot drift from the port's bit numbers. It walks every
+  instruction row for the two shapes a raise has: bit N lives at
+  byte N/8 of a signal set, bit N%8, and a set is reached either
+  as an answer buffer (displacement 0x0..0xb, the 12-byte buffer
+  0x749a0 builds with ebx=0xc) or as the live field
+  [obj+0x60..0x6b]. Over the whole .text it prints 194 candidate
+  sites and names each one's enclosing function. Its blind spot is
+  stated in the tool and here: it sees writes of a CONSTANT mask
+  only, and a bit also arrives by a register merge - PR-313's two
+  AC_ONAIR raisers 0x36165/0x2b327 and the set-OR sites
+  0x49580/0x53725 are exactly that form, and the census does not
+  print them. So "no raiser" from this tool means no
+  constant-mask raiser.
+  (b) AC_DRECT (bit 19 = byte 2, mask 0x8) HAS EXACTLY TWO such
+  raisers in the whole image: 0x40d99 and 0x286ec. Both are class
+  +0x78 ASK VERBS of the rectangle family, reached from the ask
+  walk 0x4b500 (PR-312/PR-313), and both raise into the ASKER'S
+  answer buffer, not into their own live set: the verb calls
+  0x749a0 with edx=0, ebx=0xc to build the 12-byte buffer, stores
+  0 at [buffer+0xc], then OR-s the bit into it.
+  (c) THE `DRECT` CLASS. The placement factory 0x4df10 compares the
+  entry line's first field against its name block (0x91f75 'RECT',
+  0x91f7a 'DRECT', 0x91f80 'DRECT2', the names loaded by
+  0x4e15c and its neighbours) and installs the class table by
+  immediate store: RECT 0xa15ac at 0x4e147, DRECT 0xa1638 at
+  0x4e1aa, DRECT2 0xa16c4 at 0x4e20d - and the same three again
+  from the level-descriptor parser's own factory 0x4ea10 at
+  0x4eb9a / 0x4ec6a / 0x4ed3a (0x4ea10 is called from 0x4c8a0, the
+  `.des` key parser, at 0x4d7e4/0x4d7f1). The DRECT table: ctor
+  0x4ebb0, +0x18 = 0x40c90, +0x78 = 0x40d50 in the cell 0xa16b0.
+  The +0x18 verb is the AUTHORED RECTANGLE: 0x40c90 does
+  `add eax,0x3c` and calls 0x49f90, which pushes the format at
+  0x91d00 - `%d,%d;%d,%d` - into the field parser 0x49920. The
+  numbers on the placement line become the box at
+  [obj+0x3c..0x49]: x0, y0, x1, y1.
+  (d) THE GATE, READ AT 0x40d50. eax = the DRECT instance, ebx =
+  the asker, edx = the answer buffer. It refuses unless (1) the
+  asker's class +0x3c verb - PR-303/PR-304's ASKABLE probe -
+  answers true (0x40d5e), (2) `[asker+0xc6]` is > 0
+  (0x40d65-0x40d6d), and (3) the asker's +0x68 verb returns a
+  geometry object whose own class +0x8 verb, called with
+  `edx = &[self+0x3c]`, answers true (0x40d74-0x40d82). For the
+  authored-rectangle class 0x98274 that +0x8 verb is 0x23e00, the
+  contain test the port already prints for authored contact
+  points: x within [box.x0..box.x1] and y within [box.y0..box.y1].
+  Only then bit 19.
+  (e) THE SIBLINGS, SAME SHAPE. RECT's verb 0x40cf0 (cell 0xa1624)
+  drops gates (1) and (2) and raises AC_RECT (byte 2, mask 0x2) at
+  0x40d23; the census finds two more AC_RECT candidates: 0x28772,
+  which is the +0x78 verb 0x28710 of the BRECT class 0x99668 (the
+  cell 0x996e0 is that table + 0x78; 0x29090 compares the name at
+  0x90a40 at 0x2956d and installs that table at 0x295bb), and
+  0x36b12, a stack-buffer write in a function not read here.
+  DRECT2's verb 0x40dc0 (cell 0xa173c) keeps the ASKABLE gate,
+  drops the `[asker+0xc6]` test, and raises AC_DRECT2 (byte 2,
+  mask 0x10) at 0x40dff. The second AC_DRECT raiser, 0x286ec, is
+  the other rectangle family: 0x4df10 delegates the names at
+  0x90741 ('KILOF_PL') and 0x90a46 ('BICZRECT') to 0x1f870
+  (called at 0x4e971) and to 0x29090 (called at 0x4e99a); 0x29090
+  compares 'BICZRECT' at 0x295cf and installs 0x99f64 at 0x2961d
+  (again at 0x2ac4a), whose +0x78 cell 0x99fdc holds the verb
+  0x286a0. That verb substitutes the asker's +0x70 verb answering
+  -1 (0x286ba) and its +0x6c verb's object (0x286c7) for gates
+  (2) and (3), then raises the same bit.
+  (f) THE DATA, COUNTED WITH COMMITTED TOOLS. tools/re/llrs_tree
+  and tools/re/llrs_cat1 over the HD ETAPY container give the 103
+  `.des` files of the 13 level blocks; a grep of those files for
+  the rectangle grammar (a class token, then `x0,y0;x1,y1`) gives
+  25 lines: DRECT2 x8 (SADES.06 x7, TUNGA.11 x1), DRAB x7
+  (TUNGA2.12), RECT x4 (SADES.06, TUNGA.11, TUNGA2.12, ZARIA.01),
+  ZONE x2 (ENA.03), and ONE each of KRY (LONA.05), BICZRECT
+  (KADMAR.07), KILOF_PL and DRECT - both last in ZARIA.01. The
+  shipped set therefore contains exactly one `DRECT` object and it
+  is FOCUS-1's level: ANI2.DES line 18 is `DRECT,988,645;1340,750`
+  and its box, (988..1340) x (645..750), contains the authored
+  exit point 1020,692 of PR-317 and spans the three `ZWODOSPD`
+  mushroom platforms ANI1.DES places at (992,610), (1090,610) and
+  (1190,600). Nothing here says the lion triggers it - the second
+  gate is still unread - but the raiser exists, the level places
+  it, and its rectangle is the exit region.
+  (g) WHAT THIS PORT DOES WITH THOSE LINES TODAY. ZARIA.01's
+  ANI2.DES carries 7 lines with a `;`: 3 are class entries in this
+  grammar (`DRECT`, `RECT`, `KILOF_PL`), 3 are the authored
+  contact rectangles the port already reads under DRABINKA and
+  LINA, and ANIPL2.DES adds 4 moving-platform lines. The port
+  prints "7 polyline line(s) (moving ground: needs the AC_* signal
+  bus)" - so it lumps the three rectangle-class entries in with
+  the moving ground. No rectangle-class object exists in the port
+  and no path in it raises AC_DRECT, which is where PR-317's
+  chain stops.
+  (h) AC_ONAIR GAINS A CANDIDATE, AND THE GATE'S INPUT IS WRITTEN
+  NEXT TO IT. The census prints one constant-mask AC_ONAIR site,
+  0x54800 (`or BYTE PTR [edi+0x2],0x4`), inside the object command
+  dispatcher 0x54560 - the same block that raises AC_DUP at
+  0x54785 and AC_DUP_CD at 0x547d1 when [obj+0xa9] (the surface
+  an object stands on) is installed from [obj+0xe6], and raises
+  AC_ONAIR when that link is dropped at 0x547f0. That is
+  PR-313's semantics from a SECOND site, and a candidate only:
+  `edi`'s set base is established before the window read here. The
+  same dispatcher writes the gate's word: opcode 7 assigns
+  `[obj+0xc2]`/`[obj+0xc6]` (0x54593/0x5459c), opcode 6 adds to
+  both (0x545aa/0x545bb) and a case zeroes both (0x545f4/0x545fe);
+  the pair is also zeroed at every state start (0x5042e/0x50438)
+  and zeroed-then-copied at 0x27bde/0x27bee. What the pair means
+  is now OI-119, and until it is read the ZARIA.01 exit chain is
+  walkable up to, but not through, the AC_DRECT gate.
+OPENS: OI-119 (`[obj+0xc2]`/`[obj+0xc6]`); what the asker's +0x68
+  verb returns, which decides what "overlaps the authored
+  rectangle" means for a lion; whether `edi` at 0x54800 is an
+  answer set or a live set; the third AC_RECT candidate 0x36b12;
+  and the port side, which has no rectangle-class placement and no
+  AC_DRECT path at all.
+CLOSES: the raiser half of OI-018 for AC_DRECT, and the first half
+  of plan step F4 of the T5 ladder thread (HANDOFF section 8): the
+  AC_ONAIR / AC_DRECT raisers are named, counted, and their gates
+  read. F6's second half still waits on OI-119 and on the
+  `lock`/`unlock` pair of PR-316.
+CORRECTS: PR-314, on ZARIA.01's placed-object inventory. It said
+  "There is NO WODA, STRUMIEN, KRY, PLATF or WINDA in the level"
+  and listed its placements as DRABINKA, two LINA, KATAPULT, three
+  PALMA, SEP2, POCISK, PICT, NOSOROG. STRUMIEN, PLATF and WINDA
+  are indeed absent, but ANI2.DES line 29 places
+  `WODA,woda.ani,woda.mov,955,651` and the HD install carries the
+  script it names (ANIMACJE leaf ZARIA.01/WODA, WODA.MOV, 174
+  bytes). The same file also places six BAL, three ZWODOSPD, the
+  DRECT / RECT / KILOF_PL of paragraph (f), and KAMIEN, RYBA,
+  PAJAK, LICHA, SURPRISE, ANITAB and ANIBACK. This port's own
+  reader already parses that WODA line as an entry (its `.ani`
+  field is what its class-hint counter counts) and resolves the
+  script, so the level's placed set is the 51 objects its own
+  summary line prints, not the ten PR-314 listed. PR-314's other
+  half stands: WODA's class 0x96f20 still holds the no-op 0x23930
+  at +0xac, and OI-082's floor question stays open.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  verdict-line set as PR-317's 71 - this PR adds no leg of its
+  own, its product is the tool above. rc=0 first (HANDOFF section
+  4); no Windows legs (rule 8). The fixtures had to be re-staged
+  first: /tmp is tmpfs and was cleared mid-session, so the
+  restaging recipe of NEXT_STEPS.md (the LL.iso extracts, the
+  STATUS.LEO / LONGSOFT.CFG copy, the INTRO_P.IS reference frame)
+  was run, and `make` (clean, then the default target) and both
+  halves of the gate were re-run against this tree.
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-317's pair; the tool is python over the disassembly index, so
+  neither half depends on it.
+```

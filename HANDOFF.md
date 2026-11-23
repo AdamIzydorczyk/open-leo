@@ -5306,18 +5306,34 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         F3b: what that exit word drives, and what ends a level
         whose lion script has no `end_level` row at all -
         ZARIA.01 is one.
-    F4. [read] the AC_ONAIR / AC_DRECT raisers (OI-018) - the
-        exit chain is gated on exactly those two signals.
+    F4. RAISERS NAMED AND COUNTED (PR-318); THE GATE'S INPUT STILL
+        OPEN. Both halves of this step's question - who raises
+        AC_ONAIR and AC_DRECT - are now tool output: AC_DRECT has
+        exactly two constant-mask raisers in the image, 0x40d99
+        (the `DRECT` class's ask verb 0x40d50, table 0xa1638 the
+        placement factory installs by name) and 0x286ec (the
+        `BICZRECT` verb 0x286a0), and both answer only when the
+        asker's own geometry overlaps the instance's AUTHORED
+        rectangle, the box the class's +0x18 verb parses from the
+        placement line with the format at 0x91d00. ZARIA.01 is
+        the ONE level in the shipped set that places a `DRECT`,
+        and its rectangle (988..1340, 645..750) is the exit
+        region of PR-317. What the step could not close is the
+        gate's second condition, `[asker+0xc6] > 0` - OI-119 -
+        and what the asker's +0x68 verb returns.
     F5. [read] the water as a floor (OI-082): A_WPAD and
         A_WYJSCIE choose `seq=wet`/`seq=dry`, and PR-317 read the
         ground itself: `zaria_a.plt` runs (953,654)(994,644)
         (1007,646)(1051,633) and then NOTHING until (1115,662), so
         the authored exit point 1020,692 sits in a 64 px HOLE,
         39-59 px under the terrain, with only the catch-all line
-        (-100,1500)-(3000,1500) below it. ZARIA.01 places no WODA
-        object at all (PR-314), so keep the water question for the
-        levels that do place it, and read the seven ZARIA_A.PLT
-        polylines this port counts as moving ground.
+        (-100,1500)-(3000,1500) below it. ZARIA.01 DOES place
+        WODA - ANI2.DES line 29, `WODA,woda.ani,woda.mov,955,651`,
+        and the HD install carries ZARIA.01/WODA/WODA.MOV
+        (PR-318, correcting PR-314's inventory) - so this is now a
+        read of an object the level really places, and the port
+        already places it; read the seven ZARIA_A.PLT polylines
+        this port counts as moving ground too.
     F6. DONE FOR THE FIRST HALF (PR-317): the authored `pos
         1020,692` is parsed and applied as the engine applies it -
         an absolute set at the row admit, red test first, with the
