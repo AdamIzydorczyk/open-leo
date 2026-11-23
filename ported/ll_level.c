@@ -2053,6 +2053,7 @@ static void obj_touch_enemy(lvl_obj *o, int verbose, int tick);
  * whose art is NOT on these synthetic containers - only the classification,
  * counts and placement are exercised). */
 static int place_grammar_selftest(void);
+static int place_rectclass_selftest(void);   /* PR-328 */
 
 static int obj_contact(const lvl_obj *o);   /* defined below, with the shape
                                              * helpers it reads */
@@ -4917,7 +4918,8 @@ int ll_mov_selftest(void)
         obj_rowgate_act_selftest() != 0 ||
         obj_motion_selftest() != 0 || contact_model_selftest() != 0 ||
         plany_selftest() != 0 ||
-        ladder_answer_selftest() != 0 || place_grammar_selftest() != 0) {
+        ladder_answer_selftest() != 0 || place_grammar_selftest() != 0 ||
+        place_rectclass_selftest() != 0) {
         free(sc.mov);
         free(m);
         return 1;
@@ -4934,7 +4936,15 @@ int ll_mov_selftest(void)
            " 3-comma lines stay unplaced) + PR-95 attached static image"
            " (a .SEQ line inside a bounded actor's property block is drawn"
            " at parent + offset, not the world corner; one after a"
-           " non-bounded entry keeps its absolute x,y) + PR-107 authored"
+           " non-bounded entry keeps its absolute x,y) + PR-328 the"
+           " rectangle-class placement line `TOKEN,x0,y0;x1,y1` of the"
+           " eight class tables whose +0x18 verb is the one record verb"
+           " 0x40c90 (the token names the class and the four numbers ARE"
+           " its box at [obj+0x3c]: absolute, because that verb adds no"
+           " placement the way the ladder's 0x3f0f0 does, and unsorted as"
+           " authored; one class record per token, one instance per line;"
+           " ZONE, KRY and a token whose numbers are not a box place"
+           " nothing) + PR-107 authored"
            " start row ((3) enters a 3-row state at its THIRD row, (1),"
            " (9) and (x) at the top, and that row list's wrap still"
            " returns through A_RUN(1)=AC_BREAK_NEXT) + PR-110 the object's"
@@ -8776,6 +8786,13 @@ typedef struct {                    /* counted while reading, never guessed */
      * Consumed lines are no longer counted as polyline/group
      * noise: every shipped rect line was in st->poly before. */
     int rect_lines, pair_lines;
+    /* PR-328: the standalone rectangle-class placement line,
+     * `TOKEN,x0,y0;x1,y1` - the eight class tables of PR-327 whose +0x18
+     * verb is the one record verb 0x40c90. One such line IS an object:
+     * the token names its class and the four numbers are its authored box
+     * at [obj+0x3c]. Counted apart from the polyline noise they used to be
+     * counted as. */
+    int rectclass;
     /* PR-93: the two placement grammars the census proved. Static image
      * lines ("<LEAF>,<name>.seq,<x>,<y>", 3 commas) place one image whose
      * .SEQ is named by the line itself; attached children are the five-
@@ -9586,6 +9603,148 @@ static int place_points_selftest(void)
 
 /* read one placement file: every line is classified, nothing is skipped in
  * silence and nothing is invented */
+/* PR-328: the rectangle-class placement line, `TOKEN,x0,y0;x1,y1`.
+ * PR-327 read the eight class tables whose +0x18 record verb is the SAME
+ * three instructions: 0x40c90 `add eax,0x3c; call 0x49f90; ret`, where
+ * 0x49f90 pushes eax, eax+4, eax+8, eax+0xc and the format 0x91d00
+ * `%d,%d;%d,%d , ` to the scan helper 0x49920. Such a line therefore IS
+ * the object: its first field names the class - the exact strings the
+ * engine's installer compares (0x90741 KILOF_PL, 0x90a40 BRECT, 0x90a46
+ * BICZRECT, 0x90a4f WSPRECT, 0x91291 KRA1, 0x91f75 RECT, 0x91f7a DRECT,
+ * 0x91f80 DRECT2) - and its four numbers are written straight into the
+ * box at [obj+0x3c]. Two differences from the entry grammar the port
+ * already knows, both read, both modelled here:
+ *   - 0x40c90 adds NOTHING. The ladder's own record verb 0x3f0f0 reads the
+ *     same four-number shape and then adds the placement (0x3f124-0x3f14b,
+ *     PR-246), so place_rect keeps those numbers offset-from-placement;
+ *     this verb has no such step, so these numbers are ABSOLUTE as
+ *     authored. ZARIA.01's box 988,645;1340,750 contains that level's
+ *     exit point 1020,692 (PR-317), and TUNGA.11_ANI2 line 110 authors a
+ *     box whose x0 is -10, so no world-bounds rule may drop one either.
+ *   - the numbers are stored UNSORTED, exactly as written. Sorting is not
+ *     part of this verb; an authored box that runs backwards simply
+ *     matches nothing under the element verb 0x23e00, which is the
+ *     engine's behaviour and stays the engine's.
+ * KRA2 is NOT in this list: its shipped lines (LONA.05_ANIPL2, eight of
+ * them) are five-field ART placements whose box sits in a following
+ * `1 -4,0;37,0` row, the entry grammar's own shape (PR-327). ZONE is not
+ * either: its +0x18 verb is 0x41c50, which reads an extra `id= %d`. */
+static const char *const rect_class_tokens[] = {
+    "RECT", "DRECT", "DRECT2", "KILOF_PL",
+    "BICZRECT", "BRECT", "WSPRECT", "KRA1"
+};
+
+static int rect_class_id(const char *tok)
+{
+    for (size_t k = 0; k < sizeof rect_class_tokens
+                        / sizeof rect_class_tokens[0]; k++)
+        if (ci_eq(tok, rect_class_tokens[k]))
+            return (int)k;
+    return -1;
+}
+
+/* The class record for one of those tokens. It has no .MOV, no states and
+ * no art: the line is the whole object, so this is the same inert script
+ * shape a placement with an unreachable .MOV already gets (obj_script's
+ * mov = NULL), and every runtime path that gates on sc->mov steps over it.
+ * ONE record per class, many instances - the engine keeps one table per
+ * class and one instance per line. */
+static obj_script *obj_rect_class_get(place_ctx *pc, const char *leaf)
+{
+    scene_owner *own = pc->own;
+    obj_script *sc = obj_script_find(own, leaf, "");
+    if (sc)
+        return sc;
+    sc = obj_script_new();
+    if (!sc)
+        return NULL;
+    snprintf(sc->leaf, sizeof sc->leaf, "%s", leaf);
+    sc->movname[0] = '\0';
+    sc->mov = NULL;
+    sc->movtxt = NULL;
+    sc->nart = 0;
+    if (own->nsc == own->capsc) {
+        int nc = own->capsc ? own->capsc * 2 : 128;
+        obj_script **p = realloc(own->set, (size_t)nc * sizeof *p);
+        if (!p) {
+            obj_script_free(sc);
+            return NULL;
+        }
+        own->set = p;
+        own->capsc = nc;
+    }
+    own->set[own->nsc++] = sc;
+    return sc;
+}
+
+static const char *place_rect_class(place_ctx *pc, const char *p, size_t len)
+{
+    obj_stats *st = &pc->st;
+    const char *eol = p;
+    while (eol < p + len && *eol != '\n' && *eol != '\r')
+        eol++;
+    const char *b = p;
+    while (b < eol && (*b == ' ' || *b == '\t'))
+        b++;
+    const char *e = eol;
+    while (e > b && (e[-1] == ' ' || e[-1] == '\t' || e[-1] == '\r'))
+        e--;
+    char tok[16];
+    const char *q = place_field(b, e, tok, sizeof tok);
+    if (!q || rect_class_id(tok) < 0)
+        return NULL;
+    int v[4];
+    for (int i = 0; i < 4; i++) {
+        const char *s1 = place_int(q, e, &v[i]);
+        if (!s1)
+            return NULL;
+        if (i == 0 || i == 2) {             /* ',' between the pair's */
+            q = place_comma(s1, e);         /* two numbers            */
+            if (!q)
+                return NULL;
+        } else
+            q = s1;                         /* i==1: the ';' comes next */
+        if (i == 1) {                       /* ';' between the pairs   */
+            while (q < e && (*q == ' ' || *q == '\t'))
+                q++;
+            if (q >= e || *q != ';')
+                return NULL;
+            q++;
+        }
+        if (i < 3) {
+            while (q < e && (*q == ' ' || *q == '\t'))
+                q++;
+        }
+    }
+    while (q < e && (*q == ' ' || *q == '\t'))
+        q++;
+    if (q != e)
+        return NULL;                        /* trailing text: not this */
+    obj_script *sc = obj_rect_class_get(pc, tok);
+    if (!sc)
+        return NULL;
+    lvl_obj *o = obj_slot(pc);
+    if (!o)
+        return NULL;
+    o->sc = sc;
+    o->src = (unsigned char)pc->cur_src;
+    o->layer = (unsigned char)pc->cur_layer;
+    o->sti = 0;
+    o->face = 1;
+    /* the line authors no position: the engine's ctor zeroes the object and
+     * this verb writes the box only, so the instance carries no anchor. */
+    o->bx = o->x = 0;
+    o->by = o->y = 0;
+    o->arx0 = (short)v[0];                  /* absolute, as authored: */
+    o->ary0 = (short)v[1];                  /* 0x40c90 adds no placement */
+    o->arx1 = (short)v[2];
+    o->ary1 = (short)v[3];
+    o->nrect = 1;
+    sc->ninst++;
+    st->rectclass++;
+    return eol;
+}
+
 static void des_place_file(place_ctx *pc, const char *fname,
                            const char *txt, size_t len)
 {
@@ -9783,10 +9942,24 @@ static void des_place_file(place_ctx *pc, const char *fname,
                     after_prop = 0;
                     st->statics_placed++;
                 }
-                else if (strchr(line, ';'))
-                    st->poly++;             /* polyline data (ground) */
-                else
-                    st->group++;
+                else {
+                    /* PR-328: a rectangle-class line goes first - the
+                     * token names a class of 0x40c90's eight and the box
+                     * is the object (place_rect_class). It is never a
+                     * CHILD: that verb adds no placement, so the numbers
+                     * keep their authored absolute values even when the
+                     * line sits in another object's property block. */
+                    const char *nx = place_rect_class(pc, line, ll);
+                    if (nx) {
+                        last_obj = -1;      /* nothing below it belongs
+                                             * to a box-only object */
+                        after_prop = 0;
+                    }
+                    else if (strchr(line, ';'))
+                        st->poly++;         /* polyline data (ground) */
+                    else
+                        st->group++;
+                }
             }
         } else {
             char leaf[16], cls[24], mov[24];
@@ -10120,6 +10293,159 @@ static int place_grammar_selftest(void)
     return fail;
 }
 
+/* PR-328: the rectangle-class placement grammar (the read is PR-327). The
+ * box lines are verbatim out of the shipped `.des` texts - ZARIA.01_ANI2
+ * lines 18, 19, 20, SADES.06_ANIM line 45, TUNGA.11_ANI2 lines 110 and 52
+ * (a box whose authored x0 is -10, so no world-bounds rule may drop it),
+ * KADMAR.07_ANI1 line 11 (authored right AFTER an entry line) - plus the
+ * two class tokens the engine carries and no shipped level places (BRECT,
+ * WSPRECT). What is asserted, in one step each:
+ *   1. such a line IS an object: its class is the token, and the four
+ *      authored numbers are its box, kept ABSOLUTE. 0x40c90 is
+ *      `add eax,0x3c; call 0x49f90` - it never adds a placement the way
+ *      the ladder's own record verb 0x3f0f0 does (0x3f124-0x3f14b), so
+ *      the KADMAR.07 case must NOT be pulled to parent+offset;
+ *   2. the numbers are kept UNSORTED as authored (place_rect sorts for the
+ *      ladder's intersect because 0x23145 reads low/high edges; the
+ *      rectangle verb writes what the line says, nothing else);
+ *   3. two lines of the same class share ONE class record and stay two
+ *      objects - the engine's one table per class and one instance per
+ *      line;
+ *   4. what is NOT in the family is not placed: ZONE (its own +0x18 verb
+ *      0x41c50, PR-327) and KRY (no such string in the engine at all) stay
+ *      the polyline noise they were, and a token whose numbers do not form
+ *      the box shape is not an object either. */
+static int place_rectclass_selftest(void)
+{
+    static const char txt[] =
+        "15\n"
+        "DRECT,988,645;1340,750\n"        /* ZARIA.01_ANI2 line 18 */
+        "RECT,1820,380;1970,410\n"       /* ZARIA.01_ANI2 line 19 */
+        "KILOF_PL,1760,590;1832,620\n"   /* ZARIA.01_ANI2 line 20 */
+        "DRECT2,450,0;610,250\n"         /* SADES.06_ANIM line 45 */
+        "RECT,-10,200;50,500\n"          /* TUNGA.11_ANI2 line 110 */
+        "DRECT2,510,400;820,600\n"       /* TUNGA.11_ANI2 line 52 */
+        "GWIAZDKI,xxx,kadgwi2.mov,28,42\n"    /* KADMAR.07_ANI1 line 9 */
+        "BICZRECT,218,345;230,368\n"     /* KADMAR.07_ANI1 line 11 */
+        "BRECT,10,20;30,40\n"            /* engine-only token (PR-327) */
+        "WSPRECT,5,5;9,9\n"              /* engine-only token (PR-327) */
+        "RECT,900,300;800,250\n"         /* unsorted as authored */
+        "ZONE,5044,444;5056,456\n"       /* NOT in the family */
+        "KRY,851,410;1396,598\n"         /* NOT in the family */
+        "DRECT,988,645\n"                /* the token, no box: not one */
+        "DRECT,988,645;1340\n";          /* half a box: not one */
+    static const struct {
+        const char *cls;
+        int x0, y0, x1, y1;
+    } want[] = {
+        { "DRECT",    988,  645, 1340,  750 },
+        { "RECT",    1820,  380, 1970,  410 },
+        { "KILOF_PL",1760,  590, 1832,  620 },
+        { "DRECT2",   450,    0,  610,  250 },
+        { "RECT",     -10,  200,   50,  500 },
+        { "DRECT2",   510,  400,  820,  600 },
+        { "BICZRECT", 218,  345,  230,  368 },
+        { "BRECT",     10,   20,   30,   40 },
+        { "WSPRECT",    5,    5,    9,    9 },
+        { "RECT",     900,  300,  800,  250 },
+    };
+    place_ctx pc;
+    scene_owner own;
+    memset(&pc, 0, sizeof pc);
+    memset(&own, 0, sizeof own);
+    pc.own = &own;
+    pc.level = "PR328.TEST";
+    pc.world_w = 2000;
+    des_place_file(&pc, "PR328.DES", txt, sizeof txt - 1);
+    const obj_stats *st = &pc.st;
+    int fail = 0;
+    struct { const char *what; int got, want; } chk[] = {
+        { "rectangle-class lines", st->rectclass, 10 },
+        { "entry lines", st->entries, 1 },
+        { "objects total", own.nobj, 11 },     /* 1 entry + 10 box objects */
+        { "polyline lines", st->poly, 3 },     /* ZONE, KRY, the half box */
+        { "group lines", st->group, 1 },       /* the token-only line */
+    };
+    for (unsigned k = 0; k < sizeof chk / sizeof chk[0]; k++)
+        if (chk[k].got != chk[k].want) {
+            fprintf(stderr, "mov selftest: FAILED rectangle-class grammar:"
+                    " %s counted %d, expected %d\n",
+                    chk[k].what, chk[k].got, chk[k].want);
+            fail = 1;
+        }
+    /* every authored box above stands, on an object whose class IS the
+     * token, with the numbers unchanged (absolute, unsorted) */
+    size_t nfound = 0;
+    for (size_t q = 0; q < sizeof want / sizeof want[0]; q++) {
+        int hit = 0;
+        for (int k = 0; k < own.nobj; k++) {
+            const lvl_obj *o = &own.objs[k];
+            if (!o->sc || !o->nrect || o->static_img)
+                continue;
+            if (!ci_eq(o->sc->leaf, want[q].cls))
+                continue;
+            if (o->arx0 == want[q].x0 && o->ary0 == want[q].y0 &&
+                o->arx1 == want[q].x1 && o->ary1 == want[q].y1)
+                hit = 1;
+        }
+        if (!hit) {
+            fprintf(stderr, "mov selftest: FAILED rectangle-class grammar:"
+                    " no object of class %s carries the authored box"
+                    " %d,%d;%d,%d\n", want[q].cls, want[q].x0, want[q].y0,
+                    want[q].x1, want[q].y1);
+            fail = 1;
+        } else
+            nfound++;
+    }
+    /* the KADMAR.07 shape: the box after an entry is NOT pulled to
+     * parent+offset - the parent stands at (28,42), so a pulled box would
+     * read 246,387;258,410 */
+    for (int k = 0; k < own.nobj; k++) {
+        const lvl_obj *o = &own.objs[k];
+        if (o->sc && o->nrect && ci_eq(o->sc->leaf, "BICZRECT") &&
+            o->arx0 == 246 && o->ary0 == 387) {
+            fprintf(stderr, "mov selftest: FAILED rectangle-class grammar:"
+                    " the BICZRECT box was pulled to the preceding entry"
+                    " (246,387;258,410) - 0x40c90 adds no placement\n");
+            fail = 1;
+        }
+    }
+    /* the two non-family lines place nothing */
+    for (int k = 0; k < own.nobj; k++) {
+        const lvl_obj *o = &own.objs[k];
+        if (o->sc && (ci_eq(o->sc->leaf, "ZONE") || ci_eq(o->sc->leaf,
+                                                          "KRY"))) {
+            fprintf(stderr, "mov selftest: FAILED rectangle-class grammar:"
+                    " %s was placed as an object - it is not one of the"
+                    " eight class tokens of 0x40c90\n", o->sc->leaf);
+            fail = 1;
+        }
+    }
+    /* one class record per token, many instances: three RECT lines, one
+     * class (the engine keeps ONE table per class and one instance per
+     * line) */
+    int nrect = 0, ninst = 0;
+    for (int k = 0; k < own.nsc; k++)
+        if (ci_eq(own.set[k]->leaf, "RECT")) {
+            nrect++;
+            ninst = own.set[k]->ninst;
+        }
+    if (nrect != 1 || ninst != 3) {
+        fprintf(stderr, "mov selftest: FAILED rectangle-class grammar:"
+                " %d class record(s) for RECT with %d instance(s), expected"
+                " 1 and 3\n", nrect, ninst);
+        fail = 1;
+    }
+    if (nfound != sizeof want / sizeof want[0]) {
+        fprintf(stderr, "mov selftest: FAILED rectangle-class grammar: only"
+                " %d of %d authored boxes stand\n", (int)nfound,
+                (int)(sizeof want / sizeof want[0]));
+        fail = 1;
+    }
+    scene_owner_free(&own);
+    return fail;
+}
+
 static void des_placement(place_ctx *pc, llrs *hd_ety,
                           const llrs_slot *hd_blk2, const des_kv *kvs, int nk)
 {
@@ -10218,6 +10544,18 @@ static void des_placement(place_ctx *pc, llrs *hd_ety,
                pc->level, st->statics, st->statics_placed, st->static_out,
                st->static_missing, st->static_shapeonly,
                st->static_attached);
+    /* PR-328: the rectangle-class placements, named apart because they are
+     * neither entry lines nor static images nor polyline noise: the line
+     * names a class of 0x40c90's eight and authors its box (PR-327). They
+     * carry no script, no art and no states, so nothing draws or steps
+     * them until the rectangle ask of 0x40cf0/0x40d50/0x40dc0 is ported. */
+    if (st->rectclass)
+        printf("ll_level: authored scene %s: %d rectangle-class line(s)"
+               " (`TOKEN,x0,y0;x1,y1`, the eight class tables of the record"
+               " verb 0x40c90) placed as objects carrying the class token"
+               " and the authored box at [obj+0x3c]; nothing asks them yet,"
+               " so they draw and step as nothing (the rectangle ask is the"
+               " next step)\n", pc->level, st->rectclass);
     if (st->prop || st->group || st->comment || st->class_hint ||
         st->poly || st->shortline || st->param_extra || st->field_space ||
         st->entry_noext || st->attached || st->longline)
@@ -11318,15 +11656,18 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
         }
     }
 
-    int nstatic = 0;
+    int nstatic = 0, nrectc = 0;
     for (int k = 0; k < nobj; k++)
         if (objs[k].static_img)
             nstatic++;
+        else if (objs[k].sc && rect_class_id(objs[k].sc->leaf) >= 0)
+            nrectc++;           /* PR-328: an authored box, not an
+                                 * animated thing: no script, no art */
     if (nstatic)
         printf("ll_level: show %s: bg %s %dx%d, %d animated object(s), %d"
                " static image(s)\n", level,
                bgname, img.idx ? (int)img.w : cw, img.idx ? (int)img.h : ch,
-               nobj - nstatic, nstatic);
+               nobj - nstatic - nrectc, nstatic);
     else
         printf("ll_level: show %s: bg %s %dx%d, %d animated object(s)\n",
                level,
@@ -11344,6 +11685,19 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
         if (!obj_all && obj_shown >= 24)
             break;
         const obj_script *sc = objs[k].sc;
+        /* PR-328: a rectangle-class placement has no script and no art by
+         * authoring (PR-327: the class line IS the object, and all it
+         * carries is the box), so it is neither "[mov]" nor a data hole;
+         * what it has is named instead. */
+        if (rect_class_id(sc->leaf) >= 0) {
+            printf("ll_level: obj %s[rectangle class]: no script, no art -"
+                   " the line authors the box %d,%d;%d,%d and nothing else"
+                   " (the record verb 0x40c90 writes it at [obj+0x3c])\n",
+                   sc->leaf, objs[k].arx0, objs[k].ary0, objs[k].arx1,
+                   objs[k].ary1);
+            obj_shown++;
+            continue;
+        }
         int ai = objs[k].sti >= 0 && objs[k].sti < LMOV_MAXST
                      ? sc->ast[objs[k].sti] : -1;
         const obj_art *a = ai >= 0 && ai < sc->nart ? &sc->art[ai] : NULL;

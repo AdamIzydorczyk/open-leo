@@ -2817,9 +2817,13 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     sign) inside the authored box, and ZARIA.01 ANI2.DES line 18
     authors the shipped set's only DRECT, (988,645)-(1340,750), over
     the exit point and the three ZWODOSPD platforms. The remaining
-    gap is now only a PORT gap with no unknown in it: ll_level.c
-    counts that line as polyline data (st->poly), so no object with an
-    authored box exists for the ask walk, and nothing in the port
+    gap was a PORT gap with no unknown in it: ll_level.c counted
+    that line as polyline data (st->poly), so no object with an
+    authored box existed for the ask walk. PR-328 closes THAT half:
+    the token names the class and the four numbers are the box at
+    [obj+0x3c], absolute and unsorted as 0x40c90 writes them, so
+    ZARIA.01's DRECT and KILOF_PL now stand in the port's scene.
+    What is left is the verbs: nothing in the port
     raises AC_RECT, AC_DRECT or AC_DRECT2. The AC_ONAIR term still
     needs the surface-link half (the pass at 0x5476x-0x54800:
     AC_DUP on attach, AC_DUP_CD by surface kind, AC_ONAIR when

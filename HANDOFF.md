@@ -5424,20 +5424,21 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         A_FALL_DOWN, A_WALK, A_TURN, A_PRE_JUMP, A_DRAP), and
         ANI2.DES line 18 authors the shipped set's only DRECT,
         (988,645)-(1340,750), over PR-317's exit point. The
-        port side is what is missing: ll_level.c counts that
-        line as polyline data (st->poly), so the ask walk has
-        no rectangle-class object to ask and nothing raises
-        AC_RECT/AC_DRECT/AC_DRECT2; PR-327 counts which classes
+        port side is what is missing: PR-328 places those lines
+        now - the token names the class and its four numbers are the
+        box at [obj+0x3c], absolute and unsorted as 0x40c90 writes
+        them - so the ask walk has its objects; what is left is the
+        verbs, since nothing raises AC_RECT/AC_DRECT/AC_DRECT2 yet.
+        PR-327 counts which classes
         could (AC_DRECT is raised by the DRECT and the BICZRECT
         ask verbs, AC_RECT by RECT and BRECT, and this level's
         `A_KILOF` ask has only the KILOF_PL verb 0x1e3a0 in
         reach - its raise 0x1e42b is a register form the census
         tool misses, and that verb tests the asker's facing
-        ([asker+8]+0x70 = 0x239f0 = [obj+0x6d], so a right-
-        facing lion), and ZARIA.01 places a DRECT
-        and a KILOF_PL and nothing else of the eight; and the
-        AC_ONAIR term
-        needs the surface-link pass (AC_DUP on attach,
+        ([asker+8]+0x70 = 0x239f0 = [obj+0x6d], so a right-facing
+        lion), and ZARIA.01 places a DRECT and a KILOF_PL and
+        nothing else of the eight; and the AC_ONAIR term needs the
+        surface-link pass (AC_DUP on attach,
         AC_DUP_CD by surface kind, AC_ONAIR when [obj+0xa9] is
         dropped, 0x5476x-0x54800). What the ground/contact
         pass writes WHILE a lock holds is unread and named in

@@ -44622,3 +44622,122 @@ CORRECTS: PR-326, twice, and one tool. Its framing of AC_DRECT as
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
   red leg and no suite run.
 ```
+
+## PR-328 — THE `.des` RECTANGLE-CLASS LINE IS PLACED: THE TOKEN IS THE
+## CLASS AND ITS FOUR NUMBERS ARE THE BOX AT [obj+0x3c], ABSOLUTE, UNSORTED
+```
+KIND: port
+SUBSYSTEM: the level `.des` placement reader in ported/ll_level.c - the
+  third placement grammar PR-327 read (the class-token box line, beside
+  the five-field entry and the three-comma static image), which is the
+  first half of the F6b port step of HANDOFF section 8 T5 (6).
+ADDRESSES: 0x40c90, 0x49f90, 0x49920, 0x91d00, 0x3f0f0, 0x3f124,
+  0x3f14b, 0x23e00, 0x40cf0, 0x40d50, 0x40dc0, 0x1e3a0, 0x286a0,
+  0x28710, 0x287a0, 0x37ea0, 0x96b88, 0x99668, 0x99f64, 0x99ff0,
+  0x9ec8c, 0xa15ac, 0xa1638, 0xa16c4, 0x41c50, 0x91689, 0x90741,
+  0x90a40, 0x90a46, 0x90a4f, 0x91291, 0x91f75, 0x91f7a, 0x91f80,
+  0x91fd8
+NAMES: RECT, DRECT, DRECT2, KILOF_PL, BICZRECT, BRECT, WSPRECT, KRA1,
+  KRA2, ZONE, KRY, obj+0x3c, nrect, arx0, arx1, ary0, ary1,
+  place_rect_class, obj_rect_class_get, rect_class_id, rectclass,
+  place_rect, place_pair, st->poly, static_img, LEO_OBJ_ALL,
+  TUNGA.11, ZARIA.01, SADES.06, TUNGA2.12, KADMAR.07, LONA.05, F6,
+  OI-078
+CODE: yes: ported/ll_level.c (the class-token table, the class record,
+  the placement, the report line, the object listing, the new
+  place_rectclass_selftest legs in the --mov-selftest chain) and the
+  Makefile (one new grep pair, two re-pinned counts).
+HOOKS: none new. LEO_OBJ_ALL=1 (PR-36) prints every placement, which is
+  how the two TUNGA.11 boxes are named in the fixture leg. Data-free
+  legs run in every configuration.
+MEASURED: (a) WHAT THE READER DID BEFORE. `TOKEN,x0,y0;x1,y1` has three
+  commas, so it fell past the entry grammar into `else if (strchr(line,
+  ';')) st->poly++;` - the polyline branch. Every one of the 18 shipped
+  box lines PR-327 counted (1 in ZARIA.01_ANI2 line 18 and 2 more in
+  lines 19-20, 7 in SADES.06_ANIM, 2 in TUNGA.11_ANI2, 1 in
+  TUNGA2.12_ANIM, 1 in KADMAR.07_ANI1, 7 DRECT2 elsewhere in
+  SADES.06_ANIM) was counted as ground noise and placed nothing. That is
+  what PR-318/PR-326 reported and it was true of the code then.
+  (b) RED FIRST. The new legs feed the reader a fixture `.des` of 15
+  lines built from the shipped lines verbatim. Before the code: `0
+  rectangle-class lines, expected 10`, `objects total 1, expected 11`,
+  `polyline lines 13, expected 3` and ten "no object of class X carries
+  the authored box" lines. After it, all ten boxes stand.
+  (c) MUTATIONS, five, each caught by the named legs (this leg is
+  data-free, so it runs in the fixture-free configuration too): M1b the
+  box read as a CHILD of the entry before it, PR-95's rule applied here
+  (6 legs fail, first "no object of class BICZRECT carries the authored
+  box 218,345;230,368" - the KADMAR.07 shape is a box line sitting in
+  another object's property block); M2 the box sorted to low/high like
+  place_rect does for the ladder (2, first "no object of class RECT
+  carries the authored box 900,300;800,250"); M3 one class record per
+  line instead of per class (1: "3 class record(s) for RECT with 1
+  instance(s), expected 1 and 3"); M4 the class-token check dropped, any
+  first field accepted (5: "12 rectangle-class lines, expected 10" -
+  ZONE and KRY join, which PR-327 excludes); M5 the entry grammar's
+  world-bounds rule applied to a box (6: "9, expected 10" - TUNGA.11
+  authors `RECT,-10,200;50,500`).
+  (d) THE THREE MODEL FACTS THE CODE KEEPS, EACH READ IN PR-327.
+  Absolute: 0x40c90 is `add eax,0x3c; call 0x49f90; ret`, and 0x49f90
+  only pushes the four output pointers and the format 0x91d00
+  `%d,%d;%d,%d , ` to 0x49920 - there is no add of the placement, unlike
+  the ladder's own record verb 0x3f0f0, which reads the same shape and
+  then adds the placement at 0x3f124-0x3f14b (PR-246). place_rect keeps
+  that offset rule; place_rect_class writes the authored numbers as they
+  stand, and the leg pins the difference on the KADMAR.07 case (a pulled
+  box would read 246,387;258,410). Unsorted: nothing in the verb orders
+  the edges, so an authored box that runs backwards is kept as written
+  and simply matches nothing under 0x23e00 - the engine's behaviour, not
+  a port choice. One class record, many instances: the class token names
+  the object's script the way DRABINKA does (ladder_class), so three
+  RECT lines share one class record with ninst = 3 and stay three
+  objects - the engine's one table per class and one instance per line.
+  (e) WHAT THEY ARE NOT. They have no script, no art, no states, so
+  every path that gates on sc->mov steps over them: the fixture count
+  line stays "68 animated object(s), 18 static image(s)" for TUNGA.11
+  because the two boxes are counted as neither, and the listing names
+  them for what they are ("obj DRECT2[rectangle class]: no script, no
+  art - the line authors the box 510,400;820,600 and nothing else").
+  The per-level report now prints its own line for them ("authored scene
+  TUNGA.11: 2 rectangle-class line(s) ... placed as objects carrying the
+  class token and the authored box at [obj+0x3c]; nothing asks them
+  yet"), and the bounded "more placement(s) advanced" proof line moves
+  from 74 to 76 because the scene holds 88 placements instead of 86.
+  (f) NOT IN THIS GRAMMAR, LEGGED AS NEGATIVES. ZONE
+  (`ZONE,5044,444;5056,456`): its +0x18 verb is 0x41c50, which does the
+  same 0x49f90 scan and then reads `id= %d` (0x91689) - not one of the
+  eight. KRY: no such string exists in the engine. KRA1/KRA2 are in the
+  token table (the engine's class name at 0x91291 is in the eight), but
+  their shipped lines are five-field ART placements whose box sits in a
+  following `1 -4,0;37,0` row, so they go through the entry grammar. A
+  token whose numbers are not four numbers - `DRECT,988,645`,
+  `DRECT,988,645;1340` - places nothing and stays counted as it was.
+OPENS: the ask itself - nothing in the port calls the class verb
+  0x40cf0/0x40d50/0x40dc0/0x1e3a0/0x286a0, so no AC_RECT, AC_DRECT,
+  AC_DRECT2 or AC_KILOF is raised - that is the next step, and PR-327
+  already names every gate and PR-326 the velocity input this port has;
+  the position of such an object (the line authors none, so the port
+  keeps 0 and the box absolute - the engine's own default for those
+  fields was never read); whether the `1 -4,0;37,0` row of a KRA1/KRA2
+  art line is the text their +0x18 verb scans, and whether 0x23e00 then
+  reads it relative to the object; what the broad-phase candidate filter
+  (the class +0x60 verb, PR-247) does with a box like this; and whether
+  these objects take part in the layer window intersect 0x23140 does for
+  the authored entry rectangle.
+CLOSES: nothing. It finishes the placement half of F6b as HANDOFF
+  section 8 T5 (6) names it: the shipped set's 18 rectangle-class lines
+  now place objects carrying their class and their authored box, and the
+  ask half is named in OPENS.
+CORRECTS: PR-318 and PR-326 on the port side, in the tense they were
+  written: "ll_level.c counts that line as polyline data (st->poly), so
+  no object with an authored box exists for the ask walk" was true of
+  this code and is now replaced by a placement; their engine readings
+  stand, and PR-327's census of the 18 lines is what the legs feed on.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same suite
+  with DATA=/tmp/opencode/iso_stage/LEO HD=/tmp/opencode/hd_files; red
+  first, then green, with the five mutations above reported in
+  MEASURED (c); no Windows legs (rule 8).
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
+  PR-322's/PR-324's pair, with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope.
+```

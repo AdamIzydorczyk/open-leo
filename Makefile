@@ -493,8 +493,15 @@ ifeq ($(PX_DATA),1)
 # names its own .SEQ in that CD ANIMACJE leaf), 43 scripts / 50 art
 # tables, ONE real art hole (ogien_m.SEQ), two stale count headers reported as
 # what they are, and the bare `none` keyword of ani_plat= never a fake hole.
+# PR-328 adds the third placement grammar PR-327 read: TUNGA.11_ANI2 lines
+# 52 and 110 author a DRECT2 and a RECT box (`DRECT2,510,400;820,600`,
+# `RECT,-10,200;50,500`). They are class placements of the record verb
+# 0x40c90, not polyline noise, so they are placed and named; they are NOT
+# counted as animated (no script, no art), which is why 68 stays 68.
 	@grep -q 'show TUNGA.11: bg PLAN3.PCX 640x359, 68 animated object(s), 18 static image(s)' \
 	    /tmp/opencode/lv_tick8.log \
+	  && grep -q 'authored scene TUNGA.11: 2 rectangle-class line(s)' \
+	      /tmp/opencode/lv_tick8.log \
 	  && grep -q 'authored scene TUNGA.11: 18 static image line(s).*-> 18 placed' \
 	      /tmp/opencode/lv_tick8.log \
 	  && grep -q 'obj WODOSPAD/wodos1.seq\[static image\]: art WODOS1.SEQ, 0 state(s), bbox 32x394 at (168,185)' \
@@ -536,7 +543,7 @@ ifeq ($(PX_DATA),1)
 	    /tmp/opencode/lv_tick8.log \
 	  && grep -q 'tick 8: ANIBACK/strum2.mov state 0 frame 2' \
 	    /tmp/opencode/lv_tick8.log \
-	  && grep -q 'tick 8: 74 more placement(s) advanced' \
+	  && grep -q 'tick 8: 76 more placement(s) advanced' \
 	      /tmp/opencode/lv_tick8.log \
 	  && echo "scene animation: the authored .MOV cycles advance one record step per tick, their uniform 500- and 300-unit rows closing every 5 and 3 of them (proof bounded at 12 placements, ok)" \
 	  || { echo "scene animation grep FAILED"; cat /tmp/opencode/lv_tick8.log; exit 1; }
@@ -554,9 +561,13 @@ ifeq ($(PX_DATA),1)
 	    cat /tmp/opencode/lv_objall.log; exit 1; fi
 	@grep -q 'obj MOVEPLAT/ed000002.mov\[mov\]: art ED000002.SEQ, 5 state(s), bbox 80x298 at (599,164)' \
 	    /tmp/opencode/lv_objall.log \
+	  && grep -q 'obj DRECT2\[rectangle class\].*authors the box 510,400;820,600' \
+	      /tmp/opencode/lv_objall.log \
+	  && grep -q 'obj RECT\[rectangle class\].*authors the box -10,200;50,500' \
+	      /tmp/opencode/lv_objall.log \
 	  && ! grep -q 'more placement(s) of those scripts' \
 	      /tmp/opencode/lv_objall.log \
-	  && echo "LEO_OBJ_ALL: all 68 + 18 placements named, the animated platform comes from ani_plat= with its authored x,y (ok)" \
+	  && echo "LEO_OBJ_ALL: all 68 + 18 + 2 placements named, the animated platform comes from ani_plat= with its authored x,y, and the two rectangle-class boxes stand with the numbers their line authors (ok)" \
 	  || { echo "LEO_OBJ_ALL grep FAILED"; cat /tmp/opencode/lv_objall.log; exit 1; }
 # PR-93: the two placement grammars the user's ZARIA.01 report led to. The
 # 3-comma "<LEAF>,<name>.seq,x,y" lines ARE placed: ZARIA.01's 14 (the stone
