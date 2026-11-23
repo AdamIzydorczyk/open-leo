@@ -43743,3 +43743,152 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - the same shape as
   PR-318/PR-319/PR-320's pairs, with DATA=/tmp/opencode/nope
   HD=/tmp/opencode/nope.
 ```
+
+## PR-322 — THE ROW ADVANCE LAW IS READ END TO END, AND WITH IT THE
+## `goto`/`gotorel`/`goto_rel` FAMILY: PARSE STORES THE CURSOR NUMBER,
+## AND THE VERB REWRITES `[rec+4]` ONLY WHEN THE ROW ACTUALLY ADVANCES
+```
+KIND: read
+SUBSYSTEM: none (this PR changes no code). The read itself: the
+  .MOV row-directive family goto/gotorel/goto_rel - parse arms,
+  node descriptors, the row-advance verb and its answer-6 protocol;
+  the full row-list step law of 0x520c0 (forward, wrap, and the
+  SEQ_REV reverse path the port has never modelled); and the
+  correction of two of this repo's own descriptor attributions.
+ADDRESSES: 0x46739, 0x4679c, 0x4680c, 0x76a69, 0x5c320, 0x45770,
+  0x49920, 0x46764, 0x46777, 0x467dd, 0x467e3, 0x4684d, 0x46853,
+  0xa1018, 0xa1030, 0xa1048, 0xa0f88, 0xa1000, 0xa1090, 0xa2638,
+  0x45d90, 0x45dc0, 0x45d50, 0x45750, 0x457e0, 0x458e0, 0x45800,
+  0x45870, 0x457b0, 0x47710, 0x47770, 0x477d0, 0x47800, 0x521f0,
+  0x520c0, 0x52124, 0x52135, 0x52140, 0x5214b, 0x52195, 0x521b6,
+  0x52070, 0x45a50, 0x45f05, 0x45f49, 0x52360, 0x9194d, 0x91952,
+  0x91955, 0x9195d, 0x9185d, 0x91862, 0x98278, 0x76bcc
+NAMES: goto, gotorel, goto_rel, GOTO, GOTO_REL, GOTOREL, zero,
+  zero_t, [rec+4], [row+0x10], [obj+0xa1], [obj+0x99], [obj+0x71],
+  answer-6, row cursor, A_DEAD, A_KILOF, A_PODCIAG, A_WYJSCIE,
+  A_SPADANIE, SEQ_REV_X, SEQ_REV_Y, AC_BREAK_NEXT, 0xa1030,
+  0xa1018, 0x45d90, 0x45dc0, ll_mov_fr
+CODE: no: the diff is .md only; the model this read opens (F2b)
+  belongs to the row-advance path, not to this PR.
+HOOKS: none
+MEASURED: (a) THE PARSE, 0x46739/0x4679c/0x4680c. All three arms:
+  case-insensitive name match (0x76a69) against 'goto' (0x9194d),
+  'gotorel' (0x91955), 'goto_rel' (0x9195d); a 12-byte node
+  (0x5c320, 0xc) initialized by 0x45770 ([node+0]=0, [node+4]=
+  0xa1000 base); the operand read by 0x49920 with '%d' (0x91952)
+  into [node+8]. The arms differ in two instructions each:
+  `goto` writes descriptor 0xa1030 (0x46764) and then DECREASES
+  the stored value (0x46777-0x46780) - the authored row number is
+  1-based, the engine stores the 0-based cursor index; `gotorel`
+  writes 0xa1018 (0x467e3) and decrements then INCREMENTS back
+  (0x467dd, 0x467ea-0x467ee) so the authored delta is kept
+  verbatim; `goto_rel` is instruction-for-instruction the same
+  (0x4684d-0x4685e). So gotorel and goto_rel are aliases, and
+  only `goto` compiles to an absolute index. Nothing else about
+  the three names differs - case twins GOTO (64), GOTO_REL (29),
+  GOTOREL (10) and the lowercase spellings (25/6/1) all parse.
+  (b) THE DESCRIPTOR TABLES. 0xa1030 and 0xa1018 are six-verb
+  tables (+0x00 clone 0x47710/0x47770, +0x04 EXECUTE = the base
+  chain delegate 0x457e0 - these nodes do NOTHING in the row's
+  execute pass, +0x08 TEST 0x45800, +0x0c EXECUTE-walk 0x45870,
+  +0x10 the ADVANCE verb 0x45d90/0x45dc0, +0x14 a copy builder
+  0x47800/0x477d0). Node fields: +0 next sibling in the row's
+  directive chain, +4 the descriptor, +8 the authored operand.
+  (c) THE ADVANCE DRIVER, 0x521f0 -> 0x520c0. The row step hands
+  the advance verb 0x520c0 (the record class 0xa260c's +0x18) a
+  budget = clock - threshold, exactly as PR-219 read; 0x520c0
+  walks the row chain's +0x04 verbs first (0x520e1 - pos/lock/
+  ldir act there, goto is inert there), composes and scans the
+  transition sets (0x520e6-0x52112, the empty-set composer
+  0x98278), stores the carry [obj+0xa1] = budget (0x52114-
+  0x52118), and then at 0x52124-0x5213d calls the row
+  descriptor's (+0x10) = 0x458e0, which walks every child's
+  +0x10 verb with eax=node, ebx=&[rec+4] (the row cursor),
+  ecx=&answer (init 0) and dl=6. Absolute 0x45d90: after
+  walking the siblings, if dl==6 it writes *[cursor] =
+  [node+8] and sets the answer to 6; relative 0x45dc0: *[cursor]
+  += [node+8], answer 6. At 0x52140 an answer of 6 SKIPS the
+  step entirely - a goto row never wraps and never raises the
+  list bits. (d) THE STEP ITSELF, now read end to end.
+  Non-reversed (0x521b6): cursor == count-1 -> OR byte 0 bit 0x4
+  (AC_BREAK_NEXT, verified constant 0x2 = bit index 2) into the
+  caller's signal set and cursor = 0; else cursor+1. Reversed
+  (0x52195-0x521b4): cursor == 0 -> OR byte 0 bit 0x8 (bit
+  index 3, a name this port's 68-bit ledger has no verified
+  constant for) and cursor = count-1; else cursor-1. The
+  reversed test (0x5214b-0x52193) is an XOR of three terms:
+  (the object's class +0x70 verb answering -1 AND [rec+0x12]
+  bit 0x10 = SEQ_REV_X), ([obj+0x71] == -1 AND [rec+0x12] bit
+  0x20 = SEQ_REV_Y), and ([obj+0x99] == -1 - the row-reset
+  entry 0x52360 writes it 1 at 0x52377, so that term is off
+  under normal running). No clamping after a relative jump:
+  authored `1,0,GOTOREL -1` at row 1 leaves cursor = -1, and
+  `gotorel 0` (KADMAR2's A_SPADANIE, A_RUN) re-enters the same
+  row forever - the hold-without-a-clock pattern. (e) THE
+  CORPUS, 777 texts: 135 goto lines in 102 states - goto 89
+  (25 goto + 64 GOTO), GOTO_REL family 35, GOTOREL 11; two of
+  the 135 sit on `;`-commented lines (SADES.06 BUTLA). ZARIA
+  uses them for its ROW LISTS: the lion's A_DEAD (`27,400,
+  GOTO_REL -3` - the death anim loops its last four rows
+  instead of wrapping), A_KILOF, A_DRAP, A_LOOKUP, A_FIGHT,
+  A_FIGHT_DOWN, A_BORRING, A_FG_PACKA(_DN), plus RYBA, KAMIEN
+  1-3, SEP, SEP2, SPLYW. (f) THE RIDER QUESTION, NEGATIVE: F2
+  asked whether this family could move a rider whose state
+  authors no motion. It cannot - the verbs write only [rec+4],
+  never a position word - and neither A_PODCIAG nor A_WPAD nor
+  A_WYJSCIE carries a single goto line. The last candidate
+  motion source for the lift is gone; the lift stays where
+  PR-284/PR-286 left it. (g) THE ZERO FAMILY, found by the
+  correction in CORRECTS: names 'zero' (0x9185d) and 'zero_t'
+  (0x91862) build 8-byte nodes (no operand) on descriptor
+  0xa0f88 at parser arms 0x45f05/0x45f49; its +0x04 verb
+  0x45a50 walks the rest of the chain, then calls 0x52070(rec),
+  which zeroes [obj+0x9d] and writes WORD [rec+0xc] =
+  0x76bcc's-scaled ramp (rec+0xa - rec+8)/0x7fff + rec+8 (the
+  plain move when [rec+0xa] == 0). 31 `zero` and 1 `zero_v`
+  lines exist; what the [rec+8]/[rec+0xa]/[rec+0xc] triple and
+  [obj+0x9d] ARE stays unread - named below.
+OPENS: the port's row clock has no cursor-jump and never steps
+  backwards - modelling the answer-6 protocol (ll_mov_fr gaining
+  the goto pair, and a row-close that rewrites fi instead of
+  fi+1/wrap when one is present) is the F2b port lead this read
+  exists to open; what [rec+8]/[rec+0xa]/[rec+0xc] and
+  [obj+0x9d] mean (the `zero`/`zero_t` law above is shape, not
+  semantics); the class +0x70 verb and the -1 sentinels at
+  [obj+0x70]-answer/[obj+0x71]/[obj+0x99] (who sets -1, and the
+  name of signal bit index 3); whether the engine clamps a
+  negative or past-end cursor anywhere else (the reads here show
+  none); and the chain order inside one row: each +0x10 verb
+  walks its SIBLINGS before applying itself (0x45d90 calls
+  0x458e0 first), so with two gotos on one row the FIRST
+  authored one wins - unverified against authored data because
+  no shipped row carries two.
+CLOSES: HANDOFF section 8 T5 step F2, the last unmodelled half
+  of the six exit directives - all six are now read (`pos`
+  PR-316/317, `lock`/`unlock`/`ldir`/`rdir` PR-320/PR-321,
+  goto family this PR), and the rider clause is closed as a
+  measured negative. OI-111 gains the advance law; the ladder
+  thread's remaining work is F1b/F6's AC_ONAIR raise path, the
+  ly_exit leg, and the new F2b port lead named in HANDOFF.
+CORRECTS: PR-224's descriptor attribution for the answer-6
+  verbs: `0xa1048 +0x14 = 0x45d90 (end_level ... THE ROW CURSOR
+  IS SET ...)` and `0xa1030 +0x14 = 0x45dc0` are off by one
+  table - 0x45d90 sits at 0xa1030+0x10, the ABSOLUTE-goto
+  descriptor (and its stored value is authored minus one, not
+  the authored number), 0x45dc0 at 0xa1018+0x10, the relative
+  one; end_level's own descriptor 0xa1048 holds the base chain
+  walk 0x458e0 at +0x10 and acts only through its +0x04 verb
+  0x45750 (PR-198/199's exit word), which is why no end_level
+  row touches the cursor. `0xa1090 +0x14 = 0x45d50` (the F-row
+  hold) is the right class at the wrong slot: 0x45d50 sits at
+  0xa1090+0x10. PR-320's `0x52070 is called from the ADJACENT
+  0x45a50, the apply of the goto-family name that follows pos`:
+  0x45a50 is not goto - it is the +0x04 verb of descriptor
+  0xa0f88, installed by the `zero`/`zero_t` parser arms
+  0x45f05/0x45f49; the real goto descriptors carry no custom
+  execute verb at all (+0x04 is the base 0x457e0), which is
+  exactly why `goto` changes nothing about the row's frames or
+  signals and only rewrites the cursor at the advance.
+GATE: light: verify-index verify-docs rc=0 (ok); no code changed
+  (the diff is .md only), no Windows legs (rule 8).
+```

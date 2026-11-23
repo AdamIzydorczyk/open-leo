@@ -3436,6 +3436,28 @@ OI-111: which row-step path the port's row clock models -
     PR-135's list-end bit, now named. What the row class's
     +0x10 verb DOES, and which authored number the row step's
     compare actually gates on, is OI-112.
+    PR-322 ANSWERS THE +0x10 HALF. The row descriptor (0xa2638)
+    holds the base chain walker 0x458e0 there; it walks the
+    row's directive nodes' +0x10 verbs with ebx = &[rec+4] (the
+    row CURSOR), ecx = &answer and dl = 6. Only three directive
+    families carry a non-base verb there: goto absolute
+    (0xa1030+0x10 = 0x45d90, cursor = stored 0-based number,
+    answer 6), goto relative (0xa1018+0x10 = 0x45dc0, cursor +=
+    authored delta, answer 6) and the F-row hold (0xa1090+0x10
+    = 0x45d50, PR-224/250); an answer of 6 at 0x52140 SKIPS
+    the normal step, so a goto row never wraps and never raises
+    the list bits. The normal step is fully read now: forward
+    (cursor+1, last row -> OR 0x4 = AC_BREAK_NEXT + wrap to 0)
+    or REVERSED - (class +0x70 verb == -1 AND [rec+0x12] bit
+    0x10 SEQ_REV_X) XOR ([obj+0x71] == -1 AND bit 0x20
+    SEQ_REV_Y) XOR ([obj+0x99] == -1) - which steps the cursor
+    DOWN and raises bit 0x8 (index 3, name unverified) at the
+    top. The port models neither the cursor jump nor the
+    reverse step; modelling the answer-6 protocol is the new
+    F2b lead (HANDOFF 8 T5), and what `zero`/`zero_t`
+    (0xa0f88/0x45a50/0x52070 - the verb PR-320 mis-called a
+    goto apply) actually zeroes, [obj+0x9d] and the
+    [rec+8]/[+0xa]/[+0xc] ramp, stays unread here.
   origin: PR-217 record; rewritten from the PR-218 record; the
     ladder chain stays OI-078
     PR-220 names the control bits that switch picks between:

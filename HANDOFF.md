@@ -5293,12 +5293,22 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         drawn ladder extend while he is on it, and what does the
         player press. Done when: a per-frame trace, or the plain
         statement that this ladder is a route DOWN, not up.
-    F2. [read] the apply of the six directives that exit needs -
-        `pos`, `lock`/`unlock`, `ldir`/`rdir`, `goto`/`GOTO_REL`
-        - through the engine's own table 0x917c0 node classes
-        (PR-198/199 read its `end_level` sibling 0xa1048). This
-        is also the only mechanism left that could move a rider
-        whose state authors no motion.
+    F2. CLOSED (PR-322, all six by PR-316/317/320/321 + this):
+        all six directive families are read and five are modelled;
+        the goto family is now read end to end - parse stores a
+        0-based cursor number (0xa1030) or a verbatim delta
+        (0xa1018, gotorel and goto_rel are aliases), and the
+        verbs 0x45d90/0x45dc0 rewrite `[rec+4]` ONLY at the row
+        advance (0x520c0's +0x10 chain walk, dl=6, an answer of
+        6 skips the normal +1/wrap step and its list bits). The
+        rider clause is CLOSED AS A NEGATIVE: the verbs write no
+        position word, and no A_PODCIAG/A_WPAD/A_WYJSCIE row
+        carries one. What the read opens instead is F2b, a PORT
+        lead: the port's row clock has no cursor jump (135
+        authored rows in 102 states, incl. the lion's A_DEAD
+        `27,400,GOTO_REL -3` death loop and A_KILOF, RYBA,
+        KAMIEN, SEP, SPLYW) and no SEQ_REV reverse step (the
+        whole law is in PR-322's MEASURED (d)).
     F3. CLOSED AS A MIS-SCOPE (PR-316). Who writes
         [level+0x4] is OI-046, closed by PR-198/PR-199 - the
         end_level node's 0x45750 writes that exit word and the
