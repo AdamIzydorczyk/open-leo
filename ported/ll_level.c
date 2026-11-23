@@ -535,8 +535,12 @@ typedef struct {                     /* one placement of a script        */
     /* PR-243: the AUTHORED CONTACT-POINT LIST that follows an entry line
      * in the placement file - the engine's [obj+0xa5] vector. Its
      * kind-table +0x18 verb (0x3f0f0 for the placed DRABINKA) parses
-     * `N dx,dy ...` with 0x44f10 into N 12-byte elements (x, y, the
-     * element class 0x98274), and 0x44e90 immediately ADDS the
+     * `N dx,dy ...` with 0x44f10 into N 12-byte elements (x, y, a
+     * class word - PR-305 measured that 0x98274 is NOT that word:
+     * the factory installs it at the authored rect's +0x10 =
+     * [obj+0xc1], while the list header's own +0x08 holds 0x97f50,
+     * the list class whose slots are 0x44e40/0x44ec0/0x44f10), and
+     * 0x44e90 immediately ADDS the
      * placement to every point: the authored numbers are offsets and the
      * live values are ABSOLUTE from load and never follow the object
      * (PR-242). The only consumer measured so far is the 0x44ec0

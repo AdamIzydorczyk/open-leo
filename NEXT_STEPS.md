@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-305.
+> at PR-306.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -41700,4 +41700,139 @@ GATE: light: verify-index verify-docs rc=0 (ok); no executable
 change, so no red leg by the rule PR-245 states, and no suite
 run. The last full no-Windows suite run (PR-298's, unchanged
 tree since) is rc=0 with 69 green verdict lines.
+```
+
+## PR-305 — THE TWO ACCESSORS EVERY ASK TEST RUNS THROUGH: +0x4c
+## IS THE OBJECT'S OWN RECT AT [obj+0x75], +0x68 IS A POINT AT
+## [obj+0xd6] FOR THE LION CLASSES AND THE OBJECT ITSELF FOR THE
+## LADDER FAMILY
+```
+KIND: read
+SUBSYSTEM: the object-layout verbs behind the ask protocol of
+PR-304: the +0x4c and +0x68 accessors, the point-in-rect verb
+0x23e00 that the ask arms call through them, the +0xac ENTER
+cell as it actually reads per class family, and the class words
+the ladder's own constructor installs.
+ADDRESSES: 0x23a20, 0x23900, 0x23b60, 0x23930, 0x23bd0,
+0x23be0, 0x23e00, 0x23e30, 0x546a0, 0x52a00, 0x98274, 0x98278,
+0x97f50, 0x44e40, 0x44ec0, 0x44f10, 0x235e0, 0xcf03c, 0xcf004,
+0x96960, 0x97a98, 0x98f34, 0x9b4d4, 0x9e134, 0x9f540, 0x9f668,
+0x96874, 0xa0150, 0x97cdc, 0xa1dfc, 0x9d8a8, 0x99ff0, 0x96d1c,
+0x96c38, 0x3f1c0, 0x3f1e9, 0x3f222, 0x3f230, 0x44e83, 0x44ee3,
+0x44eec, 0x534e0, 0x534e9, 0x534f5, 0x1f8f9, 0x1f908, 0x1f93a,
+0x1f947, 0x1f951, 0x3f124, 0x3f14b, 0x5503
+NAMES: ask verb, box accessor, point accessor, ENTER verb,
+point-in-rect, live box, contact point, contact list, list
+class, rect class, edge band, authored rectangle, OI-078,
+PR-150, PR-242, PR-243, PR-270, PR-291, PR-292, PR-304
+CODE: no: image reading. One comment in ported/ll_level.c
+(the [obj+0xa5] note at 535-546) is corrected for item (e);
+no executable line changed and the file recompiles clean.
+HOOKS: OI-078 says "this port hands the verb its own element
+box instead"; the port's ladder_answer_for takes `ll_pt p =
+pt_of(asker)` from the lion's x,y (ported/ll_level.c:5503,
+5556) and its PR-243 L8 leg tests the authored contact point
+against the asker's live box; PR-304 read the arms of 0x3f1c0
+that call these verbs but not the verbs; PR-242's note names
+0x98274 as the element class of that list.
+MEASURED: (a) +0x4c IS THE OBJECT'S OWN RECT. 0x23a20 = `add
+eax,0x75; ret`, and it is the +0x4c cell of every class
+sampled: the eight lion tables (0x96960, 0x97a98, 0x98f34,
+0x9b4d4, 0x9e134, 0x9f540, 0x9f668, 0x96874), DOMEK 0xa0150,
+the ladder 0x97cdc, the rope 0xa1dfc, KDRABINA 0x9d8a8,
+KATAPULT 0x96d1c and PALMA 0x96c38. One exception found:
+WSPRECT 0x99ff0 holds 0x23bd0 = `mov eax,0xcf03c; ret`, which
+hands a GLOBAL rect instead of its own (its sibling 0x23be0
+returns ds:0xcf004). Combined with the test verb of (c),
+[obj+0x75..0x81] is a rect struct laid out x0,y0,x1,y1 at
++0,+4,+8,+0xc.
+(b) +0x68 SPLITS BY FAMILY. 0x23900 = `add eax,0xd6; ret` is
+the cell of all eight lion tables AND of DOMEK 0xa0150;
+0x23b60 = `ret`, which returns eax unchanged and so hands the
+OBJECT ITSELF, is the cell of the ladder 0x97cdc, the rope
+0xa1dfc, KDRABINA 0x9d8a8, KATAPULT 0x96d1c, PALMA 0x96c38 and
+WSPRECT 0x99ff0. Those two stubs appear 155 and 64 times in the
+image, so both are family defaults, not per-class quirks. For a
+self-returning class the point the arms then read is
+[obj+0x00]/[obj+0x04] - the same two words the geometry verb
+0x3f0f0 uses as the placement offset (0x3f124-0x3f14b, PR-292
+(c)).
+(c) THE TEST VERB IS 0x23e00 AND ITS BOUNDS ARE INCLUSIVE.
+0x3f1c0's state-2 arm calls `[[point+0x08]+0x08]` (0x3f230) and
+the list arm calls the same slot through 0x44eec; 0x23e00 reads
+the point as [eax+0x00], [eax+0x04] and the rect as [edx],
+[edx+4], [edx+8], [edx+0xc] and returns true only when x0 <=
+x <= x1 AND y0 <= y <= y1 - the inclusive corners the port
+already legs (PR-150/PR-270). Read with (a)/(b), the two arms
+of the ladder's ask verb use two different nested fields of the
+ASKER: state 1 asks whether the ladder's own authored contact
+point lies inside the asker's RECT at [asker+0x75], state 2
+asks whether the asker's POINT at [asker+0xd6] lies inside the
+ladder's band or column.
+(d) NEITHER FIELD IS EVER TOUCHED BY AN OFFSET. A scan of
+.text for any mention of +0xd6, +0xda, +0xd2, +0x75, +0x79,
++0x7d or +0x81 finds ZERO hits: the only way to those fields is
+through the verbs of (a)/(b), which is why every use goes
+through them (145 call sites through +0x68, 35 through +0x4c).
+The only writer-shaped sites near them are 0x534e9/0x534f5, and
+those READ the point and copy it into the caller's buffer
+(0x534e9-0x534fb). Who WRITES [obj+0x75] and [obj+0xd6] is now
+the first named read for the ask path, and the one FOCUS 1
+needs: the port passes the lion's POSITION as the state-2 point
+while the engine passes [lion+0xd6], and PR-292 (e) measured
+that in the shipped probe the ask never passes.
+(e) WHAT THE LADDER'S FACTORY INSTALLS, AND A WRONG LABEL. The
+DRABINKA branch (name 0x906ff at 0x1f8ac) stores the list
+header's class 0x97f50 at [obj+0xad] (0x1f8f9), 0x98274 at
+[obj+0xc1] (0x1f93a) - the authored rect's +0x10 - and the
+class words 0x97cdc/0x97cd4 at 0x1f947/0x1f951. 0x97f50's
+slots are the LIST verbs: +0x00 = 0x44e40, +0x04 = 0x44ec0
+(the ANY-test), +0x08 = 0x44f10 (the builder), +0x0c = 0x235e0.
+So 0x97f50 is the contact list's own class, and 0x98274 is a
+RECT class (its +0x00..+0x14 are 0x23e30, 0x23ed0, 0x23ea0,
+0x23e00), not the "element class" of PR-242's note. The
+element test of (c) needs a class word at entry+0x08 whose
++0x08 slot is 0x23e00; every object class sampled holds
+0x23e00 at its own +0x08 (0x96874, 0x96960, 0x97cdc, 0x96c38,
+0x96d1c), so the owner's class word is the only candidate this
+reading supports, and 0x44f10's fill loop (0x44f5f..) is the
+unread detail that decides it.
+(f) THE +0xac ENTER CELL, AS IT ACTUALLY READS: 0x23930 =
+`ret`, an empty method, for the ladder 0x97cdc, the rope
+0xa1dfc, KDRABINA 0x9d8a8, KATAPULT 0x96d1c and PALMA
+0x96c38; 0x546a0 for the eight lion tables and DOMEK; 0x52a00
+for WSPRECT. That finishes PR-304's correction: the ladder
+family has no ENTER work to run at all, so its state-1 arm is
+reachable only through an ask.
+OPENS: in order: (i) who writes [obj+0x75..0x81] and
+[obj+0xd6..0xda] - the first named step for the ask path and
+what FOCUS 1 needs; (ii) 0x44f10's element fill loop, which
+installs the class word that (c)/(e) depend on; (iii) the
+WSPRECT global rects at ds:0xcf03c and ds:0xcf004; (iv)
+0x546a0, the lion's real ENTER verb; (v) the 145 +0x68 call
+sites, of which the walk-target shape at 0x27d72/0x28101/
+0x2820b (`[[obj+0x126] - point]`, and 0x28115 raises bit 8 =
+AC_EDGE from such a compare) is the same walk state as OI-035;
+(vi) 0x534e0, the ladder class's +0x88 cell, which mallocs
+0x48 through 0x5c320 and calls 0x51770.
+CLOSES: OI-078's "this port hands the verb its own element box
+instead" is now a named field pair with named accessors and a
+named difference (the lion's point at [lion+0xd6] versus this
+port's position); and the PR-243 L8 leg's shape - the ladder's
+authored contact point tested against the asker's box - is
+confirmed as the engine's state-1 arm, inclusive bounds and all
+(0x23e00).
+CORRECTS: PR-242's parenthetical that the [obj+0xa5] elements
+carry "the element class 0x98274" (repeated in the port's
+comment at ported/ll_level.c:538-539, corrected in this
+commit): 0x98274 is installed at the authored RECT's +0x10
+([obj+0xc1]) and is a rect class, while the list header's +0x08
+holds 0x97f50, the list's own class. The rest of that note,
+including the 0x23e00 point-in-rectangle reading of the
+0x44ec0 test, stands.
+GATE: light: verify-index verify-docs rc=0 (ok); no executable
+change, so no red leg by the rule PR-245 states, and no suite
+run. The last full no-Windows suite run is PR-298's, rc=0 with
+69 green verdict lines; since then only comments in ported/
+have changed (PR-304, PR-305).
 ```

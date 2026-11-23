@@ -2355,6 +2355,33 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     So the lift is not the ladder moving, and what is left for
     this row is the lion side: its climb rows and its landing
     on the platform line 518 that puts it at 489.
+    PR-305 NAMES THE TWO FIELDS THIS ROW'S ASK PATH USES, AND
+    THE PORT'S DIFFERENCE WITH THEM. The ask arms do not read
+    an object directly: they call through two accessors. +0x4c
+    is 0x23a20 = `add eax,0x75`, the object's OWN rect, in
+    every class sampled (the exception found is WSPRECT
+    0x99ff0, whose +0x4c is 0x23bd0 = `mov eax,0xcf03c` and
+    hands a global rect). +0x68 splits by family: 0x23900 =
+    `add eax,0xd6` for the eight lion tables and DOMEK,
+    0x23b60 = `ret` (the object itself, so its x,y at
+    [obj+0x00]/[obj+0x04]) for the ladder, rope, KDRABINA,
+    KATAPULT, PALMA and WSPRECT. The test verb 0x23e00 reads
+    the point at [p+0]/[p+4] and the rect at [r+0],[r+4],
+    [r+8],[r+0xc] with INCLUSIVE bounds. So the ladder's
+    state-1 arm asks whether its authored contact point lies in
+    the asker's rect at [asker+0x75] - which is exactly what
+    the port's PR-243 L8 leg does - while its state-2 arm asks
+    whether the asker's point at [asker+0xd6] lies in the band
+    or the column, and THIS PORT hands it the lion's position
+    instead (pt_of, ported/ll_level.c:5503). No instruction
+    anywhere writes either field by an offset (a scan of .text
+    for +0x75/+0x79/+0x7d/+0x81/+0xd2/+0xd6/+0xda finds zero
+    hits), so who fills them - and with what offset from the
+    lion's position - is the first named read for this path.
+    The +0xac ENTER cell of the whole ladder family is 0x23930
+    = `ret`, an empty method (the lions' is 0x546a0), which
+    settles PR-291's slot attribution for good: that arm is
+    reachable only through an ask.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
