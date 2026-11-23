@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-309.
+> at PR-310.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -42145,4 +42145,140 @@ LEO_LEVEL_PPM and is byte-identical to the cached baseline
 except the PPM path line; the last full no-Windows suite run is
 PR-298's, rc=0 with 69 green verdict lines, and since then only
 comments in ported/ have changed.
+```
+
+## PR-309 — THE SHIPPED .MOV VOCABULARY, COUNTED: NO ROW IN THE
+## CLIMB FAMILY AUTHORS A RISE, ZARIA.01'S LADDER SCRIPT DECLARES
+## NO SOLID WORD AT ALL, AND THE LEVEL'S OWN EXIT IS A_WYJSCIE
+## WITH THE CORPUS'S ONLY `pos` PAIR
+```
+KIND: read
+SUBSYSTEM: the authored .MOV text of the whole shipped set - the
+row-directive and state-control vocabulary, counted per word and
+per state - against the port's parser (what it models, captures
+and counts), with ZARIA.01's own lion and ladder scripts read
+block by block. This is FOCUS 1's remaining-work measurement:
+what the data can still be asked, and what it can no longer
+explain.
+ADDRESSES: 0x917c0, 0x46bbd, 0x3f0f0, 0x550c0, 0x3f1c0, 0xa1048
+NAMES: A_WSP, A_SCIAG, A_PODCIAG, A_DRAP, A_WPAD, A_WYJSCIE,
+A_MOVE_UP, A_MOVE_DN, A_PRE_JUMP, DRAB.MOV, DRAB.SEQ, ZAR_LEW,
+ZAR_LEWPL, AC_EDGE, AC_ONAIR, AC_DRECT, AC_BREAK_NEXT, SOLID,
+SOLID2, SEMI_SOLID, ANTI_SOLID, SEQ_REV_Y, pos, lock, unlock,
+rdir, ldir, GOTO, GOTO_REL, smpauto, m, F, I, FC, OI-078,
+OI-082, OI-018, PR-286, PR-294, PR-304, PR-308, ll_mov_fr,
+ladder_answer_core
+CODE: no: a measurement over the extracted .MOV texts and a read
+of the port's parser; nothing under `ported/` changed, so no red
+leg is owed and none was written.
+HOOKS: PR-286 closed the authored-parameter hunt for FOCUS 1
+("no state in the family rises 71 px") from the F/T/G words
+alone; PR-294 closed the geometry hunt from the art side and
+left "does any answer path consult the shape margins" open;
+PR-304 said the remaining FOCUS-1 step is "the lion's climb
+rows and the landing on the platform line 518". None of them
+read the row-directive tails of those states, and no PR had
+read ZARIA.01's own exit chain.
+MEASURED: (a) THE CORPUS. 777 extracted .MOV texts, 39,185
+lines, 18,617 frame rows - the same row count the port's own
+report cites - 2,617 of them addressed with a NEGATIVE frame
+number (the reverse-order rows PR-99/101 read as SEQ_REV_Y
+material: A_RUN 531, A_ATAK 448, A_DEAD 429, A_WYJSCIE 40).
+(a2) THE STATE-CONTROL VOCABULARY is 22 words: BY_TIME 2121,
+FRAME_REV 798, CH_DIR 552, CHECK_LEW 535, DANGER 385,
+CHECK_ALL 356, CHECK_LN 340, CHECK_ANI 168, SOLID2 152,
+SOLID 141, ANTI_POCISK 121, BY_X 105, SEMI_SOLID 92,
+ANTI_SOLID 87, CHECK_ALL_PLANE 62, CHECK_ZW 47, SEQ_REV_Y 22,
+BY_Y 13, BY_TY 12, CHECK_BASE_LN 8, SEQ_REV_X 7, INV_V 3. The
+port's ctrl_flag table names every one of those with a bit
+except SEQ_REV_X, SEQ_REV_Y, BY_TY's siblings, CHECK_BASE_LN
+and INV_V, which it counts.
+(b) THE SOLID FAMILY AND THE LADDER. 257 of the 777 scripts
+declare a SOLID-family word (KOLUMNA, SKALA, GLAZ, MOVEPLAT -
+the objects the lion stands on), and the port models those
+bits in the contact path (the 0x550c0 table). ZARIA.01's
+ladder script is NOT one of them: DRAB.MOV has three states
+and its three control lines are `control=BY_TIME` and nothing
+else - no SOLID, no SEMI_SOLID, no ANTI_SOLID, no CHECK_* - and
+its rows are A_UP `1,0,WAIT K_GEN1`, A_DROP `2,500 3,400,smpauto
+4,400 5,300 6,300 7,200 8,200 9,200 10,200` and A_DOWN
+`11,0,WAIT K_NEVER`. So the "non-solid" the port prints for
+the ladder answer is the script's own silence, and PR-294's
+open question about treating the ladder as a solid column has
+an authored negative: the script never asks for it.
+(c) THE `m dx,dy` CENSUS AND THE NEGATIVE FOR THE 71 px. 237
+`m` pairs in the whole set, and their values are: `m 0,2` 66,
+`m 0,-2` 65, `m 0,1` 39, `m -1,0` 8, then 0,-3 / 0,-10 / -10,0
+five each, 22,1 / 9,-40 / 2,2 / 0,-4 / 0,-5 four each. By
+state: A_MOVE_DN 60 and A_MOVE_UP 60 (the TUNGA.11 MOVEPLAT
+platforms and the ENA.03 harpoon, 2 px a row), A_SCIAG 30,
+A_HOLE 18, A_WSP_LIN_DOWN 7. ZARIA.01's A_SCIAG authors
+`8,300,lock` then six rows of `m 0,1` and `1,300,unlock` -
+the descent IS a row-level 1 px step, and the port models `m`,
+so it runs. ZARIA.01's A_WSP and A_WSP_LIN carry NO `m` at all:
+their climb is the BY_TY F=0,100 T=160,50 force law alone, as
+PR-259 shipped it. A_PODCIAG authors `1,300,lock ... 7,500,rdir
+8,300,unlock` and no motion word. So PR-286's negative holds
+with the tails included: nothing in the climb family authorises
+a 71 px rise, and the only authored rises in the shipped set
+belong to other mechanisms (MOVEPLAT rows, `m 0,-2`).
+(d) ZARIA.01'S OWN EXIT, READ FOR THE FIRST TIME. ZAR_LEW.MOV
+declares 37 states, A_WYJSCIE at list position 33, and its
+block is `control=BY_TIME,FRAME_REV` `F=0,0 T=50,50 G=0,0`
+`A_DRAP(1)=AC_BREAK_NEXT` `seq=dry` `time=50,150` `sample=25`
+and rows `0,0,lock`, `0,0,ldir`, `0,0,pos 1020,692`,
+`0,0,wait AC_TIME`, then `-1,300 -2,400 -3,500 ... -16,500,
+unlock` with `-13,500,smpauto`. Its ONLY incoming row in the
+whole level is A_WPAD's `A_WYJSCIE(1)=AC_BREAK_NEXT`, and
+A_WPAD (`seq=wet`, T=150,150) is reached from A_DRAP's
+`A_WPAD(1)=AC_DRECT,AC_ONAIR` and A_PRE_JUMP's
+`A_WPAD(1)=AC_ONAIR,AC_DRECT`. So the authored end of
+ZARIA.01 is: go airborne over the water, let A_WPAD's list
+wrap, and the exit state puts the lion at (1020,692) and walks
+him off on reverse-numbered frames.
+(e) `pos` IS UNIQUE TO THAT EXIT. Across all 777 texts the
+`pos x,y` directive appears EXACTLY TWICE, in
+ZARIA.01_LEW.ZAR_LEW.MOV and ZARIA.01_LEW.ZAR_LEWPL.MOV, both
+inside A_WYJSCIE, both with the pair 1020,692. The port counts
+`pos` among the directives it does not act on, so this level's
+own authored exit is currently inert in this port. (For the
+record: ZAR_LEW.MOV has no `end_level` row at all - the three
+lion scripts that do are JUNCTION, TUNGA.11 and TUNGA2.12 - so
+ZARIA.01's level end does not come from PR-198's `end_level`
+node.)
+(f) THE REST OF THE VOCABULARY THAT FOCUS 1 WOULD STEP ON:
+lock 87, unlock 61, GOTO 85, GOTO_REL 30, rdir 33, ldir 18
+across the set; in ZARIA.01's lion script A_PODCIAG carries
+lock/rdir/unlock, A_WYJSCIE carries lock/ldir/unlock/pos,
+A_DRAP carries GOTO - all six names are in the engine's own
+directive table 0x917c0 and none is modelled here.
+OPENS: in order: (i) the engine's apply for `pos` and `lock` /
+`unlock` - the node classes of 0x917c0's table and whether
+`lock` is what pins an object to the one it is answering (the
+only mechanism left that could move the rider while the state
+authors no motion); (ii) who ends the LEVEL for ZARIA.01, since
+its lion script has no `end_level` and A_WYJSCIE's rows end in
+a walk - the level's exit word [level+0x4] is still unwritten
+(PR-194's counted item); (iii) the water states: A_WPAD/A_WYJSCIE
+choose `seq=wet`/`seq=dry` and the exit point 1020,692 sits
+below ZARIA_A.PLT's main ground line 680/684, which is OI-082's
+water-as-floor question; (iv) the AC_ONAIR and AC_DRECT raisers
+(OI-018) - the exit chain is gated on exactly those two; (v) the
+seven ZARIA_A.PLT polylines the port counts as "moving ground:
+needs the AC_* signal bus" - whether any of them is a MOVEPLAT
+of the (c) kind in this level.
+CLOSES: PR-286's and PR-304's remaining FOCUS-1 question in its
+negative half: the climb family's row tails contain no rise, so
+no port model of the climb can reach 489 by a force or delta
+law, and PR-294's open (iii) about a solid ladder is answered
+from the authored side - the script never declares solidity.
+CORRECTS: none. PR-294's geometry, PR-286's parameter walk and
+PR-308's point-provider reading are all used unchanged; this
+record adds the row-tail and control-word evidence they did not
+cover.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+red leg by the rule PR-245 states, and no suite run. The last
+full no-Windows suite run is PR-298's, rc=0 with 69 green
+verdict lines; since then only comments in ported/ have changed
+(PR-304, PR-305).
 ```

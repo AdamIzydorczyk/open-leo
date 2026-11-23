@@ -2438,6 +2438,38 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     asker: no stale-point effect can explain the climb stopping
     at 560, and FOCUS 1's route is the one PR-304 named - the
     lion's climb rows and the landing on the platform line 518.
+    PR-309 CLOSES THAT ROUTE'S LAST HOP FROM THE AUTHORED SIDE
+    AND MOVES THE QUESTION. Across the 777 extracted .MOV texts
+    (18,617 frame rows, the same count the port's own report
+    cites) the `m dx,dy` row tail occurs 237 times and its
+    values are step sizes: `m 0,2` x66 and `m 0,-2` x65 (the
+    TUNGA.11 MOVEPLAT platforms), `m 0,1` x39, `m -1,0` x8, and
+    larger pairs only in unrelated states. ZARIA.01's own
+    A_SCIAG authors `lock` then six rows of `m 0,1` then
+    `unlock` - the descent is a row-level 1 px step, and this
+    port models `m`, so it runs - while A_WSP, A_WSP_LIN and
+    A_PODCIAG carry no motion word at all, so PR-286's "no
+    state in the family rises 71 px" holds with the tails
+    included. ZARIA.01's DRAB.MOV declares `control=BY_TIME`
+    and NO SOLID-family word (257 of the 777 scripts do declare
+    one), so the ladder's non-solidity is the script's own
+    silence and PR-294's "treat the column as solid" option is
+    an authored negative. And the level's OWN end is now read:
+    ZAR_LEW.MOV declares 37 states (A_WYJSCIE at index 33), has
+    no `end_level` row, and reaches A_WYJSCIE only through
+    A_WPAD's `A_WYJSCIE(1)=AC_BREAK_NEXT` - A_WPAD (`seq=wet`)
+    itself entered by `AC_ONAIR,AC_DRECT` - whose rows are
+    `lock`, `ldir`, `pos 1020,692`, `wait AC_TIME` and then the
+    reverse-numbered walk-off. `pos` exists exactly TWICE in the
+    whole shipped set, both in the two ZARIA.01 lion scripts,
+    both in that state, both with the same pair - and this port
+    counts `pos`, `lock`, `unlock`, `ldir`, `rdir` and `goto`
+    without acting on any of them. What this row needs next is
+    therefore not another ask-path read: it is the apply of
+    those six directives, the AC_ONAIR/AC_DRECT raisers, the
+    water-as-floor question (OI-082, since the exit point
+    1020,692 sits below the main ground line), and the seven
+    ZARIA_A.PLT "moving ground" polylines.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
