@@ -307,6 +307,30 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     +0xb0 provider) against the instance's authored rectangle.
     The same read established the command bus that writes the
     `[asker+0xc6]` gate input: see OI-119.
+    PR-327 COUNTS THE RECTANGLE-CLASS RAISERS, BY CLASS, AND THE
+    SEMANTICS ARE NOW THE ONLY HALF LEFT. Eight class tables
+    share the one +0x18 record verb 0x40c90, which scans
+    `%d,%d;%d,%d` into [obj+0x3c]; their +0x78 ask verbs raise
+    the CLASS's bit - AC_RECT from RECT 0x40cf0 and BRECT
+    0x28710, AC_DRECT from DRECT 0x40d50 and BICZRECT 0x286a0,
+    AC_DRECT2 from DRECT2 0x40dc0 alone, AC_KILOF from KILOF_PL
+    0x1e3a0 (raise at 0x1e42b, a register form the census tool
+    misses), from KRA1 0x37ea0 and from the non-ask body
+    0x75390; AC_BECZKA from KRA1; AC_DRAB also from WSPRECT
+    0x287a0. Their gates are not the geometry test: BICZRECT
+    needs the class +0x70 verb == -1, KILOF_PL needs it > 0,
+    BRECT branches on the asker's state index [asker+0x5c] in
+    9..13. What this row still needs is AC_ONAIR/AC_DUP's
+    surface-link semantics and AC_EDGE's; the raise sites of the
+    rectangle signals are counted. PR-327 also reads the ASKER'S
+    side of those gates: the probes and getters are the asker's
+    class verbs, and for the ZARIA lion (its own pair is
+    0x97a98/0x97a90, NOT the base 0x96874) +0x3c = 0x230a0
+    returns 1 (askable), +0x68 = 0x23900 the presented point,
+    +0x6c = 0x23a10 the frozen anchor [obj+0x89] and +0x70 =
+    0x239f0 = [obj+0x6d], PR-321's facing word - so BICZRECT
+    answers only a left-facing lion and KILOF_PL only a
+    right-facing one.
 
 OI-019: what the object-side AC_ENEMY consumers do (A_DEAD(1)/
   A_AWAY/A_SHOW class conditions)
@@ -3499,7 +3523,11 @@ OI-111: which row-step path the port's row clock models -
     authored delta, answer 6) and the F-row hold (0xa1090+0x10
     = 0x45d50, PR-224/250); an answer of 6 at 0x52140 SKIPS
     the normal step, so a goto row never wraps and never raises
-    the list bits. The normal step is fully read now: forward
+    the list bits. PR-327 names that +0x70 verb for one class: on
+    the ZARIA lion's own table 0x97a98 it is 0x239f0, `mov
+    eax,[obj+0x6d]; ret`, PR-321's facing word - so that half of
+    the reverse test is "the object faces left". The normal step
+    is fully read now: forward
     (cursor+1, last row -> OR 0x4 = AC_BREAK_NEXT + wrap to 0)
     or REVERSED - (class +0x70 verb == -1 AND [rec+0x12] bit
     0x10 SEQ_REV_X) XOR ([obj+0x71] == -1 AND bit 0x20

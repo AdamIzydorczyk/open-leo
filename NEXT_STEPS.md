@@ -44412,3 +44412,213 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   leg is owed and no suite run; the last full no-Windows suite run is
   PR-324's, rc=0 with 71 green verdict lines.
 ```
+
+## PR-327 — THE RECTANGLE-ASK FAMILY: ONE RECORD PARSER, EIGHT CLASS
+## TABLES, AND THE SIGNAL AN ASK RAISES BELONGS TO THE CLASS, NOT THE ASK
+```
+KIND: read
+SUBSYSTEM: the class tables whose +0x18 verb parses a `.des`
+  `x0,y0;x1,y1` line into the box at [obj+0x3c], and their +0x78
+  ask verbs that answer from that box - the full raiser set of
+  AC_RECT/AC_DRECT/AC_DRECT2/AC_KILOF that the F6b port half of
+  HANDOFF section 8 T5 (6) has to place.
+ADDRESSES: 0x40c90, 0x49f90, 0x49920, 0x91d00, 0x98274, 0x96b88,
+  0x96b80, 0x1fba6, 0x1fbf4, 0x1e3a0, 0x1e3a4, 0x1e3ae, 0x1e3f1,
+  0x1e3fd, 0x1e41d, 0x1e42b, 0x99668, 0x99660, 0x2956d, 0x295bb,
+  0x29480, 0x29487, 0x29458, 0x2947c, 0x28710, 0x2871f, 0x28726,
+  0x28738, 0x2874d, 0x28772, 0x99f64, 0x99f5c, 0x40ca0, 0x295cf,
+  0x2961d, 0x286a0, 0x286ae, 0x286ba, 0x286c7, 0x286d0, 0x286e7,
+  0x286ec, 0x99ff0, 0x99fe8, 0x29631, 0x2967f, 0x287a0, 0x28805,
+  0x9ec8c, 0x9ec84, 0x387f5, 0x38905, 0x3890c, 0x37ea0, 0x37ed7,
+  0x37f3a, 0xa15ac, 0xa15a4, 0x4e147, 0x40cf0, 0x40d23, 0xa1638,
+  0xa1630, 0x4e1aa, 0x40d50, 0x40d99, 0xa16c4, 0xa16bc, 0x4e20d,
+  0x40dc0, 0x40dff, 0x41c50, 0x41c62, 0x91689, 0xa1750, 0xa1748,
+  0x4e591, 0x4e5df, 0x4e5e6, 0x76a69, 0x5c320, 0x749a0, 0x75384,
+  0x75390, 0x23e00, 0x90741, 0x90a40, 0x90a46, 0x90a4f, 0x91291,
+  0x91296, 0x91f75, 0x91f7a, 0x91f80, 0x91fd8, 0x96874, 0x9686c,
+  0x2020e, 0x20215, 0x26e3f, 0x38dde, 0x1ff26, 0x90795, 0x1ff49,
+  0x1ff50, 0x97a98, 0x97a90, 0x23c10, 0x230a0, 0x239f0, 0x23a10,
+  0x23900, 0x23c60, 0x1e130, 0x3d8f0, 0x40d5e, 0x40d9f, 0x908f6,
+  0x912c1
+NAMES: RECT, DRECT, DRECT2, KILOF_PL, BRECT, BICZRECT, WSPRECT,
+  KRA1, KRA2, ZONE, KRY, AC_RECT, AC_DRECT, AC_DRECT2, AC_KILOF,
+  AC_BECZKA, AC_DRAB, obj+0x3c, obj+0x40, obj+0x44, obj+0x48,
+  obj+0x4c, obj+0x8, obj+0xc, obj+0x5c, obj+0x6d, obj+0x89,
+  obj+0xd6, obj+0x70, obj+0x6c, obj+0x68, A_KILOF, A_DRAP, A_WPAD,
+  TLewZariaB, TLewEna2, TABLICZKALONA, st->poly, llrs_cat1,
+  signal_raise_census.py, F6, OI-018, OI-111
+CODE: no: only .md rows changed (this record, OI-018 and the
+  HANDOFF section 8 T5 (6) F6 paragraph). No new tool: leodb dis
+  and the leodb sql tables (dword, loadimm, str, imm), plus the
+  shipped tools/re/signal_raise_census.py and the llrs_cat1 `.des`
+  dumps under /tmp/opencode/pr318/des.
+HOOKS: none new. Read-only shipped paths only: leodb dis/sql
+  (PR-106 index), the PR-126 `.des` text census input, and this
+  port's own LL_SIG_* table to name the bits the raises set.
+MEASURED: (a) ONE RECORD PARSER, EIGHT CLASS TABLES. The +0x18
+  verb of eight class tables is the same three instructions:
+  0x40c90 `add eax,0x3c; call 0x49f90; ret`, and 0x49f90 is a
+  four-slot scan - it pushes eax, eax+4, eax+8, eax+0xc and the
+  format 0x91d00 `%d,%d;%d,%d , ` to the wrapper 0x49920. So a
+  three-field `.des` line `TOKEN,x0,y0;x1,y1` fills the record at
+  [obj+0x3c..0x48], and the ctor zeroes that record before the
+  line is read (0x29458-0x2947c zeroes +0x3c, +0x40, +0x44, +0x48
+  and stores the 0x98274 string pointer at +0x4c). leodb's dword
+  read finds +0x18 = 0x40c90 in exactly eight tables, and they are
+  the primary half of eight adjacent pairs - every class stores
+  two vtables (BRECT: 0x99668 to [obj+0x8] and 0x99660 to
+  [obj+0xc], stores 0x29480/0x29487; the same adjacency for
+  KILOF_PL 0x96b88/0x96b80, BICZRECT 0x99f64/0x99f5c, WSPRECT
+  0x99ff0/0x99fe8, KRA1 0x9ec8c/0x9ec84 stores 0x38905/0x3890c,
+  RECT 0xa15ac/0xa15a4, DRECT 0xa1638/0xa1630, DRECT2
+  0xa16c4/0xa16bc). Only the primary of each pair parses through
+  0x40c90: the second of the BICZRECT pair has +0x18 = 0x40ca0, a
+  neighbour this record did not read. Each class is named by the
+  installer branch that compares its token through 0x76a69 and
+  stores the vtables: KILOF_PL ('KILOF_PL' 0x90741 at 0x1fba6,
+  store 0x1fbf4); BRECT ('BRECT' 0x90a40 at 0x2956d, store
+  0x295bb); BICZRECT ('BICZRECT' 0x90a46 at 0x295cf, store
+  0x2961d); WSPRECT ('WSPRECT' 0x90a4f at 0x29631, store
+  0x2967f); KRA1 ('KRA1' 0x91291 at 0x387f5); RECT ('RECT'
+  0x91f75, store 0x4e147); DRECT ('DRECT' 0x91f7a, store
+  0x4e1aa); DRECT2 ('DRECT2' 0x91f80, store 0x4e20d).
+  (b) THE SIGNAL IS THE CLASS'S, NOT THE ASK'S. All eight +0x78
+  verbs share one body shape - the asker's ASKABLE probe
+  `[edx+0x3c]` (0x286ae, 0x2871f, 0x1e3ae), a class-specific gate,
+  then the asker's point through its +0x68 or +0x6c getter and the
+  element verb `[eax+8]` against `lea edx,[ecx+0x3c]` (0x23e00,
+  PR-318/PR-319), then the answer-buffer build 0x749a0 with
+  ebx = 0xc, and a raise into that buffer. The RAISED BIT differs
+  by class: BICZRECT 0x286a0 raises byte 2 mask 8 = AC_DRECT at
+  0x286ec, so AC_DRECT has TWO raisers (PR-326 read the DRECT
+  verb 0x40d50's raise at 0x40d99); BRECT 0x28710 raises byte 2
+  mask 2 = AC_RECT at 0x28772, so AC_RECT has two too (the RECT
+  verb's 0x40d23); WSPRECT 0x287a0 raises AC_DRAB at 0x28805;
+  KRA1 0x37ea0 raises AC_KILOF at 0x37ed7 and AC_BECZKA at
+  0x37f3a; and KILOF_PL 0x1e3a0 raises AC_KILOF at 0x1e42b. The
+  gates differ as much as the bits, and none of them is the
+  geometry-only test PR-326 called RECT's: BICZRECT requires the
+  asker's class +0x70 verb to return -1 (0x286ba `call
+  [edx+0x70]`, 0x286bd `cmp eax,0xffffffff`, 0x286c0 leaves
+  unless equal) - the same
+  verb slot PR-322's reverse-row law reads (OI-111); KILOF_PL
+  requires it to be > 0 (0x1e3f1, 0x1e3f6 `jle`); BRECT tests the
+  asker's state index instead (0x28726 `cmp [ebx+0x5c],9` /
+  0x2872e `cmp eax,0xd`) and picks the +0x6c getter inside 9..13,
+  the +0x68 getter outside it. Only the RECT verb 0x40cf0 raises
+  on geometry alone (PR-326 (d)).
+  (c) ONE RAISER THE CENSUS TOOL DOES NOT SEE. 0x1e42b raises
+  through a register (`mov ah,[ecx+4]` / `add ecx,4` / `or ah,1` /
+  `mov [ecx],ah`), and tools/re/signal_raise_census.py matches the
+  memory form `or BYTE PTR [reg+d],imm`, so it reported no raise
+  for the KILOF_PL verb at all and AC_KILOF looked like a KRA1
+  signal. The complete AC_KILOF set is three sites: 0x1e42b (the
+  KILOF_PL ask), 0x37ed7 (the KRA1 ask) and 0x75390, which is a
+  command-style body, not an ask verb (0x75384 tests [eax+8],
+  writes 3 to [edx+0x1c] when present, then raises byte 1 mask 1
+  and calls 0x79450) - its caller was not read.
+  (d) WHICH OF THESE THE SHIPPED DATA PLACES, AND IN WHICH FORM.
+  Over the 103 `.des` text files llrs_cat1 dumps for both
+  installs, the standalone three-field box form
+  `TOKEN,x0,y0;x1,y1` appears 18 times: DRECT2 8 (SADES.06_ANIM
+  lines 45, 46, 47, 48, 49, 50, 215 and TUNGA.11_ANI2 line 52),
+  RECT 4 (SADES.06_ANIM 12, TUNGA.11_ANI2 110, TUNGA2.12_ANIM
+  2, ZARIA.01_ANI2 19), DRECT 1 (ZARIA.01_ANI2 line 18,
+  PR-326), BICZRECT 1 (KADMAR.07_ANI1 line 11) and KILOF_PL 1
+  (ZARIA.01_ANI2 line 20, `KILOF_PL,1760,590;1832,620`). BRECT
+  and WSPRECT appear in NO form at all: two of the eight classes
+  are engine-only. KRA1 and KRA2 appear only in the OTHER record
+  form - LONA.05_ANIPL2 places 21 `KRA1,xxx,kraf.mov,979,650`
+  and 8 `KRA2,xxx,kra2.mov,1160,650` art lines, each followed by
+  a `1 -4,0;37,0` row and a `line=N` property - and that `1
+  ...` row is the same four-number shape, in the position PR-325
+  read as the ladder's contact row (`1 33,-3`, two numbers) and
+  PR-95 read as an OFFSET, not a world position. Two tokens the
+  first pass of this census counted are not among the eight and
+  are excluded: ZONE (ENA.03_ANI3 lines 31, 33) has its own
+  +0x18 verb 0x41c50, which DOES the same 0x49f90 scan into
+  [obj+0x3c] and then a second 0x49920 scan of the format
+  0x91689 (`id= %d`, pushed at 0x41c62) into [obj+0x50], on the
+  vtable pair 0xa1750/0xa1748 (stores 0x4e5df/0x4e5e6); and the
+  string 'KRY' (LONA.05_ANI3 line 12) exists nowhere in the
+  engine - a leodb str read over the whole table finds no 'KRY',
+  only 'Program wykryl zmiany...', so that line places nothing.
+  (e) WHAT THIS DOES TO F6b, AND THE CONTROL LEVEL. ZARIA.01
+  authors exactly two boxes of this family - the DRECT that
+  answers the seven `A_WPAD(1)=AC_ONAIR,AC_DRECT` asks and the
+  KILOF_PL, the only placed object in reach of the A_DRAP ask of
+  line 462 (`A_KILOF(1)=K_FIRE,AC_KILOF,K_F4`, the same line at
+  ZAR_LEWPL.MOV 459). Both need the same port piece that does
+  not exist: a placed object carrying an authored box at
+  [obj+0x3c], which ll_level.c:9807 currently throws away as
+  st->poly. With it, the DRECT ask is PR-326 (d)'s three tests,
+  and the KILOF_PL ask additionally needs the class +0x70 verb to
+  answer > 0 - the same unknown OI-111 carries. LONA.05 is the
+  control: its lion asks AC_KILOF from seven states (LON_LEW.MOV
+  lines 146, 147, 202, 249, 282, 318, 352) and the level places
+  NO KILOF_PL, but it does place 21 KRA1 objects, whose class
+  verb 0x37ea0 raises AC_KILOF - so one ask name reaches the
+  player through two different classes in two levels, exactly as
+  section (b) says it must.
+  (f) THE ASKER'S SIDE OF THE GATES, AND THE TABLE THAT REALLY
+  RUNS. The ask verbs read the asker's vtable at [asker+0x8], so
+  every gate is the ASKER's class verb, not the box's: the ASKABLE
+  probe is [asker+8]+0x3c (0x40d5e), the direction test is
+  [asker+8]+0x70 (0x1e3f1, 0x286ba), and the two point getters are
+  [asker+8]+0x68 = 0x23900, the presented point [obj+0xd6]
+  (PR-319), and [asker+8]+0x6c = 0x23a10 `add eax,0x89`, the
+  frozen anchor pair PR-305 read. And the table that answers is
+  NOT 0x96874: that pair, 0x96874/0x9686c, is the BASE every class
+  chains to - the same two addresses are stored by the ctors of
+  TLewZariaB, TLewEna2 and TABLICZKALONA (stores 0x2020e/0x20215,
+  0x26e3f, 0x38dde) - and its +0x3c verb is 0x23c10
+  `xor eax,eax; ret`, the not-askable default. The ZARIA lion's
+  own pair is 0x97a98/0x97a90, stored into [obj+0x8]/[obj+0xc] at
+  0x1ff49/0x1ff50 in the branch whose token compare is
+  'TLewZariaB' (0x90795) at 0x1ff26. In it +0x3c = 0x230a0
+  `mov eax,1; ret` - the lion IS askable, so the DRECT, DRECT2,
+  BICZRECT and BRECT probes pass; +0x68 = 0x23900 and +0x6c =
+  0x23a10, the two points PR-319/PR-305 named; +0x70 = 0x239f0
+  `mov eax,[obj+0x6d]; ret`, PR-321's facing word; +0x18 =
+  0x23c60 and +0x10 = 0x1e130, not the base's 0x3d8f0. So the
+  BICZRECT ask answers only for a lion facing LEFT and the
+  KILOF_PL ask only for one facing RIGHT (-1/+1, PR-321's
+  ldir/rdir), and PR-322's reverse-row test `class +0x70 verb
+  == -1` is that same facing-left read on whichever class it is
+  called on. It also settles which point each ask tests: the
+  PRESENTED point for RECT, DRECT, DRECT2 and KILOF_PL, the FROZEN
+  ANCHOR for BICZRECT, and for BRECT the anchor while the asker's
+  declared state is 9..13 and the presented point outside it.
+OPENS: whether the `1 -4,0;37,0` row of an art placement is the
+  text the +0x18 verb scans, and whether 0x23e00 then reads it
+  relative to the object's position (the KRA1/KRA2 form); the
+  caller of the non-ask AC_KILOF raiser 0x75390 and what
+  `[edx+0x1c] = 3` means; the bodies of the WSPRECT 0x287a0 and
+  KRA1 0x37ea0 verbs, whose raises this record took from the
+  census tool and did not read; which lion-variant table this port
+  should read as the player's - it read TLewZariaB's 0x97a98, the
+  other TLew* classes are not compared here; and why BRECT and
+  WSPRECT exist in the engine yet are placed by no shipped `.des`.
+CLOSES: nothing. It narrows OI-018 to the semantics of AC_ONAIR,
+  AC_DUP and AC_EDGE: the raisers of AC_RECT, AC_DRECT, AC_DRECT2,
+  AC_KILOF and AC_BECZKA are counted per class, with the gate and
+  raise site of six of the eight ask verbs read; and it closes
+  PR-326's open half about the ASKABLE probe - the lion's own
+  +0x3c verb 0x230a0 returns 1, and its direction word is the
+  [obj+0x6d] this port already models.
+CORRECTS: PR-326, twice, and one tool. Its framing of AC_DRECT as
+  belonging to the DRECT class alone is too narrow - the BICZRECT
+  ask verb 0x286a0 raises the same bit under a different gate and
+  AC_RECT has a second raiser at 0x28772 (its "the shipped set's
+  only DRECT" stands). Its "the lion's own class 0x96874" names
+  the BASE pair 0x96874/0x9686c, which the classes chain to and
+  whose +0x3c is the not-askable default 0x23c10; the ZARIA lion's
+  own pair is 0x97a98/0x97a90, which is where PR-319's 0x23900
+  and PR-305's [obj+0x89] actually come from - those readings
+  stand, the attribution did not. And
+  tools/re/signal_raise_census.py under-reports AC_KILOF: the
+  KILOF_PL verb 0x1e3a0 does raise, at 0x1e42b, in a register
+  form the tool does not match.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no
+  red leg and no suite run.
+```
