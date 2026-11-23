@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-287.
+> at PR-288.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -39172,4 +39172,175 @@ Mesa/EGL driver's, not the compiler's.
 GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - identical to
 PR-285's pair; PR-278's count carried a 22nd SKIP line, the
 cmake-windows parity check, which this run does not invoke.
+```
+
+## PR-287 — THE `Wait` CLAUSE GATES THE ROW IT CARRIES: STATES
+## HOLD THEIR FRAMES, THE LADDER TAKES ITS OWN 2700-UNIT
+## DESCENT, AND PR-218'S BRANCH POLARITY IS CORRECTED
+```
+KIND: port
+SUBSYSTEM: the object row walk (obj_advance's admit) and the
+row-record model (a new ll_mov_row_gate); the ZARIA.01
+ly_climb leg extended. No player-side change.
+ADDRESSES: 0x521f0, 0x52229, 0x52235, 0x5223c, 0x495b0,
+0x52241, 0x5224b, 0x52251, 0x522e6, 0x47e40, 0x522ed,
+0x522fc, 0x52303, 0x52329, 0x52354, 0x521c1, 0x521c5,
+0x45970, 0x46b62, 0xa11c8, 0x49580, 0x47e63, 0x47edc,
+0x4806f
+NAMES: ll_mov_row_gate, LL_GOP_NAME, LL_GOP_NEVER, LL_GOP_ANY,
+WAIT K_GEN1, WAIT K_NEVER, WAIT AC_TIME, WAIT AC_DUP, A_UP,
+A_DROP, A_DOWN, AC_BREAK_NEXT, K_GEN1, K_NEVER, K_ANY,
+obj_rowgate_act_selftest, ly_climb, OI-111, OI-078, OI-073,
+PR-217, PR-218, PR-219, PR-224, PR-135, PR-172, PR-286
+CODE: yes: ll_mov_row_gate in ll_play.c (declared in
+ll_play.h) and one gate test in ll_level.c's obj_advance,
+placed BEFORE the row clock test because 0x52235 precedes
+0x52329; a new obj_rowgate_act_selftest; a new comment on the
+row-record fields; three header comments corrected (below).
+HOOKS: no new hook. The leg uses the LEO_PLAY_ASK /
+LEO_LEVEL_PPM pair ly_climb already uses.
+MEASURED: (a) THE BRANCH, AT THE FLAG LEVEL. The row step
+0x521f0 asks the row node's test slot +0x8 at 0x52235, hands
+what comes back to 0x495b0 at 0x5223c - three dwords, all
+zero answers 1, any one non-zero answers 0 (0x495ba-0x495d5),
+so that call is the EMPTY test - and 0x52241-0x5224b is
+`test eax,eax; sete al; and eax,0xff; je 0x522fc`. The `je`
+is taken exactly when 0x495b0 answered 1: an EMPTY set takes
+0x522fc, the path that calls the row's execute slot +0xc
+(0x52303), OR-s what it returns into the caller's set (0x5230c)
+and runs the row only when its authored threshold is below the
+clock (0x52320-0x5232b), clock minus threshold as its budget
+(0x52334). Only a NON-empty set falls through to 0x52251: the
+caller's key set (0x5226f) and the object's own [obj+0x60]
+(0x5229d) are copied, OR-ed by 0x49580 (0x522bc) and matched
+against the clause by 0x47e40 at 0x522e6, and the refusal is
+`je 0x52354` - the epilogue, past the execute, the clock and
+every class verb. PR-218 paired these the other way round, and
+that pairing cannot be the shipped game: it would put every
+row WITHOUT a clause - all but the 251 the port's own parser
+captures - on the zero-budget path with no clock consulted,
+so no authored frame duration would be honoured, while the
+durations PR-109 and PR-110 measured ON SCREEN sit exactly
+there. (b) SO THE CLAUSE GATES. 0x47e40 switches on the
+clause's mode byte: 0 (0x47e63) is "the clause is a SUBSET",
+so a plain name must be live; 1 (0x47edc) is "shares nothing",
+so a `!` name must be down; the no-bit K_NEVER set (0x60 in
+data byte 4, 0x4806f-0x4807d) is a subset of nothing the game
+raises, so a `WAIT K_NEVER` row NEVER runs - THAT is how a
+shipped state holds its last frame for good - and the
+tokenless `Wait ;` compiles to an empty set and gates nothing.
+Census over the 777 extracted texts, line-anchored: 201 `Wait`
+rows carry an explicit `<frame>,<time>,` prefix, 46 in lion
+scripts and 155 in object scripts. Of the object rows, the
+ones whose authored threshold is non-zero AND whose operand can
+be live are `WAIT K_GEN1` at 100/400/1000 (ENA.03_SKALA,
+ENA2_DEMOTEXT, TUNGA2.12_DOMEK x2, LONA.05_SKJUMP), `WAIT
+AC_TIME` at 300..4600 (LONA.05_FLAGA, ZARIA.01/ZARIA.02
+ANIBACK, ZARIA.02_ANIBACK_GLIST, SADES.06's STULB/STULBIA
+family) and `WAIT AC_DUP` at 200/300 (LONA.05_PINGWIN,
+LONA.05_YETI, KADMAR.07_0_0); every other non-zero-threshold
+gated row names K_NEVER, whose number is unreachable anyway.
+Three gated rows carry a second directive at all (2 `smpauto`,
+1 `rdir`) and none carries `GEN`, so the execute slot the
+gated path skips has nothing to raise in any shipped row.
+(c) THE ACT: obj_advance now asks ll_mov_row_gate(f, o->sig)
+before its clock test - the order the bytes give - and a
+refused row admits NO frame, wraps NO list, raises NO signal
+and consumes NO clock. (d) THE LADDER'S OWN SCRIPT, END TO
+END, in the new selftest (ZARIA.01/DRABINKA/drab.MOV verbatim
+but for the `seq=`/`sample=` art keys): A_UP's `1,0,WAIT
+K_GEN1` row admits nothing for 6 steps and arms NO list-end
+bit - the red leg, because the port admitted a 0-unit row and
+wrapped its one-row list on the FIRST step, every step;
+raising K_GEN1 then enters A_DROP at its authored entry row
+with the clock zeroed (PR-172); the nine rows close after
+5,4,4,3,3,2,2,2,2 = 27 iterations, and the last one's admit
+wraps the counter to 0 and arms the bit in the SAME step
+(0x521c1-0x521c5); the next step's composition takes
+`A_DOWN(1)=AC_BREAK_NEXT`, and A_DOWN's `11,0,WAIT K_NEVER`
+admits nothing for 12 more steps and never hands a bit to any
+transition. (e) THE SAME CHAIN IN THE LEVEL: ly_climb's ask
+log now reads the placed ladder at index 1 (A_UP) through tick
+103, at index 3 (A_DROP) 104..131 - K_GEN1 live at 104, the
+27 row-walk iterations 105..131 - and at the answerable index
+2 (A_DOWN) from 132, and the leg pins those four ticks plus
+the negative that no tick below 132 reads state 2 (27 such
+lines before this PR, 0 after). Every later pin of that leg
+is UNCHANGED: the catch at 146/148, A_TURN_BACK at 150,
+AC_EDGE at 262, the hold 263..288, the landing at 299 - the
+ladder is lowered by 132, a full 14 ticks before the lion
+asks it to answer. What this nets for FOCUS 1: the ladder's
+descent is now its own authored list, and the answer window
+opens 27 iterations later than it did. (f) WHAT THE PORT
+STILL DOES NOT DO: the engine's gated path SKIPS the
+threshold compare at 0x52329 and runs the row with a ZERO
+budget (0x522ef `xor ebx,ebx` then `jmp 0x52338`, against the
+plain path's `sub ebx,eax` at 0x52334) - this port still
+requires its own clock, so the two readings agree only on rows
+whose authored threshold is 0, which is every row of the
+ladder chain and NOT the rows named in (b); and the LION's own
+row admit in player_iterate does not consult the clause at
+all, although ZAR_LEW carries `8,0,WAIT AC_DUP` and
+`8,200,WAIT !K_UP` rows. (g) THE SAME SHAPE ELSEWHERE IN THIS
+LEVEL: ZARIA.01's `[A_STOP]` in KAMIEN1.MOV is one `1,0,WAIT
+K_GEN1` row whose only exit is `A_GO(1)=AC_BREAK_NEXT`, and
+LINA.MOV is the ladder's twin (`[A_UP] 1,0,WAIT K_GEN1`, a
+nine-row A_DROP, `[A_DOWN] 10,0,WAIT K_NEVER`). Both
+re-entered their next state through the wrapped list-end bit -
+with a temporary trace on the pre-fix build, three
+`KAMIEN [A_STOP]->[A_GO]` lines land in the first ticks - and
+after the change the same 200-tick probe traces ZERO of them:
+the stones are now held by their own authored gate, because
+nothing in this port raises K_GEN1 on a KAMIEN (the raise
+paths are per object: a row's `GEN` tail, the balloon pop, the
+ladder's answer branch). LINA follows the ladder's chain
+exactly, A_DROP to A_DOWN, twice. That trace was a throwaway
+print, not a shipped probe.
+OPENS: in order: (i) the zero-budget admit - an object row
+whose clause names a signal that DOES go up (the (b) list:
+K_GEN1 / AC_TIME / AC_DUP with a non-zero threshold) admits in
+the engine a whole authored duration earlier than this port
+lets it; (ii) the player-side gate, and with it the lion's
+`WAIT !K_UP` / `!K_DOWN` rows, whose clause names INPUT keys -
+the row step matches them against the caller's key set, which
+this port composes only inside the transition pass; (iii) the
+gate is only as good as the signals: 19 shipped rows gate on
+AC_DUP and its producer is still unmodelled (PR-277 OPENS
+(i)), so every one of those rows now holds forever by design
+of this fix, which is a behaviour change in levels this port
+has no leg for; (iv) the (g) pair is now a measured
+difference, not only a text reading: the stones of ZARIA.01
+stop moving in this port, and what would release them is the
+OTHER half of the row step's live set - the row walk 0x520c0
+composes the level-global set at 0x98278 (0x520e6-0x520f6)
+and the row step matches the clause against THAT union
+(0x52251-0x522e6), while this port has no level-wide signal
+set at all, so its gates read one object's raised bits only.
+Is K_GEN1 in that global set, and who writes it there?
+Unread; (v) OI-111 stays open on (i) and (ii) alone.
+CLOSES: PR-286 OPENS (ii) - the ladder's chain timings, which
+that record left unverified both ways ("the authored A_DROP
+list is 2500 units but the port answers as A_DOWN from the
+next iteration"): the port is now the authored one.
+CORRECTS: PR-218's reading of 0x5224b (and PR-217's note
+beside it, which PR-287 rewrote in place) - the two row-step
+paths were paired the wrong way round, and the "match never
+refuses a shipped row" conclusion of OI-111 item (5) goes with
+them; PR-286's "A_DROP frames 2..10 = 2500 units" and "25
+iterations" - the nine rows are 500+400+400+300+300+200+200+
+200+200 = 2700 units, 27 of this port's iterations.
+GATE: make 0 warnings; verify-all fixtures rc=0 64 (ok);
+the same 64 green verdict lines as PR-286, because this PR
+adds no leg of its own: the new assertions live inside the
+existing `--mov-selftest` (obj_rowgate_act_selftest, whose
+first leg was RED before the change) and inside the ly_climb
+greps. rc=0 first (HANDOFF section 4); the run is the 24
+no-Windows legs (DATA=/tmp/opencode/iso_stage/LEO HD=
+/tmp/opencode/hd_files), and the verify-cmake parity and the
+verify-win/verify-mod legs stay excluded per the owner's
+2026-11-22 request. The log's five `warning:` lines are the
+Mesa/EGL driver's, not the compiler's.
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - identical to
+PR-286's pair; the hermetic selftest half is where the new
+gate leg runs, so it is exercised in this configuration too.
 ```

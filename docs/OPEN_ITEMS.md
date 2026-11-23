@@ -1865,6 +1865,25 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     its rider off the top of every ladder it climbs - counted
     at OI-073, where the grounded-y instruction and the
     ground_on/ground_off caller are the open pair.
+
+    PR-287 CLOSES the timing half of PR-286's "both halves are
+    open" and CORRECTS its arithmetic: the authored A_DROP list
+    is 500+400+400+300+300+200+200+200+200 = 2700 units, NOT
+    2500, and the port now walks all of it - 27 of its own
+    iterations - so the ZARIA.01 ask log reads A_UP through
+    tick 103, A_DROP (state index 3) 104..131 and the
+    answerable A_DOWN from 132; ly_climb now pins those three
+    ticks plus the negative that no tick below 132 reads state
+    2. Why the port dropped the ladder in ONE iteration before
+    is PR-286's other half, and it was a bug of the port's own:
+    A_UP's `1,0,WAIT K_GEN1` row was admitted every step, its
+    one-row list wrapped, and that list-end bit - armed by the
+    previous step, tested by the next (PR-135) - reached
+    A_DOWN's `A_DOWN(1)=AC_BREAK_NEXT` at once. The row gate
+    of OI-111 (ll_mov_row_gate, in obj_advance before the
+    clock, as 0x52235 precedes 0x52329) is what holds it. The
+    ground_on/ground_off pair this row re-opened is untouched
+    by it: the rider is still dropped by A_DRAP's own G=0,250.
     PR-274 PINS THAT CHAIN as a leg (ly_climb, its record
     derives every tick from the fixture's own arithmetic):
     the whole chain runs deterministically and the leg also
@@ -2563,6 +2582,61 @@ OI-111: which row-step path the port's row clock models -
     cursor, 0xa1030 = 0x45dc0, delta, and 0xa1090 (`F`) =
     0x45d50, gated on the node's own trigger byte. The clause
     selects the PATH; a directive holds the row.
+    PR-287 CORRECTS item (4) and the INERT reading of (5), and
+    acts on the clause. The branch is `test eax,eax; sete al; and
+    eax,0xff; je 0x522fc` (0x52241-0x5224b): 0x495b0 answers 1
+    for an EMPTY set and the `je` takes that case, so an EMPTY
+    answer goes to the execute + clock-compare path 0x522fc and
+    only a NON-empty answer - a `Wait` clause's own set - falls
+    through to the match at 0x522e6, whose refusal is `je
+    0x52354` = the epilogue (no execute, no clock compare, no
+    class verb, no frame, no list wrap). PR-218 paired them the
+    other way, and its consequence cannot be the shipped game:
+    under that pairing the rows that carry NO clause - every row
+    but the 251 the port's own parser captures - would run on a
+    zero budget with no clock, and no authored frame duration
+    would be honoured, while the durations PR-109 and PR-110
+    MEASURED on screen sit exactly there. So the clause gates:
+    a plain name must be live (mode 0, a subset), a `!` name
+    must not be (mode 1), the no-bit K_NEVER never admits, and
+    the tokenless `Wait ;` compiles to an empty set and gates
+    nothing. The port acts on it now - obj_advance asks
+    ll_mov_fr's gate before its clock, as 0x52235 precedes
+    0x52329 - and the ZARIA.01 ladder is the net: A_UP holds
+    frame 1 and wraps NOTHING until the ask raises K_GEN1,
+    A_DROP then runs its authored 2700 units (5+4+4+3+3+2+2+2+2
+    = 27 of this port's iterations, ly_climb 105..131, its last
+    row arming the list-end bit at 0x521c1-0x521c5), and A_DOWN
+    holds frame 11 for good on `WAIT K_NEVER`. Two halves stay
+    open and are now this row's whole remainder: (a) the gated
+    path SKIPS the threshold compare at 0x52329 and runs with a
+    ZERO budget (0x522ef-0x522f8), which the port does not -
+    the two agree only where the authored threshold is 0, and
+    the shipped exceptions are real object rows with a live
+    operand: `1,100,WAIT K_GEN1` (ENA.03_SKALA, ENA2_DEMOTEXT,
+    TUNGA2.12_DOMEK), `1,1000,WAIT K_GEN1` (LONA.05_SKJUMP),
+    `WAIT AC_TIME` rows at 300..4600 (LONA.05_FLAGA, ZARIA.02
+    and SADES.06's STULBIA family), `WAIT AC_DUP` at 200/300
+    (LONA.05_PINGWIN, LONA.05_YETI, KADMAR.07_0_0); a
+    K_NEVER row's threshold never matters, its clause never
+    matches; and (b) the LION's own row admit does not consult
+    the clause at all, while its scripts carry it too - 46 of
+    the 201 `Wait` rows a line-anchored grep matches (the
+    port's parser captures 251) are in lion scripts, ZAR_LEW's
+    `8,0,WAIT AC_DUP` and `8,200,WAIT !K_UP` among them; and
+    (c) the OTHER half of the set match is handed. 0x52251
+    copies the CALLER's key set, and the row walk 0x520c0
+    composes that with the level-global set at 0x98278
+    (0x520e6-0x520f6, named by PR-219) - so a clause can be
+    answered by a LEVEL-wide signal, not only by the object's
+    own raised bits. This port has no level-wide signal set;
+    its gate reads o->sig alone. Measured consequence: with
+    the gate in, a 200-tick ZARIA.01 probe traces ZERO
+    `KAMIEN [A_STOP]->[A_GO]` where the same probe on the
+    pre-fix build traced three - the stones are held by their
+    own `1,0,WAIT K_GEN1` row, because nothing in this port
+    raises K_GEN1 on a KAMIEN. Whether the engine's global set
+    carries K_GEN1, and who writes it, is unread.
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port

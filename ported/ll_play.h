@@ -324,8 +324,11 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                   * pull re-applies every iteration the row stays current)
                   * tails of PR-250/PR-251. The `IC` tail (id 3, force
                   * pair) has no shipped instance's consumer modeled here. */
-                 /* gsig_id / gneg: this row's `Wait <signal>` tail, kept as
-                 * DATA and NOT yet acted on (PR-217). -1 = the row carries
+                 /* gsig_id / gneg: this row's `Wait <signal>` tail
+                 * (PR-217), ACTED ON by the object walker since
+                 * PR-287 (ll_mov_row_gate); the player's row admit
+                 * does not consult it yet, named at OI-111.
+                 * -1 = the row carries
                  * no Wait tail; -2 = a token the engine's signal table has
                  * no BIT for (the 255 tails name 161 of them: K_NEVER 159,
                  * K_ANY 1 and `rdir` 1); otherwise its LL_SIG_* index.
@@ -355,13 +358,15 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                  * 0x52235 calls ITS test slot +0x8 (class 0xa2638 is the
                  * delegate 0x45800, so the walk lands on the row's
                  * directive chain); 0x5223c calls 0x495b0, which answers 1
-                 * only when all three data dwords are zero. A NON-empty
-                 * answer goes to 0x522fc: 0x52303 calls the execute slot
-                 * +0xc and 0x5230c OR-s what it returns into the CALLER's
-                 * set, and the row then runs only if its authored frame
-                 * [row+0x10] is BELOW the object's clock [obj+0xa1]
-                 * (0x52320-0x5232b), with the difference as its budget.
-                 * Only an EMPTY answer reaches the second test:
+                 * only when all three data dwords are zero, and the
+                 * test/sete/and/je at 0x52241-0x5224b branches ON that
+                 * answer: an EMPTY one takes the plain path 0x522fc, where
+                 * 0x52303 calls the execute slot +0xc and 0x5230c OR-s
+                 * what it returns into the CALLER's set, and the row then
+                 * runs only if its authored frame [row+0x10] is BELOW the
+                 * object's clock [obj+0xa1] (0x52320-0x5232b), with the
+                 * difference as its budget. Only a NON-empty answer - a
+                 * `Wait` node's own clause - reaches the second test:
                  * 0x52251-0x522b3 copy the caller's key and the object's
                  * own EventSet at [obj+0x60] and OR them (0x49580), and
                  * 0x522e6 calls TEventSet::match (0x47e40, its own name in
@@ -380,16 +385,28 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                  * clause. MEASURED over the shipped texts: 230 clauses are
                  * mode 0 and 21 mode 1, no text uses `*` or `|`, and every
                  * one of them leaves a NON-empty set (K_NEVER writes 0x60
-                 * into data byte 4, 0x4806f-0x4807d), so not one shipped
-                 * row reaches match WITH a clause, and the clause-less rows
-                 * that do reach it carry an empty clause, which is a subset
-                 * of anything: match never refuses a shipped row. That is
-                 * what the clause is NOT. What it IS does move a row: a row
-                 * that carries one is gated by the frame/clock compare at
-                 * 0x52320, a row that carries none runs at once with a
-                 * zero budget. OI-111 asks which of those two paths the
-                 * port's row clock models, so the clause is carried here
-                 * and no model acts on it yet. ZARIA.01's own DRAB.MOV is
+                 * into data byte 4, 0x4806f-0x4807d) - so it is the
+                 * clause-carrying rows that reach match, and a refusal
+                 * ENDS the step: 0x522ed's `je 0x52354` is the epilogue,
+                 * past the execute, the clock compare and the class verb.
+                 * PR-287 RE-READS THE FLAGS here: PR-218 had this branch
+                 * the other way round, and that reading would leave the
+                 * rows carrying NO clause - all but the 255 measured tails
+                 * - running with a zero budget and no authored duration
+                 * honoured at all, while PR-109's and PR-110's measured
+                 * row durations sit on the other side of the branch. So a
+                 * `Wait` row is gated on the live set (a plain name must
+                 * be up, a `!` name must be down), a `Wait K_NEVER` row
+                 * never runs at all - THAT is how a shipped state holds
+                 * its last frame for good - and the token-less `Wait ;`
+                 * compiles to an empty set and gates nothing. Two halves
+                 * stay unmodelled and stay at OI-111: the gated path
+                 * skips the threshold compare at 0x52329 and runs with a
+                 * ZERO budget, where this port still requires its clock
+                 * (the two agree on every row whose authored threshold is
+                 * 0, which is every row of the ladder chain PR-287 nets),
+                 * and the player's own row admit does not consult the
+                 * clause yet. ZARIA.01's own DRAB.MOV is
                  * one of these rows (`[A_UP]` row 1 is `WAIT K_GEN1`,
                  * `[A_DOWN]` row 11 is `WAIT K_NEVER`), which is why the
                  * field lives beside
@@ -705,6 +722,11 @@ int ll_mov_find(const ll_mov_t *m, const char *name); /* state idx or -1  */
  * list: entry-1, and 0 for an absent/non-numeric token or an over-long
  * row. The engine evidence and both model choices are in the definition. */
 int ll_mov_row_start(const ll_mov_st *s, int entry);
+/* PR-287: this row's `Wait` clause, matched against the live signal set:
+ * 1 admits the row, 0 holds it (no frame, no list wrap, no signal). The
+ * engine's admit test 0x52235/0x5223c/0x522e6 and the operand arms are
+ * in the definition. */
+int ll_mov_row_gate(const ll_mov_fr *f, unsigned long long live);
 
 /* ------------------------------------------------------- player sim ---- */
 /* Held-key view of the input (platform.h translates the arrows; the CI

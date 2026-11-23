@@ -239,6 +239,45 @@ int ll_mov_row_start(const ll_mov_st *s, int entry)
     return i;
 }
 
+/* PR-287: a row's `Wait <clause>` tail, ACTED ON. The engine's row step
+ * 0x521f0 asks the row node's test slot +0x8 at 0x52235 and hands the
+ * set it returns to 0x495b0 at 0x5223c - three dwords, any one non-zero
+ * answers 0 (0x495bd-0x495d5), so that call is the EMPTY test - and takes
+ * the plain admit path 0x522fc, the one that runs the row's execute slot
+ * and compares the threshold against [obj+0xa1] at 0x52329, ONLY when the
+ * set is empty. The `Wait` node (class 0xa11c8, PR-217) answers +0x8 with
+ * 0x45970, which copies the node's own 12-byte clause at [node+0x8] and
+ * never calls its operand, so a `Wait` row takes the other branch:
+ * 0x52251 copies the caller's key set (0x5226f) and the object's
+ * [obj+0x60] (0x5229d), 0x49580 merges them at 0x522bc, and 0x47e40 at
+ * 0x522e6 matches the clause against that union - and the `je 0x52354`
+ * at 0x522ed returns from the whole step. A gated row that does not match
+ * admits NO row: no frame advance, no list wrap, no list-end bit, no
+ * signal, no threshold consumed. The operands are the comparator's own:
+ * K_ANY is the mask operand (0x48037-0x48048 OR-s 0x2001f8 into dword 1)
+ * and always matches, K_NEVER carries no bit and never does, and a plain
+ * name matches exactly when its bit is live (a `!` clause shares NOTHING,
+ * the same arm the transition evaluator of PR-87 uses). The one tail with
+ * no token (`Wait ;`, 1 of the 255 measured) compiles to an EMPTY node
+ * set, which is the plain path, so it gates nothing. What is NOT modelled
+ * here: the gated path skips the threshold compare at 0x52329 altogether
+ * (its row admits on the clause alone, with the accumulator left alone) -
+ * every gated row in the ladder chain this PR is about has threshold 0,
+ * where the two readings agree; the general case is counted at OI-111. */
+int ll_mov_row_gate(const ll_mov_fr *f, unsigned long long live)
+{
+    unsigned long long bit;
+
+    if (f->gsig_id == -1)
+        return 1;                       /* no clause, or the token-less one */
+    if (f->gop != LL_GOP_NAME)
+        return f->gop == LL_GOP_ANY;    /* no-bit operands: K_ANY always,
+                                         * K_NEVER and a name in NO table
+                                         * never (PR-88's convention) */
+    bit = 1ull << f->gsig_id;
+    return f->gneg ? (live & bit) == 0ull : (live & bit) != 0ull;
+}
+
 /* PR-88: name -> LL_SIG_* index. The table is the engine's own (name
  * block 0x919ec, bit constants from the comparison chain at 0x48000 -
  * see the ll_play.h enum comment). K_ANY / K_NEVER and their AC_ aliases

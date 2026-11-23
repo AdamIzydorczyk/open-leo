@@ -2007,6 +2007,23 @@ ifeq ($(PX_DATA),1)
 # ladder is still not reached by position: the named route to
 # it is the hang's own `A_JUMP_S(1)=K_JUMP` row, a leg of its
 # own, counted at OI-073.
+# PR-287 ADDS THE LADDER'S OWN DESCENT to this leg. Its A_UP
+# state is one `1,0,WAIT K_GEN1` row: the row step 0x521f0
+# tests that clause against the live set (0x5223c's empty test
+# at 0x495b0, the match at 0x522e6, and `je 0x52354` ending
+# the step) - so it admits NO frame and wraps NO list until
+# K_GEN1 is up, and the K_GEN1 the lion's own ask raises at
+# 104 (PR-257) goes straight to A_UP's one transition. From
+# there A_DROP runs its authored nine rows - 500+400+400+300+
+# 300+200+200+200+200 = 2700 units, and this port's row clock
+# admits one row per threshold reached, so 5+4+4+3+3+2+2+2+2
+# = 27 iterations: ticks 105..131, its last row arming the
+# list-end bit at 0x521c1-0x521c5 - and 132 is the step whose
+# composition takes `A_DOWN(1)=AC_BREAK_NEXT`, the first tick
+# from which the answer gate (PR-216: only state 2 answers)
+# lets the ladder answer at all. Before this PR the port
+# dropped the ladder in ONE iteration, because its own A_UP
+# list wrapped every step and handed that bit to A_DOWN early.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
 	  LEO_PLAY_SCRIPT="1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP 275:NONE" \
@@ -2021,6 +2038,11 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play: A_WSP -> A_PODCIAG' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play: A_PODCIAG -> A_DRAP' /tmp/opencode/ly_climb.log \
 	  && ! grep -q 'state A_LOOKUP' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 104: asked ladder DRABINKA/drab.mov at state 3' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 105: asked ladder DRABINKA/drab.mov at state 3' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 131: asked ladder DRABINKA/drab.mov at state 3' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 132: asked ladder DRABINKA/drab.mov at state 2' /tmp/opencode/ly_climb.log \
+	  && ! grep -qE 'play tick (1[0-2][0-9]|13[01]): asked ladder DRABINKA/drab.mov at state 2' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 146: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 400' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 148: ladder DRABINKA/drab.mov state 2 ANSWERS the lion (non-solid): set 1400' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 150: state A_TURN_BACK' /tmp/opencode/ly_climb.log \
@@ -2028,7 +2050,7 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play tick 263: state A_PODCIAG seq lift frame 1 pos 212,560 grounded 0' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 288: state A_PODCIAG seq lift frame 1 pos 212,560 grounded 0' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 299: state A_DRAP seq idle frame 1 pos 212,654 grounded 1' /tmp/opencode/ly_climb.log \
-	  && echo "play climb chain (PR-274/PR-285): the authored ladder climb runs end to end - CATCH only inside the middle 70%, A_TURN_BACK at 150 (A_LOOKUP never), A_WSP 1 px/t, AC_EDGE at the band edge, A_PODCIAG's own 2700-unit clock HOLDS the body at the band edge (its authored T=100 is the hold) and exits to A_DRAP, whose own G=0,250 drops him to the main ground at 299; the platform top stays a named open route (ok)" \
+	  && echo "play climb chain (PR-274/PR-285/PR-287): the authored ladder climb runs end to end - A_UP's `WAIT K_GEN1` row holds until the ask raises the bus, the ladder then takes its own 2700-unit A_DROP descent (27 iterations, answerable only from 132), CATCH only inside the middle 70%, A_TURN_BACK at 150 (A_LOOKUP never), A_WSP 1 px/t, AC_EDGE at the band edge, A_PODCIAG's own 2700-unit clock HOLDS the body at the band edge (its authored T=100 is the hold) and exits to A_DRAP, whose own G=0,250 drops him to the main ground at 299; the platform top stays a named open route (ok)" \
 	  || { echo "play ZARIA climb chain grep FAILED"; \
 	       grep -E 'play: A_|ANSWERS|state A_(TURN_BACK|WSP|PODCIAG|DRAP) ' \
 	         /tmp/opencode/ly_climb.log | tail -12; exit 1; }

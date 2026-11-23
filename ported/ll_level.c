@@ -1561,6 +1561,17 @@ static void obj_advance(lvl_obj *o, unsigned dt_ms)
          * `facc`, the distance its own walk fed this step (PR-98's
          * distance law, 0x543a0 mode 0), and the branch above fed it
          * no wall clock at all: one accumulator, one source. */
+        /* PR-287: the row's own `Wait` clause comes FIRST, as the
+         * engine's does: 0x521f0 asks the row node's test slot +0x8 at
+         * 0x52235 and 0x495b0 (the empty test) at 0x5223c, and only a
+         * node whose set is EMPTY reaches the threshold compare at
+         * 0x52329; a `Wait` node hands back its own clause and the
+         * match against the caller's keys and [obj+0x60] at 0x522e6
+         * decides, with `je 0x52354` ending the whole step. The live
+         * set here is what this port keeps in o->sig - the bits raised
+         * since the transition pass cleared the mask, PR-262. */
+        if (!ll_mov_row_gate(f, o->sig))
+            continue;
         if (walk ? o->facc < (double)f->thresh   /* units, not ms: the same  */
                  : o->row_t < f->thresh)        /* one clock, two feeds  */
             continue;                           /* this step admits no row;
@@ -3448,18 +3459,25 @@ out:
  * 777 shipped files; operands K_NEVER 159, K_GEN1 25, AC_DUP 20, AC_TIME
  * 18, 22 `!`-negated), not a magic delay. This leg pins what the parser
  * CAPTURES into ll_mov_fr.gsig_id/gneg. What the engine DOES with the
- * clause is a separate question and the bytes were read: the row step
- * 0x521f0 calls the row node's test slot +0x8 at 0x52235 and admits the
- * row only when the returned EventSet is EMPTY (0x5223c calls 0x495b2,
- * 0x5224b branches), then tests the union of that with the caller's key
- * and the object's [obj+0x60] at 0x522e6 before it may call the execute
- * slot +0xc at 0x52303, whose result 0x5230c OR-s into [obj+0x60]. The
- * `Wait` vtable 0xa11c8 answers slot +0x8 with 0x45970, which copies the
- * node's own [node+0x8] and never calls its operand. This PR carries the
- * clause and acts on none of that; OI-111 keeps the reading. ZARIA.01's
- * own DRAB.MOV (the fixture's shape, rows trimmed) is a file whose A_UP
- * state is one `WAIT K_GEN1` row and whose A_DOWN is one `WAIT K_NEVER`
- * row. */
+ * clause was a separate question when this leg was written, and the
+ * reading here was WRONG about the branch: it said the row step "admits
+ * the row only when the returned EventSet is EMPTY (0x5223c calls
+ * 0x495b2, 0x5224b branches), then tests the union of that with the
+ * caller's key and the object's [obj+0x60] at 0x522e6". PR-287 re-reads
+ * those six instructions (test/sete/and/je at 0x52241-0x5224b): 0x495b0
+ * answers 1 for an EMPTY set, and the `je` takes the plain path 0x522fc
+ * - the execute slot +0xc at 0x52303 and the threshold compare at
+ * 0x52329 - for exactly that case; only a NON-empty set, a `Wait` node's
+ * own clause, reaches the match at 0x522e6, and its refusal ends the
+ * step at 0x52354. The `Wait` vtable 0xa11c8 answers slot +0x8 with
+ * 0x45970, which copies the node's own [node+0x8] and never calls its
+ * operand, so a `Wait` row is gated on the live signal set and a `Wait
+ * K_NEVER` row never runs. That is what the model of PR-287's
+ * ll_mov_row_gate now acts on; the two halves it leaves open (the gated
+ * path skips the threshold compare, and the player's row admit does not
+ * consult the clause yet) stay at OI-111. ZARIA.01's own DRAB.MOV (the
+ * fixture's shape, rows trimmed) is a file whose A_UP state is one
+ * `WAIT K_GEN1` row and whose A_DOWN is one `WAIT K_NEVER` row. */
 static int obj_rowgate_selftest(void)
 {
     static const char drab[] =
@@ -3541,6 +3559,162 @@ static int obj_rowgate_selftest(void)
     }
     rc = 0;
     return rc;
+}
+
+/* PR-287: and the clause ACTS. The row step 0x521f0 asks the row node's
+ * test slot +0x8 at 0x52235 and 0x495b0 at 0x5223c - that call is the
+ * EMPTY test (three dwords, any one non-zero answers 0, 0x495bd-
+ * 0x495d5) - and takes the plain admit path 0x522fc ONLY when the set
+ * it was handed is empty. A node whose +0x8 returns a NON-empty set -
+ * the `Wait` class 0xa11c8 answers +0x8 with 0x45970, which copies the
+ * node's own 12-byte clause at [node+0x8] and never calls its operand -
+ * goes to 0x52251 instead, where the caller's key set (copied at
+ * 0x5226f) and the object's [obj+0x60] (copied at 0x5229d) are merged
+ * by 0x49580 at 0x522bc and matched against the clause by 0x47e40 at
+ * 0x522e6; the `je 0x52354` at 0x522ed leaves the WHOLE step - no row
+ * admitted, no list advance, no signal raised. So a `Wait` row is gated
+ * on the live set, and a `Wait` whose operand carries no signal bit at
+ * all (K_NEVER -> LL_GOP_NEVER, one of the comparator's own no-bit
+ * operands, PR-217) never admits: THAT is how a shipped state holds its
+ * last frame for good, and it is why ZARIA.01's ladder sits at the top
+ * of its own A_DOWN instead of looping back through it. This leg runs
+ * that ladder's own script end to end. Its A_UP is one
+ * `1,0,WAIT K_GEN1` row, its A_DROP is the nine rows 500+400+400+300+
+ * 300+200+200+200+200 = 2700 units, and its A_DOWN is one
+ * `11,0,WAIT K_NEVER` row. Every tick below is the fixture's own
+ * arithmetic on THIS port's row clock (PR-110: 100 units per
+ * LL_ITER_MS, a row admits when the clock reaches its threshold and the
+ * threshold is subtracted; PR-135: the step that CHANGES state feeds no
+ * clock at all; PR-172: a state change zeroes the clock and lands on
+ * the authored entry row). */
+static int obj_rowgate_act_selftest(void)
+{
+    /* ZARIA.01/DRABINKA/drab.MOV, lines 1-30, verbatim but for the
+     * `seq=`/`sample=` art keys, which this port does not model - the
+     * same trim PR-217's capture fixture makes. */
+    static const char drab[] =
+        "A_UP\nA_DOWN\nA_DROP\n\n[A_UP]\ncontrol=BY_TIME\n"
+        "A_DROP(1)=K_GEN1\n1,0,WAIT K_GEN1\n\n[A_DROP]\n"
+        "control=BY_TIME\nA_DOWN(1)=AC_BREAK_NEXT\n2,500\n3,400\n"
+        "4,400\n5,300\n6,300\n7,200\n8,200\n9,200\n10,200\n\n"
+        "[A_DOWN]\ncontrol=BY_TIME\n11,0,WAIT K_NEVER\n";
+    static const int drop_rows[] = { 500, 400, 400, 300, 300,
+                                     200, 200, 200, 200 };
+    ll_mov_t *m = calloc(1, sizeof *m);
+    obj_script sc;
+    lvl_obj o;
+    int i, up = -1, drop = -1, down = -1;
+
+    if (!m)
+        return 1;
+    if (ll_mov_parse(drab, m) < 3) {
+        fprintf(stderr, "row gate act selftest: FAILED the ladder script"
+                        " parsed to %d state(s)\n", m->nst);
+        free(m);
+        return 1;
+    }
+    up = ll_mov_find(m, "A_UP");
+    drop = ll_mov_find(m, "A_DROP");
+    down = ll_mov_find(m, "A_DOWN");
+
+    if (up < 0 || drop < 0 || down < 0 ||
+        m->st[drop].nfr != (int)(sizeof drop_rows / sizeof drop_rows[0])) {
+        fprintf(stderr, "row gate act selftest: FAILED the script's states"
+                        " (up %d drop %d down %d rows %d)\n", up, drop,
+                down, m->st[drop].nfr);
+        free(m);
+        return 1;
+    }
+    memset(&sc, 0, sizeof sc);
+    memset(&o, 0, sizeof o);
+    sc.mov = m;
+    o.sc = &sc;
+
+    /* A_UP, iterations 1..6: the row is a 0-unit row, so an ungated
+     * walker admits it every single step and wraps its one-row list,
+     * arming the list-end bit; the gate holds it instead. No clock
+     * reaches a threshold, so `at` stays 0 and the expected frame here
+     * is the one the state opens on - and NO list-end bit ever. */
+    for (i = 0; i < 6; i++)
+        obj_advance(&o, LL_ITER_MS);
+    if (o.sti != up || o.fi != 0 || o.brk_arm != 0u || o.sig != 0ull) {
+        fprintf(stderr, "row gate act selftest: FAILED `WAIT K_GEN1` let"
+                        " A_UP admit or wrap (state %d frame %d brk %u"
+                        " sig %llu)\n", o.sti, o.fi, o.brk_arm,
+                (unsigned long long)o.sig);
+        goto out;
+    }
+    /* The bus names K_GEN1: the transition at 0x523f0's composition
+     * matches A_UP's only row, and the state change zeroes the clock
+     * and lands on the authored entry row (1) of A_DROP. */
+    o.sig |= 1ull << LL_SIG_K_GEN1;
+    obj_advance(&o, LL_ITER_MS);
+    if (o.sti != drop || o.fi != 0 || o.row_t != 0u) {
+        fprintf(stderr, "row gate act selftest: FAILED K_GEN1 did not enter"
+                        " A_DROP at its authored row (state %d frame %d"
+                        " t %u)\n", o.sti, o.fi, o.row_t);
+        goto out;
+    }
+    /* A_DROP's nine rows, one admit per authored threshold: the row at
+     * index k closes after drop_rows[k]/100 of this port's iterations,
+     * so the walk below steps exactly that many times per row and
+     * checks where the row counter stands after each - 5, 4, 4, 3, 3,
+     * 2, 2, 2, 2 = 27 iterations in all. Nothing here is gated, so it
+     * also checks the gate stays out of the way of an ungated list.
+     * The LAST row is different by the engine's own rule: 0x521c5
+     * writes 0 to the row counter and ORs the list-end bit in the SAME
+     * call that admits the last row (0x521c1-0x521c5), so the counter
+     * is back at the top with the bit armed, not one past the end. */
+    for (size_t k = 0; k < sizeof drop_rows / sizeof drop_rows[0]; k++) {
+        int last = k + 1 == sizeof drop_rows / sizeof drop_rows[0];
+        for (i = 0; i < drop_rows[k] / 100; i++)
+            obj_advance(&o, LL_ITER_MS);
+        if (o.sti != drop || o.fi != (last ? 0 : (int)k + 1) ||
+            o.brk_arm != (unsigned)last) {
+            fprintf(stderr, "row gate act selftest: FAILED A_DROP row %u"
+                            " (%d units) did not close after %d of them"
+                            " (state %d frame %d brk %u t %u)\n",
+                    (unsigned)k, drop_rows[k], drop_rows[k] / 100,
+                    o.sti, o.fi, o.brk_arm, o.row_t);
+            goto out;
+        }
+    }
+    /* The list has run out and the bit is armed: the NEXT step's
+     * composition is where A_DROP's `A_DOWN(1)=AC_BREAK_NEXT` lives. */
+    if (o.fi != 0 || o.brk_arm != 1u) {
+        fprintf(stderr, "row gate act selftest: FAILED A_DROP's 2700-unit"
+                        " list did not arm the list-end bit (frame %d"
+                        " brk %u)\n", o.fi, o.brk_arm);
+        goto out;
+    }
+    obj_advance(&o, LL_ITER_MS);
+    if (o.sti != down || o.fi != 0 || o.row_t != 0u) {
+        fprintf(stderr, "row gate act selftest: FAILED the list-end bit did"
+                        " not enter A_DOWN at its authored row (state %d"
+                        " frame %d t %u)\n", o.sti, o.fi, o.row_t);
+        goto out;
+    }
+    /* A_DOWN's one row is `11,0,WAIT K_NEVER`: the operand has no
+     * signal bit, so the match at 0x522e6 can never hold and the step
+     * returns at 0x522ed - the state holds frame 11 forever, and above
+     * all it never wraps, so it never hands a list-end bit to a
+     * transition. An ungated walker admits a 0-unit row every step and
+     * arms that bit forever; anything downstream of it then reads a
+     * transition this script does not author. */
+    for (i = 0; i < 12; i++)
+        obj_advance(&o, LL_ITER_MS);
+    if (o.sti != down || o.fi != 0 || o.brk_arm != 0u || o.sig != 0ull) {
+        fprintf(stderr, "row gate act selftest: FAILED `WAIT K_NEVER` let"
+                        " A_DOWN admit or wrap (state %d frame %d brk %u"
+                        " sig %llu)\n", o.sti, o.fi, o.brk_arm,
+                (unsigned long long)o.sig);
+        goto out;
+    }
+    free(m);
+    return 0;
+out:
+    free(m);
+    return 1;
 }
 
 static int obj_motion_selftest(void)
@@ -4548,6 +4722,7 @@ int ll_mov_selftest(void)
         obj_actime_selftest() != 0 ||
         obj_rowzero_selftest() != 0 || obj_rowseek_selftest() != 0 ||
         obj_rowgate_selftest() != 0 ||
+        obj_rowgate_act_selftest() != 0 ||
         obj_motion_selftest() != 0 || contact_model_selftest() != 0 ||
         plany_selftest() != 0 ||
         ladder_answer_selftest() != 0 || place_grammar_selftest() != 0) {
@@ -4639,7 +4814,20 @@ int ll_mov_selftest(void)
            " tail captured as the engine's own signal clause - one"
            " token in 254 of the 255 shipped tails, `!` in 22,"
            " K_NEVER/K_ANY kept as the no-bit specials, `WAIT ;`"
-           " left counted, and NO model acting on it yet, and"
+           " left counted; and PR-287 that SAME clause ACTING"
+           " on the object's row admit - the row step 0x521f0"
+           " asks the row node's test slot +0x8 at 0x52235 and"
+           " 0x495b0 (the empty test) at 0x5223c, and only an"
+           " EMPTY set reaches the threshold compare at 0x52329,"
+           " while a `Wait` node's own set is matched against the"
+           " caller's keys and [obj+0x60] at 0x522e6 and"
+           " `je 0x52354` ENDS the step: no frame, no list wrap,"
+           " no signal - so ZARIA.01's own ladder holds its A_UP"
+           " row until K_GEN1 is live, then walks the authored"
+           " 2700 units of A_DROP (27 of this port's iterations,"
+           " its last row arming the list-end bit at"
+           " 0x521c1-0x521c5), and holds frame 11 for good on"
+           " `WAIT K_NEVER`; and"
            " PR-218 WHICH no-bit operand a captured clause names"
            " (K_NEVER's 0x60 mask, K_ANY's 0x2001f8 mask, or a"
            " name the comparator 0x48000 does not know), with"
