@@ -2150,6 +2150,70 @@ ifeq ($(PX_DATA),1)
 	  || { echo "play ZARIA ladder-descend grep FAILED"; \
 	       grep -E 'play: A_|state A_(WSP|SCIAG|FALL_DOWN|WALK) ' \
 	         /tmp/opencode/ly_cdown.log | tail -12; exit 1; }
+# PR-286, FOCUS 1 / OI-078: THE HANG AT THE TOP OF THE LADDER AND
+# ITS OWN EXIT - AND THE MEASUREMENT THAT THE LADDER DOES NOT REACH
+# THE PLATFORM. Keys are released at 288 and JUMP is pressed at 290,
+# so the leg leaves the chain of PR-274/PR-285 (A_WSP to 212,560,
+# A_PODCIAG HOLDING 560 through its 27 iterations) through the
+# hang's authored row `A_JUMP_S(1)=K_JUMP`. Every tick below is the
+# fixture's own arithmetic:
+# - 289: A_DRAP at 562 - its OWN G=0,250 against T_y=15 (PR-285
+#   MEASURED (d): the register 250, the step idiv(250,100) = 2).
+# - 290: K_JUMP takes `A_JUMP_S(1)=K_JUMP`. A_JUMP_S's words are
+#   F=180,0 T=20,1 G=0,55 and its rows carry `F 0,350` on row 1
+#   and the launch pair `I 120,-1200` on row 3 - 225+100+150 =
+#   475 units = 5 iterations in. The arc is therefore the CARRIED
+#   fall register (2 A_DRAP ticks = 463 units) against that pair:
+#   566, 570, 575, 580 down to the admit at 293, then 575, 570,
+#   566, 562, 559, 557, 555, 554, 553 - the APEX 553 at 302, 27
+#   px up from the lowest point and 7 px above the hold.
+# - THE APEX IS THE POINT. The platform over the ladder is the
+#   .plt line `5 98,514;288,520;...`, y 518 at x 212, so a lion
+#   standing on it holds its position point at 518 - 29 = 489
+#   (PR-279/PR-281's contact arithmetic). The hop ends 63 px of
+#   feet-clearance below that line, and the leg pins the negative:
+#   no tick of this run ever reads `pos 212,489`.
+# - 321: A_JUMP_S's own `A_DRAP(1)=AC_BREAK_NEXT` at its list
+#   wrap; 324: A_DRAP's G=0,250 lands him on the main ground -
+#   feet 654 + the 28 A_DRAP contact = 682, the .plt line at x
+#   212 (PR-97/PR-274's arithmetic).
+# What this nets: the hold, the hang's exit, the launch arc, the
+# landing - and the measurement that NO authored ladder route in
+# these four states reaches the platform: it disproves the lead
+# PR-285 named (OPENS (i), "the hang's own K_JUMP hop onto 489"),
+# and the same probe with K_UP still held instead never leaves
+# the re-catch cycle (`A_TURN_BACK(1)=K_UP,AC_DRAB_CATCH` at 290,
+# A_WSP at once back into A_PODCIAG, no position gain in any of
+# the three). The route to 489 is open again, named at OI-078.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=20 \
+	  LEO_PLAY_SCRIPT="1:FWD 98:JUMP 100:NONE 136:FWD 150:FWD,UP \
+288:NONE 290:JUMP 292:NONE" \
+	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_chang.ppm \
+	  LEO_LEVEL_PPM_TICK=400 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_chang.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play ZARIA hang-and-hop FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_chang.log; exit 1; fi
+	@grep -q 'play tick 288: state A_PODCIAG seq lift frame 1 pos 212,560 grounded 0' \
+	       /tmp/opencode/ly_chang.log \
+	  && grep -q 'play: A_PODCIAG -> A_DRAP' /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 289: state A_DRAP seq idle frame 1 pos 212,562 grounded 0' \
+	       /tmp/opencode/ly_chang.log \
+	  && grep -q 'play: A_DRAP -> A_JUMP_S' /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 290: state A_JUMP_S seq fall_dn frame 1 pos 212,566 grounded 0' \
+	       /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 302: state A_JUMP_S seq fall_dn frame 4 pos 212,553 grounded 0' \
+	       /tmp/opencode/ly_chang.log \
+	  && grep -q 'play: A_JUMP_S -> A_DRAP' /tmp/opencode/ly_chang.log \
+	  && grep -q 'play tick 324: state A_DRAP seq idle frame 1 pos 212,654 grounded 1' \
+	       /tmp/opencode/ly_chang.log \
+	  && ! grep -q 'pos 212,4[0-9][0-9] ' /tmp/opencode/ly_chang.log \
+	  && ! grep -q 'state A_SCIAG' /tmp/opencode/ly_chang.log \
+	  && echo "play hang-and-hop (PR-286): the authored hold ends, K_JUMP takes the hang's own A_JUMP_S row, its I 120,-1200 against the carried fall register arcs 27 px to an apex of 553, and the lion is back on the main ground at 324 - and NO position in the run is within 63 px of the platform line above the ladder (ok)" \
+	  || { echo "play ZARIA hang-and-hop grep FAILED"; \
+	       grep -E 'play: A_|state A_(PODCIAG|DRAP|JUMP_S|SCIAG|TURN_BACK|WSP) ' \
+	         /tmp/opencode/ly_chang.log | tail -12; exit 1; }
 # PR-83: the KEYUP half of the input contract. No backend ever translated
 # SDL_KEYUP, so through the REAL backend every key stuck down forever: the
 # reported "controls press themselves in a loop". The live loop (NO

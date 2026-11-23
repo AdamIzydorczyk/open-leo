@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-286.
+> at PR-287.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -39057,4 +39057,119 @@ its new text is quoted in MEASURED (d).
 GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named (PR-278's count
 carried a 22nd SKIP line, the cmake-windows parity check,
 which this run does not invoke);
+```
+
+## PR-286 — THE HANG AND ITS HOP, MEASURED END TO END: NO AUTHORED
+## LADDER ROUTE IN THESE STATES REACHES THE PLATFORM, SO THE
+## FOCUS-1 "FINISH" IS RETRACTED AS AN AUTHORED ROUTE AND A NEW
+## NET PINS WHAT THE LADDER DOES DO
+```
+KIND: gate
+SUBSYSTEM: the ZARIA.01 play legs in the Makefile (a new
+ly_chang leg: hold, hang, K_JUMP exit, A_JUMP_S launch arc,
+landing). No `ported/` change.
+ADDRESSES: 0x4b500, 0x3f1c0, 0x44ec0, 0x23e00, 0x4b970,
+0x3f16a, 0x44e90
+NAMES: A_PODCIAG, A_DRAP, A_JUMP_S, A_SCIAG, A_WSP,
+A_TURN_BACK, A_WPAD, A_LOOKUP, A_FALL_DOWN, A_UP, A_DROP,
+A_DOWN, K_JUMP, K_UP, K_GEN1, AC_EDGE, AC_DRAB_CATCH,
+AC_BREAK_NEXT, AC_ONAIR, I, F, m, LIFT.SEQ, DRAB.SEQ,
+ly_climb, ly_chang, ly_cjump, ly_cdown, OI-073, OI-078,
+PR-274, PR-278, PR-284, PR-285
+CODE: no: a new fixture leg and this reading; no `ported/`
+line moves.
+HOOKS: uses LEO_PLAY_SCRIPT, LEO_PLAY_ASK, LEO_LEVEL_PPM and
+LEO_LEVEL_PPM_TICK as ly_climb/ly_cjump/ly_cdown already do;
+adds no hook.
+MEASURED: (a) THE HOLD ENDS AND THE HANG FALLS ON ITS OWN WORD:
+288 is the last of A_PODCIAG's 27 iterations at 212,560; 289 is
+A_DRAP at 562 - its authored G=0,250 against T_y=15, register
+250, step idiv(250,100) = 2 (PR-285 MEASURED (d) reproduced
+byte-for-byte in a second run). (b) THE HANG'S HOP IS THE
+STATE'S OWN LAUNCH, AND IT IS SMALL: K_JUMP at 290 takes
+`A_JUMP_S(1)=K_JUMP`; A_JUMP_S authors F=180,0 T=20,1 G=0,55
+and its rows carry `F 0,350` on row 1 and the launch pair
+`I 120,-1200` on row 3, admitted 225+100+150 = 475 units = 5
+iterations in. The arc is the CARRIED fall register (2 A_DRAP
+ticks = 463 units) against that pair: 566, 570, 575, 580 down
+to the admit, then 575, 570, 566, 562, 559, 557, 555, 554, 553
+- the APEX is 553 at 302: 27 px up from the lowest point, 7 px
+above the hold. (c) THE NEGATIVE, WHICH IS THE POINT OF THE
+LEG: the platform over the ladder is the .plt line
+`5 98,514;288,520;...`, y 518 at x 212, so the position point
+of a lion STANDING on it is 518 - 29 = 489 (PR-279/PR-281's
+contact arithmetic). The hop's apex leaves 63 px of
+feet-clearance under that line, and no tick of the run reads
+any position in 212,4xx - the leg pins that with a negative
+grep, and pins the landing back on the main ground: 321
+A_JUMP_S's own `A_DRAP(1)=AC_BREAK_NEXT` at the list wrap, 324
+A_DRAP at 654 grounded, 654 + the 28 contact = the .plt line
+682 at x 212. (d) THE OTHER EXIT IS A CYCLE, NOT A CLIMB: the
+same probe with K_UP still held takes `A_TURN_BACK(1)=
+K_UP,AC_DRAB_CATCH` at 290, A_TURN_BACK's `A_WSP(1)=
+AC_BREAK_NEXT,AC_DRAB` re-enters the climb, and A_WSP's FIRST
+row `A_PODCIAG(1)=AC_EDGE,K_UP` puts the lion straight back
+into the hold - no position gain in any of the three states.
+(e) THE STATE-MACHINE CEILING, STATED PRECISELY: A_WSP cannot
+run inside the column at all (its first transition row leaves it
+the moment AC_EDGE is true, and AC_EDGE is the column block,
+PR-284), A_PODCIAG authors no motion (PR-285), A_DRAP's motion
+exits are the descent (A_SCIAG, the m 0,1 rows), the hop
+(A_JUMP_S), the re-catch (A_TURN_BACK) and the air states on
+AC_ONAIR (A_WPAD - T=150,150, G=0,0, another hold - and
+A_FALL_DOWN), A_LOOKUP and A_JUMP_S both author DOWNWARD G
+words (A_LOOKUP G=0,200) and the only upward words in the
+family are the two `I` launch pairs, -1100 (ly_cjump, PR-277)
+and -1200 here. The largest measured rise in the family is 27
+px; the climb to the platform needs 71. The 30 px the level
+shows at the top of a climb is LIFT.SEQ's own frame anchors
+(PR-284 MEASURED (d)) - art. (f) WHY THE LADDER ANSWERS AT ALL,
+read off its OWN script (ZARIA.01/DRABINKA/drab.MOV): it
+declares A_UP, A_DOWN, A_DROP - so the answer gate's "state 2"
+(PR-216: only index 2 answers) IS A_DOWN, the lowered ladder.
+A_UP's one row is `1,0,WAIT K_GEN1` and its only transition is
+`A_DROP(1)=K_GEN1`; A_DROP runs frames 2..10 (500+400+400+300+
+300+200+200+200+200 = 2500 units) and ends with
+`A_DOWN(1)=AC_BREAK_NEXT`; A_DOWN holds frame 11 with
+`1,0,WAIT K_NEVER`. The port reproduces the first link (ly_climb
+tick 104: "DRABINKA/drab.mov takes its own K_GEN1 line: state
+A_DROP") and answers from state 2 from 105 on - which is ONE
+iteration after A_DROP was entered, not 25: see OPENS (ii).
+OPENS: in order: (i) the route onto the platform at x 212 is
+open again and re-named: the two candidates left are the
+crossing/snap law read against the LADDER'S ART (its frames 2
+..10 are the ladder DROP - the answer geometry itself is fixed,
+the placement rect (203,540)-(233,670) and the column from
+PR-282), and the ground pair ground_on/ground_off (the target's
+vtable +0xc0/+0xc4, PR-273) which would HOLD the rider on the
+ladder instead of letting A_DRAP's G=0,250 drop it; (ii) the
+ladder's own chain is not netted by any leg and the port's
+timings for it are unverified: the authored A_DROP list is 2500
+units but the port answers as A_DOWN from the next iteration
+(105) - either the engine drops the ladder in one iteration
+(the `1,0,WAIT K_GEN1` row and the (1) entry row say something
+this port has not read) or the port is early, and the climb
+window's opening tick depends on it; (iii) FOCUS-1's "finish"
+needs ground truth this tree does not hold: PR-82's video
+(gp.mp4) is no longer staged anywhere under /tmp/opencode, and
+the level's own data ends the ladder at 560.
+CLOSES: PR-285's OPENS (i) and PR-284's reading that the
+FOCUS-1 finish is "the hang's own K_JUMP hop onto 489" - the
+hop is measured as a 27 px arc ending 63 px of clearance under
+the line, and the K_UP path is a cycle with no gain.
+CORRECTS: PR-284, PR-285 (the FOCUS-1 finish named as the
+hang's K_JUMP hop onto the platform).
+GATE: make 0 warnings; verify-all fixtures rc=0 64 (ok);
+one more green line than PR-285's 63, and it is exactly this
+PR's ly_chang leg - nothing else moved. The count is the
+distinct green verdict lines in the run log, rc=0 first
+(HANDOFF section 4); the run is the 24 no-Windows legs
+(DATA=/tmp/opencode/iso_stage/LEO HD=/tmp/opencode/
+hd_files), and the verify-cmake parity and the
+verify-win/verify-mod legs stay excluded per the owner's
+2026-11-22 request. The log's five `warning:` lines are the
+Mesa/EGL driver's, not the compiler's.
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 21 named - identical to
+PR-285's pair; PR-278's count carried a 22nd SKIP line, the
+cmake-windows parity check, which this run does not invoke.
 ```

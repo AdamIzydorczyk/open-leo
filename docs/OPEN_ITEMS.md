@@ -682,6 +682,15 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     OI's remaining grounded-y question rides the ladder
     column of PR-282 (below) and the PR-281 application
     law.
+    PR-286 PUTS A NAME ON IT FROM THE PLAY SIDE: the hang
+    A_DRAP authors G=0,250, so a rider who reaches the top
+    of a ladder is DROPPED by his own state's word unless
+    something grounds him there. The writers of the
+    [obj+0xb6] bit0/1 pair - ground_on/ground_off, the
+    target's vtable +0xc0/+0xc4 (PR-273, lion
+    0x54fe0/0x55020) - have no measured caller from an
+    ANSWER, and no leg but ly_chang pins the drop as it
+    now is.
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -1832,6 +1841,30 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     is left in that chain. The platform top is still not
     reached, and the named route to it is the hang's authored
     `A_JUMP_S(1)=K_JUMP` row - the next FOCUS-1 leg.
+    PR-286 MEASURES THAT ROUTE AND FINDS IT IS NOT AN AUTHORED
+    ROUTE TO THE PLATFORM: from the hold, K_JUMP does take
+    A_JUMP_S, whose rows carry `I 120,-1200` five iterations
+    in, but against the A_DRAP fall's carried 463-unit register
+    the arc is 27 px - apex 553 at 302, which leaves 63 px of
+    feet-clearance under the platform line 518 (a lion standing
+    on it sits at 489); with K_UP held instead the chain is
+    A_TURN_BACK -> A_WSP -> A_PODCIAG with NO position gain,
+    because A_WSP's first row leaves itself the moment AC_EDGE
+    is true. No state in the family rises 71 px; the 30 px at
+    the top is LIFT.SEQ art. ly_chang now pins the whole chain
+    plus the negative (no position in 212,4xx). The ladder's
+    OWN script also explains the PR-216 answer gate - only
+    state 2 = A_DOWN, the LOWERED ladder, answers (A_UP
+    `1,0,WAIT K_GEN1` -> A_DROP frames 2..10 = 2500 units ->
+    A_DOWN `WAIT K_NEVER`) - and the port reaches A_DOWN ONE
+    iteration after A_DROP, not 25: both halves are open. What
+    the probe re-opens is PR-273's GROUND PAIR: A_DRAP authors
+    G=0,250, so unless the ladder's answer runs ground_on on
+    the rider ([obj+0xb6] bit0/1, the target's vtable
+    +0xc0/+0xc4 = the lion 0x54fe0/0x55020), the port drops
+    its rider off the top of every ladder it climbs - counted
+    at OI-073, where the grounded-y instruction and the
+    ground_on/ground_off caller are the open pair.
     PR-274 PINS THAT CHAIN as a leg (ly_climb, its record
     derives every tick from the fixture's own arithmetic):
     the whole chain runs deterministically and the leg also
