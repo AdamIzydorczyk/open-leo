@@ -329,6 +329,20 @@ OI-030: the [obj+0xf6] authoring map (1500/10000 per stage; the
 OI-031: the ds:0xa94ec load-sites' per-consumer semantics
   status: OPEN
   origin: PR-189 item (3), carried PR-190/192
+  PR-300 NAMES TWO CONSUMERS AND THE ONLY WRITER. The image
+  writes this global once, 0x4cda6-0x4cda9 (`eax =
+  [esi+0x40]`; `mov ds:0xa94ec,eax`), under a name compare
+  whose string is 'ani_plat' (0x91ded); the other load is
+  0x4b897. The two load sites this record read are
+  0x28412/0x2844b: there it is loaded into ebx and kept as an
+  OBJECT across a call to the object's own class +0x80 verb
+  (0x28423/0x2845c `call DWORD PTR [esi+0x80]`, 37 such sites
+  exist), together with edx = [obj+0x10a] (then [obj+0x10e]).
+  For the class whose +0x80 verb is 0x287a0, that global is
+  the object whose +0x3c gate and +0x6c verb the verb calls,
+  i.e. the "other object" of the pair answer. What the pool
+  actually holds is still not established - only that it comes
+  from an +0x40 field of something named 'ani_plat'.
 
 OI-032: level-meta remainders: the 0x43fb0 result stored to
   [level+0x398] (7 readers, none individually read), the 0x5df2b
@@ -2186,6 +2200,25 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     never an authored `GEN` line, never an inline bit. Whether
     either verb is reachable for the ZARIA.01 DRABINKA is
     still the class-identity question.
+    PR-300 MOVES THAT QUESTION AND SHARPENS IT. The class
+    tables are now measured: 26 tables in 0x99054..0xa0394
+    share one slot map (0x45250 at +0x10, 0x45120 at +0x28,
+    0x23e00 at +0x34, 0x52a00 at +0x4c), and 21 of them hold
+    0x3dcb0 in the +0x3c slot that both pair verbs use as
+    their gate - so "is this object askable" is a class-shape
+    and zone test, not a state test. The overrides are named
+    (0x27700, 0x52bb0 twice, 0x34620, and 0x3c310, which is
+    the derived gate of the table at 0xa0394 and calls the
+    base gate first). 0x287a0 is the +0x80 verb of the table
+    at 0x99fe8, and at the +0x80 call sites its second object
+    is the global ds:0xa94ec, not the loop entry - so the
+    port's acdrab_law caller story (PR-235, "reached ONLY from
+    the collision loop") does not hold: the loop
+    0x3eac2-0x3eb0c walks entry indices of the array at
+    [[obj+0x30]+0x40], bounded by [[obj+0x30]+0x3c] and
+    stopped at self, and calls the +0x10 slot, which for these
+    classes is 0x45250. Its numbers stay; its caller is now
+    named as unsupported.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-300.
+> at PR-301.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -40882,4 +40882,174 @@ class, not of one pair.
 CORRECTS: none.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-300 — THE CLASS-TABLE FIELD MEASURED: 26 CLASS TABLES
+## SHARE ONE SLOT MAP, THE "+0x3c ASK GATE" IS 0x3dcb0, AND
+## 0x287a0 IS THE +0x80 VERB WITH A GLOBAL FOR ITS SECOND
+## OBJECT - WHICH ENDS PR-235'S STORY ABOUT THE COLLISION LOOP
+```
+KIND: read
+SUBSYSTEM: the class tables themselves - where the pair-answer
+verbs PR-297 and PR-299 live, which slot each of them occupies,
+what the shared +0x3c gate verb does, and what the collision
+loop 0x3eac6 really iterates over and really calls.
+ADDRESSES: 0x55760, 0x3eac2, 0x3eac6, 0x3eac8, 0x3eacd,
+0x3eae3, 0x3eaf1, 0x3eaf4, 0x3eaf6, 0x3eafe, 0x3eb02,
+0x3eb05, 0x3eb08, 0x45250, 0x452d0, 0x45120, 0x23e00,
+0x52a00, 0x3dcb0, 0x3dcc2, 0x3dccd, 0x3dcd2, 0x3dcf9,
+0x3dd02, 0x3dd06, 0x54560, 0x54569, 0x54590, 0x5459c,
+0x3dd23, 0x3dd28, 0x3dd32, 0x3dd3c, 0x3dd4c, 0x287a0,
+0x28412, 0x2841d, 0x28423, 0x28429, 0x28456, 0x2845c,
+0x9a068, 0x99fe8, 0x99054, 0x99550, 0x996ec, 0x997fc,
+0x9990c, 0x99a1c, 0x99b2c, 0x99c3c, 0x9a74c, 0x9af0c,
+0x9b01c, 0x9b12c, 0x9d790, 0x9dbd0, 0x9e01c, 0x9e628,
+0x9e944, 0x9ea54, 0x9eb6c, 0x9efc4, 0x9f788, 0x9fa0c,
+0x9fd38, 0x9fe48, 0x9ff58, 0xa02a8, 0xa0394, 0xa03d0,
+0x27700, 0x52bb0, 0x34620, 0x23a10, 0x23b50, 0x3ddf0,
+0x3db2f, 0x3db36, 0x39d7a, 0x39d8e, 0x39d95, 0x4cda6,
+0x4cda9, 0xa94ec, 0x91ded, 0x4b897
+NAMES: class table, vtable slot, slot map, ask gate, message
+kind, collision loop, container object array, entry index,
+self-check, global object pool, ani_plat, +0x80 verb, +0x3c
+verb, +0x10 verb, zone list, class word, OI-031, OI-035,
+OI-078, PR-235, PR-293, PR-297, PR-298, PR-299, acdrab_law,
+classtabs.py, field40.py
+CODE: no: readings plus two image censuses; no behaviour
+changed, so no red leg.
+HOOKS: PR-297 had to leave the tables that store 0x3c270 and
+0x3c310 unnamed and their slots uncertain, and its OPENS (i)
+and (iii) were "which class" and "what makes an object
+askable"; PR-299's OPENS (i) asked which slot 0x287a0
+occupies; the port has carried since PR-235 that 0x287a0 is
+"reached ONLY from the collision loop 0x3eac6".
+MEASURED: (a) THE COLLISION LOOP, END TO END, 0x3eac2-0x3eb0c.
+ebx = 0; the body at 0x3eac6 passes edx = ebx and eax =
+[ecx+0x30] to 0x55760, which is `mov eax,[eax+0x40]; mov
+eax,[eax+edx*4]; ret` - so entry ebx of the pointer array at
+[[ecx+0x30]+0x40]. It calls that ENTRY's class +0x10 verb
+(0x3ead4 reads esi = [eax+0x08], 0x3eaf1 `call [esi+0x10]`)
+with four stack arguments: 0 at [esp+0x28], ebp at
+[esp+0x2c], the constant 0x8138764 at [esp+0x30], 0x39 at
+[esp+0x34]. The bound is the CONTAINER's own field: 0x3eb02
+loads eax = [ecx+0x30], 0x3eb05 edx = [eax+0x3c], 0x3eb08
+`cmp ebx,edx; jl` - so [container+0x3c] is the entry COUNT -
+and 0x3eafe `cmp eax,ecx; je` stops the walk as soon as an
+entry is the requesting object itself. For the classes counted
+in (b) that +0x10 slot is 0x45250, NOT 0x287a0.
+(b) THE CLASS-TABLE FIELD AND ITS SLOT MAP. Two anchors over
+the image's stored-pointer region 0x99000..0xa0800: the pair
+0x45250,0x452d0 at +0x10,+0x14 gives 28 groups; the triple
+0x45120 at +0x28 with 0x23e00 at +0x34 and 0x52a00 at +0x4c
+gives 26 CLASS TABLES, bases 0x99054, 0x99550, 0x996ec,
+0x997fc, 0x9990c, 0x99a1c, 0x99b2c, 0x99c3c, 0x9a74c,
+0x9af0c, 0x9b01c, 0x9b12c, 0x9d790, 0x9dbd0, 0x9e01c,
+0x9e628, 0x9e944, 0x9ea54, 0x9eb6c, 0x9efc4, 0x9f788,
+0x9fa0c, 0x9fd38, 0x9fe48, 0x9ff58, 0xa0394 - the four the
+earlier records kept meeting (0x9fd38, 0x9fe48, 0x9ff58,
+0xa0394) are four of them. All 26 carry 0x45250 at +0x10,
+0x45120 at +0x28, 0x23e00 at +0x34 and 0x52a00 at +0x4c. The
++0x3c slot holds 0x3dcb0 in 21 of them; the five exceptions
+are 0x27700 (0x99a1c), 0x52bb0 (0x9dbd0 and 0x9f788), 0x34620
+(0x9e01c) and 0x3c310 (0xa0394). The +0x98 slot holds 0x23a10
+in 24 and 0x23b50 in 2. So PR-297's and PR-299's shared
+"+0x3c gate" is a named function, 0x3dcb0, for most of this
+family.
+(c) 0x3c310 IS AN OVERRIDE OF THAT GATE SLOT, not a sibling.
+With the correct base 0xa0394, 0x3c310 is at +0x3c (PR-297
+said +0x20) and 0x52a00 is at +0x4c (PR-297 said +0x30). That
+is exactly why 0x3c310 begins by calling 0x3dcb0 at 0x3c316:
+a derived gate calling the base gate, then testing the row
+cursor and raising K_GEN1.
+(d) 0x3dcb0, THE GATE. eax = the object (kept in esi), edx =
+the argument (kept in ecx). First branch 0x3dbc2: it requires
+[edx+0x04] == 1; on that path it does `add eax,0xee` and
+calls 0x45200 - the zone-list lookup the port knows - with
+ebx = [ecx+0x0c], edx = [ecx+0x08], i.e. a point against the
+OBJECT'S [obj+0xee] BLOCK, a third zone-list anchor after
+[obj+0xa5] and [obj+0x30]'s list. Then 0x3dcd2 reads
+[obj+0x112]; if non-null 0x3dce3-0x3dcff walks it and calls
+THAT object's +0x10 verb with (0, [ecx+0x08], [ecx+0x0c], 1).
+Every path ends at 0x3dd02-0x3dd06, `call 0x54560(this,
+argument)`, and returns its value. 0x54560 (0x54569) dispatches
+on [argument+0x04] into the ranges <6, 7..12, 13..26, ==27,
+else, and in one of them copies [argument+0x08] and
+[argument+0x0c] into [this+0xc2] and [this+0xc6] - so the
+gate's argument is meant to be a small-kind block, while both
+pair verbs pass the class word (0x287ac `mov edx,[ebx+0x08]`,
+0x3c298 `mov edx,[ecx+0x08]`). That mismatch is open, not
+resolved here. The companion 0x3dd23, which sits at that
+family's +0x48 slot, initialises the walk field: [obj+0x112]
+= 0, [obj+0x116] = 1, [obj+0x11e] = 0, [obj+0x11a] =
+[obj+0x11e].
+(e) 0x287a0 IS A +0x80 VERB AND ITS OBJECT ARGUMENT IS A
+GLOBAL. It is stored at exactly one address, 0x9a068, which is
++0x80 from the table base 0x99fe8 (a second table shape, the
+one headed by 0x2ace0/0x2aca0/0x2ac60). 37 sites call `call
+DWORD PTR [reg+0x80]`; the read pair 0x28412-0x28423 and
+0x2844b-0x2845c shows the convention: ebx = the global
+ds:0xa94ec, eax = the object itself, edx = [obj+0x10a] (the
+second call, edx = [obj+0x10e]) - so the "other object" of
+0x287a0's gate and position tests is that global, loaded from
+a pool pointer, not the loop's entry. The same slot in the 26
+tables of (b) holds 0x3ddf0, which also works on the
+[obj+0xee] block (0x3de04 `lea esi,[ecx+0xee]`) - the +0x80
+verb and the +0x3c gate touch the same data.
+(f) WHO ds:0xa94ec IS, TO THE EXTENT THE IMAGE SAYS. One store
+(0x4cda6-0x4cda9, `eax = [esi+0x40]`, `mov ds:0xa94ec,eax`)
+under a name compare whose string is 'ani_plat' at 0x91ded;
+one other load, 0x4b897. Nothing else writes it. That is a new
+per-consumer answer for OI-031's two load sites and no more.
+(g) OFFSET REUSE, MEASURED, WHICH IS WHY THE EARLIER SENTENCES
+NEED CARE. The same +0x40 offset is dereferenced as an array
+by 0x55760, DECREMENTED at 0x3db2f-0x3db36, set to 30 beside
+a 30 at [x+0x3c] by 0x39d7a-0x39d95 (through `mov eax,
+[eax+0x390]`, a different struct), and copied to the global at
+0x4cda6. A field name in this engine is only valid with its
+class attached.
+OPENS: in order: (i) 0x45250, the verb the collision loop
+really calls for these 26 classes - unread, and it is the real
+collision path; (ii) 0x54560's dispatch and the kind field
+[argument+0x04]: which block the gate is really passed, since
+both pair verbs pass a class word; (iii) the [obj+0xee] block
+- a third zone-list anchor, with [obj+0x112]/[0x116]/[0x11a]/
+[0x11e] as its walk state (related to OI-035's [obj+0x106]
+tables and OI-034); (iv) 0x3ddf0 and the other 36 +0x80 call
+sites; (v) [obj+0x10a]/[obj+0x10e], the pair whose value the
++0x80 verb is given; (vi) which table the ZARIA.01 DRABINKA's
+class word selects - still unanswerable statically, since no
+immediate names a table base, and 0x3c270 at 0xa02a8 is not
+inside any of the 26; (vii) 0x27700, 0x52bb0 and 0x34620, the
+three other gate overrides, unread.
+CLOSES: PR-297 OPENS (iii) and PR-299 OPENS (iii): the +0x3c
+gate is 0x3dcb0 for 21 of 26 measured classes, and it is a
+class-shape/zone test, not a state test. PR-299 OPENS (i)'s
+slot half: 0x287a0 occupies slot +0x80. PR-297's "no caller in
+.text" is now explained: these verbs are reached only through a
+class word, and the loop that walks a level's objects calls the
++0x10 slot, so the reachability question moves to the class
+word, which is item (vi).
+CORRECTS: PR-297's table sentences. The tables are NOT
+"repeated 68-slot (0x110-byte) tables with stride exactly
+0x110": 26 tables share a slot map but have different bases
+and lengths (the 0x110 spacing only happens to hold for the
+three consecutive ones at 0x9fd38/0x9fe48/0x9ff58), 0x3c310
+is at slot +0x3c of the table at 0xa0394 rather than +0x20 of
+one at 0xa03b0, 0x52a00 is at +0x4c rather than +0x30, and
+0x3c270 at 0xa02a8 is not inside any of the 26, so its slot
+stays unknown. It also corrects PR-299's sentence that
+0x287a0's second object is "ANOTHER object" of the caller's
+choosing: at the measured +0x80 call sites it is the global
+ds:0xa94ec. And it corrects the reading behind the port's
+acdrab_law comment (PR-235): 0x287a0 is not "reached ONLY
+from the collision loop 0x3eac6" - that loop calls the +0x10
+slot, which for this class family is 0x45250 - so the port's
+class-scoping of that law to the collision walk rests on a
+caller that does not exist; the law's own numbers are
+untouched and its behaviour is unchanged (a counted model
+choice, now with its caller named as unsupported).
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run. The
+last full no-Windows suite run (PR-298's, unchanged tree
+since) is rc=0 with 69 green verdict lines.
 ```
