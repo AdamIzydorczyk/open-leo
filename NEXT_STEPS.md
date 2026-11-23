@@ -12,7 +12,7 @@
 > own status block, `## Next`, `## Deferred big items` and
 > `## Standing rules` - all four had drifted, and P2 now fails the
 > build if any of them appears here again.) Numbering continues
-> at PR-298.
+> at PR-299.
 
 The P/E/M and T work-order ids cited across this journal come from
 the external review documents, now under `docs/archive/` with every
@@ -40661,6 +40661,117 @@ CLOSES: PR-296 OPENS (i) for the AC_EDGE producer: it is read
 object's position being inside [obj+0x50] - and PR-291's
 kind-0x19 sentence is now backed by the test itself (0x3c31b).
 CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so
+no red leg by the rule PR-245 states, and no suite run.
+```
+
+## PR-298 — THE ENGINE DISPATCHES ON THE CURRENT ROW INDEX:
+## [rec+0x04] IS COMPARED AT 49 PLACES WITH ROW-NUMBER
+## CONSTANTS, AND TWO ROWS ANSWER AC_DRAB AND K_GEN1
+```
+KIND: read
+SUBSYSTEM: the record instance's field +0x04 - the row cursor
+PR-215 saw being stored at 0x53616 - as a dispatch key, and
+the row-index bounds of the shipped .MOV corpus that decide
+what that field can hold.
+ADDRESSES: 0x53609, 0x5360f, 0x53612, 0x53616, 0x521c5,
+0x1e6a1, 0x1e6aa, 0x1e6b6, 0x1e670, 0x1e546, 0x1e57c,
+0x1e5d4, 0x1edc0, 0x287e1, 0x287ea, 0x287e4, 0x28805,
+0x2880b, 0x28813, 0x2881a, 0x28823, 0x28826, 0x28832,
+0x285c2, 0x28dd2, 0x2fc93, 0x2fce7, 0x2fee7, 0x2f897,
+0x3c31b, 0x3c321, 0x1f061, 0x23924, 0x23aa5, 0x55760,
+0x53714, 0x523f0, 0x49580, 0x749a0
+NAMES: record instance, row cursor, row index, dispatch,
+jump table, AC_DRAB, K_GEN1, AC_EDGE, state index, row walk,
+OAI-, OI-078, OI-092, PR-172, PR-215, PR-287, PR-290,
+PR-291, PR-295, PR-296, PR-297, ll_mov_tr, rec_idiom_census
+CODE: no: a reading plus two censuses; no behaviour changed,
+so no red leg.
+HOOKS: PR-215 established that the transition-apply pass
+STORES a row index at [rec+0x04] (0x53616) and asked what
+reads it; PR-295 and PR-297 each met a comparison against a
+small constant there (0x19) without being about that field;
+PR-296's answer-signal census left the AC_DRAB producers
+0x28805 and 0x36a1f unread; PR-287 built the port's row model
+from the walk at 0x520c0 and PR-293 confirmed it is called
+through the set composer.
+MEASURED: (a) THE RECORD-INSTANCE IDIOM, COUNTED. A strict
+search for the two-instruction idiom `mov r,[o+0x50]` then
+`mov r,[i+r*4]` (the shape at 0x1e6a1, 0x287e1, 0x53609,
+0x53714) finds 83 sites in .text; 79 of them go on to read a
+field of the record they derive, and 49 compare groups are
+made on field +0x04 alone. Two of the 79 dispatch through a
+jump table: 0x1e6aa `sub eax,3; cmp eax,4; ja` with
+`jmp DWORD PTR cs:[eax*4+0x1e670]` - a five-way switch over
+row numbers 3..7 inside a class verb, in the same function
+that fills the [obj+0xa5] zone list (0x1e6c8 calls 0x45200 on
+it) and holds one of PR-291's K_GEN1 raise sites at 0x1e546.
+(b) THE VALUES SAY ROW NUMBERS. The distinct constants
+compared against [rec+0x04] are exactly 20: 1, 2, 3, 4, 5, 6,
+7, 10, 11, 12, 13, 14, 15, 16, 20, 21, 25, 38, 45, 60.
+Measured over the 777 shipped .MOV texts, a single state block
+carries up to 97 authored row lines (the maximum is in
+KADMAR.07_0_0.MOV's A_DEAD) and counts of 20, 21, 22, 23, 24,
+25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 38, 39, 41, 46,
+48, 57 and 83 all occur. Every compared constant is inside
+that range, so [rec+0x04] is a ROW INDEX - the same field the
+transition pass writes with its argument at 0x53616 and the
+row walk wraps at 0x521c5. PR-215's reading of the store is
+confirmed and its "what reads it" question has its answer:
+everything above.
+(c) THREE OF THE DISPATCHES, READ. 0x287e1-0x28805: the
+record is derived with the CALLER'S index argument, not the
+current state ([eax+0x50] then [eax+edx*4]), and if that
+record's +0x04 equals 6 the verb builds an empty set and
+`or BYTE PTR [ecx+0x1],0x4` = AC_DRAB - an answer signal
+selected by a row number, with no authored token anywhere;
+otherwise 0x2880b tests [obj+0x5c] == 0x12 AND the current
+record's row <= 0x19 and goes through 0x55760 with [obj+0x30]
+and edx = 1 (the pair/attached-object path). 0x3c31b: row
+number 0x19 = 25 raises K_GEN1 inline (PR-297's site, now
+placed: it is a row test, not a record kind). 0x1e6aa: the
+five-way row switch above. And 0x285c2 compares a row number
+against 0x3c = 60.
+(d) WHAT THE PORT HAS: ll_mov_tr carries the frame number,
+the duration, the condition parts and the frame-directive bits
+(GEN/ATC/WAIT/rdir/lock) - a row is data with optional
+authored directives. Nothing in the port models the OTHER half
+seen here: behaviour attached to a row NUMBER inside a class
+verb, which can raise a signal (AC_DRAB at row 6, K_GEN1 at
+row 25) for a state that authors no GEN line for it. That is a
+systematic gap, not a defect of one leg, and it is the same
+gap PR-296 pointed at from the other side: the signals the
+lion's rows test are produced by class verbs keyed on the
+ladder's or the platform's CURRENT ROW, not by a contact test.
+(e) CROSS-CHECK, free from the same census: among the fields
+those 79 sites read are +0x12 (at 0x1f061 and 0x23924 -
+PR-290's control-word/signal-set word) and +0x8 and +0xc (at
+0x23aa5 - PR-102's time_lo and PR-295's rolled gate). The
+field map PR-290 and PR-295 published is the one this
+independent walk keeps running into.
+OPENS: in order: (i) which class owns each dispatch cluster
+(the 0x1exxx, 0x27xxx-0x28xxx, 0x2cxx-0x30xxx groups) and
+which .MOV state each row number refers to - without the class
+identity (PR-297 OPENS (i)) the row numbers cannot be tied to
+authored rows; (ii) the 0x287e1 verb as a whole: its caller's
+index argument, the [obj+0x30]/0x55760 pair path, and whether
+this is the producer that answers a RIDER; (iii) whether any
+row-index dispatch raises AC_EDGE for the ZARIA.01 ladder -
+the direct FOCUS-1 question now; (iv) whether the port should
+model row-index dispatch at all, and what it would cost in the
+pinned legs (ly_climb and ly_chang depend on the current row
+machine); (v) 0x36a1f, the fourth AC_DRAB producer, unread.
+CLOSES: PR-215's "what a -1 cursor does on the next step"
+half stays open, but its companion question - who reads the
+cursor - is closed: 49 comparison sites and two jump tables,
+all keyed on row numbers within the authored range. It also
+closes PR-296's OPENS (ii) for one producer: 0x28805's answer
+is a row-number test, not a contact test.
+CORRECTS: PR-297's sentence about "the contact record of kind
+0x19": the field at [rec+0x04] is not a record kind but the
+row cursor, and 0x19 = 25 is a row number - its own constants
+(1..60) and the corpus row counts say so. PR-297's reading of
+the test itself and of the surrounding verb stands unchanged.
 GATE: light: verify-index verify-docs rc=0 (ok); no code, so
 no red leg by the rule PR-245 states, and no suite run.
 ```

@@ -2146,6 +2146,23 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     `cmp DWORD PTR [rec+0x4],0x19` (0x3c31b) and on a match
     raises K_GEN1 inline at 0x3c321 - PR-291's kind-0x19 raise
     read to its test.
+    PR-298 REDIRECTS THE QUESTION AGAIN, AND THIS TIME IT IS A
+    MECHANISM, NOT A MISSING SIGNAL. The engine branches on the
+    CURRENT ROW NUMBER of the current record: [rec+0x04] is
+    compared at 49 places with 20 distinct constants (1..7,
+    10..16, 20, 21, 25, 38, 45, 60 - all valid row indices,
+    since a shipped state carries up to 97 rows), and two of
+    those are jump tables over row ranges. Read examples:
+    `row == 6` builds a set containing AC_DRAB (0x287ea ->
+    0x28805), `row == 25` raises K_GEN1 inline (0x3c31b ->
+    0x3c321). So an answer signal can be produced at a
+    specific authored row with no `GEN` token anywhere, which
+    is exactly the shape PR-296 was looking for. Tying a row
+    number to an authored row still needs the class identity
+    (PR-297 OPENS (i)), and the port models no row-number
+    dispatch at all - ly_climb and ly_chang are pinned on the
+    row machine as it is, so any change there is a pinned-leg
+    decision, not a free fix.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -2263,6 +2280,23 @@ OI-092: the transition-apply SIGNAL legs stay unread: the
   edx = [obj+0x60] - a third call site of the ENTER verb
   (after 0x535f7 and 0x52416). The -1 cursor's next step is
   still unread, so the row stays open.
+  PR-298 ANSWERS THE COMPANION QUESTION - WHO READS THAT
+  CURSOR. A strict search for the record-derivation idiom
+  `mov r,[o+0x50]` then `mov r,[i+r*4]` finds 83 sites, 79 of
+  which read a record field, and 49 compare groups are made on
+  field +0x04 alone, with two jump-table dispatches (0x1e6aa
+  `sub eax,3; cmp eax,4; ja` + `jmp [eax*4+0x1e670]`, a
+  switch over rows 3..7 inside a class verb). The 20 distinct
+  constants are 1..7, 10..16, 20, 21, 25, 38, 45, 60 - all
+  inside the authored row range (a single shipped state carries
+  up to 97 row lines; 20..57 all occur), so the field is the
+  ROW INDEX and the engine attaches behaviour to row NUMBERS:
+  row 6 answers AC_DRAB into a set (0x287ea/0x28805), row 25
+  raises K_GEN1 inline (0x3c31b/0x3c321), a row equals 60
+  (0x285c2). The port's ll_mov_tr models a row as frame +
+  duration + clauses + directives and nothing else; the
+  row-number dispatch half is a systematic gap, not one leg's
+  defect.
   status: OPEN
   origin: PR-107/172/174/215
 
