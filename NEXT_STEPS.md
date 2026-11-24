@@ -49808,3 +49808,217 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - one new
   all 7 records that name OI-128 with prose/structured marked apart, and
   a bare `0x33` routes to the free-text search instead of an empty addr
   query - both used in this pass, both working as the record describes.
+
+## PR-360 - THE .SEQ SECOND ANCHOR IS AUTHORED, NOT PADDING: 98.7% OF
+## SHIPPED ELEMENTS CARRY AN ANCHOR, HALF OF THEM A REAL LANDING STEP, AND
+## EVERY FRAME OF THE LION'S ZARIA.01 WALK STATE STEPS HIM 31 px DOWN
+```
+KIND: read
+SUBSYSTEM: the shipped .SEQ element anchors - the data half of OI-128's
+  open question, read over the staged CD and HD overlay - and what that
+  measurement says about F6/T5 and about the pair PR-359 left unwired.
+ADDRESSES: 0x42980, 0x429d0, 0x42984, 0x4298d, 0x42993, 0x429a0, 0x429d7,
+  0x429dd, 0x41ef0, 0x41ef3, 0x41f01, 0x41f4d, 0x41f60, 0x41f9d, 0x41fa3,
+  0x41fb9, 0x41fd0, 0x42030, 0x42083, 0x43e70, 0x43f59, 0xa0c08, 0x7fff,
+  0x33, 0x37, 0x04, 0x08, 0x1c, 0x50, 0x6d, 0xb6, 0x15, 0x17, 0x19, 0x2e
+NAMES: OI-128, OI-129, F6, T5, PLAN 8g, ll_seq_anchor_land,
+  ll_seq_anchor_leave, seq_parse.py, verify_seq.py, records_of,
+  pr360_anchor_census.py, pr360_detail.py, pr360_second_anchor.py,
+  pr360_states.py, pr360_example.py, pr360_list_records.py, LEWPL.MOV,
+  LEW.MOV, PALM.MOV, PALML.MOV, KAT.MOV, LITM.SEQ, WALK.SEQ, DEATH.SEQ,
+  ANIMACJE, ETAPY, LEVELDES, hd_files, iso_stage, A_WALK, A_ZABLOK,
+  A_FIGHT_DOWN, A_WSP_LIN, A_ODLOT, A_DEAD, seq=, second anchor,
+  landing step, draw anchor, LL.iso
+CODE: yes: one comment block, ported/ll_seq.h's note on the two
+  declarations PR-359 added - it said "whether any shipped element
+  carries a second anchor is unmeasured" and named the staged fixture as
+  the blocker; it now states what the census found and names OI-129 and
+  the missing per-object current-element as the real blockers. No
+  executable line, no Makefile target, no leg changed.
+HOOKS: PR-357 read the pair this measures (0x42980/0x429d0, the
+  anchor-delta transform and its 0x7fff guard) and opened exactly this
+  census; PR-359 modelled it in the port (ll_seq_anchor_land/leave, leg
+  L16) and left it unwired pending this measurement; PR-354 owns the
+  standing bit ([obj+0xB6] bit 0x01) that flips at the same instant;
+  PR-352's standing query (L15) is what the step moves the ask point of;
+  PR-45/PR-49 established that a state draws exactly the .SEQ its own
+  seq= names and that the draw subtracts f0/f2 - this pass reads the
+  same seq= tables to map states to elements; PR-342 read the ZARIA.01
+  seat scripts (PALM.MOV, PALML.MOV, KAT.MOV) and their row lists;
+  PR-47's rule "partial staging must FAIL, not shrink the corpus" is why
+  the census enumerates with verify_seq.records_of, the same walk
+  make verify-seq pins, instead of a file scan.
+OPENS: OI-129 - the contradiction this measurement creates: a
+  body-height-sized offset applied at the standing transition, unmodelled
+  in the port, with the fixture suite green (69 legs ok), so one of the
+  three statements is wrong and the pose-dump comparison at a landing
+  instant is the measurement that says which. What point of the frame the
+  second anchor names (a pose-tracking body line: not the shape height,
+  not the bottom edge). Why the 20 LITM.SEQ elements (ETAPY/ZARIA.02 and
+  ETAPY/ENA.03) hold 0x7fff in f4/f6 with f0 in -4..0 and w0 000c, and
+  what the 185 f0-sentinel elements are (one per file, mostly ANIBACK
+  EDGE* strips). Whether the element the engine passes at a standing
+  transition is in fact the CURRENT frame's - if OI-129's pose comparison
+  shows no ~31 px step in the original, PR-357's chain has to be re-read
+  at the call site. And the items already open: the element block's slot
+  +0x10 (12 sites) and +0x14 (9), the 0x58c counter, the block
+  0x546de-0x54700, bit 0x04 of [obj+0xB6].
+CLOSES: OI-128's data question ("whether any shipped element carries such
+  a second anchor") and with it PR-357's and PR-359's OPENS item for the
+  census: measured over the whole shipped install, not a sample.
+CORRECTS: PR-359, twice in the same week and both in the direction of
+  "rarer than it is": its ll_seq.h note says a second anchor may be
+  unmeasured and (by its choice of a 12 px demo anchor) implies the
+  feature is an occasional one - measured, 98.7% of elements carry an
+  anchor and 48.5% of those carry a real step. PR-357's paragraph (c) is
+  unaffected (the arithmetic it read is exactly what the data feeds it),
+  and its sentence "for an element whose f0 is the 0x7fff sentinel it
+  moves nothing at all" is true but describes 1.26% of shipped elements,
+  which this pass now measures rather than assumes.
+MEASURED: (a) THE POPULATION. /tmp/opencode/pr360_anchor_census.py walks
+  the containers with verify_seq.records_of (the walk make verify-seq
+  pins) and parses every payload with tools/seq_parse.py: 1655 payloads
+  plus the one known-bad original (ANIMACJE/TUNGA.11/DNGANI/OGIEN_M.SEQ,
+  accepted as at PR-47), 14715 elements, every one consumed exactly.
+  185 elements (1.26%) hold 0x7fff in f0 - the guard case, where
+  0x4298d writes nothing - and they are spread one per file over 182
+  payloads: 169 of them are ANIBACK background strips (mostly
+  SADES.06/ANIBACK/EDGE*.SEQ, one per file), 16 are elsewhere, the
+  largest single file being ANIMACJE/KADMAR.07/0/UJ23.SEQ with 4. 14530
+  elements are anchored.
+  (b) THE SECOND ANCHOR IS AUTHORED. Of the anchored ones the words
+  f4/f6 hold real values in 13917 cases, zeros in 260+191+142 patterns,
+  and the 0x7fff sentinel in 20 - and only 146 elements have f4 == f6 ==
+  0, so "no second anchor" is NOT how the game spells an unused field.
+  (f4,f6) == (f0,f2) in 7487 (51.5%) - the pair deliberately a no-op -
+  and 7043 carry a step: 1455 distinct (dx,dy), magnitude min 1, median
+  28, p90 48, max 32767 (the 20 sentinel elements). The most common are
+  pure-y: (0,-28) x217, (0,-29) x191, (0,-31) x159, (0,-30) x149,
+  (-15,-29) x124. With the engine's `sub [edx+4],(f2-f6)` a negative dy
+  moves the position DOWN. w0 is 000f in 14031 elements (shape+art, and
+  the f8/fA pair present: 14440 elements carry it, and the lion's frames
+  store 32767 there - the value the element initializer 0x41ef0 stamps
+  at +8, so the ctor's sentinel is the authored value too).
+  (c) WHAT IT IS NOT. Over the 14530 anchored elements: f6 - f2 equals
+  the element's own shape row count int16(b17) in 21 cases (0.1%), so
+  the second anchor is not the frame's height; f6 equals the bottom row
+  int16(b17) - 1 in 2172 (14.95%), within one row in 27.7%, so it is
+  not the bottom edge either; and f4 == f0 in 10345 (71.2%), which is
+  why most steps are y-only.
+  (d) WHAT IT IS: a body line that tracks the pose. Read through the
+  authoring that selects these elements - the .MOV scripts are NOT on the
+  CD, they are HD-overlay ANIMACJE records (hd_files/ANIMACJE,
+  ANIMACJE/<level>/<LEAF>/<SCRIPT>.MOV), and every [STATE] block names
+  its art with seq=, which resolves to the CD's ANIMACJE/<level>/<LEAF>/
+  <NAME>.SEQ; /tmp/opencode/pr360_states.py resolves them and found 0
+  unresolved names for ZARIA.01's seat-line and lion scripts - and
+  (f6-f2) is constant within a state and scales across states. For the
+  lion's own ZARIA.01 script (LEW.ZAR/LEWPL.MOV, 36 states naming art),
+  per state: A_WALK 31..31 over its 12 frames and A_ZABLOK the same,
+  A_FIGHT_DOWN 21..25, A_DRAP/A_JUMP_DOWN 28..29, A_WSP_LIN 38..46,
+  A_ODLOT a constant 59 over 30 frames, A_KAMIEN 5..33, and A_DEAD 0..56
+  - the first frames 55, the last 4, i.e. the distance shrinks as the
+  lion collapses. KAT.MOV's 10 frames carry (-6,-21) to (-28,-44);
+  PALM.MOV and PALML.MOV, the two ZARIA.01 PALMA scripts, carry
+  (-5,-11) to (-5,-5) over their 14 frames.
+  (e) ONE ELEMENT, ALL OF IT (/tmp/opencode/pr360_example.py).
+  ANIMACJE/ZARIA.01/LEW.ZAR/WALK.SEQ element 0: w0 000f, rows 63, width
+  66, f0 44 f2 31 f4 44 f6 62, f8 32767 fA 32767. The draw anchor this
+  element is positioned by (ll_seq_anchor_origin, PR-49) is (44,31)
+  inside that 66x63 frame; the second anchor is the same x, 31 px lower,
+  32 px above the frame's bottom row. 0x42980 on it gives (0,-31): the
+  object's live position steps DOWN 31 px on entering the standing state
+  and 0x429d0 puts it back. DEATH.SEQ element 0: rows 62, f0 21 f2 6 f4
+  21 f6 61 -> (0,-55). fight_dn: rows 51 -> (0,-22). climb: rows 66 ->
+  (0,-32).
+  (f) WHY THAT IS A PROBLEM, NOT A COMPLETION. The step is applied at
+  the same instant PR-354's standing bit flips, it is body-height sized,
+  and for the asker in F6 - the lion - it is ~31 px in his standing
+  states. The port does not model it and does not need it today: with
+  the CD and HD overlay staged, `make -k verify-all` is green (69 legs
+  ok, the 3 named SKIPs being the no-regression baseline and the two
+  STATUS.LEO legs, which the ISO does not carry - LEO_HDD has no
+  STATUS.LEO, it is created by the installer). So either no covered leg
+  crosses a standing transition, or the port's own contact model reaches
+  the same place by another route, or a leg would notice. OI-129 names
+  the single comparison that decides: a pose-dump of the original across
+  a landing instant against the port's position trace.
+GATE: make 0 warnings; verify-all fixtures rc=0 69 (ok); NOTE - THE BOX
+  STATE CHANGED IN THIS PR AND THAT IS WHY THE NUMBER MOVED: the fixtures
+  are now staged (LL.iso is in the repository directory, gitignored;
+  `bsdtar -xf LL.iso -C /tmp/opencode/iso_stage LEO` and `bsdtar -xf
+  LL.iso -C /tmp/opencode LEO_HDD` then `mv /tmp/opencode/LEO_HDD/*
+  /tmp/opencode/hd_files/`),
+  so every ISO/HDD leg runs instead of name-SKIPPING. The suite was run
+  twice: with the staged data (69 ok + 3 named SKIPs - no-regression
+  needs a pre-fix baseline frame, verify-save and verify-userdir need
+  /tmp/opencode/hd_files/STATUS.LEO, which the ISO does not carry), and
+  with DATA=/tmp/opencode/nope HD=/tmp/opencode/nope (14 ok + the named
+  SKIPs), both ALL TESTS PASSED rc=0; verify-docs (with the journal-db
+  leg) and verify-index byte-identical, and those two plus the index
+  regeneration were run AGAIN after this record was appended, which is
+  the state the commit ships in. make verify-seq, which this
+  census depends on, is green over the staged corpus: 1656/1656 payloads
+  byte-exact, 1 known-bad original accepted.
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs in the
+  DATA=/tmp/opencode/nope HD=/tmp/opencode/nope run - unchanged from
+  PR-355..PR-359, because nothing executable changed. The evidence for
+  this record is fixture-backed by design: it
+  reads the staged containers through the repo's own enumerator and
+  parser, no new tool in the repo, five scripts under /tmp/opencode
+  (pr360_anchor_census.py, pr360_detail.py, pr360_second_anchor.py,
+  pr360_states.py, pr360_example.py plus pr360_list_records.py) and
+  their outputs (pr360_census.txt, pr360_detail_out.txt,
+  pr360_example_out.txt, pr360_states_zaria01.txt), logs
+  pr360_build.log, pr360_verify_staged2.log, pr360_verify_nope2.log.
+```
+
+- WHY. Two records in a row ended on the same sentence: "whether any
+  shipped element carries a second anchor is unmeasured". PR-357 wrote it
+  as the honest limit of a machine-code read; PR-359 wrote it as the
+  reason not to wire the model. Meanwhile this box had been reporting
+  "14 legs ok + 22 named SKIPs" for a week because nothing was staged -
+  and LL.iso was sitting in the repository directory the whole time,
+  gitignored. So the census is the cheap thing to do, and it is the thing
+  F6 needs.
+
+- WHAT THE CENSUS CHANGED IN ME. I expected the second anchor to be a
+  rare authored field, because PR-353/PR-354/PR-357 all described landing
+  through script commands and level data. It is the opposite: the field
+  is authored almost everywhere, and half the elements spell it equal to
+  the first anchor - an explicit no-op. That is a grammar fact, not an
+  accident: the game's own element initializer stamps 0x7fff at +0, +4
+  and +8, the blob then overwrites f0/f2/f4/f6 with real words, and where
+  the author wanted no step he wrote the same point twice rather than
+  leaving the field alone. So the honest reading of the pair is: the
+  engine applies a per-frame offset whenever the author asked for one,
+  and for the lion's standing states he asked, every frame, ~31 px.
+
+- THE THREE-WAY CONTRADICTION, STATED PLAINLY (OI-129). The engine
+  applies a ~31 px offset at the standing transition. The port does not
+  model it. The port matches the original on 69 fixture legs. All three
+  cannot be load-bearing: either the covered legs never cross that
+  instant (likely - the level legs are short ticks and the lion's
+  landing transitions are not among the pinned moments), or the port's
+  own ground model lands him at the same coordinates by a different route
+  (plausible - PR-352's L15 and the contact model place him from the
+  surface, not from his sprite's body line), or the offset is not applied
+  where PR-357's chain says it is (which would mean re-reading the call
+  site). The deciding measurement is one pose-dump pair at a landing
+  instant, and it is written as OI-129 with the recipe in it.
+
+- A NOTE ON THE BOX STATE. Every record since PR-354 reported 14 legs
+  because the box was unstaged, and those records are correct for the
+  state they ran in. From this PR on the staged configuration is the
+  default here, so gates will report the full fixture numbers (69 ok with
+  these two gaps named). Anyone comparing counts across records should
+  read the box-state sentence, not the count.
+
+- LEDGER NOTE. `tools/jq.py addr 0x42980` and `jq.py oi OI-128` were the
+  lookup step again before a single script ran. One vocabulary limit worth
+  recording: `jq name` is fed by `doc_census.NAME_RE`, which matches
+  `A_*`/`AC_*`/`K_*` state and action names and `.des` keys - C
+  identifiers are not names, so `name ll_seq_anchor_land` and
+  `name ll_seq_anchor_origin` both return 0 while `free ll_seq_anchor_land`
+  finds the records. Function names need either the free-text verb or a
+  new vocabulary; nothing in this pass needed more than free text.

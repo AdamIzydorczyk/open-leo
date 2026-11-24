@@ -5706,12 +5706,30 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         record, where the bracket names nothing. The pair is NOT wired
         into the level path, deliberately: its argument is the current
         frame's element through [view+0x48], which the port does not
-        track per object, and no shipped element has been counted for a
-        second anchor. So what F6 still lacks is a measurement, not a
-        mechanism: how many .SEQ elements have (f4,f6) != (f0,f2) -
-        tools/seq_parse.py would say, once an .SEQ fixture is staged -
-        and the port still counts ground_on, ground_off, lock2 and
-        unlock2 unmodelled (PLAN 8g).
+        track per object. PR-360 then measured the data, and it is the
+        normal case, not an exotic one: over 1655 .SEQ payloads and
+        14715 elements only 185 (1.26%) hold the 0x7fff guard, 7487
+        spell (f4,f6) == (f0,f2) - the pair as a deliberate no-op - and
+        7043 carry a real step (median 28 px, p90 48), with the second
+        anchor authored rather than padded (only 146 elements have
+        f4 == f6 == 0). Read through ZARIA.01's own scripts - the .MOV
+        records live in the HD-overlay ANIMACJE and each [STATE] names
+        its art with seq= - the lion's A_WALK and A_ZABLOK frames ALL
+        carry (0,-31): landing steps his position DOWN 31 px and leaving
+        steps it back, and the neighbouring states scale with the pose
+        (A_FIGHT_DOWN ~22, A_WSP_LIN 38-46, A_ODLOT 59, A_DEAD 55 down
+        to 4 as he collapses), while KAT.MOV's ten frames run (-6,-21)
+        to (-28,-44) and PALM.MOV/PALML.MOV's fourteen (-5,-11) to
+        (-5,-5). So the landing half of F6 is a body-height-sized offset
+        applied at the same instant the standing bit flips - and that is
+        now a contradiction to resolve, not a gap to fill: the port does
+        not model it and its fixture suite is green anyway (69 legs ok
+        with the CD and HD overlay staged). OI-129 names the one
+        measurement that decides which statement is wrong - a pose-dump
+        comparison across a landing instant. What F6 still lacks after
+        that: the current-frame element per object (the [view+0x48]
+        chain) if the pair does have to be wired, and the port's
+        unmodelled ground_on, ground_off, lock2 and unlock2 (PLAN 8g).
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

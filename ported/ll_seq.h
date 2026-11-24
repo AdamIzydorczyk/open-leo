@@ -150,9 +150,17 @@ void ll_seq_anchor_origin(const ll_seq_elem *e, int x, int y, int mirror,
  * is the sign the caller supplies: [obj+0x6d] (the authored `ldir`/`rdir`
  * word) in the class +0xB4/+0xB8 verbs, the +0x50 verb's answer in the
  * other six call sites.
- * NOT WIRED INTO THE RUNTIME PATH YET. Whether any shipped element
- * carries a second anchor is unmeasured - leg L16 pins the law, the .SEQ
- * census waits for a staged fixture (PR-357's OPENS). */
+ * NOT WIRED INTO THE RUNTIME PATH YET. PR-360 measured the shipped data:
+ * 98.7% of elements carry an anchor, half of them spell (f4,f6) ==
+ * (f0,f2) so this pair is a deliberate no-op, and the rest carry a real
+ * step - through ZARIA.01's own scripts the lion's A_WALK frames all
+ * give (0,-31), i.e. landing would step his position down 31 px and
+ * leaving back. Leg L16 pins the law; what stops the wiring is OI-129
+ * (the port is green on the fixture legs WITHOUT this offset, so which
+ * of the three statements is wrong has to be measured at a landing
+ * instant) and the fact that the engine's argument is the current
+ * frame's element through [view+0x48], which the port does not track
+ * per object. */
 void ll_seq_anchor_land(const ll_seq_elem *e, int facing, int *x, int *y);
 void ll_seq_anchor_leave(const ll_seq_elem *e, int facing, int *x, int *y);
 int ll_seq_draw_elem_anchor(const ll_seq *s, const ll_seq_elem *e,

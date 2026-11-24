@@ -5300,10 +5300,12 @@ OI-128: what landing and leaving a surface does - the class verbs
     record, its table is 0xa0c08, and slot +4/+8 are one inverse pair
     that shifts the position by the element's second anchor minus its
     first and undoes it on leaving; PR-359 models that pair in the port
-    (ll_seq_anchor_land/leave, leg L16) but does not run it. Still
-    open: whether any shipped element carries such a second anchor
-    (needs the .SEQ fixture), the 0x58c timer posters, the block
-    0x546de-0x54700, and the '#' census)
+    (ll_seq_anchor_land/leave, leg L16) but does not run it; PR-360
+    measured the shipped data - 98.7% of elements carry an anchor, half
+    of them spell (f4,f6) == (f0,f2) so the pair is a no-op, and for the
+    lion's own ZARIA.01 standing states the step is a DOWN move of about
+    31 px. Still open: what the second anchor NAMES (OI-129), the 0x58c
+    timer posters, the block 0x546de-0x54700, and the '#' census)
   origin: PR-345 (the class verb +0xAC read)
     The ground-contact verb 0x546a0 ends by telling the object about
     its surface: when the standing query's answer differs from the
@@ -5422,12 +5424,32 @@ OI-128: what landing and leaving a surface does - the class verbs
     argument is the object - so [obj+0]/[obj+4], the live position
     PR-308 named - or a copy of it. So landing is: set the standing bit
     (PR-354) and, when the current element declares a second anchor,
-    step the position onto it; leaving steps back. WHAT IS LEFT HERE is
-    no longer the mechanism but the data: how many shipped elements have
-    f0 != 0x7fff and (f4,f6) != (f0,f2) - measurable with
-    tools/seq_parse.py once an .SEQ fixture is staged, DEFERRED here -
-    what the block's slot +0x10 (12 sites) and +0x14 (9) verbs do, and
-    the timer items above.
+    step the position onto it; leaving steps back. PR-360 MEASURED THE
+    DATA over the staged fixtures and the answer is that the mechanism is
+    the normal case, not an exotic one: over 1655 .SEQ payloads and
+    14715 elements, only 185 (1.26%) hold the 0x7fff in f0 (the guard,
+    and they are one element per file, mostly ANIBACK background strips),
+    7487 of the anchored ones spell (f4,f6) == (f0,f2) so the pair is a
+    deliberate no-op, and 7043 spell a real step (median magnitude 28 px,
+    p90 48). The second anchor is authored, not padding: only 146
+    elements have f4 == f6 == 0. What (f4,f6) is NOT: not the shape
+    height (f6-f2 == int16(b17) for 0.1%), not the frame's bottom row
+    (exact 15%, within a row 28%), and f4 == f0 in 71% of cases, which
+    is why most steps are pure-y. What it IS, per frame: a body line -
+    its distance from f2 is constant within one state and tracks the
+    pose. Read through the ZARIA.01 scripts (the .MOV records are in the
+    HD overlay ANIMACJE, and each [STATE] names its art with seq=), the
+    lion's A_WALK/A_ZABLOK frames all step (0,-31), A_FIGHT_DOWN about
+    (0,-22), A_WSP_LIN (0,-38..-46), A_ODLOT a constant -59, and A_DEAD
+    runs from -55 down to -4 as he collapses; KAT.MOV's ten frames run
+    (-6,-21) to (-28,-44) and PALM.MOV/PALML.MOV's fourteen (-5,-11) to
+    (-5,-5). So when the lion lands, his position steps DOWN by about
+    31 px, and when he leaves it steps back. WHAT IS LEFT HERE: what
+    point of the art the second anchor names (a body line, not a shape
+    edge - see OI-129), the 20 LITM.SEQ elements (ZARIA.02, ENA.03) that
+    spell f4/f6 as 0x7fff and whose step would be 32767 px, the block's
+    slot +0x10 (12 sites) and +0x14 (9) verbs, and the timer items
+    above.
     PR-359 PUTS THAT PAIR IN THE PORT and answers the ask-model half:
     `ll_seq_anchor_land`/`ll_seq_anchor_leave` (ported/ll_seq.c) are the
     two methods instruction for instruction, and leg L16
@@ -5439,6 +5461,53 @@ OI-128: what landing and leaving a surface does - the class verbs
     So the landing step decides WHICH surface the standing query can
     see. It is deliberately NOT wired into the level runtime path: the
     engine's argument is the current frame's element through
-    [view+0x48], which the port does not track per object yet, and no
-    shipped element has been counted for a second anchor. Wiring it is
-    the step that needs the fixture.
+    [view+0x48], which the port does not track per object. PR-360 has
+    since measured the data half, and it says the step is real and big
+    (~31 px for the lion's standing states), which makes OI-129 the
+    blocker for wiring it, not the measurement.
+
+OI-129: the shipped landing step is ~31 px for the lion's standing
+  states, the port does not model it, and its fixture legs are green -
+  which of those three statements is wrong
+  status: OPEN
+  origin: PR-360 (the .SEQ element anchor census)
+  notes: PR-357 read the land/leave pair (0x42980/0x429d0) as one
+    inverse transform over the object's live position; PR-359 modelled it
+    in the port without wiring it; PR-360 measured what shipped data
+    puts in it. Through the ZARIA.01 HD-overlay scripts
+    (ANIMACJE/ZARIA.01/LEW.ZAR/LEWPL.MOV, each [STATE] naming its art
+    with seq=), every frame of the lion's A_WALK and A_ZABLOK states
+    carries the step (0,-31) - with the engine's `sub [edx+4],(f2-f6)`
+    that moves his position DOWN 31 px when he enters the standing state
+    and 31 px back when he leaves it - and the neighbouring states scale
+    with the pose: A_FIGHT_DOWN ~22, A_WSP_LIN 38-46, A_ODLOT a constant
+    59, A_DEAD from 55 down to 4 as he collapses. So this is not a
+    rounding detail: it is a body-height-sized offset applied at the same
+    instant the standing bit flips (PR-354's [obj+0xB6] bit 0x01).
+    The contradiction: the port does NOT model it (it counts ground_on,
+    ground_off, lock2 and unlock2 unmodelled, PLAN 8g) and yet the
+    fixture suite is green - 69 legs ok with the CD and HD overlay staged
+    (the three named SKIPs are the no-regression baseline and the two
+    STATUS.LEO legs, not data holes). So either (a) none of the covered
+    legs crosses a standing transition of the lion, (b) the port's own
+    ground/contact model lands him at the same place by a different
+    route, or (c) the legs would notice and something else is off.
+    WHAT WOULD CLOSE IT: one targeted measurement, not more reading.
+    Take a level moment where the lion transitions into standing - the
+    KATAPULT launch or a PALMA step in ZARIA.01, or any landing in
+    TUNGA.11 - and compare the original's frame (the golden rig's
+    pose-dump half, verify-golden) with the port's [obj+0x00]/[obj+0x04]
+    trace across that instant. If the original's position steps ~31 px
+    and the port's does not, the pair has to be wired (which needs the
+    current frame's element per object, PR-357's [view+0x48] chain) and
+    the port's own seat/ground offsets re-read against it. If the
+    original does not step, then the element the engine passes at that
+    moment is NOT the current frame's, and PR-357's chain needs re-read
+    at the call site.
+    SECOND, SMALLER: what point of the frame the second anchor names.
+    It is not the shape height (f6 - f2 == int16(b17) in 0.1% of
+    elements) and not the bottom edge (f6 == int16(b17)-1 in 15%); f4 ==
+    f0 in 71%, so the x leg is usually absent. The ZARIA.01 per-state
+    numbers (constant within a state, pose-tracking across states) say
+    body line, and the 20 LITM.SEQ elements that hold 0x7fff in f4/f6
+    with f0 of -1 or -4 are the oddity that would explain the rest.
