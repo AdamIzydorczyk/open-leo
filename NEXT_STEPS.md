@@ -54188,3 +54188,169 @@ MEASURED: (a) THE LIVE RIG. The disk-D original runs under TCG
   first tracer was built to watch. The object's aim anchors were
   continuously changing with the animation frame, while the flag
   that names PR-354's scripted state stayed untouched.
+
+## PR-391 - THE LEVEL'S GROUND FILE IS ITS LIVE SURFACE TABLE, LINE FOR
+## LINE: 0x4dc00 BUILDS ONE 12-BYTE POINT CONTAINER PER POLYLINE, AND THE
+## SEPARATOR AFTER EACH POINT IS THE FLAG BYTE AT record+0xc
+
+```
+KIND: read
+SUBSYSTEM: the level ground file - the `platformy=` loader, its point
+  containers, and the surface table a running level holds
+ADDRESSES: 0x4dc00, 0x4dc30, 0x4dc55, 0x4dc7f, 0x4dc88, 0x4dc92, 0x4cf64,
+  0x4cf85, 0x4cf94, 0x4cfb5, 0x4cfc7, 0x4cfe8, 0x4d440, 0x4d446, 0x4d44f,
+  0x4d469, 0x4d472, 0x4d48c, 0x4d492, 0x4d49b, 0x4a910, 0x49820, 0x4db50,
+  0x4da90, 0x455e0, 0x45120, 0x45136, 0x45149, 0x4515f, 0x45169, 0x4519d,
+  0x451e2, 0x4a0b0, 0x49920, 0x498f0, 0x45380, 0x453d0, 0x45250, 0x45258,
+  0x5c320, 0x76a64, 0x76bb7, 0x76d20, 0x57d30, 0xa0c64, 0xa0c78, 0xa0cb4,
+  0xa0cc0, 0x91e1e, 0x91e2c, 0x91e38, 0x91e28, 0x91ee5, 0x961fc, 0x96200,
+  0x9182d, 0x91830, 0x91834, 0x91d0f, 0x91d15, 0x91f21, 0x91f24, 0x91f27,
+  0x10000, 0x3a, 0x7a, 0x8a, 0x9a, 0x70, 0x74, 0x7c, 0x80, 0x84, 0x20, 0xc,
+  0x1000, 0x41c
+NAMES: platformy=, blokady=, sufity=, dir=, lew=, pozycja=, levels, Bledny
+  wpis w pliku levels, ZARIA1.DES, ZARIA_A.PLT, ZAR.BLK, none.des, .PLT,
+  ground line, surface table, point container, separator flag, held surface,
+  [obj+0x74], [obj+0x80], [obj+0x70], [obj+0x7c], [obj+0x84], [element+4],
+  [element+8], record+0xc, [obj+0xa9], [obj+0x89], [obj+0xca],
+  golden_surface_read.py
+CODE: yes: tools/golden_surface_read.py reads the live surface table, every
+  record of every element, and the world object's table fields through
+  non-stopping QMP reads and diffs them against an authored .PLT text;
+  nothing in ported/ changes
+HOOKS: none
+OPENS: what the FIRST record's flag byte decides where 0x45258 compares it
+  with ecx (`cmp edi,ecx; jg`) - ZARIA.01's ground line 0 carries 0 there
+  and 38 of the other 44 lines carry 1; what the two sibling tables do at
+  runtime, since 0x4db50 keeps 20-byte elements parsed by 0x455e0 at
+  [world+0x70]/[world+0x7c] and 0x4da90 reads a header into [world+0x84],
+  and how the 6-entry table that matches ZAR.BLK feeds the AC_BLOK answer
+  PR-389 read; whether the other nine ground files load through the same
+  call and the same law (45/45 is verified for ZARIA.01 alone)
+CLOSES: OI-128's `.PLT` separator census (no `#` is authored anywhere, 0
+  of 1749 separators), PR-390's "what the surface-provider array is" (it
+  is the `platformy=` table, and the handle PR-390 followed names line 0
+  of ZARIA_A.PLT, the west ground at y 680-684), and this record's own
+  first draft question about which level-config name reaches which loader:
+  the levels-file parser answers it, at 0x4cf64, 0x4cf94 and 0x4cfc7
+CORRECTS: PR-390, on the third word of a provider element: it is the
+  record count the line's leading number gives, written by 0x45136 into
+  [element+8] - the word PR-343 already read as `[handle+8]` - not a
+  "kind value"
+GATE: make 0 warnings; verify-all fixtures rc=0 111 (ok);
+GATE-FIXTURE-FREE: rc=0 15 (ok) + 22 named verify-SKIPs
+  Runs are `-k -j$(nproc)` (32 cores here), rc FIRST as section 2 rule 4
+  says. Counts use the house verdict pattern of HANDOFF section 2
+  (`grep -cE "\(ok\)|byte-exact|== (python|wine)|render 3000ms"`), not a
+  `(ok)`-line count, which that section warns undercounts (72 here). The
+  real check is the SET: every verdict line of the passing run matches
+  PR-390's run except the one that section predicts, the music pump's
+  wall-clock duration (tunga.MOD 2.00s -> 2.12s; its own assertions
+  silent=0 clip=0 peak=12706 unchanged). The fixture-free run's set is
+  byte-equal to PR-390's. ONE RUN FAILED AND IT IS NAMED: the first
+  with-fixtures run was rc=2, `verify-menu`'s demo-chain leg printed
+  `demo chain FAILED (rc=0)` with 5 fewer verdict lines - that leg opens
+  a real SDL window under a 180 s timeout, and this machine was running
+  the live-measurement QEMU guest at the time. The guest was stopped and
+  the leg was re-run alone (rc=0) and the whole suite again (rc=0, the
+  numbers above). Logs /tmp/opencode/pr391_build2.log (0 warnings),
+  pr391_verify_fixtures2.log (the rc=2 run), pr391_verify_fixtures3.log,
+  pr391_verify_nofixtures2.log, pr391_docs.log. Nothing under ported/
+  changed; the new tools/golden_surface_read.py is checked by the
+  comparison quoted in MEASURED (e) and by `python3 -m py_compile`, and
+  no port claim depends on this run.
+MEASURED: (a) THE AUTHORED GROUND FILES. The HD ETAPY container (sha
+  be5d8b92..., the one the disk-D rig runs; the CD variant holds no `.PLT`
+  record at all) carries ten of them, dumped with `tools/re/llrs_cat1
+  ETAPY <LEVEL> <NAME>.PLT`: 457 lines, 1749 points. A file's first line
+  is a decimal header and it equals the file's line count in 10 of 10.
+  Inside every one of the 457 lines x never decreases - the shape 0x45380
+  needs. Separator characters that follow the points: ';' 1738, '!' 11,
+  '#' 0. ZARIA.01's is named by LEVELDES/ZARIA1.DES: `dir=zaria.01`,
+  `platformy=zaria_a.plt`, `blokady=zar.blk`, `sufity=none.des`, next to
+  `pozycja=50,640` and `lew=TLewZaria,...`.
+  (b) THE CONFIG KEYS AND THEIR LOADERS, ONE FUNCTION. The parser that
+  reads a level description compares each entry's key word, held at
+  [ebp+0x3a], with the literals at 0x91e1e "platformy", 0x91e2c
+  "blokady" and 0x91e38 "sufity" (0x4cf64, 0x4cf94, 0x4cfc7; the compare
+  is 0x76d20, a word-at-a-time string equality) and stores the value with
+  the format " %s" (0x91e28) through 0x57d30 into [ebp+0x7a],
+  [ebp+0x8a], [ebp+0x9a]. An entry that matches no key ends at 0x4d423
+  with the error string "Bledny wpis w pliku levels: %s" (0x91ee5) - the
+  engine calls this file a levels file. The SAME function then opens each
+  name with 0x4a910 ([ebp+0x8a] at 0x4d440, [ebp+0x7a] at 0x4d466,
+  [ebp+0x9a] at 0x4d48c; 0x4a910 resolves the name and leaves the stream
+  at the globals 0x961fc/0x96200 that the line reader 0x49820 reads) and
+  hands the stream to the matching loader: 0x4db50 at 0x4d44f, 0x4dc00 at
+  0x4d472, 0x4da90 at 0x4d49b. So `platformy=` is the ground table,
+  `blokady=` is the 0x4db50 table, `sufity=` the 0x4da90 one - the
+  mapping ZARIA1.DES's three lines suggested is now machine-code fact.
+  0x4dc30 scans the header with "%d" (0x91f27) into [world+0x80];
+  0x4dc55 asks 0x76a64 for count*12+4 bytes; 0x4dc7f stores the array at
+  [world+0x74]; 0x4dc88 walks it 12 bytes a step and 0x4dc92 calls
+  `[element class + 0x20]` with edx = the running text pointer: one line
+  per element. The siblings read their headers with the same "%d"
+  (0x91f21, 0x91f24) into [world+0x84] and [world+0x7c], and 0x4db50
+  keeps 20-byte elements at [world+0x70] and parses each by calling
+  0x455e0 directly.
+  (c) THE ELEMENT AND ITS POINT RECORDS, 0x45120. "%d" at [element+8] is
+  the line's vertex count, i.e. points-1. 0x45149 allocates
+  (count+1)*13+4 bytes in 13-byte records with element class base
+  0xa0c64, stored at [element+4]. 0x4a0b0 reads `%d,%d` (0x91d0f) into
+  record+0x0 and record+0x4. Between the pairs 0x45130 scans " %c"
+  (0x91830) and 0x4519d writes 1 for ';', 2 for '#' and 0 for anything
+  else into that record's +0xc; 0x451e2 then consumes the terminating ';'
+  through 0x498f0 with the literal ';' at 0x91834. A point record is
+  therefore {int x, int y, dword class word, byte flag}.
+  (d) THE CLASS WORDS ARE PR-372's CONTAINER. The method array at 0xa0cb4
+  read at base +0xc, i.e. 0xa0cc0, has 0x45120 at +0x20 - the verb
+  0x4dc92 calls - and 0x45250 at +0x8, which is exactly the table PR-372
+  used as the ownership test. The level's ground table is one container
+  per polyline of the same class family that 37 object classes own at
+  [obj+0xee]; 0x45380 brackets a query x in it (no answer when x is
+  outside the first or last record) and 0x453d0 hands out the two
+  bracketing records.
+  (e) THE LIVE TABLE. tools/golden_surface_read.py against the PR-390
+  disk-D rig at icount shift 8, ZARIA.01 started from the chapter map by
+  hand. The world object is at guest 0x12dbf8: [world+0x74] = 0x51f144,
+  [world+0x80] = 45. All 45 elements carry class word 0x20ccc0 = image
+  0xa0cc0; 106 records carry 0x20ccb4 = image 0xa0cb4. Compared with
+  ZARIA_A.PLT: 45 of 45 elements equal their line - the count, every one
+  of the 106 points' x and y, and every flag byte the parser writes. 61
+  flag bytes are written, 51 of them 1 (the ';' after their point) and 10
+  of them 0 (the '!' lines 0, 5, 10, 11, 12, 14, 44); 61 = 106 points -
+  45 lines is exactly "the last point of a line carries no written byte",
+  and those 45 bytes hold 36 distinct unmotivated values, 0 to 255.
+  Element 0 is `1 -50,680!408,684;`, the west ground the lion of PR-390
+  stood on at (88,681); element 44 is `1 -100,1500!3000,1500;`, the
+  world floor. In the same window [world+0x70] = 0x51f0c4 with
+  [world+0x7c] = 6, the count ZAR.BLK's header gives, and [world+0x84]
+  is 0 while the file `sufity=none.des` names holds "0".
+  (f) THE IMAGE ADDRESSING, CHECKED BECAUSE THE TWO RULES IN THE REPO
+  LOOK ALIKE. `build/leo/leo.img` is flat from 0x10000 (build/leo/leo.json
+  `"image": ["0x10000","0xd76d0"]`), so its file offset is VA - 0x10000;
+  "VA - 0xf000" is the rule for the raw LEO.EXE text sweep. The two
+  differ by 0x1000, and a string read under the wrong one still returns
+  plausible text: image offset 0x9182d - 0xf000 spells "its.is" where the
+  VA 0x9182d holds "%d". Every string address in this block was read at
+  VA - 0x10000, and the string addresses the earlier records name
+  (0x9182d "%d", 0x91830 " %c", 0x91834 ";", 0x91d0f "%d,%d") re-read
+  correctly under that rule, so PR-334/371/389/390 need no correction
+  here. PR-338's CLOSED OI-124 row is the earlier instance of the mistake.
+```
+
+- WHY. OI-128 and the F6 thread ask what the lion stands on, and PR-390
+  followed a handle into an anonymous 45-element array. This says what
+  that array is: the authored ground file, byte for byte, with the
+  separator after each point carried into a per-point byte. The port
+  already measures its own actors against the level's line list
+  (`ll_plt_first_below`), so the geometry law is not what was missing -
+  what was missing is that the engine keeps the authoring separator
+  (0/1/2) as data, and the only ground line ZARIA.01's lion ever stands
+  on is one of the seven that carry 0 there.
+
+- WHAT SURPRISED ME. That a separator character survives into runtime as
+  a flag at all, and that the byte 0x45258 tests belongs to the FIRST
+  point of the line, not to a lookup result: for line 0 the author's
+  choice of '!' over ';' is what that test reads. And that the last
+  point of all 45 lines keeps an uninitialized byte, in a structure the
+  engine otherwise fills completely.

@@ -5523,12 +5523,33 @@ OI-128: what landing and leaving a surface does - the class verbs
     now answered too: 0x23a50 in all 155 tables, `lea edx,[eax+0x75]`
     then a call to 0x534e0, and 0x534e0 is one instruction, `ret`.
     It is a no-op, everywhere.
+    PR-391 CLOSES THE `.PLT` HALF OF THIS ROW. The provider table the
+    landing chain reads is the level's own ground file: the level-config
+    parser matches the keys `platformy`, `blokady` and `sufity`
+    (literals 0x91e1e/0x91e2c/0x91e38, compared by 0x76d20, values kept
+    at [ebp+0x7a]/[ebp+0x8a]/[ebp+0x9a]) and the same function opens
+    each name with 0x4a910 and calls 0x4dc00, 0x4db50, 0x4da90.
+    0x4dc00 makes one 12-byte container per polyline of the `.PLT` text
+    (count*12+4 bytes at [world+0x74], the file's header count at
+    [world+0x80]) and calls `[element class + 0x20]` = 0x45120 per line;
+    0x45120 allocates the 13-byte records whose count is at [element+8].
+    Measured live in ZARIA.01: 45 of 45 elements equal ZARIA_A.PLT's 45
+    lines in file order - every x, every y, and every flag byte the
+    parser writes (tools/golden_surface_read.py). The authored census is
+    answered too: no `#` separator exists in any of the ten shipped
+    `.PLT` files (0 of 1749), so the parser's flag-2 branch is dead in
+    shipped data. WHAT IS LEFT is what that flag byte decides: 0x45250,
+    slot +0x8 of the SAME container class 0xa0cc0, gates on the FIRST
+    record's byte (`movzx edi,[rec+0xc]`, `cmp edi,ecx`, `jg`) and on a
+    pass writes that record's x,y to [obj+0x89]/[obj+0x8d] - the sample
+    pair of OI-129 - plus deltas at [obj+0xca]/[obj+0xce].
 
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -
   which of those three statements is wrong
-  status: PARTIAL (PR-390 answers the ordinary landing; the named
-    ground_on script remains unexercised)
+  status: PARTIAL (PR-390 answers the ordinary landing, PR-391 names the
+    provider table and the geometry of the ask; the named ground_on
+    script remains unexercised and the separator flag byte is unexplained)
   origin: PR-360 (the .SEQ element anchor census)
   notes: PR-357 read the land/leave pair (0x42980/0x429d0) as one
     inverse transform over the object's live position; PR-359 modelled it
@@ -5944,3 +5965,23 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     Still open: whether authored script state ever invokes the
     0x54f40 runner, and what provider-record geometry makes the
     ask choose a particular element.
+    PR-391 ANSWERS THE LAST CLAUSE AND MAKES THE PROVIDER READABLE. The
+    provider array is the level's `platformy=` ground file: 0x4dc00 reads
+    its header count into [world+0x80] and builds one 12-byte container
+    per polyline at [world+0x74], 0x45120 parses one line into 13-byte
+    records. In ZARIA.01 the live 45-element table at 0x51f144 equals
+    ZARIA_A.PLT's 45 lines in file order, point for point, and the
+    handle PR-390 followed is element 0, the line `1 -50,680!408,684;`.
+    The element's third word is the line's vertex count at [element+8] -
+    PR-343's `[handle+8]` - and the record class word is the container
+    method array at image 0xa0cb4/0xa0cc0, the same table PR-372 used as
+    the ownership test. Geometry-wise the ask is already explained by
+    0x45380 (it rejects an x outside the first or last record and
+    returns the first record index >= x) and 0x453d0 (hands out the two
+    bracketing records). What is new open is the separator flag byte: the
+    parser writes it at record+0xc for the separator FOLLOWING point i
+    (';' to 1, '#' to 2, anything else 0) and never writes the last
+    record's byte, so the byte 0x45258 tests is the first point's
+    separator, authored - '!' on 7 of ZARIA.01's 45 lines including the
+    one the lion stands on, ';' on the other 38. `tools/golden_surface_read.py`
+    reads this table from a running level without stopping the guest.
