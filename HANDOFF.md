@@ -5558,6 +5558,16 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         the base either. So the attachment is real but is not this
         level's mechanism, and the named step before F6 is now OI-127,
         the entry array at [0xcef40+0x74] that the attach carries.
+        PR-344 then read that query's own entry law and removed a false
+        obstacle from it: every one of the six askers passes the mode 2
+        in ebx, 0x45120 never writes a record flag above 2, so the flag
+        filter at 0x4540c is inert and the ZARIA.01 chain does fail
+        where PR-336 measured it, at the clearance compare; and a
+        queried surface is not an object but a three-word handle - code
+        table, record array, count - embedded in a seat at obj+0xa5, so
+        the slot 0x1b writes and the slot a seat's own table lives in
+        are the same offset, with 38 such handle tables in the image,
+        PALMA's at 0x96c28 immediately before its class view.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

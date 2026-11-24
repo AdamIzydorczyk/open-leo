@@ -47602,3 +47602,190 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   name-branch map that names SPLYW and STRUMIEN; the verb bodies are
   dumped in /tmp/opencode/pr343_54560.txt and pr343_52b10.txt.
 ```
+
+## PR-344 - EVERY ASKER OF THE SURFACE QUERY PASSES MODE 2, SO THE FLAG
+## FILTER AT THE HEAD OF 0x45400 IS INERT IN THE SHIPPED GAME: PR-343'S
+## "THE ZARIA TABLES FAIL IT FIRST" IS VOID, AND A QUERYED SURFACE IS A
+## THREE-WORD HANDLE - AT obj+0xa5 IN A SEAT - THE SLOT 0x1b WRITES
+```
+KIND: read
+SUBSYSTEM: F6's seat chain - the entry law of the surface query
+  0x45320/0x45380/0x45400, the mode word its six askers pass, what a
+  queried surface actually is, and which of those gates can fire.
+ADDRESSES: 0x45120, 0x4512c, 0x4513b, 0x45149, 0x4514a, 0x45152,
+  0x45166, 0x451a6, 0x451d4, 0x451db, 0x4531c, 0x45320, 0x45326,
+  0x4532a, 0x4533c, 0x45340, 0x45345, 0x45349, 0x4534f, 0x45359,
+  0x4535f, 0x4536f, 0x45370, 0x45380, 0x4538c, 0x45391, 0x45397,
+  0x453a1, 0x453b8, 0x453cd, 0x45400, 0x45406, 0x4540a, 0x4540c,
+  0x4540f, 0x45417, 0x4541f, 0x45423, 0x4542c, 0x45434, 0x45439,
+  0x4543c, 0x45440, 0x45447, 0x45462, 0x45468, 0x4546d, 0x45471,
+  0x45477, 0x45479, 0x4547d, 0x45481, 0x45491, 0x45496, 0x4549a,
+  0x454a2, 0x454a8, 0x454ae, 0x454b1, 0x454c0, 0x455a0, 0x541f0,
+  0x54200, 0x54218, 0x4a0b0, 0x49920, 0x9182d, 0x98278, 0x1e560,
+  0x1e585, 0x1e58a, 0x1e58f, 0x1e596, 0x1e970, 0x1e979, 0x1e985,
+  0x288e0, 0x288f4, 0x288fe, 0x28903, 0x2890d, 0x380d0, 0x380e2,
+  0x380e9, 0x380f6, 0x380fb, 0x38102, 0x3df00, 0x3df16, 0x3df20,
+  0x3df2f, 0x3efe0, 0x3efe9, 0x3f019, 0x3f01e, 0x3f023, 0x3f028,
+  0x1f8d9, 0x1f8de, 0x1f8e9, 0x1f8f9, 0x2b6a0, 0x4a621, 0x4a63f,
+  0x5460e, 0x54618, 0x5461e, 0x54624, 0x5462e, 0x54632, 0x4b79d,
+  0x4b7ad, 0x4b7d2, 0xa5, 0xca, 0xce, 0xe2, 0xe6, 0xea, 0x44, 0x6c,
+  0x88, 0xa9, 0xad, 0xee, 0xd, 0xc, 0x2, 0x1b
+NAMES: surface query, surface handle, record array, record count,
+  separator, flag byte, mode word, bracket law, clearance, held
+  surface, waiver, winner triple, DRABINKA, PALMA, KATAPULT, OI-072,
+  OI-123, OI-124, OI-127, F6, pr344_45400.txt
+CODE: no: nothing in ported/ or the Makefile moved. What moves is the
+  shape of the gate an F6 leg would have to satisfy, and one field's
+  type.
+HOOKS: the seat ask verbs 0x1e570/0x1e970 (PR-336, PR-341) and the
+  record grammar the port copied from 0x45120/0x4a0b0 into
+  place_seat_table (PR-335) - neither is changed; no port behaviour
+  moves. The port's own seat tables are built from the .MOV text, so
+  the handle slots measured here are not modelled and none of this
+  changes a port answer.
+MEASURED: (a) THE SIX ASKERS AND THEIR MODE. 0x45320 has exactly six
+  callers and all six set the same registers: eax = a surface HANDLE,
+  edx = the requester, ecx = 0, and EBX = 2. The seat pair: 0x1e58a
+  `mov ebx,2; add eax,0xa5` and 0x1e979 `mov ebx,2; add eax,0xa5`,
+  both behind the cursor test of PR-341, the first also gated at
+  0x1e585 `cmp ebx,0xd; jge`. The other four: 0x288fe is reached only
+  when the class +0xd8 verb answers nonzero at 0x288f4, and passes
+  &[edi+0xee]; 0x380f6 passes &[edi+0x44] and only when [obj+0x5c] is
+  0x1f or 0x20 (0x380e9-0x380f4), two of the state indices of PR-336;
+  0x3df20 passes &[esi+0xee] behind the same +0xd8 verb; 0x3f01e
+  passes &[eax+0x44] only when the caller equals [eax+0x3c], the
+  rectangle word of PR-328 - and 0x3efe9 shows that class parsing its
+  own table with 0x45120 at &[eax+0x44]. So mode 2 is not a seat
+  peculiarity: no asker in the image passes anything else.
+  (b) WHAT A SURFACE IS. The handle is a three-word block: +4 is the
+  record array, +8 is the count. 0x45120(eax = the handle, edx = the
+  text) is what fills it: it scans the header with the format at
+  0x9182d, which is the literal "%d %c ;" - a count, one character, a
+  semicolon - writing the count at [handle+8] (0x4512c, 0x4513b),
+  then allocates (count+1)*0xd + 4 bytes (0x45149-0x45152) and stores
+  the array at [handle+4] (0x45166) before filling the rows through
+  0x4a0b0, PR-335's line parser. A seat's handle is EMBEDDED in the
+  object at obj+0xa5, so its record array is [obj+0xa9] and its count
+  is [obj+0xad]: the ladder's constructor 0x1f8ac initialises exactly
+  that triple - 0x1f8de writes [obj+0xa5] = 0, 0x1f8e9 writes
+  [obj+0xa9] = 0, 0x1f8f9 writes [obj+0xad] - and 0x2b6a0, 0x4a621
+  and 0x4a63f clear the same fields. The other handle homes are the
+  rectangle class's embedded one at obj+0x44 and the pointer at
+  [obj+0xee]. That is the type OI-127 asked for: the value the 0x1b
+  attach stores at [obj+0xa9] (0x54624) is a HANDLE OF THIS SAME SHAPE,
+  because the waiver 0x45479 `cmp esi,ebx` compares it against esi,
+  which is 0x45400's own first argument - a handle - and 0x54618 and
+  0x5462e read [handle+0] as a CODE TABLE and call its +4 and +0 with
+  edx = the object, which is the same first word 0x4b7ad uses when it
+  calls `[[entry]+0x14]` on the provider entries. So a surface handle
+  is {code table, record array, count}: PR-343's "the payload's first
+  word is a table of two code pointers" is right about the use and
+  incomplete about the shape, and OI-127's conflict between the two
+  readings of [obj+0xa9] is dissolved - there is one type.
+  (c) THE QUERY AND THE MODE. 0x45320 keeps the handle in edi and the
+  requester in esi, builds {0, 0, 0x98278} on the stack and fills it
+  with 0x541f0 (0x45340), the position block of PR-336, which also
+  tests [obj+0xb6] bits 1 and 2 and calls the class +0xbc verb
+  (0x54200, 0x54218). It then adds the velocity words [obj+0xca] and
+  [obj+0xce] to that point (0x45349-0x45363) - the ask is aimed where
+  the requester is MOVING, not where it stands - and calls 0x45400
+  with eax = the handle, edx = the requester, ecx = ebx = the mode
+  (0x45359 `mov ecx,ebx`, 0x4536f), the mode being the caller's ebx,
+  not its ecx as PR-343's OPENS paragraph said.
+  (d) THE FIRST GATE CANNOT FIRE. 0x4540c `mov eax,[eax+4]` takes the
+  record array, 0x4540f `mov al,BYTE PTR [eax+0xc]` and 0x45412 read
+  the FLAG BYTE OF RECORD 0, and 0x45417 `cmp eax,ecx; jg 0x454c0`
+  rejects when that flag exceeds the mode. But 0x45120 is the only
+  writer of that byte and its three branches are 1 for ';' (0x451a6),
+  2 for '#' (0x451d4) and 0 otherwise (0x451db); with the mode fixed
+  at 2 by paragraph (a) the compare can never go the wrong way. The
+  flag filter is INERT in the shipped game: no shipped table is
+  rejected before the bracket test, and PR-343's claim that the
+  ZARIA.01 tables whose first separator is ';' fail there is void.
+  (e) THE GATES THAT DO FIRE, IN ORDER. 0x4541f calls 0x45380 with the
+  handle and the aimed point. It returns 0 if [handle+8] is zero
+  (0x4538c), if x < record 0's x (0x45393 `cmp edx,[eax]; jl`), or if
+  x > record count's x (0x45397 `imul edx,[ecx+8],0xd`, 0x4539f);
+  otherwise it walks the table from index 1 (0x453a3-0x453bb) and
+  returns the SMALLEST SEGMENT INDEX i with x <= record i's x - not a
+  boolean, a bracket. 0x45400 rejects only on 0 (0x4542c) and turns i
+  into the record PAIR: 0x4543c `imul ebx,edx,0xd` and 0x45440
+  `imul edx,edx,0xd` after `dec edx`, both added to [handle+4] -
+  record i and record i-1. 0x453d0 is the same pair used the plain
+  way - call 0x45380, interpolate records i and i-1 with 0x455a0, and
+  return 0x7fffffff when the point is outside the table (0x453f5).
+  The requester's class verb +0x6c is called at 0x45439 and its
+  result is passed as 0x455a0's second argument
+  (0x45462): the pair of 0x455a0 calls (0x45468, 0x45491) is
+  PR-336's segment interpolation, asked at the requester's own +0x6c
+  value, and the first result has the aimed point's y subtracted
+  (0x4546d reads 0x45320's block, 0x45477 `sub eax,edx`). The
+  rejections are 0x4547d `test eax,eax; jl 0x454c0` - a negative
+  clearance, which is what PR-336 measured at ZARIA.01's coordinates -
+  skipped only when 0x45479 `cmp esi,ebx` finds the handle to be the
+  requester's own attached one, ebx = [requester+0xa9] read at 0x45471;
+  then 0x45496 `test eax,eax; jg` and 0x4549a `cmp eax,[requester
+  +0xea]; jg` reject a worse clearance than the incumbent. The winner
+  is stored as PR-336 said - [requester+0xe6] = the handle, [+0xea] =
+  the clearance, and [+0xe2] = the winning record's flag byte, read at
+  0x454b1, which is the only place that byte is ever USED - so with
+  mode 2 the flag byte carries no selection meaning anywhere and
+  [actor+0xe2] is information, not a gate.
+  (f) THE HANDLE'S CODE TABLE, AND WHO HAS ONE. That first word is a
+  four-method table and it is in the image: 0x96c28 = {0x453d0,
+  0x45320, 0x45400, 0x45120} - height-at-x, the query, the query core,
+  the parser - and it sits SIXTEEN BYTES BEFORE PALMA's class view
+  0x96c38; 0x96d0c is the same quartet sixteen bytes before KATAPULT's
+  0x96d1c. Counting aligned dwords whose value is 0x453d0 gives 38 of
+  these tables, all in the class-view region 0x96c28-0xa2044, which is
+  the census of the classes that own a queryable surface. No
+  instruction names any of those 38 addresses, so they are installed by
+  the template copy of PR-294 rather than by a store, and that is the
+  remaining OI-127 question. It also renames what PR-343 called the
+  attach and detach NOTICES: they are methods of this table. The
+  detach half 0x5461e calls the old surface's +4, which is the query
+  0x45320, so detaching re-runs the standing-surface query for the
+  object; the attach half 0x54632 calls the new surface's +0, which
+  all 38 tables hold as 0x453d0, the height probe - and it passes the
+  OBJECT as the position block, which works because 0x45380 reads the
+  point as [edx] and the object's x is at [obj+0] (PR-159).
+OPENS: what the class verb +0x6c returns, since it is the x at which
+  the segment is interpolated - no port model has it, and the two seat
+  verbs run it on the lion; who calls 0x453d0, the plain "ground
+  height at my x" entry that returns 0x7fffffff outside the table, and
+  whether the physics tail of PR-336 uses that instead of 0x45400;
+  whether a .des built by a different tool ever passes a mode below 2,
+  since the bound comes from 0x45120's three writers and not from the
+  data; and the provider entries of OI-127, whose +0 code table is now
+  known to be the same first word as a seat handle's - what installs
+  those entries and who their +0 and +4 methods are.
+CLOSES: the open item PR-343 opened about the flag-byte gate at
+  0x4540c - answered from 0x45120's value range and the askers' mode,
+  so the census of the shipped tables it asked for is not needed; the
+  first half of OI-127, the shape of a 0x1b payload, which is a
+  surface handle {four-method table, record array, count} and not a
+  surface object; and the census of who owns a queryable surface - 38
+  of those handle tables, PALMA's at 0x96c28 and KATAPULT's at
+  0x96d0c. It does not close OI-072, OI-123 or OI-124: with the flag
+  filter inert the ZARIA.01 chain still ends at the bracket and
+  clearance law PR-336 measured and at a waiver that needs an attach
+  this level never posts.
+CORRECTS: PR-343 twice. Its OPENS paragraph says the two seat ask
+  verbs pass the mode 0 and that ZARIA.01's tables fail the flag test
+  before any bracket or clearance: they pass 2, in the ebx of the call
+  rather than its ecx, and 0x45120 never writes a flag above 2, so
+  that test never rejects. Its paragraph (h) calls the 0x1b payload
+  "a table of two code pointers": it is a surface handle, and its
+  first word is the code table that a seat's own handle at obj+0xa5
+  also begins with. And PR-336's "surface object" for that argument is
+  a handle, not an object: 0x45400 never reads a vtable of the surface.
+  PR-336's bracket law, its clearance arithmetic, its winner triple and
+  its measured rejection all stand.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: the six asker sites are the
+  leodb callers list of 0x45320 with their `mov ebx,2` quoted at 0x1e58a,
+  0x1e979, 0x288fe, 0x380f6, 0x3df20 and 0x3f01e; the flag bound is
+  0x45120's branches 0x451a6/0x451d4/0x451db and its header format is
+  the string at 0x9182d; the query body is dumped in
+  /tmp/opencode/pr344_45400.txt.
+```

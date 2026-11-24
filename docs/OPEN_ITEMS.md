@@ -4906,9 +4906,14 @@ OI-123: what the 0x1b attach attaches, and why no shipped seat object
     WHAT WOULD CLOSE IT: what the entries at [0xcef40+0x74] are and
     what their +0/+4/+0x14 verbs do (OI-127); whether the state gate
     of 0x2c1cd-0x2c1ef - held surface nonzero, state index 1, the
-    flag bit 0x40 at [obj+0x64] - ever holds in a shipped level; and
-    the flag-byte test at 0x4540c measured over the shipped seat
-    tables, which decides whether their ask answers at all.
+    flag bit 0x40 at [obj+0x64] - ever holds in a shipped level. Two
+    of the questions this row raised are now answered: the flag-byte
+    test at 0x4540c is INERT, all six askers passing the mode 2 while
+    0x45120 never writes a flag above 2, so no shipped table is
+    rejected before the bracket test and no census is owed (PR-344);
+    and the 0x1b payload is a surface handle, not a surface object
+    (PR-344, OI-127). What is left is whether ZARIA.01 owns any
+    attachable surface at all.
 
 OI-124: ZARIA.01's first chasm has no measured carrier
   status: OPEN
@@ -5076,8 +5081,9 @@ OI-126: the golden-master menu pose-set pin is a wall-clock capture, so
 
 OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
   its code blocks, and the group it mirrors
-  status: OPEN
-  origin: PR-343 (the object message queue read)
+  status: PARTIAL
+  origin: PR-343 (the object message queue read), the type answered
+    by PR-344
     The one payload-carrying 0x1b post, 0x2c252, hands over what
     0x4b760 wrote to its out-parameter: not an object pointer but an
     ENTRY ADDRESS inside the array at [game anchor 0xcef40 + 0x74],
@@ -5096,6 +5102,32 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     NEGATIVE score from a start of 0x80000001 (0x4b720-0x4b737) where
     0x4b760 keeps the most positive from 0x7fffffff, and the caller
     accepts only a score above -5 or below 5 (0x2c209, 0x2c230).
+    PR-344 ANSWERS THE TYPE AND DISSOLVES THAT CONFLICT. A surface is
+    a three-word handle: +0 a code table, +4 the record array, +8 the
+    count - 0x45120 writes the count at [handle+8] and the array at
+    [handle+4] (0x4512c, 0x4513b, 0x45166), 0x45380 reads the count
+    at +8 and the array at +4, and a seat's own handle is EMBEDDED in
+    its object at obj+0xa5, so its record array IS [obj+0xa9], the
+    slot 0x54624 writes - the ladder's ctor initialises that triple at
+    0x1f8de, 0x1f8e9 and 0x1f8f9. The waiver 0x45479 `cmp esi,ebx`
+    compares a handle against [requester+0xa9], so the attached value
+    is a handle too - which is also the shape of the 0xc-stride
+    entries this row describes: {code table, records, count}, and
+    0x4b7ad's `[[entry]+0x14]` is the same code table 0x5461e and
+    0x54632 call at +4 and +0. Those tables are in the image: 0x96c28
+    is {0x453d0, 0x45320, 0x45400, 0x45120} - height-at-x, query,
+    query core, parser - sixteen bytes before PALMA's class view, and
+    the dwords that hold 0x453d0 number 38 across the class-view
+    region, which is the census of the classes that own a queryable
+    surface. Each is a four-method table immediately FOLLOWED by the
+    class view, so the +0x14 of this row is the class view's own +4.
+    The two "notices" of 0x5460e are methods of that table, not
+    notifications: 0x5461e calls the OLD surface's +4, which is the
+    query 0x45320, so detaching re-runs the standing-surface query for
+    the object, and 0x54632 calls the NEW surface's +0, which all 38
+    tables hold as the height probe 0x453d0, passing the object itself
+    as the position block - [obj+0] is its x (PR-159), and 0x45380
+    reads the point as [edx].
     0x5da60 shows where the array comes from: it rebuilds the
     mirrors at [anchor+0x6c..0x78] and [0x7c..0x80] from the anchor's
     group heads at [0x14]/[0x18]/[0x1c]/[0x20] and their counts at
@@ -5108,6 +5140,8 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     depends entirely on what that group is.
     WHAT WOULD CLOSE IT: which of the four group heads the mirror at
     +0x74 follows and what fills that group - the installer or the
-    level record that creates those entries; the three verbs of the
-    entry code blocks; and whether [obj+0xa9] holds such an entry or
-    a surface object, which 0x45479 and 0x54632 read differently.
+    level record that creates those entries; whether those entries use
+    a class's own four-method table, as a seat's embedded handle does,
+    or a table of their own; and whether [obj+0xa9] is per-object or
+    per-class, since a seat uses that same offset as its own record
+    array while a lion uses it as the surface it is attached to.
