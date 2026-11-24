@@ -4903,6 +4903,18 @@ OI-123: what the 0x1b attach attaches, and why no shipped seat object
     half of the seat chain is real but belongs to KADMAR II, not to
     ZARIA.01, and PR-336's measured rejection at shipped coordinates
     still stands as the reason ZARIA's chain does not carry the lion.
+    PR-345 REMOVES THAT CONDITIONAL. The same slot is written on the
+    standing path by the class ground-contact verb +0xAC, which every
+    lion class and KAMIEN install as 0x546a0 and which copies the query
+    answer [obj+0xe6] into [obj+0xa9] each step (0x5478e, 0x547bc) -
+    the 0x1b message at 0x54624 is the scripted exception, not the
+    only door. The seat classes' own +0xAC is 0x23930, a bare `ret`,
+    so a seat never holds a surface for itself, and the question for
+    this level is no longer whether a message is posted but WHICH
+    SURFACE the lion's standing query resolves to: if it resolves to a
+    seat's own handle at that seat's obj+0xa5, the waiver 0x45479 is
+    live and the negative-clearance rejection of PR-336 stops applying
+    to that seat.
     WHAT WOULD CLOSE IT: what the entries at [0xcef40+0x74] are and
     what their +0/+4/+0x14 verbs do (OI-127); whether the state gate
     of 0x2c1cd-0x2c1ef - held surface nonzero, state index 1, the
@@ -4962,14 +4974,18 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     message that attaches a requester to a surface - is ANSWERED and
     it is not this level's: five sites post it, the only one with a
     payload is a verb of TLewKadmar2 (0x9b4d4 +0x90), and no seat
-    class and no ZARIA lion dispatches the value at all (PR-343). So
-    the carrier of this chasm is still unmeasured. What would close
-    it: what the entry array at [0xcef40+0x74] is and whether
-    ZARIA.01 has any of those entries (OI-127); if not, the carrier
-    is something else, and the candidates are the .plt ground of the
-    chasm read as a slope or a scripted chain (T6). The seat chain's
-    own motion is now ported (PR-342) and returns to its authored
-    place every row cycle, so the 28 px is not coming from it.
+    class and no ZARIA lion dispatches the value at all (PR-343). But
+    the attachment slot is not message-only: the ground-contact verb
+    +0xAC, which every lion class installs as 0x546a0, copies the
+    standing query's answer into [obj+0xa9] every step (PR-345), so
+    the carrier question becomes WHICH HANDLE the lion's standing query
+    resolves to at each chasm position - if it resolves to a seat's own
+    handle at that seat's obj+0xa5, the waiver of PR-344 applies and
+    the seat can hold the lion below its table. Measuring that needs
+    the +0x6c verb of the lion class (PR-344) and the ground the
+    chasm's own tiles give, which is T6. The seat chain's own motion
+    is ported (PR-342) and returns to its authored place every row
+    cycle, so the 28 px is not coming from it.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that
@@ -5145,3 +5161,44 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     or a table of their own; and whether [obj+0xa9] is per-object or
     per-class, since a seat uses that same offset as its own record
     array while a lion uses it as the surface it is attached to.
+
+OI-128: what landing and leaving a surface does - the class verbs
+  +0xB4 and +0xB8, the '#' ejection counter, and the unread head of
+  the ground-contact verb
+  status: OPEN
+  origin: PR-345 (the class verb +0xAC read)
+    The ground-contact verb 0x546a0 ends by telling the object about
+    its surface: when the standing query's answer differs from the
+    kept one it calls the old surface's +4 method, copies the new
+    answer into [obj+0xa9] (0x5478e, 0x547bc) and calls the object's
+    own class +0xB4 at 0x5479f, and when there is no answer it calls
+    the kept surface's +4, zeroes the field (0x547f0) and calls
+    +0xB8 at 0x547fa. The installed pair is 0x238b0/0x23880 for every
+    lion class and KAMIEN, 0x1e560/0x208d0 for PALMA, 0x22de0/0x20a40
+    for KATAPULT, 0x23290/0x20230 for the ladder - and PALMA's +0xB4
+    IS the seat ask verb of PR-341, so a seat's ask belongs to
+    landing, not to the tick. A second dispatcher, 0x45cb1, calls the
+    same pair keyed on the surface's record count at [handle+8]
+    (0x45cc6, 0x45cd4), and nothing in the image names it.
+    The other half is a timer. 0x54766 leaves the surface whenever the
+    winning record's flag byte [obj+0xe2] is 2 - a '#' record of
+    PR-335 - and [obj+0xc6] has reached 0x58c, 1420. That word is one
+    of the two the message values 2, 8 and 0xd write through 0x54560
+    (PR-343), so some poster is counting the ticks a thing may stay on
+    a '#' surface. The same tail also sets bit 0x10 of [edi] when it
+    acquires a surface and bit 0x20 of [edi+1] whenever the winning
+    flag byte is non-zero (0x54785, 0x547cf) - two state bits the port
+    has no name for.
+    WHY IT MATTERS: '#' is the third separator the .MOV table grammar
+    writes and the port reads but never acts on; if a shipped seat's
+    table uses it, that seat drops the lion on a timer, which is a
+    crossing mechanism the ladder has not modelled. And the ask verbs
+    being land verbs changes what F6 has to drive: a standing lion,
+    not a per-tick query.
+    WHAT WOULD CLOSE IT: the bodies of the land and leave verbs,
+    PALMA's 0x1e560 first; who posts the messages that write
+    [obj+0xc6] and what counts there; the unread block 0x546de-0x54700
+    of 0x546a0 and the three scan-and-apply pairs behind its state
+    bits, which read the provider tables of OI-127 from the standing
+    path; and a census of the '#' separator over the shipped .MOV
+    tables, which the port's parser already sees.

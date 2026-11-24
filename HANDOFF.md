@@ -5568,6 +5568,21 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         the slot 0x1b writes and the slot a seat's own table lives in
         are the same offset, with 38 such handle tables in the image,
         PALMA's at 0x96c28 immediately before its class view.
+        PR-345 then took the conditional out of OI-123's answer. The
+        attachment slot is not the message's private field: class slot
+        +0xAC is a ground-contact verb, 0x546a0 in 118 class views
+        including every lion class and KAMIEN, and its tail copies the
+        standing query's answer into [obj+0xa9] every step (0x5478e,
+        0x547bc) and calls the surface's +0 and +4 methods, the same
+        pair the 0x1b message calls. The seat classes' own +0xAC is a
+        bare `ret` (0x23930), so a seat never holds a surface for
+        itself, and landing dispatches the object's class verbs +0xB4
+        and +0xB8 - PALMA's +0xB4 is its ask verb 0x1e560, so the seat
+        ask belongs to landing, not to the tick - and 0x54766 leaves a
+        surface whose record flag is '#' once a counter reaches 0x58c,
+        which is OI-128. What F6 must now measure is not whether a
+        message is posted but which handle the lion's standing query
+        resolves to at each position of the chasm.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

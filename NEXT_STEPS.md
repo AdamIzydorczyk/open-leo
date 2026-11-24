@@ -47789,3 +47789,135 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   the string at 0x9182d; the query body is dumped in
   /tmp/opencode/pr344_45400.txt.
 ```
+
+## PR-345 - THE STANDING SURFACE IS MAINTAINED EVERY STEP BY THE CLASS
+## VERB +0xAC, WHICH IS THE OTHER WRITER OF THE ATTACHMENT SLOT: THE
+## WAIVER OF OI-123 IS LIVE WITHOUT THE 0x1b MESSAGE, THE SEAT CLASSES'
+## +0xAC IS A BARE RET, AND LANDING DISPATCHES THE CLASS VERBS +0xB4
+```
+KIND: read
+SUBSYSTEM: F6's seat chain - the ground-contact verb 0x546a0 installed
+  at class slot +0xAC, the fields it keeps, the land and leave verbs it
+  calls, and the state paths that re-enter it.
+ADDRESSES: 0x546a0, 0x546ac, 0x546b3, 0x546b9, 0x546bf, 0x546c2,
+  0x546c5, 0x546c8, 0x546d7, 0x54700, 0x54706, 0x54709, 0x54719,
+  0x54724, 0x54732, 0x5473d, 0x5474b, 0x54754, 0x54759, 0x54760,
+  0x54766, 0x5476f, 0x5477b, 0x54785, 0x5478e, 0x54794, 0x54798,
+  0x5479a, 0x5479f, 0x547a7, 0x547ad, 0x547b3, 0x547bc, 0x547c6,
+  0x547c8, 0x547cf, 0x547d7, 0x547e1, 0x547e8, 0x547f0, 0x547fa,
+  0x54804, 0x523f0, 0x52416, 0x535e0, 0x535ed, 0x535f7, 0x53620,
+  0x45cb1, 0x45cc6, 0x45cd4, 0x45c80, 0x45c96, 0x45ca4, 0x457e0,
+  0x4b600, 0x4b430, 0x4b7f0, 0x49580, 0x23930, 0x52a00, 0x238b0,
+  0x23880, 0x208d0, 0x20a40, 0x1e560, 0x23290, 0x453d0, 0x45320,
+  0x96920, 0x96960, 0x96a88, 0x96b34, 0x96c38, 0x96d1c, 0x96ddc,
+  0x96e94, 0x97a98, 0x97cdc, 0x9b4d4, 0x58c, 0x2, 0x40, 0x10, 0x20,
+  0x50, 0x5c, 0x8, 0xac, 0xb4, 0xb8, 0xb6, 0xa9, 0xe2, 0xe6, 0xea,
+  0xc6, 0x12, 0x44
+NAMES: ground contact, standing surface, held surface, attachment,
+  land, leave, ground-contact verb, state list, flag byte, ejection,
+  PALMA, KATAPULT, SPLYW, STRUMIEN, KAMIEN, DRABINKA, TLewZaria,
+  TLewZariaB, TLewKadmar2, OI-072, OI-123, OI-124, OI-127, F6,
+  pr345_54760.txt, pr345_45c80.txt
+CODE: no: nothing in ported/ or the Makefile moved. What moves is what
+  F6 has to assume about a standing lion.
+HOOKS: the query and its waiver 0x45320/0x45479 (PR-336, PR-344), the
+  seat ask verbs at 0x1e560 and 0x1e970 (PR-336, PR-341), the state
+  list [obj+0x50]/[obj+0x5c] of PR-336 and the applier of PR-341 -
+  none of them changed here, and no port behaviour moves.
+MEASURED: (a) THE VERB AND ITS CENSUS. Class slot +0xAC is the
+  ground-contact verb. 0x546a0 is installed there in 118 of the
+  class-view tables the ctor pattern names, and every class this ladder
+  cares about that can stand on something has it: TLewZaria 0x96960,
+  TLewZariaB 0x97a98, TLewKadmar2 0x9b4d4 and KAMIEN 0x96a88 all hold
+  0x546a0 at +0xAC. The seat classes hold NOTHING: PALMA 0x96c38,
+  KATAPULT 0x96d1c, SPLYW 0x96ddc and the ladder DRABINKA 0x97cdc hold
+  0x23930, which is a bare `ret`, and STRUMIEN 0x96e94 holds 0x52a00.
+  A seat never maintains a standing surface for itself; only the things
+  that stand on one do. Two call sites run it: 0x523f0, which calls
+  [obj+0x44]'s +0x8 and +0xc and then the class +0xAC at 0x52416, and
+  0x535e0, which is the state applier's tail - it writes the new state
+  index to [obj+0x5c] at 0x535ed and calls +0xAC at 0x535f7, so
+  changing state re-runs ground contact immediately.
+  (b) ITS GUARDS. 0x546a0 returns at once when [obj+0xb6] bit 2 is set
+  (0x546ac). It then reads the state record of PR-336 - eax =
+  [[obj+0x50] + [obj+0x5c]*4] at 0x546b9-0x546bf - takes the dword at
+  [state+0x12] and branches on its bits: 0x4000 takes the provider
+  scan 0x4b600 of OI-127 with ecx = 0 (0x546c5, 0x546d5, 0x546d7) and
+  a second arg of &esp+0x20; 0x100 runs three scan-and-apply pairs
+  0x4b600 with ecx = 2, 0x4b430 and 0x4b7f0, each followed by 0x49580
+  (0x54706-0x54754). The block between 0x546de and 0x54700 is not
+  read here and stays open.
+  (c) THE TAIL IS THE MAINTAINER, AND IT IS THE OTHER WRITER OF
+  [obj+0xa9]. 0x54759: if the query result [obj+0xe6] is zero, go to
+  the leave branch 0x547d7. Otherwise compare the kept surface
+  [obj+0xa9] with the fresh answer. They are equal: do nothing
+  (0x547c8). [obj+0xa9] was zero: set bit 0x10 of the flag byte at
+  [edi], copy the answer into it (0x5478e), call the NEW surface's +0
+  method - the height probe 0x453d0 - with the object as the position
+  block (0x54794-0x54798), then call the object's own class verb +0xb4
+  (0x5479a-0x5479f). They differ: call the OLD surface's +4 method -
+  the query 0x45320 - first (0x547af-0x547b3), then copy the new
+  answer in (0x547bc) and call its +0 (0x547c2-0x547c6). So the
+  attachment slot of PR-343 and OI-127 is not a message-only field:
+  it tracks the standing query every step, by the same +0 and +4
+  method pair, and the 0x1b message is the scripted twin of this tail.
+  Afterwards 0x547c8 sets bit 0x20 of [edi+1] whenever the winning
+  record's flag byte [obj+0xe2] is non-zero.
+  (d) THE EJECTION LAW. The leave branch 0x547d7 is taken from the top
+  of the tail (0x54760) when there is no answer, and also when
+  [obj+0xe2] == 2 - a '#' record, the flag 2 of PR-335 and PR-344 -
+  AND [obj+0xc6] >= 0x58c (0x54766, 0x5476f): standing on a '#'
+  surface is time-limited to 1420 of the [obj+0xc6] counter, which is
+  one of the two words the message values 2, 8 and 0xd write (PR-343).
+  The branch calls the kept surface's +4 method (0x547e1-0x547e8),
+  zeroes [obj+0xa9] (0x547f0) and calls the class verb +0xb8
+  (0x547eb-0x547fa).
+  (e) THE LAND AND LEAVE VERBS. +0xB4 is land and +0xB8 is leave: the
+  lions' pair is 0x238b0 and 0x23880, KAMIEN's the same, PALMA's
+  0x1e560 and 0x208d0, KATAPULT's 0x22de0 and 0x20a40, the ladder's
+  0x23290 and 0x20230. PALMA's +0xB4 is the seat ask verb of PR-341 -
+  so a seat's ask is the thing that runs when something of that class
+  lands, not a per-tick poll. The only other dispatcher of that pair
+  is 0x45cb1(eax = a surface handle, edx = the object): it calls
+  0x457e0 and then dispatches on [handle+8], the record COUNT, to
+  +0xB4 when the table has records and to +0xB8 when it does not
+  (0x45cc6, 0x45cd4). 0x45c80 is the same shape onto +0xc0 and +0xc4.
+  Nothing in the image names 0x45cb1 or 0x45c80 by call or pointer.
+OPENS: the unread block 0x546de-0x54700, and what the three
+  scan-and-apply pairs 0x4b600/0x49580, 0x4b430/0x49580 and
+  0x4b7f0/0x49580 give the object - those are the provider tables of
+  OI-127 being read from the standing path, not from a message; who
+  calls 0x523f0, the other caller of +0xAC, and what [obj+0x44] is
+  there, since its +0x8 and +0xc are called before it; the counter
+  [obj+0xc6] that the '#' ejection compares with 0x58c, which PR-343
+  showed is written by message values 2, 8 and 0xd - who posts those
+  for a standing object; what +0xB4, +0xB8, +0xC0 and +0xC4 do for the
+  seat classes, PALMA's 0x1e560 first, since that is the seat's own
+  ask; and 0x45cb1, unreachable in the image, which is either dead or
+  reached through a table built at run time.
+CLOSES: the part of OI-123 and OI-124 that said the attachment slot is
+  reached only through the 0x1b message - it is maintained by the
+  ground-contact verb of the standing class, so the waiver at 0x45479
+  of PR-344 is live in any level where the lion stands on something,
+  and the question for ZARIA.01 becomes which surface its standing
+  query resolves to, not whether a message is ever posted. It also
+  settles the mechanism half of OI-127's last open field: the +0 and
+  +4 methods called on an attached handle are the same two methods
+  called on a standing one, so there is no separate attachment
+  protocol. It does not close OI-072, OI-123 or OI-124: the crossing
+  itself is still unmeasured.
+CORRECTS: PR-336's list of writers of [obj+0xa9], which its own row
+  left as a side note, and the framing PR-343 left in OI-123 and
+  OI-124: "the attach is real but belongs to KADMAR II" is wrong about
+  the normal case - 0x5478e and 0x547bc are the standing path and
+  0x54624 is the exception. And it corrects the reading implied by
+  PR-344's paragraph (a), that the seat ask verbs run from a per-tick
+  path: at least for PALMA the ask verb 0x1e560 is installed as the
+  land verb +0xB4.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: the tail is dumped in
+  /tmp/opencode/pr345_54760.txt and the two dispatchers in
+  /tmp/opencode/pr345_45c80.txt; the +0xAC census is the leodb refs
+  list of 0x546a0 read against the ctor-pattern views, and the empty
+  seat verb is `dis 0x23930 2`.
+```
