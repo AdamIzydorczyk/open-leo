@@ -52127,3 +52127,124 @@ GATE: light: verify-index verify-docs rc=0 (ok); no file under ported/ is
   a different relationship depending on whether the class owns a point
   list, and that I had measured that relationship an hour earlier and read
   it backwards because I matched instruction forms instead of values.
+
+## PR-374 - THE 37 INSTALLED VERB BLOCKS SHARE ALL SIX SURFACE VERBS WORD
+## FOR WORD WITH THE BASE TABLE AND DIFFER ONLY IN LIFECYCLE HOOKS: +0x10
+## IS A UNIFORM DESTRUCTOR THUNK, +0x0 AND +0x4 FORWARD INTO THE CLASS, AND
+## THE TWO SLOTS BELOW THE BLOCK TAKE [obj+0xc] AS THIS
+
+```
+KIND: read
+SUBSYSTEM: the nine slots of the verb block that PR-373 showed every
+  point-list class installs - which entries are shared with the base table
+  0xa0cc0, which are per-class, and what the per-class ones do (OI-128,
+  OI-129, the F6 thread; continues PR-373, PR-372, PR-371 and reads the
+  element thunks PR-340 left).
+ADDRESSES: 0x96c38, 0x96c14, 0x96c0c, 0x96560, 0x206f0, 0x20712,
+  0x2071c, 0x2072b, 0x20737, 0x20750, 0x20755, 0x20760, 0x20764, 0x20770,
+  0x20775, 0x2077a, 0x20789, 0x2078e, 0x207c0, 0x207c5, 0x207d0, 0x207d5,
+  0x207e5, 0x207ea, 0x1e540, 0x1e560, 0x3df50, 0x3df5f, 0x3df69, 0x3df75,
+  0x3df7e, 0x3df83, 0x3df90, 0x44f90, 0x44fe0, 0x45120, 0x45200, 0x45230,
+  0x45250, 0x452d0, 0x45320, 0x453d0, 0x45400, 0x49580, 0x53a30, 0x5c370,
+  0x749a0, 0x74bc0, 0x74be0, 0x98278, 0x9dbd8, 0x9ef14, 0x9f790, 0xa1f6c,
+  0xa2030, 0xa0cc0, 0x23ea0, 0x23e00, 0x2b230, 0x2b295, 0x2b2a0,
+  0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24, 0x2c, 0x3c, 0x9d,
+  0xa5, 0xc, 0xee, 0x112
+NAMES: verb block, shared verb, lifecycle hook, destructor thunk, this
+  adjustment, forwarder, descriptor block, ask hook, parser hook, text
+  reader, second base, base container table, pr374_slots.py,
+  pr374_slots.txt, pr374b_thunks.py, pr374b_thunks.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines that asked what the three overridden slots
+  add, and the HANDOFF section 8 F6 paragraph. Nothing under ported/ is
+  touched, so only the light gate applies.
+HOOKS: PR-371 counted that "in all 37, exactly three entries differ -
+  +0x0, +0x4 and +0x10" and left their meaning open, naming 0x2b2a0 and
+  0x2b295. PR-372 located the block at class-0x24 and PR-373 showed the
+  constructor installing it over the base table. PR-279 read the container
+  family and the level-text loader; PR-340 read the 0x1e5xx element
+  methods that two of these thunks forward to; PR-369 named 0x23ea0 as the
+  request-block entry [0x98278+4].
+OPENS: whether the +0x0 override changes what the ask hook does (the base
+  0x45230 calls the asker's +0x3c and writes 1 to [ds:0xcef40+0x1c], and
+  32 of the 37 replace it while the five second-family owners keep it -
+  what the replacements do instead is unread); the 0x1e540/0x1e560 pair
+  that 0x96c38's two hooks forward to; what 0x3df90 adds before 0x3df50 in
+  the 0x3ddf0 family's +0x4 hook, and what the value 0x3df50 parses
+  (through 0x749a0 and 0x49580) into [obj+0x112] is - the fields near it,
+  [obj+0xfa]/[obj+0xfe] and [obj+0x106]/[obj+0x10a], are the ones PR-369
+  read as the standing query's offsets and answers; the descriptor block
+  each destructor prints (0x96560 for 0x96c38, 0x993ac for the class of
+  0x9a754) - these are the same one-word blocks PR-370's five-dword
+  census named and still does not understand; and the second base's own
+  slot +0, which for 0x96c38 is a function that only returns.
+CLOSES: PR-371's open item "what a derived table's +0x0/+0x4 verbs add
+  (0x2b2a0 calls 0x3df50, 0x2b295 calls 0x3df90)" - they are the
+  container's lifecycle hooks: construct, load, destruct. And the question
+  those records kept circling, whether a class customises how its surface
+  is measured: it does not. Every surface verb in every one of the 37
+  blocks is the same function address as in the base table.
+CORRECTS: PR-371 (my own) twice, and one word of mine. (1) "in all 37,
+  exactly three entries differ - +0x0, +0x4 and +0x10": measured slot by
+  slot it is +0x10 in all 37, +0x4 in 36 and +0x0 in 32; the five blocks
+  that keep the base +0x0 are 0x9dbd8, 0x9ef14, 0x9f790, 0xa1f6c and
+  0xa2030 - exactly the five second-family owners PR-373 listed - and only
+  0x9ef14 keeps +0x4. So the count of distinct per-class functions is 32
+  at +0x0, 36 at +0x4 and 37 at +0x10, not 37 everywhere. (2) I called
+  them "derived sub-tables" and "the container's method table": they are
+  blocks inside the owner's own method array (PR-372, PR-373), and calling
+  them sub-tables is what made PR-371's ownership count wrong.
+MEASURED: (a) THE SLOTS (pr374_slots.py). Over the 37 installed blocks:
+  +0x8 0x45250, +0xc 0x452d0, +0x14 0x453d0, +0x18 0x45320, +0x1c 0x45400
+  and +0x20 0x45120 hold the SAME dwords as the base 0xa0cc0 in all 37,
+  and nothing else in the block is ever a surface verb. Only +0x0, +0x4
+  and +0x10 vary (32, 36, 37 of the 37).
+  (b) THE +0x10 HOOK, UNIFORM IN ALL 37 (pr374b_thunks.py, class 0x96c38
+  at 0x20760): `push ebx; push ecx; mov ecx,edx; sub eax,0xa5; mov ebx,eax;
+  test cl,4; je ...; mov edx,0x96560; call 0x74bc0; call 0x74be0; ...`
+  then `mov edx,1; add eax,0xa5; call 0x44f90; ...; call 0x53a30;
+  test cl,2; ... call 0x5c370`. The this-pointer is the CONTAINER (that is
+  why it subtracts the class's container field, 0xa5 here and 0xee in
+  0x2b230); it optionally prints with the class's descriptor block, runs
+  the base container destructor 0x44f90, then the outer object's glue
+  0x53a30, and frees. That is a destructor, in the slot the base table
+  fills with 0x44f90.
+  (c) THE +0x0 AND +0x4 HOOKS FORWARD INTO THE CLASS. For 0x96c38 they are
+  one instruction each: 0x207d0 `call 0x1e540; ret` and 0x207c0
+  `call 0x1e560; ret` - PR-340's element region. For the 0x3ddf0 family
+  they call 0x3df50 and, at +0x4, 0x3df90 then 0x3df50; 0x3df50 reads a
+  value (0x749a0, then 0x49580) and stores it at [obj+0x112]. So these
+  are load/construct hooks, and the class body they jump to is the element
+  code - the same region whose methods translate the container at +0xa5.
+  (d) THE TWO SLOTS BELOW THE BLOCK USE [obj+0xc] AS THIS. Every one of
+  the 37 blocks is preceded by two per-class functions; for 0x96c38 those
+  are 0x20750 (which only returns) and 0x206f0, which opens
+  `sub eax,0xc` - recovering the object from an argument that arrived as
+  obj+0xc - and ends `add eax,0xa5; call 0x44f90; sub eax,0xa5; call
+  0x53a30; ... call 0x5c370`: the object's destructor reached through the
+  second base. So [obj+0xc] is a real interface with its own thunks and
+  its own this convention, and the container's nine verbs are that
+  interface's slots +0x8..+0x24. The base table 0xa0cc0 has no such pair:
+  the two dwords before it are 0x23ea0 and 0x23e00, request-block verbs
+  (0x23ea0 is `mov [eax],edx; mov [eax+4],ebx; ret`, the pair writer
+  PR-369 called [0x98278+4]), i.e. whatever array precedes it, not a
+  class's.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The F6 thread has been asking what the engine measures a moving
+  object against. This says what is and is not per-class about that
+  measurement: the ask, the slope, the bracket, the relative ask, the
+  standing ask and the text parser are one shared implementation in all 37
+  owners and the base, and what each class supplies is only how its point
+  list is created, filled and destroyed. A port may therefore treat the
+  surface verbs as one mechanism, and must treat the container's lifecycle
+  as the per-class part.
+
+- WHAT SURPRISED ME. That the "derived" tables I had been counting were
+  not tables of a sub-object at all but ordinary stretches of the owner's
+  method array, and that the strongest evidence for it was a `sub eax,0xc`
+  in a destructor - a function that knows it was called with the object's
+  second interface pointer.

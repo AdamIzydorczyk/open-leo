@@ -5766,11 +5766,18 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     by running each node target's +0x10 verb, and 0x52b80 drains and
     then runs the owner's +0x14 - six call sites. Still open: what the
     flag byte means where 0x45258 compares it with ecx (`cmp edi,ecx;
-    jg`) against PR-344's mode 2, what a derived table's +0x0/+0x4
-    verbs add (0x2b2a0 calls 0x3df50, 0x2b295 calls 0x3df90) and whether
-    they are reachable at all now that the block is installed - the 37
-    owners each install their own block over the 0xa0cc0 that 0x44fe0
-    left, so the question is what the three overridden slots buy; the 5
+    jg`) against PR-344's mode 2, and what the installed +0x0 override
+    does instead of the base ask hook 0x45230 (32 of the 37 owners
+    replace it; the five that keep it are exactly the second-family
+    owners) - the +0x0/+0x4 hooks are one-instruction forwarders into the
+    class (0x96c38: `call 0x1e540`/`call 0x1e560`, PR-340's element
+    region) or, for the 0x3ddf0 family, 0x3df90 and 0x3df50, and 0x3df50
+    parses a value through 0x749a0/0x49580 into [obj+0x112] - what is
+    that, given [obj+0xfa]/[obj+0xfe] and [obj+0x106]/[obj+0x10a] are the
+    standing query's offsets and answers; the destructor's descriptor
+    block (0x96560, 0x993ac), the one-word form of PR-370's five-dword
+    blocks; the second base's own slot +0 (0x20750 only returns).
+    Older open items stand: the 5
     sites that write the three bases with no build call nearby (0x29f4d,
     0x2b312, 0x37c7b, 0x37fa7, 0x38d6d) and whether those objects keep
     the array and count the base part left; what 0x531f0 does before

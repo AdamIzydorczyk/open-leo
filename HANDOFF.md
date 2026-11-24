@@ -5834,10 +5834,24 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         classes own one - all 29 of the 0x3ddf0 family, 2 of the 31
         0x53df0, 5 of the 33 second family (KTRASA, TUNTRAS) - and no
         class of the 124-strong 0x55070 family does, which is the
-        two-writer split above restated as an ownership law. The base
-        table's six surface verbs (bracket-to-c1, the ask, the
-        relative ask, the slope scaled by 1000, the parser) are shared
-        by every owner. The records are authored as text: 0x45120
+        two-writer split above restated as an ownership law. PR-374 read
+        those installed blocks slot by slot: the six surface verbs
+        (bracket-to-c1, the ask, the relative ask, the slope scaled by
+        1000, the parser) are the SAME function addresses in all 37 and
+        in the base 0xa0cc0 - no class customises how its surface is
+        measured - and only the lifecycle hooks differ: +0x10 is a
+        uniform destructor thunk that takes the container as this
+        (`sub eax,0xa5`/`sub eax,0xee`), prints with the class's
+        descriptor block, runs 0x44f90 and then the outer glue 0x53a30;
+        +0x0 and +0x4 forward into the class (0x96c38: `call 0x1e540`,
+        PR-340's element region) or, in the 0x3ddf0 family, into
+        0x3df90/0x3df50, a text reader storing at [obj+0x112]; and 32 of
+        the 37 replace the base ask hook 0x45230 while the five
+        second-family owners keep it. The two slots below each block are
+        per-class functions taking [obj+0xc] as this (0x206f0 opens `sub
+        eax,0xc`), so that base is a real interface whose slots
+        +0x8..+0x24 are the container's verbs. The records are authored
+        as text: 0x45120
         reads "%d" then a " %c" separator, ';' storing flag 1 and '#'
         flag 2. Arrays are shared, not private: 0x24aa0, 0x259b0,
         0x1ece0, 0x20200 and 0x23360 copy the three words. And the
