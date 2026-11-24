@@ -367,8 +367,13 @@ PR-355 (the layer, closing OI-102) and PR-356 (its indexes).
     python3 tools/jq.py corr PR-350                   # correction graph
     python3 tools/jq.py show PR-355                   # one record: Read range
 
-A bare token auto-routes (0x->address, [..]->field, OI->open item,
-PR->show, else full text). jq.py rebuilds the DB first if
+A bare token auto-routes: 0x of 4-6 hex -> the address table; short
+hex like 0x33 -> substring search (a field offset is not an address
+key, so `+0x33`/`0x33` match through the text instead); [..]->field,
+OI->open item, PR->show, else full text. `oi OI-nnn` lists every
+record that NAMES the id - prose mentions and the structured
+OPENS/CLOSES graph - matched by integer, so OI-128 and 128 agree.
+jq.py rebuilds the DB first if
 NEXT_STEPS.md is newer, so an answer never comes from a stale index.
 `corr` reads the structured CORRECTS: field into a queryable graph -
 the generator upgrade that closed OI-102, deferred since PR-197.

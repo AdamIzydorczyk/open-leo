@@ -113,6 +113,13 @@ def create_schema(db):
         CREATE TABLE field_mentions(pr INTEGER, rid INTEGER, field TEXT);
         CREATE TABLE name_mentions(pr INTEGER, rid INTEGER, name TEXT);
         CREATE TABLE oi_refs(pr INTEGER, rid INTEGER, oi TEXT, verb TEXT);
+        -- PR-358: OI ids appear in record PROSE far more often than in
+        -- the OPENS:/CLOSES: fields (measured: 51 distinct ids in record
+        -- bodies vs 29 in the fields that feed oi_refs), the same way
+        -- addresses and names are found. Feed a mention table from the
+        -- body with the SHARED doc_census.OI_MEN_RE - the exact regex
+        -- P6 uses to resolve OI citations - so `jq oi` reflects reality.
+        CREATE TABLE oi_mentions(pr INTEGER, rid INTEGER, oi TEXT);
         CREATE TABLE corrections(pr INTEGER, corrects TEXT);
         CREATE TABLE pr_cites(pr INTEGER, rid INTEGER, cited INTEGER);
         CREATE INDEX ix_addr  ON addr_mentions(addr);
@@ -132,12 +139,13 @@ def create_schema(db):
         CREATE INDEX ix_addr_rid ON addr_mentions(rid);
         CREATE INDEX ix_field_rid ON field_mentions(rid);
         CREATE INDEX ix_name_rid ON name_mentions(rid);
+        CREATE INDEX ix_oi_men ON oi_mentions(oi);
         """)
 
 
 def build(db, lines):
     blocks = record_blocks(lines)
-    n_addr = n_field = n_name = n_oi = n_corr = n_cite = 0
+    n_addr = n_field = n_name = n_oi = n_oi_men = n_corr = n_cite = 0
     rid = 0
     for pr, i, end in blocks:
         block = lines[i:end]
@@ -176,6 +184,13 @@ def build(db, lines):
                     db.execute("INSERT INTO oi_refs VALUES(?,?,?,?)",
                                (pr, rid, oi, verb))
                     n_oi += 1
+        # PR-358: every OI id named anywhere in the record body, via the
+        # SHARED regex (same as P6). This is the door `jq oi` needs:
+        # records cite OI ids in prose, not only in OPENS:/CLOSES:.
+        for oi in set(dc.OI_MEN_RE.findall(body)):
+            db.execute("INSERT INTO oi_mentions VALUES(?,?,?)",
+                       (pr, rid, oi))
+            n_oi_men += 1
         if corrects:
             for tgt in dc.PRCITE_RE.findall(corrects):
                 db.execute("INSERT INTO corrections VALUES(?,?)",
@@ -188,7 +203,7 @@ def build(db, lines):
     return {
         'records': len(blocks), 'rids': rid,
         'addr': n_addr, 'field': n_field, 'name': n_name,
-        'oi': n_oi, 'corr': n_corr, 'cite': n_cite,
+        'oi': n_oi, 'oi_men': n_oi_men, 'corr': n_corr, 'cite': n_cite,
     }
 
 
@@ -210,9 +225,11 @@ def main(argv):
         "SELECT COALESCE(kind,'(none)'), COUNT(*) FROM records "
         "GROUP BY 1 ORDER BY 2 DESC"))
     print('re_db: %d records -> %s' % (st['records'], out), file=sys.stderr)
-    print('  rows: %d addr, %d field, %d name, %d oi, %d corr, %d cite '
-          'mentions' % (st['addr'], st['field'], st['name'], st['oi'],
-                        st['corr'], st['cite']), file=sys.stderr)
+    print('  rows: %d addr, %d field, %d name, %d oi(field) %d oi(prose), '
+          '%d corr, %d cite mentions' % (st['addr'], st['field'], st['name'],
+                                         st['oi'], st['oi_men'],
+                                         st['corr'], st['cite']),
+          file=sys.stderr)
     print('  kind mix: ' + ', '.join('%s=%d' % kv for kv in kinds.items()),
           file=sys.stderr)
     db.close()

@@ -41,8 +41,8 @@ current - the ledger simply never wrote a correction for it; deciding
 whether an uncorrected claim still stands means reading its records.
 
 # entries: 1616 address keys (>=3 records) = 9978/16420 (60%)
-# of all address mentions; 260 field tokens (>=3) = 73%
-# of field mentions; 300 authored names (all of them). Built from 342 records.
+# of all address mentions; 261 field tokens (>=3) = 73%
+# of field mentions; 300 authored names (all of them). Built from 343 records.
 
 
 ## Addresses
@@ -7992,6 +7992,10 @@ whether an uncorrected claim still stands means reading its records.
 ### [obj+0x2e] - 3 records
         mentions: PR-129 PR-130 PR-288
         latest mention: PR-288
+
+### [obj+0x33] - 3 records
+        mentions: PR-350 PR-357 PR-358
+        latest mention: PR-358
 
 ### [obj+0x3e6] - 3 records
         mentions: PR-190 PR-191 PR-198

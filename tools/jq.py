@@ -23,12 +23,15 @@ usage:
     field <[reg+0xNN]> records citing a field token
     name  <A_*/AC_*/K_*/word=> records naming an authored token
     free  "<phrase>"   ranked full-text (FTS5; AND/OR and "quoted" ok)
-    oi    <OI-nnn>     records opening/closing an open item
+    oi    <OI-nnn>     records referencing an open item: prose mentions
+           (body text) plus structured OPENS/CLOSES; OI-128 and 128 both
+           resolve to the same row
     corr  <PR-nn>      correction edges in and out of a record
     show  <PR-nn>      one record: kind, subsystem, Read range, corrects
     all   <PR-nn>      like show plus the record's own field block
-  A bare arg auto-routes: 0x..->addr, [..]->field, OI-..->oi,
-  PR-..->show, otherwise ->free.
+  A bare arg auto-routes: 0x(4-6hex)->addr; short 0x..->free, because a
+  field offset is not an address key (doc_census.ADDR_RE needs 4-6 hex);
+  [..]->field, OI-..->oi, PR-..->show, otherwise ->free.
   flags: --kind read|port|gate|docs   --unfixed (drop superseded)
          --limit N (default 15)        --snippet   --json   --rebuild
   Run from the repository root (like the other tools/ scripts).
@@ -101,6 +104,11 @@ def v_addr(db, arg, a):
                      "WHERE addr=?", (arg.lower(),)).fetchone()[0]
     emit(rows, a, 'addr %s - %d records cite it (showing %d)' % (
         arg.lower(), tot, len(rows)))
+    if tot == 0 and re.fullmatch(r'(?i)0x[0-9a-f]{1,3}', arg):
+        sys.stdout.write('# hint: %s is a field OFFSET, not an engine '
+                         'address (doc_census.ADDR_RE needs 4-6 hex). '
+                         'Use: jq free "+0xNN" (substring) or jq field '
+                         '"[reg+0xNN]".\n' % arg)
 
 
 def _simple_mentions(db, table, col, arg, a, label):
@@ -138,12 +146,34 @@ def v_free(db, arg, a):
 
 
 def v_oi(db, arg, a):
-    rows = db.execute(
-        "SELECT r.pr,r.kind,r.start_line,r.end_line,r.title||'  <' "
-        "||group_concat(o.verb,',')||'>' FROM oi_refs o JOIN records r "
-        "ON r.rid=o.rid WHERE o.oi=? GROUP BY r.pr ORDER BY r.pr DESC "
-        "LIMIT ?", (arg, a.limit)).fetchall()
-    emit(rows, a, '%s - records touching the open item' % arg)
+    d = re.sub(r'\D', '', arg)
+    if not d:
+        sys.stdout.write('# no open item id in %r\n' % arg)
+        return
+    # PR-358: oi_* store the numeric id; match by integer so OI-128,
+    # OI-128 and 128 all resolve (the old exact-string compare missed the
+    # 'OI-' prefix entirely), and read BOTH sources: the structured
+    # OPENS/CLOSES graph AND the prose mentions (oi_mentions).
+    struct = set()
+    st = {}
+    for pr, kind, sl, el, ti, verbs in db.execute(
+            "SELECT r.pr,r.kind,r.start_line,r.end_line,r.title,"
+            "group_concat(o.verb,',') FROM oi_refs o JOIN records r "
+            "ON r.rid=o.rid WHERE CAST(o.oi AS INTEGER)=? GROUP BY r.pr",
+            (int(d),)):
+        struct.add(pr)
+        st[pr] = (pr, kind, sl, el, ti + '  <%s>' % verbs)
+    prose = set()
+    for pr, kind, sl, el, ti in db.execute(
+            "SELECT r.pr,r.kind,r.start_line,r.end_line,r.title "
+            "FROM oi_mentions m JOIN records r ON r.rid=m.rid "
+            "WHERE CAST(m.oi AS INTEGER)=? GROUP BY r.pr", (int(d),)):
+        prose.add(pr)
+        st.setdefault(pr, (pr, kind, sl, el, ti + '  <mention>'))
+    rows = [st[p] for p in sorted(st, reverse=True)][:a.limit]
+    emit(rows, a, '%s -> %d record(s) reference it (%d in OPENS/CLOSES; '
+         '<opens/closes>=structured, <mention>=prose)' % (
+             arg, len(st), len(struct)))
 
 
 def v_corr(db, arg, a):
@@ -186,8 +216,18 @@ def v_show(db, arg, a, full=False):
 # ---- routing -------------------------------------------------------------
 
 def route(db, arg, a):
-    if arg.lower().startswith('0x'):
-        v_addr(db, arg, a)
+    low = arg.lower()
+    if low.startswith('0x'):
+        # A real engine address is 4-6 hex (doc_census.ADDR_RE, shared
+        # with the pinned index). Short hex is a field OFFSET, never an
+        # address key, so it goes to the substring door (free), where
+        # "0x33"/"+0x33" actually match, not the empty addr index. Keep
+        # this shape in sync with ADDR_RE; v_addr's zero-hit hint is the
+        # safety net if the two ever drift.
+        if re.fullmatch(r'(?i)0x[0-9a-f]{4,6}', arg):
+            v_addr(db, arg, a)
+        else:
+            v_free(db, arg, a)
     elif arg.startswith('['):
         v_field(db, arg, a)
     elif arg.upper().startswith('OI-'):

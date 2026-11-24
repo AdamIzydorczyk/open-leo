@@ -49533,3 +49533,99 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
   tools/jq.py (PR-355's layer): `jq.py free "+0x33"` is what surfaced
   PR-255's 0xa0c08 and PR-308's live-position sentence in one call.
 ```
+
+## PR-358 - THE SEARCH LAYER LEARNS OI PROSE MENTIONS AND REFUSES
+## SHORT HEX AS ADDRESSES: re_db.py feeds an oi_mentions table from the
+## record BODY via the shared doc_census.OI_MEN_RE (the regex P6 uses),
+## jq.py's oi verb reads it beside the structured OPENS/CLOSES graph and
+## matches the id by integer; a bare short hex now routes to substring
+## search instead of the empty addr index
+```
+KIND: gate
+SUBSYSTEM: docs structure (the generated ledger search layer, OI
+  coverage and short-hex routing)
+ADDRESSES: none
+NAMES: tools/re_db.py, tools/jq.py, oi_mentions, ix_oi_men, OI_MEN_RE,
+  OI-128, ADDR_RE
+CODE: yes: re_db create_schema gains oi_mentions + ix_oi_men and build
+  fills it from the body; jq.py v_oi reads both tables and compares the
+  id by integer; route sends short hex to free; v_addr prints a hint on
+  a short hex. Every other verb's reader is unchanged
+HOOKS: none
+OPENS: none
+CLOSES: none
+CORRECTS: none
+GATE: make 0 warnings; verify-all fixtures rc=0 14 (ok); NOTE - the
+  full build/verify-all half is NOT freshly measured for this PR: the
+  shared tree carries another session's UNCOMMITTED ported/ll_level.c,
+  ll_seq.c and ll_seq.h, so a make/verify-all would build their
+  in-flight [PORT] code, not this tools-only change's baseline, and
+  stashing it would disturb their live work. The ISO/HDD legs still
+  name-SKIP (no LL.iso staged), 14 data-free legs + 22 named
+  verify-SKIPs, exactly as at PR-355/356. What IS re-run green here,
+  and is all this change can affect: doc_census (P1-P6, the width
+  ratchet at 62, the .md inventory, the register), verify-index
+  byte-identical, and the journal-db leg.
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - the figure
+  is unchanged from PR-356 because this change adds no leg, reads no
+  fixture and touches no port code. The real evidence is data-free and
+  DOES run: the index control /tmp/opencode/pr356_index_control.py and
+  the two behaviour controls named below.
+```
+
+- WHY. The layer was field-tested by a second session working a real
+  thread (it used `jq free "+0x33"` to reach PR-255/PR-308; that
+  read landed as PR-357). Its report named two sharp edges. Both were
+  checked against the generated DB before changing anything.
+
+- THE OI GAP (a real inconsistency I introduced). `re_db` fed
+  `oi_refs` from ONLY the OPENS:/CLOSES: fields. But records name OI
+  ids in prose far more often: measured 51 distinct OI ids appear in
+  record bodies (the bodies include the fields, so they subsume them)
+  against 29 ids in the structured fields, 361 prose mentions in all.
+  OI-128 specifically: 6 records name it, only 2 in OPENS/CLOSES, so
+  `jq oi` reported 2 of 6 - while the same tool indexes
+  addresses/names/fields from body text. That double standard was the
+  bug. The fix mirrors how those other vocabularies already work: a new
+  `oi_mentions(pr,rid,oi)` table filled from `dc.OI_MEN_RE.findall(body)`
+  - the SAME regex `make verify-docs` P6 uses to resolve OI citations,
+  so there is still one definition of "a mention" - with ix_oi_men, and
+  the `oi` verb now reports prose mentions plus the structured
+  opens/closes graph, marking which is which.
+
+- A THIRD, UNREPORTED BUG, found while checking the above. `oi_refs.oi`
+  stores the bare number (`128`), but `v_oi` matched the raw arg
+  (`OI-128`) as a string, so `jq oi OI-128` returned 0 - it missed even
+  the 2 structured rows (only `jq oi 128` hit them). `v_oi` now strips
+  the id to digits and compares by integer, so OI-128, OI-128 and 128
+  all resolve. OI-128 now returns its full 6 records.
+
+- THE SHORT-HEX EDGE (correct behaviour, misleading answer). The split
+  is right and shared with the pinned index: `doc_census.ADDR_RE` is
+  `0x[0-9a-fA-F]{4,6}`, so `0x33`/`0x8` are not address keys - only
+  the bracket form `[obj+0x33]` is a field token. I did NOT change
+  ADDR_RE (it would silently move RE_INDEX and the P1/P3 counts - the
+  "never change acceptance to make a leg pass" rule). The defect was
+  only that `jq addr 0x33` answered a question that cannot exist with a
+  bare "0 records". Now a bare short hex auto-routes to the substring
+  door (`free`), where "+0x33"/"0x33" actually match (that is the door
+  that found the thread - `field [obj+0x33]` is only 2 records), and an
+  explicit `jq addr <short>` prints a hint pointing to free/field.
+
+- CONTROL + MUTATION (data-free, no fixtures, no window). Coverage:
+  re-running the generator on the real ledger shows oi_mentions with 51
+  ids, and `jq oi OI-128` returning 6 (was 0 via the format bug, 2 of
+  6 via the field-only gap). Routing: `jq 0x33` now returns substring
+  hits including PR-255/PR-308 (was 0), and `jq addr 0x33` prints the
+  field-offset hint. The index control
+  /tmp/opencode/pr356_index_control.py still passes (13 indexes, hot
+  paths seek not scan); dropping an index still flips a plan back to
+  SCAN, so it has teeth.
+
+- WHAT IS UNCHANGED. ADDR_RE/FIELD_RE/OI_MEN_RE are not edited - the
+  layer keeps reading through the shared parser, so it still cannot see
+  a different ledger than the index and `make verify-docs` do. Results
+  for every other verb are byte-identical; docs/RE_INDEX.md and P4 are
+  untouched; build/journal.db stays a gitignored client, never a source
+  of truth. README's "Searching the ledger" note now states the OI
+  prose door and the short-hex split so a user hits them knowingly.
