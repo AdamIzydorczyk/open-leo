@@ -5809,7 +5809,14 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         0x3ddf0 classes run 0x55070 and then ask again for offsets read
         off the point lists at [obj+0xee]/[obj+0xfa], translating the
         list through 0x45200; the port models none of that and its legs
-        stay the 0x55070 half of the 155.
+        stay the 0x55070 half of the 155. PR-369 read what those 29
+        keep: a record array behind the header at [obj+0xee] (`[+4]` is
+        the array, `[+8]` the count, 13-byte records with x at +0 and y
+        at +4) held SORTED BY x, translated by the delta that moves the
+        object through 0x45200 and bracketed by 0x45380, whose two
+        bracketing records are handed to 0x455a0 - the port's c1. A
+        moving class carries its own surface; the port measures every
+        class against the level's array and gives those 29 a frozen one.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

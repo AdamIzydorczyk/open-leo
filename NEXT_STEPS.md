@@ -51291,3 +51291,143 @@ GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff
   anything else. And that the id boundary is exact in one direction only:
   same id, same behaviour, always; same behaviour, many ids. Any port
   that classifies by behaviour will merge what the original keeps apart.
+
+## PR-369 - A MOVING CLASS CARRIES ITS OWN SURFACE: THE 13-BYTE RECORD ARRAY AT
+## [obj+0xee] IS X-SORTED, TRANSLATED ON MOVE, AND BRACKETED BY THE SAME SEARCH
+## THE STANDING QUERY USES
+```
+KIND: read
+SUBSYSTEM: the per-object surface records of the 0x3ddf0 family (PR-368) -
+  the record-array header at [obj+0xee], the bracket that feeds PR-352's c1,
+  the "relative to another object" ask verb 0x45320, and the [x+0x10] action
+  queue 0x52b10/0x52b50/0x52b80 (OI-128, OI-129, the F6 thread).
+ADDRESSES: 0x3ddf0, 0x3de00, 0x3de04, 0x3de27, 0x3de2c, 0x3de37, 0x3de3d,
+  0x3de5a, 0x3de7a, 0x3de8d, 0x3de94, 0x3dea6, 0x3deb2, 0x3ded8, 0x45200,
+  0x45209, 0x45214, 0x45217, 0x4521a, 0x45222, 0x452d4, 0x45320, 0x45340,
+  0x45349, 0x4534f, 0x4536f, 0x45380, 0x45388, 0x4538e, 0x45397, 0x453b3,
+  0x453d2, 0x453d6, 0x453ed, 0x45400, 0x45468, 0x455a0, 0x52b10, 0x52b13,
+  0x52b27, 0x52b30, 0x52b3f, 0x52b50, 0x52b52, 0x52b67, 0x52b6d, 0x52b80,
+  0x52b8f, 0x52ba2, 0x55070, 0x55380, 0x541f0, 0x23a10, 0x5c320, 0x5c370,
+  0x98278, 0x23ea0, 0x1e52a, 0x1e896, 0x3df02, 0x3df16, 0x3df2f, 0x4aed6,
+  0x4baed, 0x4bb12, 0x55398, 0x55696, 0x556af, 0x1fb42, 0x1fc18, 0x96c38,
+  0x96d1c, 0x97cdc, 0x9957c, 0x99828, 0x9a778, 0xee, 0xf2, 0xf6, 0xfa,
+  0xfe, 0x104, 0x106, 0x10a, 0x10c, 0x112, 0x3c, 0x40, 0x54, 0x6c, 0x89,
+  0xca, 0xce, 0xd8, 0x28
+NAMES: record array, record header, x-sorted, stride 13, bracket,
+  surface records, translate loop, action queue, queue node, drain,
+  relative ask, anchor point, moving platform, c1, aim filler, standing
+  query, MOVEPLAT, GRABOBJ, pr369_lists.py, pr369_lists.txt,
+  pr369_layout.py, pr369_sizes.py
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the two OI-128 rows that called [obj+0xfa] a list, the
+  HANDOFF section 8 F6 paragraph, and the L15 comment in
+  ported/ll_level.c that repeated PR-368's "the point lists at
+  [obj+0xee]/[obj+0xfa]/[obj+0x106]".
+HOOKS: PR-368 found the 0x3ddf0 writer and the 29 tables that install it and
+  left "[obj+0xee]/[obj+0xfa]/[obj+0x106]" as an open layout question.
+  PR-352 read 0x455a0 (the port's c1) and PR-363 the chain that reaches it
+  through 0x45400; PR-362/PR-364 read the aim filler 0x541f0 and the
+  anchor pair; PR-349 read 0x23a10 (`add eax,0x89; ret`). PR-340 read the
+  0x1dfd9..0x1e896 element region where eight of the ten translate calls
+  live, and PR-338 the allocator 0x5c320. PR-366 read the 0x3ed70 latch
+  that stores a companion at [obj+0x3c] - see the tension in (f).
+OPENS: what a 13-byte record is: the +0 and +4 words are x and y and the
+  array is ordered by +0, but the bytes at +8..+12 are never read in the
+  three readers found here; where the arrays come from - the header fields
+  are written at 0x24b10, 0x24e86, 0x259d8 and others, none read; whether
+  the lion's standing query ever consults such a per-object array (his own
+  class 0x96874 has +0x54 = 0x55070, no list pass, and no +0x104 verb);
+  what the [x+0x10] action queue is for and who schedules the six 0x52b80
+  call sites; the [obj+0x3c]/[obj+0x40] pair in 0x55380 against PR-366's
+  [obj+0x3c] companion (f); and which of the 29 classes these are by
+  name - the only hint is still this pass's grep of the ledger near their
+  bases (GRABOBJ, MOVEPLAT, MOVERECT), not a measurement.
+CLOSES: PR-368's open item on the [obj+0xee] field - it is a record-array
+  header, and its shape is fixed by two independent readers; and the
+  question of what 0x45200 does (PR-368 read it as a translate, here it is
+  confirmed with its call census).
+CORRECTS: PR-368 (my own) on the "[obj+0xfa] list". Only [obj+0xee] is a
+  record array. At 0x3de37 the code reads [obj+0xfa] and [obj+0xfe] as two
+  plain offsets and combines them with the point returned by the +0x6c verb
+  (0x3de3d-0x3de56) before calling the block method [0x98278+4]; no list is
+  involved there, and the exact operand pairing is quoted in (a) rather than
+  interpreted. It also retires a method: the object-size census I ran to
+  compare the families is not sound and no size claim is made - the
+  constructor-window scan mixes sub-object allocations (the 0x44/0x48/0xa5
+  constants that dominate the hits) and returns impossible maxima such as
+  0x9066b, so pr369_sizes.py stands as a rejected attempt.
+MEASURED: (a) THE 0x3ddf0 FLOW, re-read from 0x3ddf0 to its `ret` at
+  0x3dee6. It calls 0x55070 (0x3ddfb). Then [esp+0x18]/[esp+0x1c] are
+  loaded from `[[obj+0xee]+4]` and `[[obj+0xee]+4]+4` - the FIRST record of
+  the array (0x3de0e-0x3de1f), with [esp+0x20] = 0x98278. It asks its own
+  +0x6c (0x3de2c; 0x23a10 = `add eax,0x89; ret`) for the anchor point,
+  then reads the pair [obj+0xfa], [obj+0xfe] and adds them into that
+  point's components (0x3de3d `mov ebx,[edi+4]`, 0x3de43 `mov ebp,[edi]`,
+  0x3de45 `add ebx,eax`, 0x3de4e `add eax,ebp`) and hands the block method
+  at [0x98278+4] = 0x23ea0 the result (0x3de5a). A second call at 0x3de8d
+  passes differences instead (`sub ebx,edi` at 0x3de83, `sub edx,ebp` at
+  0x3de87). The pair it computed is stored to [obj+0x106]/[obj+0x10a]
+  (0x3de94-0x3de9e), the array is translated by it through 0x45200
+  (0x3deb2), and when [obj+0x112] is non-null the pair is queued through
+  0x52b10 (0x3ded8). (b) THE HEADER AND THE RECORD (two independent
+  readers). 0x45200: `mov ebx,[eax+8]` is the count and returns if it is
+  negative, `mov eax,[ecx+4]` is the record array, the loop body is `add
+  DWORD PTR [ebx+eax],esi` / `add ...+4,edi` with `add ebx,0xd` per
+  iteration - 13-byte records, x at +0 and y at +4, translated by (edx,ebx)
+  (0x45209-0x45227). 0x45380: returns empty if `[eax+8]` is 0, compares the
+  query x against `[eax+4]` (the first record) and against
+  `imul edx,[ecx+8],0xd` + base (the last), then walks with `add eax,0xd`
+  while the stored +0 word is below the query, returning the 1-based index
+  or 0 (0x45388-0x453c9). The array is therefore SORTED BY THE +0 FIELD,
+  which is why the translate loop is legal. 0x453d2 turns that index into
+  the two bracketing records (`imul edx,eax,0xd`, `dec eax; imul eax,eax,
+  0xd`, base from `[ecx+4]`) and calls 0x455a0 - PR-352's c1 - with them;
+  with no bracket it returns 0x7fffffff (0x453d2-0x453fc). (c) THE RELATIVE
+  ASK VERB 0x45320: builds an empty block {0, 0, 0x98278}, calls the aim
+  filler 0x541f0 with the other object (0x45340 - the PR-362/PR-364 chain),
+  then adds `[other+0xca]` and `[other+0xce]` to the returned pair
+  (0x45349-0x45367) and calls the standing ask 0x45400 (0x4536f). Its call
+  sites are six (0x1e596, 0x1e985, 0x2890d, 0x38102, 0x3df2f, 0x3f028) and
+  it is installed as a class verb by 34 tables: at +0x104 in 12 of the 29
+  0x3ddf0 tables and +0x10c in 1, at scattered slots in the other families
+  (6 at +0xf8, 3 at +0xa4). (d) THE ACTION QUEUE: 0x52b10 walks the list at
+  [x+0x10] to its end and appends a node allocated by 0x5c320(0x10) with
+  [0]=0, [4]=esi, [8]=ebx, [0xc]=ecx (0x52b13-0x52b3f); 0x52b50 walks that
+  list calling `[[node]+8]`'s class verb +0x10 and frees each node with
+  0x5c370 (0x52b5d-0x52b77); 0x52b80 drains it and then calls the owner's
+  +0x14 verb, and if [obj+0x28] is non-zero its +0x0 verb with edx=2
+  (0x52b8f-0x52ba2). 0x52b10 has 66 call sites; 0x52b80 has six (0x4aed6,
+  0x4baed, 0x4bb12, 0x55398, 0x55696, 0x556af). 0x45200 has ten call
+  sites: eight in PR-340's element region (0x1e52a..0x1e896) plus 0x3dccd
+  and 0x3deb2, both inside the 0x3ddf0 writer. (e) FIELD USE IS PER CLASS:
+  115, 40 and 27 instruction rows name [reg+0xee], [reg+0xf2] and
+  [reg+0xf6] and several store plain values there (0x1ff57 `mov [eax+0xf6],
+  0x2710`, 0x2c39e `mov [eax+0x106],1`), so those offsets are not one
+  layout across the image; the record-array reading applies to the classes
+  that reach 0x45200/0x45380/0x45320. (f) A TENSION, NOT A CONCLUSION:
+  0x55380, the +0x14 verb of four second-family tables, loops
+  `count=[obj+0x3c]`, `array=[obj+0x40]`, step 4, calling 0x52b80 on each
+  entry (0x55386-0x553a5) - i.e. there [obj+0x3c] is a count, while
+  PR-366 read 0x3ed70 storing a companion OBJECT at [obj+0x3c] in a
+  different class. Both readings are of different classes, so neither is
+  retracted here; which is right for the record-class tables stays open.
+GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff
+  includes the comment fix in ported/ll_level.c, so what was run
+  anyway: make rc=0 with 0 warnings and make verify-level rc=0 - 10
+  (ok) lines, the legs unchanged; the index was regenerated with this
+  record in the tree before the runs.
+```
+
+- WHY. This is the other half of F6. PR-349 to PR-365 read how the lion
+  measures the surface he stands on; this is what a moving surface keeps for
+  itself: its own copy of the x-sorted records, translated whenever it
+  moves, bracketed by the same search that the standing query uses, and a
+  queue of actions to run when it does. A port that measures every class
+  against the level's static array - which is what the port's L15/L17
+  legs do - silently gives moving platforms a frozen surface.
+
+- WHAT SURPRISED ME. That the ordering is part of the format. The array is
+  kept sorted by x, which is what lets a plain `add` translate it, and it
+  is what makes the bracket a binary search in the standing query - so the
+  surface data has an invariant the engine depends on, and nothing in the
+  port states it.

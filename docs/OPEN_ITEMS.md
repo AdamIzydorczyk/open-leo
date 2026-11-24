@@ -5702,15 +5702,33 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     0x23bb0) - classes that are carried and do not carry, and PR-366's
     five record tables are among them, all five with an id getter at
     +0xc. 0x3ddf0 is the standing writer PLUS a second pass: it runs
-    0x55070, asks +0x6c for &[obj+0x89] and issues the request-block
-    entry [0x98278+4] = 0x23ea0 for offsets read from the lists at
-    [obj+0xee] and [obj+0xfa], stores to [obj+0x106] and translates the
-    [obj+0xee] list through 0x45200 - 29 classes keep a list of points
-    that move with them, which nothing in the port models. Seven of the
-    23 +0xb0 companion ids are now named as the +0xc id of a
-    second-family table (ANITAB 0xa1eb4 names ds:0xceea4 = 0xa1f90); the
-    other 16, the six seeded ids no table names (ds:0xcee6c, 0xcee80,
-    0xceed4, 0xcf05c, 0xcf4e0, 0xcf4e4), the two ids named but never
-    seeded (ds:0xceba0, 0xcf0e4) and what those
-    [obj+0xee]/[obj+0xfa]/[obj+0x106] lists are in the object layout all
-    stay open.
+    0x55070, asks +0x6c for &[obj+0x89], issues the request-block entry
+    [0x98278+4] = 0x23ea0 with the offsets at [obj+0xfa]/[obj+0xfe]
+    added to that point, stores the result at [obj+0x106]/[obj+0x10a]
+    and translates the array at [obj+0xee] through 0x45200. PR-369 READ
+    THAT ARRAY AND IT IS SURFACE DATA: the header is {[+0] ?,
+    [+4] record array, [+8] count} with 13-byte records holding x at +0
+    and y at +4, kept SORTED BY x - 0x45200 translates every record by
+    the delta (that is why a plain add is legal) and 0x45380 brackets a
+    query x in it, handing the two bracketing records to 0x455a0,
+    PR-352's c1, or returning 0x7fffffff. So a moving class carries its
+    own copy of the surface its riders stand on, and the port - which
+    measures every class against the level's array - gives those 29
+    classes a frozen one. Seven of the 23 +0xb0 companion ids of the
+    31-family are named as the +0xc id of a second-family table (ANITAB
+    0xa1eb4 names ds:0xceea4 = 0xa1f90). The companion verb is 0x45320
+    (installed at +0x104 by 12 of the 29): it calls the aim filler
+    0x541f0, then adds [other+0xca]/[other+0xce] and calls 0x45400.
+    0x45200 has ten call
+    sites, eight in PR-340's element region; 0x52b10 appends {next, ?,
+    x, y} nodes to a list at [x+0x10] (66 sites) which 0x52b50 drains
+    by running each node target's +0x10 verb, and 0x52b80 drains and
+    then runs the owner's +0x14 - six call sites. Still open: what a
+    13-byte record is beyond x,y, who fills the header (0x24b10,
+    0x24e86, 0x259d8), whether the lion's own standing query ever
+    consults such a per-object array (0x96874 has neither the list pass
+    nor a +0x104 verb), what the [x+0x10] queue drives, which classes
+    the 29 are by name, 16 of the 23 +0xb0 companion ids, the six
+    seeded ids no table names (ds:0xcee6c, 0xcee80, 0xceed4, 0xcf05c,
+    0xcf4e0, 0xcf4e4) and the two ids named but never seeded
+    (ds:0xceba0, 0xcf0e4).
