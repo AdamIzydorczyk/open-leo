@@ -255,7 +255,9 @@ OI-017: is the live signal set EVER CLEARED (pulse vs latching)?
 
 OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
   AC_EDGE, AC_DRAB_CATCH
-  status: PARTIAL
+  status: PARTIAL (the three ground-query bits and the condition that
+    raises them are fully read, PR-392: the condition is the authored
+    separator byte; AC_EDGE and the identity question at OI-121 stay)
   notes: AC_ENEMY_ATC raised and ruled (PR-91/94/139); AC_BLOK/
     AC_BLOK_Y raisers PR-94 + relation providers PR-177; AC_EDGE
     via the ladder answer PR-141/149; AC_DRAB/AC_DRAB_CATCH raise
@@ -356,6 +358,21 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     AC_EDGE's semantics, and the surface IDENTITY and kind word a
     .plt polyline cannot carry, named at OI-121. AC_DRECT's gate is
     untouched by this.
+    PR-392 READS THE HALF THIS ROW LEFT OPEN AS ONE COMPARISON. The byte
+    the ask keeps at [obj+0xe2] is the separator flag byte of PR-391
+    (0x4519d writes it at record+0xc: ';' to 1, '#' to 2, anything else
+    0), and the "mode" is compared against it TWICE, as the first
+    instruction of both verbs: `movzx [record0+0xc] ; cmp reg,ecx ; jg
+    return` at 0x4540c-0x45419 (the ask 0x45400) and 0x45255-0x4525e (the
+    clamp 0x45250). Mode 0 therefore accepts only '!' lines, mode 2
+    accepts everything the parser can write, and the level's ground array
+    is walked one `call [element class + 0x1c]` per polyline at
+    0x4b67e-0x4b697, with the mode from the state control word (OI-078)
+    and the threshold pushed as 0. So the AC_DUP_CD condition "that
+    surface's kind byte is not 0" is the authored separator, and no '#' is
+    authored anywhere (PR-391: 0 of 1749 separators), which makes the
+    flag-2 branch of 0x54766 dead in shipped data. What stays open here
+    is only AC_EDGE's semantics and the identity question at OI-121.
 
 OI-019: what the object-side AC_ENEMY consumers do (A_DEAD(1)/
   A_AWAY/A_SHOW class conditions)
@@ -3010,6 +3027,16 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     named deviation here, and the A_JUMP, A_FALL_DOWN, A_LOOKDOWN and
     A_DOSTAL holds the row gates produce are the first legs whose
     pins depend on it.
+    PR-392 CORRECTS ONE POLARITY AND ONE NAME IN THIS ROW. The gate at
+    0x5476f is `cmp [obj+0xc6],0x58c; jge 0x547d7`: a flag-2 answer is
+    dropped AT OR ABOVE that v_y, not "while [obj+0xc6] < 0x58c" as the
+    paragraph above has it (OI-018's PR-331 wording is the correct one).
+    The "kind" of that answer and of each record is the authored
+    separator byte of PR-391, gated against the mode as the first
+    instruction of both 0x45400 (0x45417) and 0x45250 (0x45258); and
+    0x4b600 walks the level's own ground array with one
+    `call [element class + 0x1c]` per element (0x4b67e-0x4b6a8), which is
+    the walk this row's ground-query description assumed but had not read.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -5073,6 +5100,23 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     therefore the land/attach path of OI-128 - PALMA's +0xB4 IS the
     ask verb - or the lion's launch through KATAPULT's landing verb,
     and the .plt ground of T6, not the standing query.
+    PR-392 CORRECTS THE GEOMETRY OF THE TWO SAMPLER CALLS IN THIS ROW.
+    Nothing is reversed: both 0x455a0 calls take A = record i-1 and
+    B = record i (the first builds them across stack slots at
+    0x45443-0x45464, the second in registers at 0x45481-0x4548f), so the
+    two expressions are not negatives of each other and not within 1 px
+    as (a) above has it. What differs is the sampled point: the first
+    call measures at the +0x6c result, which is 0x23a10 = `add
+    eax,0x89; ret` in all 186 class views (PR-351) - the clamp sample
+    pair [obj+0x89]/[obj+0x8d] of OI-128 - and only the second measures
+    at the aimed block that 0x4541f's bracket test used. The gate
+    reading also needs fixing here: 0x4547b skips that first test for the
+    held element, so a held table is not re-accepted "at any non-positive
+    clearance at the snapshot"; the value tested for everything, held
+    included, is the AIMED clearance, rejected above 0 and above the
+    incumbent. The port follows the old reading in seat_ask_core
+    (ported/ll_level.c:10521-10525, c2 with the pair reversed); re-pinning
+    it and the L15 leg that runs it is the open port half.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that
@@ -5543,6 +5587,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     record's byte (`movzx edi,[rec+0xc]`, `cmp edi,ecx`, `jg`) and on a
     pass writes that record's x,y to [obj+0x89]/[obj+0x8d] - the sample
     pair of OI-129 - plus deltas at [obj+0xca]/[obj+0xce].
+    PR-392 ANSWERS THE REST OF THAT PARAGRAPH AND NARROWS IT. The byte is
+    a MINIMUM QUERY MODE: the same comparison is the first instruction of
+    both verbs (0x45417 in the ask 0x45400, 0x45258 in the clamp 0x45250),
+    the mode comes from bit 0x4000 / bit 0x0100 of the state control word
+    at state+0x12 (OI-078), and the array is the level's own ground table,
+    walked one `call [element class + 0x1c]` per element at
+    0x4b67e-0x4b6a8. The write is a clamp to the line's two ENDPOINTS,
+    not a per-record write: record 0 when the query x is left of it, the
+    last record - array + [element+8] * 13 - when the query x is right of
+    it, nothing in between. The delta pair and the ask's clearance
+    [obj+0xea] are added to the live position once, at 0x54825-0x5482d,
+    and then all three are cleared (0x5481b, 0x54830-0x5484a). And the
+    "0x58c counter" this row keeps listing is not a counter: 0x58c is
+    compared against [obj+0xc6], the signed v_y, at 0x5476f - a flag-2
+    answer is dropped at or above terminal fall.
 
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -
@@ -5985,3 +6044,15 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     separator, authored - '!' on 7 of ZARIA.01's 45 lines including the
     one the lion stands on, ';' on the other 38. `tools/golden_surface_read.py`
     reads this table from a running level without stopping the guest.
+    PR-392 READS THE STEP THIS ROW ASKS ABOUT. The ground query's own
+    contribution to [obj+0x00]/[obj+0x04] is one addition per call: the
+    clamp delta and the ask's clearance, x += [obj+0xca] and y +=
+    [obj+0xce] + [obj+0xea] at 0x54825-0x5482d, after which all three
+    words are cleared (0x5481b, 0x54830-0x5484a). That clearance is
+    y_line(qx) - qy, interpolated by 0x455a0 between the two records that
+    bracket the query x, so an ordinary landing step is however far the
+    aim point sat below the polyline - not a constant, and not the .SEQ
+    anchor pair. What it is in a running level is still unmeasured: the
+    two PR-392 sessions with the extended tracer reached a level boundary
+    but no playable ZARIA.01, so no TLewZaria object was sampled (see PR-
+    392 MEASURED (i)).

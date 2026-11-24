@@ -54354,3 +54354,282 @@ MEASURED: (a) THE AUTHORED GROUND FILES. The HD ETAPY container (sha
   choice of '!' over ';' is what that test reads. And that the last
   point of all 45 lines keeps an uninitialized byte, in a structure the
   engine otherwise fills completely.
+
+## PR-392 - THE GROUND QUERY WALKS THE LEVEL'S OWN SURFACE ARRAY AND THE
+## AUTHORED SEPARATOR BYTE IS A MINIMUM QUERY MODE: 0x4b600 CALLS
+## `[element+0x1c]` FOR EVERY ELEMENT OF `[world+0x74]`, AND 0x45400
+## REFUSES A LINE WHOSE FIRST RECORD'S BYTE IS ABOVE THE MODE
+
+```
+KIND: read
+SUBSYSTEM: the ground query behind the class verb +0xAC - the level
+  surface-array walk, the ask's candidate law, the endpoint clamp, and the
+  separator flag byte read as a minimum query mode
+ADDRESSES: 0x546a0, 0x546ac, 0x546b3, 0x546b9, 0x546c2, 0x546c5, 0x546ca,
+  0x546d3, 0x546d7, 0x54706, 0x54709, 0x5470b, 0x54719, 0x54759, 0x54760,
+  0x54766, 0x5476f, 0x54779, 0x5477b, 0x54785, 0x5478e, 0x54798, 0x5479f,
+  0x547a7, 0x547b3, 0x547bc, 0x547c6, 0x547c8, 0x547cf, 0x547d7, 0x547e8,
+  0x547fa, 0x54800, 0x54804, 0x5481b, 0x54825, 0x5482b, 0x5482d, 0x54e1a,
+  0x54e98, 0x550a0, 0x4b600, 0x4b616, 0x4b62c, 0x4b638, 0x4b644, 0x4b64f,
+  0x4b659, 0x4b669, 0x4b66c, 0x4b670, 0x4b67e, 0x4b682, 0x4b687, 0x4b689,
+  0x4b697, 0x4b6a5, 0x4b6a8, 0x45250, 0x45255, 0x45258, 0x4525e, 0x4526a,
+  0x45293, 0x45297, 0x4529f, 0x452c4, 0x45320, 0x4536f, 0x45400, 0x4540c,
+  0x45417, 0x45419, 0x45423, 0x45434, 0x45439, 0x45443, 0x45455, 0x45462,
+  0x45464, 0x45468, 0x4546d, 0x45471, 0x45479, 0x4547b, 0x4547d, 0x45481,
+  0x45485, 0x4548b, 0x4548f, 0x45491, 0x45496, 0x4549a, 0x454a2, 0x454a8,
+  0x454ae, 0x454ba, 0x455a0, 0x455a3, 0x455c3, 0x455cd, 0x45380, 0x541f0,
+  0x23a10, 0x98278, 0x96874, 0x96920, 0x96960, 0x96a0c, 0x9a134, 0x9ad48,
+  0x9e740, 0xcef40, 0x23af40, 0x58c, 0xac, 0x74, 0x80, 0x89, 0x8d, 0xa9,
+  0xb6, 0xc6, 0xca, 0xce, 0xe2, 0xe6, 0xea, 0x1c, 0x12, 0x4000, 0x0100,
+  0x10000
+NAMES: ground query, class verb +0xAC, query mode, separator flag, minimum
+  mode, candidate, clearance, held surface, endpoint clamp, clamp delta,
+  answer triple, answer flag, answer clearance, snapshot point, aimed point,
+  sample pair, seat_ask_core, CHECK_BASE_LN, CHECK_LN, ANIMACJE,
+  llrs_extract_mov.c, AC_ONAIR, AC_DUP, AC_DUP_CD, lock2,
+  TLewZaria, ZARIA_A.PLT, surface array, golden_level_trace.py
+CODE: yes: tools/golden_level_trace.py now samples the ask's answer fields
+  ([obj+0xe2]/[obj+0xe6]/[obj+0xea]) and the clamp delta
+  ([obj+0xca]/[obj+0xce]), reports answer changes in the manifest, and
+  re-looks for the requested class instead of only classes that are new
+  since the menu baseline; nothing in ported/ changes
+HOOKS: none
+OPENS: the paragraph j of MEASURED counts those two mode bits in the shipped
+  `.MOV` text, not at runtime: do the objects whose state is the ZARIA.01
+  `LEW.ZAR*` members really run the mode-0 query, and with what separator
+  bytes are the platforms of those levels authored. What the port does with
+  the two points: `seat_ask_core` (ported/ll_level.c:10521-10525) still
+  measures the second clearance with the record pair REVERSED, which by
+  (d) is not what 0x45491 does - re-pinning it is a port PR, and the seat
+  legs that run through it move; whether the "a line that is not the held
+  one can only win with clearance exactly 0" reading of 0x4547d-0x4549a is
+  what shipped levels actually hit - it needs a live TLewZaria sample; and
+  which value the engine ever puts in a record's flag byte other than 0
+  and 1, since 2 is never authored; and whether a mode-0 query ever
+  returns a DIFFERENT answer than the mode-2 query of the same step, which
+  is what the separator difference between the 7 '!' and the 38 ';' lines
+  of ZARIA_A.PLT would decide
+CLOSES: OI-018's "the kind byte, the mode argument and the per-point flag
+  byte of PR-312 are the unmodelled half of the semantics" - the mode and
+  the byte are now read as one comparison, in both verbs, with the byte
+  named by PR-391's parser; the "next read: 0x4b600" that the same row
+  names; OI-128's "the 0x58c counter" - 0x58c is compared against
+  [obj+0xc6], the signed v_y, at 0x5476f; and the point object PR-344 and
+  PR-350 left open at 0x45439 - the +0x6c verb is 0x23a10 = `add
+  eax,0x89; ret` in all 186 class views (PR-351), the clamp sample pair
+  of (e)
+CORRECTS: PR-313 and PR-331, on the name: what they call the surface's
+  "kind byte"/"kind word" at [obj+0xe2] is the authored separator flag
+  byte that 0x4519d writes at record+0xc (PR-391), not a kind; and the
+  OI-078 row, which says a kind-2 surface "is ignored while [obj+0xc6] <
+  0x58c" - the bytes are `cmp [obj+0xc6],0x58c; jge` to the detach path,
+  so it is ignored AT OR ABOVE that speed, as OI-018 already had it.
+  PR-350 (c) and PR-352 (d), on the two 0x455a0 calls: they have the
+  first call taking A = record i and B = record i-1 and the second the
+  pair reversed, and PR-352 from that derives that "the two expressions
+  are negatives of each other ... both calls measure ONE clearance, in
+  opposite signs, each off the other by at most 1 because `idiv`
+  truncates". The bytes do not reverse anything: the stack dance at
+  0x45443-0x45464 leaves eax = array + (i-1)*13 and edx = array + i*13,
+  exactly what 0x45481-0x4548f builds for the second call. What differs
+  is ebx - [obj+0x89] in the first, the caller's point in the second - so
+  the two clearances are not the same value in opposite signs and not
+  within 1 of each other. What stands of PR-352: the +0x6c result is the
+  sampled point, and the gates and which value reaches [obj+0xea] are as
+  it says. OI-124's "a surface already held at [obj+0xa9] re-accepts
+  itself at any non-positive clearance at the snapshot" is wrong on both
+  halves: 0x4547b skips the snapshot gate for the held element, and the
+  value tested is the one measured at the caller's point.
+GATE: make 0 warnings; verify-all fixtures rc=0 111 (ok);
+GATE-FIXTURE-FREE: rc=0 15 (ok) + 21 named
+  The counts are the house verdict pattern of HANDOFF section 2
+  (`grep -cE "\(ok\)|byte-exact|== (python|wine)|render 3000ms"`) on
+  /tmp/opencode/pr392d_verify_fixtures.log and
+  pr392d_verify_nofixtures.log; the build log is pr392c_build.log, clean
+  and warning-free, and nothing under ported/ changed. The fixture-free
+  verdict SET is identical to the PR-391 run; the fixture run's set
+  differs in one measure only, the music pump's wall-clock duration
+  (2.12s -> 2.37s under the load of the parallel legs), which is a
+  wall-clock value and not a pin. The 21 named SKIPs are the
+  `^verify-*: SKIP` lines plus the generic `verify: SKIP`, the same 22 as
+  PR-391. The docs legs of the record's own edits - re_index plus
+  `make verify-docs verify-index` - are in pr392_docs3.log, and the tool
+  change is checked by `python3 -m py_compile` and by the two live
+  sessions quoted in MEASURED (i).
+MEASURED: (a) WHO RUNS THE QUERY. 0x546a0 is stored at +0xAC of 155 class
+  tables (155 of 155 stores are 4-aligned; the authored lion tables all
+  carry it: 0x96874 -> 0x96920, 0x9a134, 0x9ad48, 0x9e740, and
+  TLewZaria 0x96960 -> 0x96a0c). It opens by testing [obj+0xB6] bit 0x02
+  (0x546ac) and jumps to 0x54804 when set - the `lock2` flag skips the
+  whole query but still runs the position carry of (g).
+  (b) THE MODE AND WHERE IT COMES FROM. eax = [[obj+0x50]+[obj+0x5c]*4]
+  and the dword read at [[eax]+0x12] (0x546b9-0x546c2), tested a byte at a
+  time - OI-078 already names that word as the current state's control
+  word and its two bits as the mode selectors; what is added here is the
+  instruction-level shape of the three cases and what each one calls. Bit
+  0x4000 of that word (`test ah,0x40`, 0x546c5) runs
+  0x4b600 with ecx = 0 (0x546c5 falls through to 0x546d3); if the bit is
+  clear, bit 0x0100 runs 0x4b600 with ecx = 2 (0x54706 -> 0x5470b); with
+  stands. Those two bits are not unnamed: the `.MOV` parser ORs them from
+  the tokens `CHECK_BASE_LN` (0x4000) and `CHECK_LN` (0x0100) at
+  0x51b0d-0x51e07 (PR-99's table, in tools/re/mov_channels.py), so the
+  engine's own authoring vocabulary calls the ground query a base-line
+  check or a line check, and the mode says which one was asked for. Read
+  to the end, the two branches differ ONLY in the mode argument and the
+  stack buffers: bit 0x4000 runs 0x4b600 at 0x546d7 into [esp+0x20],
+  0x4b430 at 0x546f0 into [esp+0x30] and 0x4b7f0 at 0x5474b into
+  [esp+0x40]; bit 0x0100 runs 0x4b600 at 0x54719 into [esp], 0x4b430 at
+  0x54732 into [esp+0x50] and the same 0x4b7f0 into [esp+0x10]; and
+  every one of those six calls is followed by 0x49580 with eax = the
+  caller's blob, ebx = the object and edx = the result - that is how the
+  answer triple reaches the signal set. Both query calls take the world
+  pointer from the global ds:0xcef40 - the slot the rig reads as the
+  world anchor, 0x16c000 + 0xcef40 = 0x23af40. 0x4b600 has exactly two
+  call sites, 0x546d7 and 0x54719.
+  (c) WHAT 0x4b600 DOES, the read that row named as next. 0x4b616 sets
+  ecx = the class view 0x98278 and 0x4b62c calls the aim filler 0x541f0,
+  which leaves a point pair at [esp]/[esp+4]; 0x4b638-0x4b64b ADD the
+  previous step's clamp delta [obj+0xca]/[obj+0xce] to that point;
+  0x4b64f-0x4b669, when a surface is held, call the held element's clamp
+  verb `[class+0x8]` = 0x45250 with ecx = 2 and that point; and
+  0x4b66c-0x4b6a8 walk the level's ground table: count = [[world]+0x80]
+  (skip when <= 0), eax = [world+0x74] + i*0xc, push the threshold 0, and
+  `call [element class + 0x1c]` = 0x45400 with ecx = the mode, ebx = the
+  point, edx = the object (the `push 0` shifts the stack, so the saved
+  mode is read at [esp+0x14] and the point at [esp+0x4] after it). The
+  stride is 0xc and the bound is [world+0x80], so in ZARIA.01 every
+  ground query calls 0x45400 once per polyline of ZARIA_A.PLT, 45 times,
+  over exactly the array PR-391 read.
+  (d) THE CANDIDATE LAW, 0x45400 - one direct call site, 0x4536f inside
+  the contact-list verb 0x45320; everything else reaches it through
+  +0x1c. 0x4540c reads the byte at [record 0 + 0xc] and 0x45417
+  `cmp eax,ecx; jg 0x454c0` returns when it is above the mode: the same
+  comparison the clamp verb makes at 0x45258. A flag-0 line ('!') answers
+  every mode; a flag-1 line (';') answers only mode >= 1; a flag-2 line
+  ('#') only mode 2 - and no '#' is authored anywhere (PR-391), so the
+  shipped separator choice IS the query filter. Then 0x45423 asks 0x45380
+  for the first record index i at or past the query x (0 -> return);
+  0x45439 calls the asker's own +0x6c verb (eax = the object, edx = the
+  record index) and its result is the point for the FIRST clearance - in
+  186 of the 186 class views that verb is 0x23a10, `add eax,0x89; ret`
+  (PR-351's census), so what the ask samples first is the CLAMP SAMPLE
+  PAIR [obj+0x89]/[obj+0x8d] that 0x45250 writes at 0x4526a-0x452c4, and
+  the 0x4b669 call above may have filled it a few instructions earlier in
+  the SAME query. 0x455a0 computes the clearance, and read instruction by
+  instruction it is exactly A.y + idiv((qx-A.x) * (B.y-A.y), B.x-A.x) -
+  qy, the line's y at the query x minus the query y (0x455a3-0x455cd, the
+  divide at 0x455c3; eax = A, edx = B, ebx = the point). 0x4546d-0x4547f:
+  if this element is NOT the one at [obj+0xa9] (0x45479 `cmp esi,ebx` and
+  0x4547b `je 0x45481` skip the test for the held one) and that first
+  clearance minus the pushed threshold is negative, the candidate is
+  refused. Then 0x45481-0x45491 computes it a second time through the same
+  0x455a0 against the SAME record pair - both calls put array + (i-1)*13
+  in eax and array + i*13 in edx; the first builds them across the stack
+  slots at 0x45443-0x45464, the second in registers at 0x45481-0x4548f -
+  and only ebx differs, 0x4548b `mov ebx,ebp` restoring the point the
+  CALLER passed, saved at 0x4540a. So the two calls measure one segment
+  at TWO points: the snapshot pair for the first gate, the caller's point
+  for everything that is kept. It is the second value that is tested and
+  stored: any clearance above 0 is refused (0x45496) and any clearance
+  above the current best [obj+0xea] is refused (0x4549a), so a candidate
+  must sit at or below the caller's point and beat the incumbent. The
+  winner is stored at 0x454a2-0x454ba:
+  [obj+0xe6] = the element, [obj+0xea] = the clearance, and [obj+0xe2] =
+  the flag byte of the record at index i-1, read as `[ecx+array+0xc]`.
+  (e) THE CLAMP, 0x45250, the same mode gate at 0x45258. If the query x
+  is left of record 0 (0x4526a), write record 0's x,y into
+  [obj+0x89]/[obj+0x8d] and the offsets into [obj+0xca]/[obj+0xce];
+  otherwise take the LAST record, addressed as array + [element+8] * 13
+  (0x45293-0x45297: PR-391's record count, times the 13-byte record
+  stride), and if the query x is right of it (0x4529f) write that
+  endpoint and the offsets. For an x between the endpoints nothing is
+  written. 0x4b600 calls it with mode 2, so for the held surface the gate
+  never fires. The offsets are read by 0x4b638 BEFORE that call, which
+  means a mode-2 query sees the clamp the mode-0 query of the same +0xAC
+  verb just made, and the carry of (g) then applies and clears them.
+  (f) THE ANSWER IS BRANCHED ON, at 0x54759-0x547d5, and the branches are
+  the signals of PR-313. No answer ([obj+0xe6] = 0): run the held
+  element's +0x4 verb, clear [obj+0xa9], run the object's class +0xB8
+  (PR-353's leave verb), and set signal byte 2 bit 0x4 = AC_ONAIR
+  (0x54800). Answer flag 2 and [obj+0xc6] >= 0x58c: the same detach path
+  (0x5476f `jge`) - [obj+0xc6] is the signed v_y and 0x58c its terminal
+  value, so a flag-2 line lets go at terminal fall. Nothing held: set
+  signal byte 0 bit 0x10 (AC_DUP), attach [obj+0xa9] = the answer, call
+  the element's +0 verb, then call the object's class +0xB4, PR-353's
+  land verb (0x54785-0x5479f). A DIFFERENT surface held: run the old
+  element's +0x4, re-attach, run the new element's +0, with no signal at
+  all (0x547a7-0x547c6). And 0x547c8: if the answer flag is not 0, set
+  signal byte 1 bit 0x20 (AC_DUP_CD) - every step. What that means for
+  ZARIA.01, counted from the authored file at this record's reading: the
+  byte the mode gate 0x45417 tests is the separator of each line's FIRST
+  point, and it is 0 on 7 of the 45 ground lines (lines 0, 5, 10, 11, 12,
+  14 and 44 - line 0 is `1 -50,680!408,684;`, the west ground under the
+  spawn, line 44 `1 -100,1500!3000,1500;`, the world floor) and 1 on the
+  other 38. So a mode-0 query (bit 0x4000) can only be answered by those 7
+  lines, and any answer found on one of the other 38 raises AC_DUP_CD. The
+  byte 0x454ba actually stores is the same field of the bracket's LEFT
+  record, so which of the two an answer carries depends on the segment the
+  query point falls in.
+  (g) THE CARRY MOVES THE BODY - the shape OI-078 states in words, here
+  instruction by instruction. 0x54804 reads [obj+0xce], [obj+0xea],
+  [obj+0xca] and the live position, zeroes [obj+0xea] (0x5481b) and writes
+  [obj+0x00] = x + [obj+0xca], [obj+0x04] = y + [obj+0xce] + [obj+0xea]
+  (0x54825-0x5482d), then clears the two clamp words with a
+  self-subtraction, `sub [obj+0xca],[obj+0xca]` and the same at +0xce
+  (0x54830-0x5484a). So one ground query contributes, once and only once,
+  the clamp offset plus this frame's clearance to the position - not the
+  .SEQ anchor pair of OI-129 - and it runs even when the query itself was
+  skipped by the lock2 bit. The other reset sites 0x54e1a/0x54e98/0x550a0
+  clear the answer triple.
+  (h) WHY THIS MATTERS FOR THE PORT. The port asks its own level lines
+  (`ll_plt_first_below`), so the geometry is covered; what was not
+  modelled is the FILTER: the same polyline is a different surface
+  depending on the query mode, and the authored ';' or '!' after each
+  point is what decides that, plus the AC_DUP_CD side effect that follows
+  it.
+  (i) WHAT I TRIED TO MEASURE AND DID NOT GET. Two live sessions on the
+  PR-391 disk-D rig with the extended tracer (the new fields sample
+  cleanly: `answer_flag`, `answer_surface`, `answer_gap`, `clamp_dx`,
+  `clamp_dy` appear in every trace row). Neither session reached a
+  playable ZARIA.01: the level boundary appeared at t=304 s with
+  [world+0x74] = 0, and the census then found no TLewZaria object - the
+  first session's fallback traced five objects of the KAMIEN class (their
+  answer triple stayed 0 and their clamp delta stayed 0 over 3,368
+  samples each at 20 Hz), the second found two objects of the lion-family
+  table 0x96874 that never moved (4,747 samples, one distinct position). The
+  baseline filter was the reason the player was missed in the first
+  session - the menu already holds a lion, so "new class words since the
+  menu" hides it - which is what the code change in this record fixes;
+  the second session shows the fix works for the census (0x96874 objects
+  were found) but that run still had no moving player. The live half of
+  (d)'s exact-zero question stays open.
+  (j) THE SHIPPED DATA BEHIND THOSE TWO BITS. Re-extracted the `.MOV`
+  members of the HD ANIMACJE tree with the existing
+  `tools/re/llrs_extract_mov.c` (777 members into /tmp/opencode/mov, then
+  a line census over their `control=` lists) and counted the two token
+  names PR-99 ties to those bits: CHECK_BASE_LN = 0x4000 appears on 8
+  `control=` lines in 8 members - KADMAR.07, LONA.05, TUNGA.11, TUNGA2.12
+  and the two `LEW.*` members of each of ZARIA.01 and ZARIA.02 - while
+  CHECK_LN = 0x0100 appears on 340 lines in 101 members. 2 members name
+  both and 670 of 777 name neither, so for most shipped object state text
+  the ground query never runs at all. The 8/8 for CHECK_BASE_LN matches an
+  earlier token census of another record (NEXT_STEPS line 2157), which is
+  a second measurement of the same thing. So the mode-2 path (0x0100) is
+  the common one, the mode-0 path is rare and sits in level-exit scripts
+  of five levels including ZARIA.01 - which is the other half of why that
+  level's 7 '!' lines matter.
+```
+
+- WHY. PR-391 made the level's ground table readable, and the ledger row
+  for the ground signals had been carrying "the kind byte, the mode
+  argument and the per-point flag byte are the unmodelled half" since
+  PR-313. Reading 0x4b600 - the row's own named next read - collapses
+  that whole sentence into one comparison that appears twice, and it names
+  the thing the ask is filtering on.
+
+- WHAT SURPRISED ME. That the author's choice of ';' or '!' after a point
+  is a runtime query filter rather than an authoring comment, and that the
+  engine's own answer keeps the byte of the record it chose so it can
+  raise a signal every step from it. Also that the position carry at
+  0x54825 is a sum of the clamp delta and the ask's clearance: the ground
+  query moves the body directly, every frame.

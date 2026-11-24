@@ -87,6 +87,12 @@ FIELDS = [                # name -> offset in the object, per the ledger
     ('asked', 0x3c), ('surface_handle', 0xa9),
     ('sample_a_x', 0x89), ('sample_a_y', 0x8d),
     ('sample_b_x', 0xd6), ('sample_b_y', 0xda),
+    # PR-392: the ask's answer fields. 0x45400 writes the winning ground
+    # container at [obj+0xe6], its interpolated clearance at [obj+0xea] and
+    # the separator flag byte of the chosen record at [obj+0xe2]; 0x45250
+    # writes the clamp delta at [obj+0xca]/[obj+0xce].
+    ('answer_flag', 0xe2), ('answer_surface', 0xe6), ('answer_gap', 0xea),
+    ('clamp_dx', 0xca), ('clamp_dy', 0xce),
 ]
 WIN = 0x140               # sampled window: covers every FIELDS offset
 MENU_AT = (640, 400)      # the chapter map menu's CRTC geometry (PLAN S6)
@@ -320,8 +326,8 @@ def world_state(h, base):
 def surface_entry(surface_array, handle):
     """Describe a held-surface handle. The live measurement shows that
     [obj+0xa9] is an unaligned dword naming one 12-byte provider element
-    (class pointer, surface record, kind), not the record's payload. The
-    provider array and its count come from the world object."""
+    (class pointer, record array, record count - PR-391), not the record's
+    payload. The provider array and its count come from the world object."""
     handle &= 0xFFFFFFFF
     if not surface_array or not handle:
         return None
@@ -655,7 +661,8 @@ def main():
                       'ddisk': ({'path': ddisk, 'sha256': sha256(ddisk)}
                                 if ddisk else None)},
            'class_va': hex(class_va), 'phases': [], 'events': [],
-           'transitions': [], 'contact_transitions': [], 'summary': {}}
+           'transitions': [], 'contact_transitions': [], 'ask_answers': [],
+           'summary': {}}
 
     def note(msg, **kw):
         el = time.time() - t0 if t0 else 0.0
@@ -840,6 +847,13 @@ def main():
             if baseline is None:
                 baseline = set()
             new = [(x, c) for x, c in hits if x not in baseline]
+            # PR-392: the player class is NOT new at level start - the menu
+            # already holds a lion - so the baseline filter hides exactly the
+            # object the ask fields matter for. Always re-look for the
+            # requested class once the census runs.
+            player = [(x, c) for x, c in hits if c == class_va]
+            if player:
+                new = player + [(x, c) for x, c in new if c != class_va]
             inv = collections.Counter(c for _, c in new)
             if inv:
                 note('new objects in RAM (level start)', total=len(new),
@@ -963,6 +977,29 @@ def main():
                         note('standing bit flipped', obj=hex(o),
                              standing=event['standing'],
                              dx=event['dx'], dy=event['dy'])
+                    # PR-392: 0x45400 keeps the ask's answer - the winning
+                    # ground container at [obj+0xe6], the interpolated
+                    # clearance at [obj+0xea], and the separator flag byte
+                    # of the record it chose at [obj+0xe2]. Watching that
+                    # triple is how the mode/flag gate at 0x45417 and the
+                    # branches at 0x54766/0x547c8 get tested on live data.
+                    pa, ca = p.get('answer_surface'), w['answer_surface']
+                    if pa != ca:
+                        event = {
+                            't': round(t, 2), 'obj': hex(o),
+                            'answer': '%s->%s' % (hex(pa & 0xFFFFFFFF),
+                                                  hex(ca & 0xFFFFFFFF)),
+                            'gap': w['answer_gap'],
+                            'answer_flag': w['answer_flag'],
+                            'held': surface_entry(surface_array,
+                                                 w['surface_handle']),
+                            'entry': surface_entry(surface_array, ca),
+                            'before': p, 'after': w}
+                        man['ask_answers'].append(event)
+                        note('ask answer changed', obj=hex(o),
+                             answer=event['answer'], gap=event['gap'],
+                             answer_flag=event['answer_flag'],
+                             entry=event['entry'])
             if got:
                 prev = got
             trace.flush()
@@ -1000,6 +1037,12 @@ def main():
               % (x['t'], x['obj'], x['standing'], x['dx'], x['dy'],
                  x['before']['x'], x['before']['y'], x['after']['x'],
                  x['after']['y']))
+    aa = man['ask_answers']
+    print('ask-answer changes seen: %d' % len(aa))
+    for x in aa:
+        print('  %s obj %s: %s gap=%d answer_flag=%d element=%s'
+              % (x['t'], x['obj'], x['answer'], x['gap'], x['answer_flag'],
+                 (x['entry'] or {}).get('element_index')))
     print('trace: %s.jsonl   manifest: %s.json' % (out_prefix, out_prefix))
 
 
