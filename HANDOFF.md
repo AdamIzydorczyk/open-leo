@@ -5891,7 +5891,11 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         its +0x9c continuation is the per-class filter, where 181 of
         the 219 tables hold the always-allow stub 0x23a40 and 5 hold
         0x3d980 (`cmp edx,[obj+0xee]`, is the point-list container
-        set?); the askable answer verb 0x50f80 asks +0xd0 with
+        set?) - PR-388 added that this slot is also where a class keeps
+        its destructor: 181 hold one shared placeholder and 7 hold
+        destructor thunks, the four this-adjusted ones being exactly the
+        road family, and each names its own PR-387 descriptor record;
+        the askable answer verb 0x50f80 asks +0xd0 with
         [obj+0xb1], the placement damage; the four dispatch sites of
         +0x78 are the ask walks 0x4b500, 0x4bd30 and 0x553e0, whose
         candidate filter at +0x60 is `mov eax,[obj+0x2c]` in 178

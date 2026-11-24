@@ -53872,3 +53872,123 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   noise but the signature of a whole misaligned array, and that the value
   repeated through it, which I had already used as junk twice, is a runtime
   stub with a printed message that says what the field means.
+
+## PR-388 - THE CLASS TABLE'S +0x9c SLOT IS WHERE A CLASS KEEPS ITS
+## DESTRUCTOR: 181 TABLES HOLD THE "NOTHING TO DO" PLACEHOLDER AND THE ROAD
+## FAMILY HOLDS FOUR this-adjust THUNKS THAT NAME THEIR OWN DESCRIPTOR
+
+```
+KIND: read
+SUBSYSTEM: the [T+0x9c] verb the answer verbs call - what its 181 identical
+  values and its 7 exceptions actually are, and the road family's filter and
+  answer verb (OI-128, OI-129, the F6 thread; continues PR-384, PR-387,
+  PR-385).
+ADDRESSES: 0x23a40, 0x35a10, 0x3a7d0, 0x4f8d0, 0x4fa40, 0x20760, 0x29e90,
+  0x39950, 0x3d980, 0x36170, 0x3f010, 0x3f0f0, 0x74bc0, 0x74be0, 0x5c370,
+  0x53a30, 0x53ae0, 0x552e0, 0x55318, 0x53c90, 0x53ccd, 0x50fdb, 0x3d9d7,
+  0x3e8bd, 0x749a0, 0x45320, 0x4a0b0, 0x98278, 0x96560, 0x99398, 0x9d64c,
+  0x9e418, 0x9f4d4, 0xa1498, 0xa14ac, 0x9dbfc, 0x9f7b4, 0xa1f90, 0xa2054,
+  0x9e294, 0x96b88, 0x99668, 0x9ee88, 0x981e8, 0x8, 0xc, 0x2c, 0x3c, 0x44,
+  0x60, 0x78, 0x9c, 0xa5, 0xee
+NAMES: destructor thunk, this-adjust, scalar delete, placeholder verb,
+  flag-bit protocol, road answer, descriptor reference, pr388_dtor3.py
+CODE: no: image reading, no port change and no leg. The tracked diff is this
+  record, the OI-128 lines about the +0x9c stub and the road classes, and
+  one clarifying sentence in HANDOFF section 8. Nothing under ported/ is
+  touched, so only the light gate applies.
+HOOKS: PR-384 published "[T+0x9c] is the per-class filter, 181 tables hold
+  the always-allow stub 0x23a40"; PR-385 asked why the road classes pair an
+  always-allow +0x60 filter with a 0x3f010 answer verb; PR-387 found the
+  class-descriptor arrays and reported that nothing in the image reads them,
+  and that their records sit at 1 mod 4 so a table that ends at +0x9c reads
+  back 0x74bac00.
+OPENS: whether the ask path really means to run a destructor - at the five
+  answer sites edx is the requester object and the thunk's free branch is
+  chosen by bit 0x2 / bit 0x4 of that pointer's low byte, which is the C++
+  destructor flag convention arriving as address bits; what the other 31
+  [T+0x9c] values do (0x3d980 in 5 tables, 0x23e00 and 0x53770 twice each,
+  and the rest single); the 3 no-adjustor destructor thunks 0x20760,
+  0x29e90 and 0x39950 (KILOF_PL, SCHODY4/BRECT and the no-token class
+  0x9ee88) and what they free; 0x53ae0's own gate, which every answer verb
+  calls before [T+0x9c] and bails on; and whether a road's zeroed answer is
+  the whole story, given 0x3f0f0 builds a road's point list at [obj+0xa5]
+  with the element descriptor 0x98278 and 0x4a0b0 runs the meet against it.
+CLOSES: the PR-385 item "the road classes' always-allow filter vs their
+  0x3f010 answer verb". The four road tables 0x9dbfc (KTRASA), 0x9f7b4
+  (TUNTRAS), 0xa1f90 (TRASA) and 0xa2054 (TRASA2) are one family: all four
+  hold the same +0x60 filter 0x36170 (`mov eax,1; ret` - every candidate
+  passes), the same +0x78 answer verb 0x3f010, and a this-adjusted
+  destructor thunk at +0x9c. A road never answers: 0x3f010 writes a zeroed
+  12-byte record with the flag byte at +0xc cleared into the buffer the
+  asker handed in; the only thing it does is, when the requester in ebx
+  equals [obj+0x3c], clear its own container at [obj+0x44] through 0x45320
+  first. So the road is a candidate that always passes and never replies,
+  and what makes it interesting is not its answer but the container it
+  drops and the point list 0x3f0f0 builds beside it.
+CORRECTS: PR-384's name for the slot. "Per-class filter" describes what the
+  call site does with the return value, but the slot is where the class's
+  destructor lives: 181 tables hold one shared two-instruction placeholder
+  0x23a40, and 7 hold a destructor thunk with the compiler's flag protocol
+  (`test cl,0x4` or `test bl,0x4` -> release and free, `test cl,0x2` ->
+  0x53a30 then free). No measured behaviour changes - the placeholder really
+  does always return 1 - but the 7 exceptions are not predicates, and the
+  four that are this-adjusted (`sub eax,0xc`) are exactly the road family,
+  which PR-385 had picked out for a different reason. PR-387's "nothing in
+  the image reads these arrays" is also too strong: each of those 7
+  destructors passes its own descriptor record to 0x74bc0, which is the
+  first live use of the arrays found.
+MEASURED: (a) THE CENSUS (pr388_dtor3.py, all 219 tables). At +0x9c: 181
+  tables hold 0x23a40 = `mov eax,1; ret` - one address, not 181 different
+  always-true functions; 7 hold a function with the destructor protocol; 31
+  hold something else, and two of those are the out-of-bounds reads PR-386
+  and PR-387 predicted (0x981e8 reads back 0x74bac00 and the shared road
+  class 0x9e294 reads 0x38a8000, both shifted words of the descriptor array
+  that follows the table). (b) THE 7 THUNKS. 0x35a10 (KTRASA), 0x3a7d0
+  (TUNTRAS), 0x4f8d0 (TRASA) and 0x4fa40 (TRASA2) all open with
+  `mov ecx,edx` (or `mov ebx,edx`) and `sub eax,0xc` and all end by
+  returning obj-0xc; 0x20760 (KILOF_PL 0x96b88), 0x29e90 (SCHODY4/BRECT
+  0x99668) and 0x39950 (the no-token class 0x9ee88) have the same flag
+  protocol without the -0xc adjust. Each of the seven loads a constant and
+  calls 0x74bc0 then 0x74be0: 0x96560, 0x99398, 0x9d64c, 0x9e418, 0x9f4d4,
+  0xa1498 and 0xa14ac, and every one of those is one byte before a record
+  of a PR-387 descriptor array (0x96561, 0x99399, 0x9d64d ... are 1 mod 4).
+  (c) WHAT THE CALLEE DOES. 0x74be0 is `jmp 0x5c370`, i.e. operator delete;
+  0x74bc0 takes the object in eax, reads the allocation header at [eax-4]
+  and calls 0x76c00 with it, returning eax-4, and it puts the descriptor
+  argument in ebx and never reads it. The other branch calls 0x53a30 with
+  edx=1 and then `test cl,0x2; call 0x5c370` - free only when that flag
+  bit is set. (d) THE CALL SITES. `mov ebx,[obj+8]; mov edx,asker;
+  mov eax,obj; call DWORD PTR [ebx+0x9c]; test eax,eax; je bail` appears
+  exactly 5 times, at 0x3d9d7, 0x3e8bd, 0x50fdb, 0x53ccd (inside the
+  0x53c90 answer verb) and 0x55318 (inside 0x552e0, the answer verb of 78
+  tables). All five sit after the same prologue: build the 12-byte answer
+  record on the stack with 0x749a0, call 0x53ae0 (eax=me, edx=the requester)
+  and bail if it returns 0, then this [T+0x9c] call, then the class's own
+  work, then `repnz movsd` of 12 bytes into the caller's buffer with the
+  flag byte moved to record+0xc - the answer format of PR-384. (e) THE ROAD
+  ANSWER. 0x3f010: `push ecx; sub esp,8; mov [esp],edx` (keep the answer
+  buffer), `mov edx,ebx; cmp edx,[eax+0x3c]` - if the requester equals
+  [obj+0x3c] then `mov ebx,2; add eax,0x44; xor ecx,ecx; call 0x45320`,
+  the container clear of PR-381; then fill the answer buffer with 12 zero
+  bytes through 0x749a0 and clear its flag byte: `mov BYTE PTR [eax+0xc],
+  0`. The neighbouring 0x3f0f0 is the road's own initializer - it parses the
+  point list into [obj+0xa5] with 0x44f10, makes the 12-byte elements of
+  class 0x98278, offsets them by [obj] and [obj+4], and hands the block to
+  0x4a0b0.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The F6 thread needs to know what happens when the lion asks what is
+  under him. This says the road classes are not answering: they pass every
+  filter, return an empty record, and the only road-specific work in that
+  path is in the destructor thunk - which is also the only place the engine
+  provably touches its own class-descriptor records. So the "surface" the
+  lion stands on is carried by the point-list containers (0x3f0f0,
+  [obj+0xa5], the 0x98278 element class), not by the answer verbs.
+
+- WHAT SURPRISED ME. That the four this-adjusted thunks are exactly the four
+  road tables, and that the free branch of a destructor sits on the ask
+  path - the engine calls it as a predicate and lets the requester's address
+  bits decide whether memory is released.

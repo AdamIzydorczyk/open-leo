@@ -5830,7 +5830,12 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     12-byte key, calls 0x53ae0 and tail-calls [T+0x9c], where 181 of
     the 219 tables hold the always-allow stub 0x23a40 (`mov eax,1;ret`)
     and 5 hold 0x3d980 (`cmp edx,[obj+0xee]` - is the point-list
-    container set?); 0x3df00 (23 classes) asks [obj+8+0xd8] first and
+    container set?); PR-388 identified that slot as where a class keeps
+    its destructor: the 181 are one shared placeholder, and 7 tables hold
+    destructor thunks - the four this-adjusted ones are exactly the road
+    family (KTRASA, TUNTRAS, TRASA, TRASA2), and each thunk passes its
+    own PR-387 descriptor record to 0x74bc0 before the free; 0x3df00
+    (23 classes) asks [obj+8+0xd8] first and
     clears that container with 0x45320, 0x50f80 is the answer verb of
     exactly the 15 askable ones and asks [T+0xd0] with [obj+0xb1] when
     [obj+0x11a]==7, and 0x3f010 serves the road classes on the
