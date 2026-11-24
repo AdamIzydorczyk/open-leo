@@ -5773,13 +5773,26 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     class (0x96c38: `call 0x1e540`/`call 0x1e560`, PR-340's element
     region) or, for the 0x3ddf0 family, into 0x3df50 and 0x3df90
     (PR-375): they OR one byte into the 13-byte signal key at
-    [obj+0x60] (bit 0x20 of its third dword, of its first one), 0x3df50
+    [obj+0x60] (bit 0x20 of its byte 3, of its byte 0), 0x3df50
     stores its argument as the companion at [obj+0x112], and 0x3df90
     then asks that companion through its own verbs +0x3c and +0x70 and
-    queues [obj+0x11a]/[obj+0x11e] scaled by the answers - so still
-    open: which signal bit that is (the ledger's numbering stops at 54),
-    what the companion's +0x3c and +0x70 verbs are, what the authored
-    key ` F = %d, %d ` at 0x91446 controls, and why 0x3dd60 has only 11
+    queues [obj+0x11a]/[obj+0x11e] scaled by the answers. PR-376 read
+    those two verbs: they are PR-322's askable test (0x23c10 `xor
+    eax,eax` in 204 of the 219 tables, 0x230a0 `mov eax,1` in 15 - a
+    constant the author chose, never computed) and PR-321's facing word
+    (0x239f0 `mov eax,[obj+0x6d]` in 186, and constant 1 for the 33
+    anchored tables) - and all 15 askable tables are 0x55070-family and
+    none of them owns a point list, while the four link wrappers
+    (0x1f490, 0x1f6f0, 0x27626, 0x34623) only take the link after the
+    CANDIDATE's +0x3c answers 1, recording the result as bits 0x40/0x80
+    of the key byte at [obj+0x66]. So still open: which signal bit that
+    is (the ledger's numbering stops at 54), what the authored
+    key ` F = %d, %d ` at 0x91446 controls, what 0x1f330/0x1f590 test
+    and what [obj+0x5c] == 6/9 selects, the tokens of the other 14
+    askable classes (their ctors are at 0x1ff15, 0x1e0a6, 0x22ee5,
+    0x2413d, 0x269c2, 0x2703e, 0x2bfd6, 0x2dfa0, 0x3204d, 0x33dcd,
+    0x3624d, 0x3a489, 0x3a455, 0x3b1d2, 0x5011b), and why 0x3dd60 has
+    only 11
     sites for 29 [obj+0xee] owners when 0x3efe0 parses the same text at
     [obj+0x44] and 0x288d5 is unread. Settled at the same time:
     [obj+0xfa]/[obj+0xfe] are the FIRST RECORD of the object's own

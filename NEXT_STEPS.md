@@ -52414,3 +52414,123 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
 - WHAT SURPRISED ME. That I had called a flag-setter a text reader because
   I read past a `ret`. The bounded-body rule is the same one that caught
   the PR-372 offset mistake: reading a window instead of a function.
+
+## PR-376 - THE COMPANION VERBS PR-375 FOUND ARE THE LEDGER'S OWN +0x3c
+## ASKABLE TEST AND +0x70 FACING GETTER, AND LINKING IS GUARDED BY THE
+## ASKABLE TEST: 204 OF THE 219 KIND TABLES ANSWER "NOT ASKABLE", 15
+## ANSWER 1, AND NONE OF THE 37 POINT-LIST OWNERS IS IN THE 15
+
+```
+KIND: read
+SUBSYSTEM: who links a companion at [obj+0x112] and what the companion
+  answers - the call sites of the +0x0/+0x4 hooks (0x3df50/0x3df90) and
+  the class verbs they call, +0x3c and +0x70, across all 219 kind tables
+  (OI-128, OI-129, the F6 thread; continues PR-375 and reaches PR-322's
+  askable test and PR-321's facing word).
+ADDRESSES: 0x3df50, 0x3df90, 0x3df00, 0x23c10, 0x230a0, 0x239f0, 0x23b40,
+  0x1f372, 0x1f385, 0x1f38c, 0x1f490, 0x1f4a4, 0x1f4b4, 0x1f4bb, 0x1f4c9,
+  0x1f4d2, 0x1f4d8, 0x1f4e0, 0x1f521, 0x1f6f0, 0x1f752, 0x27626, 0x27652,
+  0x27661, 0x27672, 0x34623, 0x3468c, 0x96960, 0x97970, 0x97a98, 0x988ec,
+  0x98f34, 0x9a54c, 0x9b4d4, 0x9c958, 0x9d338, 0x9e134, 0x9f170, 0x9f540,
+  0x9f668, 0xa0624, 0xa2218, 0x1ff15, 0x1ff49, 0x2413d, 0x64, 0x65, 0x66,
+  0x6d, 0x3c, 0x70, 0x112, 0x1c
+NAMES: askable verb, facing verb, companion link, guarded link, link
+  wrapper, not-askable default, always-askable, signal byte, table census,
+  pr376_link.py, pr376_link.txt, pr376b_who.py, pr376b_who.txt,
+  pr376c_sites.py, pr376c_sites.txt, pr376d_names.py, pr376d_names.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines that asked what the companion's +0x3c and
+  +0x70 verbs are, and the HANDOFF section 8 F6 paragraph. Nothing under
+  ported/ is touched, so only the light gate applies.
+HOOKS: PR-375 found the +0x4 hook calling the companion through +0x3c and
+  +0x70 and left those verbs unread; PR-322 had already read +0x3c as the
+  askable test and PR-321 the +0x70 verb as the facing word - this record
+  connects them to the companion path. PR-337 read 0x3df00, the ask with
+  the asked's point list, which the same link wrapper calls one step
+  before linking. PR-374 established the blocks and their overrides.
+OPENS: the four link wrappers (0x1f490, 0x1f6f0, 0x27626, 0x34623) name
+  the candidate's class before linking - what the class-specific tests
+  0x1f330, 0x1f590 and [obj+0x5c]==6/9 are checking; which signal bit is
+  byte 0x65 bit 0x40 / 0x80 and byte 0x66 bit 0x20/0x40 of the [obj+0x60]
+  key, which the wrappers set around a link; the authored tokens of the
+  other 14 askable tables (their constructors are at 0x1ff15, 0x1e0a6,
+  0x22ee5, 0x2413d, 0x269c2, 0x2703e, 0x2bfd6, 0x2dfa0, 0x3204d, 0x33dcd,
+  0x3624d, 0x3a489, 0x3a455, 0x3b1d2, 0x5011b); whether the 18 `cmp
+  [reg+0x112],0` rows outside 0x3dfxx use the same field or another one -
+  61 rows name [reg+0x112] and the ledger also records it as a zone/element
+  link, so this census does not claim the field is single-purpose.
+CLOSES: PR-375's open items "what the companion's verbs +0x3c and +0x70
+  are" - the askable test and the facing word, both already in the ledger.
+  It also closes the question of whether the +0x0 hook links blindly: it
+  does not, in the four classes that wrap it the link is taken only if the
+  candidate's own +0x3c verb answers 1, and the signal bytes record which
+  way the test went.
+CORRECTS: PR-375 (my own, yesterday): (1) the four sites it printed as the
+  code that calls 0x3df50 (0x1f4d8, 0x1f752, 0x2a305, 0x2a4b5) came from
+  a broken thunk filter - measured properly the 30 sites split 26 in-block
+  thunks plus 4 wrappers for +0x0 and 28 plus 2 for +0x4. (2) It treated
+  +0x3c and +0x70 as unknown verbs: 204 of the 219 tables hold the
+  not-askable stub 0x23c10 at +0x3c and 186 hold the facing getter
+  0x239f0 at +0x70, both long known.
+MEASURED: (a) THE TWO VERBS, OVER ALL 219 KIND TABLES (pr376b_who.py).
+  +0x3c holds 0x23c10 (`xor eax,eax; ret`, not askable) in 204 tables and
+  0x230a0 (`mov eax,1; ret`) in 15 - the askable answer is a compile-time
+  constant per class, never computed. +0x70 holds 0x239f0
+  (`mov eax,[obj+0x6d]; ret`, PR-321's facing word) in 186 tables and
+  0x23b40 (`mov eax,1; ret`) in the 33 second-family tables, which have
+  no facing of their own. All 15 askable tables are of the 0x55070 family
+  (+0x54 = 0x55070) and none of them is one of the 37 point-list owners,
+  and no point-list owner is askable: an object with an authored point
+  list links to a companion that answers surface questions.
+  (b) THE 15 ASKABLE TABLES: 0x96960, 0x97970, 0x97a98, 0x988ec, 0x98f34,
+  0x9a54c, 0x9b4d4, 0x9c958, 0x9d338, 0x9e134, 0x9f170, 0x9f540, 0x9f668,
+  0xa0624, 0xa2218, stored by constructors at 0x1ff15, 0x1e0a6, 0x1ff49,
+  0x2413d, 0x269c2, 0x2703e, 0x2bfd6, 0x2dfa0, 0x3204d, 0x33dcd, 0x3624d,
+  0x3a489, 0x3a455, 0x3b1d2, 0x5011b (pr376d_names.py). 0x97a98 is the
+  ZARIA lion's table, which PR-322 showed stored at [obj+0x8]/[obj+0xc] at
+  0x1ff49/0x1ff50; that one store is exactly the pattern.
+  (c) THE SITES THAT LINK (pr376c_sites.py). 0x3df50 has 30 call sites,
+  0x3df90 30, found by scanning instructions; 26/28 of them are the
+  blocks' own one-instruction thunks. The rest are four per-class wrappers
+  at 0x1f490, 0x1f6f0, 0x27626 and 0x34623 (+0x0) and two at 0x1f4e0 and
+  0x27661 (+0x4) - the same functions PR-375 listed as the non-default
+  forwarders. The 0x1f490 wrapper, in order: take the candidate from
+  [ds:0xcef40+0x1c]; test it; `call 0x1f330`, a two-form acceptor stub
+  (`mov eax,1; ret` or `xor eax,eax; ret` on a flag in eax);
+  `mov ecx,[edx+0x8]; mov eax,edx; call [ecx+0x3c]` - ask the CANDIDATE
+  whether it is askable; if that fails, set bit 0x40 of the byte at
+  [obj+0x66]; if it passes, `call 0x1f590` and on success set bit 0x80 of
+  that same byte; then `mov eax,ebx; call 0x3df50` either way. The other
+  wrapper at 0x1f6f0 branches to three sites that OR 0x40, 0x80 or 0x1
+  (at [obj+0x67]) and then calls 0x3df50; 0x27626 and 0x34623 guard the
+  same way.
+  (d) THE GUARD IS NOT NEW TO THIS ENGINE - IT IS ALSO IN THE STANDING
+  QUERY. 0x1f372 does `mov edx,[eax+0x112]; test edx,edx; mov ecx,
+  [edx+0x8]; mov eax,edx; call [ecx+0x3c]; test eax,eax` and only
+  continues for [obj+0x5c] == 6, reading a per-kind array at [obj+0x50];
+  and the wrapper at 0x1f43a tests `[obj+0x5c] == 9`, sets bit 0x40 of
+  [obj+0x66] and calls PR-337's 0x3df00 before linking. So the same
+  askable verb guards both linking a companion and asking it.
+  (e) THE FIELD ITSELF: 61 instruction rows name [reg+0x112] - 16 stores,
+  27 loads and 14 compares (10 of them `cmp [reg+0x112],0`), counted on
+  the operand shape (pr376_link.py); the stores are at
+  0x1e1db, 0x2401d, 0x2709b, 0x2c10b, 0x2e04b, 0x33ced, 0x362bb, 0x39edb,
+  0x3b2ad, 0x4d6c5, 0x500fd, 0x3df83, 0x3e042, 0x3dd28, 0x285d7
+  (`mov [esi+0x112],1` - a flag, not a pointer) and 0x283c9.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The F6 thread wants to know what an authored object stands on when
+  it is not standing on the level. PR-375 showed it asks a companion; this
+  shows the engine refuses to link a companion that cannot answer a
+  surface question, and that the 37 classes with authored point lists are
+  never themselves answerable. The two halves of the mechanism - the
+  askable test from PR-322 and the point-list ownership law from
+  PR-372/PR-373 - are complementary sets in every measurement taken here.
+
+- WHAT SURPRISED ME. That the "unknown" verbs I opened PR-376 to read were
+  two the ledger has known for fifty records, and that the count 204/15
+  says the askable answer is a constant written into the table: the engine
+  never computes whether something can be asked, the author decided it.

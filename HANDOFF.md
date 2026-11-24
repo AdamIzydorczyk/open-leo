@@ -5858,7 +5858,13 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         the +0x0 one stores its argument as the companion at
         [obj+0x112], while +0x4 then queries that companion through its
         own +0x3c and +0x70 verbs and queues the authored pair
-        [obj+0x11a]/[obj+0x11e] scaled by the answers; and 32 of
+        [obj+0x11a]/[obj+0x11e] scaled by the answers; PR-376 read those
+        two verbs - they are PR-322's askable test (0x23c10 in 204 of the
+        219 tables, 0x230a0 in 15, a constant the author chose) and
+        PR-321's facing word at [obj+0x6d] - and all 15 askable classes
+        are 0x55070-family and none owns a point list, while the four
+        link wrappers (0x1f490, 0x1f6f0, 0x27626, 0x34623) take a
+        companion only after its own +0x3c answers 1; and 32 of
         the 37 replace the base ask hook 0x45230 while the five
         second-family owners keep it. The two slots below each block are
         per-class functions taking [obj+0xc] as this (0x206f0 opens `sub
