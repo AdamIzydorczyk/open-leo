@@ -5816,17 +5816,24 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         +4) held SORTED BY x, translated by the delta that moves the
         object through 0x45200 and bracketed by 0x45380, whose two
         bracketing records are handed to 0x455a0 - the port's c1.
-        PR-370 read the header itself: a sub-object with a class
-        (0x98bdc, an anchor table of the 155 family with a kind id and
-        count get/set verbs at +0xd8/+0xdc), built EMPTY by 0x26060 on
-        top of the base part 0x53ff0 lays down (views 0xa23b8/0xa23b0,
-        a request block at [obj+0xd6]), and copied field-for-field by
-        0x24aa0, 0x259b0, 0x1ece0, 0x20200 and 0x23360 - three of them
-        the sites PR-99 read as the LION's two-view idiom, so a LION
-        object always carries a header aliasing another object's
-        array. The port measures every class against the level's array
-        and gives those 29 a frozen one where the engine has a
-        shareable record object.
+        PR-370 read how that field is copied and PR-371 what it is:
+        [obj+0xee]/[+0xf2]/[+0xf6] is ONE embedded container of the
+        0xa0cc0 family PR-279 found, built in place by 0x44fe0 at 47
+        sites that do `add eax,0xee` first. Its base table's six
+        surface verbs - bracket-to-c1, the ask, the relative ask, the
+        slope scaled by 1000, the parser - are shared by every class,
+        and the 37 derived sub-tables override only +0x0, +0x4 and
+        +0x10. 28 of the 219 class blobs hold such a sub-table (13 of
+        the 29 0x3ddf0 classes at blob+0xec; 0x9daf8 = KKULA is one),
+        and a derived destructor proves the sub-object's this is
+        obj+0xee (`sub eax,0xee`). The records are authored as text:
+        0x45120 reads "%d" then a " %c" separator, ';' storing flag 1
+        and '#' flag 2. Arrays are shared, not private: 0x24aa0,
+        0x259b0, 0x1ece0, 0x20200 and 0x23360 copy the three words,
+        three of them the sites PR-99 read as the LION's two-view
+        idiom. The port measures every class against the level's array
+        and is missing the object that answers surface questions for
+        its owner.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

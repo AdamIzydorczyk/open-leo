@@ -51620,3 +51620,190 @@ GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff includes a
   yet. And the LION's own object carries the header: PR-99 read those three
   constructors and stopped at the view stores, while the very next field,
   [obj+0xee], is a surface-record header.
+
+## PR-371 - THE SURFACE RECORDS ARE AN EMBEDDED CONTAINER WITH A TEXT
+## FORMAT: THE 0xa0cc0 VERB FAMILY, SHARED BY EVERY CLASS AND OVERRIDDEN IN
+## ITS LIFECYCLE SLOTS BY A SUB-TABLE INSIDE 28 CLASS BLOBS, WHICH IS WHAT
+## PR-369 MISTOOK FOR CLASS VERBS
+```
+KIND: read
+SUBSYSTEM: the point-list container - the object embedded at [obj+0xee], its
+  base method table 0xa0cc0 and the 37 derived sub-tables, the parser that
+  fills it from level text, and the verbs that answer a surface question from
+  it (OI-128, OI-129, the F6 thread; continues PR-369 and PR-370; the
+  container family itself is PR-279's).
+ADDRESSES: 0xa0cc0, 0x44fe0, 0x44f90, 0x45230, 0x39d00, 0x45250, 0x45258,
+  0x4526e, 0x45293, 0x452b3, 0x452c4, 0x452d0, 0x452d4, 0x453d0, 0x45320,
+  0x45400, 0x45120, 0x45149, 0x4515a, 0x451a1, 0x451be, 0x451cf, 0x45002,
+  0x45012, 0x4504f, 0x45053, 0x45070, 0x450f8, 0x45102, 0x45235, 0x45244,
+  0x45380, 0x455a0, 0x9182d, 0x91830, 0x91834, 0x49920, 0x4a0b0, 0x498f0,
+  0x76a64, 0x76bb7, 0xa0c64, 0xa0c78, 0x993ac, 0x34871, 0x34885, 0x348a8,
+  0x348d6, 0x37fa2, 0x981e8, 0x9ef38, 0x9ef14, 0x9ef0c, 0x29a58, 0x29a70,
+  0x2a194, 0x2a1ac, 0x2b230, 0x2b234, 0x2b259, 0x2b26d, 0x99804, 0x9a754,
+  0x97360, 0x976e0, 0x99718, 0x99828, 0x99a48, 0x99b58, 0x99c68, 0x9af38,
+  0x9b048, 0x9e970, 0x9ea80, 0x9fd64, 0x9fe74, 0x9daf8, 0x9edd0, 0x9e82c,
+  0x9ee88, 0xa0230, 0x26060, 0x98bdc, 0x5c370, 0x74bc0, 0x74be0, 0x53a30,
+  0x98278, 0x98274, 0x23a10, 0x3ddf0, 0x55070, 0x53df0, 0x23ea0, 0x89,
+  0x90, 0xca, 0xce, 0xdc, 0xe0, 0xe8, 0xec, 0xf4, 0xee, 0xf2, 0xf6, 0x104,
+  0x128, 0x144, 0x16c, 0x3c, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20,
+  0x21, 0x28, 0x48, 0x4c, 0xa5, 0x6c, 0x54
+NAMES: point list, container, embedded sub-object, sub-method table,
+  sub-vtable, derived verb, base table, this-adjustment, record, flag byte,
+  separator, text format, scanner, grow, copy, bracket, slope, milli-units,
+  surface records, stride 13, x-sorted, platformy, pr371_container.py,
+  pr371_container.txt, pr371b_container.py, pr371b_container.txt,
+  pr371c_subtables.py, pr371c_subtables.txt, pr371d_classes.py,
+  pr371d_classes.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is this
+  record, the OI-128 rows PR-370 wrote about the header, the HANDOFF section
+  8 F6 paragraph, and the L15 comment in ported/ll_level.c that PR-370 had
+  just written with the wrong class for the container.
+HOOKS: PR-279 found the 0xa0cc0 method family, the .plt/.DES loader that
+  splits a record into lines and calls the element's +0x20 method (=0x45120)
+  per line, and the pools ds:0xa0c78 and 0xa0c64. PR-338/PR-336/PR-300/
+  PR-301 read 0x45250 and 0x452d0 as the "seat verbs" that make an object
+  askable. PR-369 read the 13-byte x-sorted records, the translate 0x45200,
+  the bracket 0x45380, the ask 0x45400 and the relative ask 0x45320.
+  PR-352 read 0x455a0, which the port models as seat_slope. PR-368 found
+  that class tables stop corresponding past their own method table only as a
+  count, not as a reason - this record supplies the reason.
+OPENS: which of the named classes the 28 are - 0x9daf8 is KKULA, the other
+  27 are not named in the ledger, and 16 of the 29 0x3ddf0 classes carry a
+  container built by 0x44fe0 but no sub-table, so they use the base verbs:
+  what a derived table's +0x0/+0x4 verbs add (0x2b2a0 calls 0x3df50 and
+  0x2b295 calls 0x3df90, both unread); what the flag byte means when 0x45258
+  compares it with ecx (`cmp edi,ecx; jg`), against PR-344's finding that
+  every asker passes mode 2; the four 0x44fe0 sites that build the container
+  at [obj+0xa5] instead of +0xee; the twelve where eax is already positioned
+  before the call (0x2a31a, 0x35109, 0x4e768, 0x4f854 and eight others);
+  0x98274, the request-block signature's neighbour used at 0x34885 where the
+  level array is read; who else reads [obj+0xca]/[obj+0xce] after 0x45250
+  wrote them; and the descriptor blocks the derived verbs name (0x993ac for
+  the class of 0x9a754, 0xa0c78 for the base container, 0xa2374 and 0x98310
+  from PR-370) - PR-370's five-dword census and these one-word blocks are
+  the same structure at different sizes and neither is understood.
+CLOSES: PR-369's and PR-370's open item "who fills an array" - the format is
+  text and the fillers are 0x45120 (parse a line), 0x45002 (copy a container)
+  and 0x45070 (ask twice and store the answers); PR-279 already had the
+  loader that drives 0x45120 from the level wiring, so the chain is closed
+  end to end. It also closes PR-369's question about the varying slots: those
+  entries are the container's sub-table, not class verbs.
+CORRECTS: PR-370 (my own, same day), PR-369 (my own) twice, and one method
+  of mine. (1) PR-370's "the record array's header is a sub-object whose
+  class is 0x98bdc with a kind id" -
+  the container's class is 0xa0cc0, and 0xa0cc0 is NOT a kind table (its
+  +0x6c is 0x800, not 0x23a10); 0x98bdc is the class of the OUTER object
+  0x26060 builds, and that builder zeroes [obj+0xee], [obj+0xf2] and
+  [obj+0xf6], i.e. it leaves the record field with a null vtable rather than
+  constructing a container. (2) PR-369 (my own): "0x45320 is installed as a
+  class verb by 34 tables, at +0x104 in 12 of the 29 0x3ddf0 tables" - those
+  words are the embedded container's method table (0x45320 is its +0x18),
+  placed inside the class blob right after the class's own method table;
+  the measured sub-tables sit at +0xe0..+0x16c, 13 of the 29 at +0xec.
+  (3) PR-369's OPENS line that "the bytes at +8..+12 are never read": the
+  byte at +0xc is a record flag, written by the parser at 0x451be, copied at
+  0x45053 and tested at 0x45258. A method caution follows: a slot census that
+  reads past +0xdc of a class table reads sub-object tables, so PR-368's
+  uniformity and hook-slot numbers hold only below that line - re-checked
+  here over all 219 tables, 17 groups share a kind id and 16 of them differ
+  at +0xe0 and above, where a blob holds its members' tables rather than its
+  own methods.
+MEASURED: (a) THE CONTAINER IS EMBEDDED, NOT POINTED AT. 0x44fe0 sets
+  [eax]=0xa0cc0, [eax+4]=0, [eax+8]=0 and returns; it has 63 call sites and
+  at 47 of them the instruction before is `add eax,0xee` (for instance
+  0x1f2b5, right after `call 0x53ff0`), so the container is constructed IN
+  PLACE at [obj+0xee]: the three words PR-369 called a header are one object
+  - its vtable at +0xee, its record array at +0xf2, its count at +0xf6. Four
+  sites construct it at [obj+0xa5] instead.
+  (b) THE BASE TABLE 0xa0cc0, nine entries: +0x0 0x45230, +0x4 0x39d00,
+  +0x8 0x45250, +0xc 0x452d0, +0x10 0x44f90, +0x14 0x453d0, +0x18 0x45320,
+  +0x1c 0x45400, +0x20 0x45120. Six of those nine are the functions PR-369
+  read as free-standing helpers: the bracket-to-c1 path, the relative ask,
+  the standing ask and the filler. None of them has a direct call site except
+  0x45320 (6), 0x45400 (1), 0x45120 (5) and 0x44f90 (111) - the rest are
+  reached only through a table, which is why the earlier call censuses
+  missed them.
+  (c) 37 DERIVED SUB-TABLES. Every table in the image whose +0x8 word is
+  0x45250: 38, the base plus 37 others. In all 37, exactly three entries
+  differ - +0x0, +0x4 and +0x10 - and the six surface entries (+0x8, +0xc,
+  +0x14, +0x18, +0x1c, +0x20) are identical to the base; 37 distinct
+  functions sit at each of the three overridden slots. The proof that these
+  are sub-object tables and not class tables: the derived +0x10 verb at
+  0x2b230 begins `sub eax,0xee` - it turns the container pointer back into
+  the object base - then `add eax,0xee; call 0x44f90` runs the base
+  container's destructor, and `call 0x53a30` runs the outer object's glue,
+  with the delete block 0x993ac passed to 0x74bc0 when the flag bit 2 of the
+  flags byte is set. Four constructors store one of them directly: 0x29a58
+  and 0x2a194 store 0x9a754 at [eax+0xee], 0x29a70 and 0x2a1ac store
+  0x99804.
+  (d) WHICH CARRY ONE (pr371d_classes.py, a sub-table is a table at
+  blob+0xd0..+0x16c whose +0x8 word is 0x45250): 13 of the 29 0x3ddf0
+  classes (0x97360, 0x976e0, 0x99718, 0x99828, 0x99a48, 0x99b58, 0x99c68,
+  0x9af38, 0x9b048, 0x9e970, 0x9ea80, 0x9fd64, 0x9fe74 - twelve at +0xec,
+  0x9ea80 at +0xf4); 11 of the 124 0x55070 classes (at +0xe0, +0xe4, +0xe8,
+  +0x128, +0x160; 0x9daf8 is KKULA); 1 of the 31 0x53df0 classes (0x9edd0 at
+  +0x144); 3 of the 33 second-family tables (0x9e82c at +0x120, 0x9ee88 at
+  +0x144, 0xa0230 at +0x16c). Total 28 of the 219. The LION's class 0x96874
+  carries none, which is consistent with PR-369's note that it has no such
+  verb.
+  (e) THE RECORD FORMAT COMES OUT OF THE PARSER (0x45120; the entry point,
+  the four bytes there are 53 51 56 57 = push ebx, ecx, esi, edi): it grows
+  the array by one record - `inc edx; imul eax,edx,0xd; add eax,0x4` then
+  0x76a64 with the pool ebx=0xa0c64 and 0x76bb7 (0x45149-0x45166) - and per
+  record it calls the scanner 0x49920 with "%d" (the string at 0x9182d) and
+  with " %c" (0x91830) and the separator test is against ';' (0x3b) and '#'
+  (0x23): ';' stores 1 at record+0xc, '#' stores 2, anything else stores 0
+  (0x451a1-0x451e0, stored at 0x451be). So a record is {int x, int y, four
+  unused bytes, a flag byte} and the level text separates records with ';'
+  and '#'.
+  (f) THE OTHER TWO FILLERS. 0x45002 copies a container: it takes the source
+  count, allocates count*13+4 the same way, and copies each record's +0, +4
+  and the +0xc byte (0x45041-0x45053). 0x45070 makes a two-record array from
+  queries: it allocates 0x1e (2*13+4), sets the count to 1, then issues
+  [0x98278+4] = 0x23ea0 twice and writes the two answers at record 0 and
+  record 1 (0x450c5, 0x450d1, 0x450eb, 0x450f2) with both flags set to 1
+  (0x450f8, 0x45102). Its only call site is 0x37fa2, inside a constructor
+  that installs the views 0x981e8/0x981e0 and then 0x9ef38/0x9ef14/0x9ef0c.
+  (g) WHAT THE SURFACE VERBS ANSWER. +0xc (0x452d0) brackets the query x
+  with 0x45380 and returns the slope of the segment between the two
+  bracketing records, scaled: dy -> `shl eax,5; sub eax,edx` (x31), `lea
+  eax,[eax*4]` (x124), `add edx,eax` (x125), `lea edx,[edx*8]` (x1000),
+  then `sar edx,0x1f; idiv ebx` over dx (0x452ef-0x45319) - a gradient in
+  thousandths, and not the same function as 0x455a0, which
+  interpolates and which the port models as seat_slope. +0x8 (0x45250) first
+  tests the first record's flag byte against ecx (`movzx edi,BYTE PTR
+  [eax+0xc]; cmp edi,ecx; jg` at 0x45258-0x4525e), then takes the FIRST
+  record if the query x is left of it or the LAST one otherwise (`imul esi,
+  [esi+8],0xd` at 0x45293), copies that record's pair into [edx+0x89] and
+  [edx+0x8d] and writes the differences into [edx+0xca] and [edx+0xce]
+  (0x4526e-0x452c4) - the same two fields PR-369 saw 0x45320 add to an aim
+  before the ask. +0x0 (0x45230) calls the asker's +0x3c verb and, if it
+  answers, writes 1 to [ds:0xcef40+0x1c].
+  (h) THE LEVEL ARRAY IS THE SAME FORMAT. The code at 0x34871-0x348ff reads
+  an array at [esi+0x48] with its count at [esi+0x4c], tests the query
+  against the first record and against `imul edx,ebx,0xd` plus the base,
+  walks with stride 0xd and stops before the end (`dec eax; imul eax,eax,
+  0xd`), then issues a request-block call with the signature 0x98278 - and
+  uses 0x98274, the word right before that signature, as a tag at 0x34885.
+  Nothing distinguishes the level's array from a container's records.
+GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff includes a
+  comment fix in ported/ll_level.c, so what was run anyway: make rc=0 with 0
+  warnings and make verify-level rc=0 - 10 (ok) lines, the legs unchanged;
+  the index was regenerated with this record in the tree before the runs.
+```
+
+- WHY. PR-349 to PR-365 read how the lion measures the surface; PR-369 found
+  that a moving class keeps its own copy of the records; this is where those
+  records come from and who answers questions about them. They are authored
+  as text (`%d` then a ';' or '#' separator, with a per-record flag), they
+  are attached to objects at construction, and the six verbs that read them
+  are shared by every class - only the lifecycle verbs are per-class. So a
+  port that measures everything against one level table is not merely
+  missing a copy: it is missing a whole object that answers the surface
+  questions on behalf of its owner.
+
+- WHAT SURPRISED ME. That the class table and the sub-object table are
+  neighbours, and that the boundary between them is what makes PR-368's
+  census stop working past +0xdc. Two days of "same-id tables agree at 32
+  slots and differ at eleven" were partly a reading of a class's own methods
+  next to its members' vtables.

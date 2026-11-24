@@ -5706,46 +5706,56 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     [0x98278+4] = 0x23ea0 with the offsets at [obj+0xfa]/[obj+0xfe]
     added to that point, stores the result at [obj+0x106]/[obj+0x10a]
     and translates the array at [obj+0xee] through 0x45200. PR-369 READ
-    THAT ARRAY AND IT IS SURFACE DATA: the header is {[+0] ?,
-    [+4] record array, [+8] count} with 13-byte records holding x at +0
-    and y at +4, kept SORTED BY x - 0x45200 translates every record by
-    the delta (that is why a plain add is legal) and 0x45380 brackets a
-    query x in it, handing the two bracketing records to 0x455a0,
-    PR-352's c1, or returning 0x7fffffff. PR-370 READ ITS BUILDER: the
-    header is a sub-object - 0x26060 zeroes [obj+0xee]/[+0xf2]/[+0xf6]
-    and installs the views 0x98bdc/0x98bd4, an anchor class of the 155
-    family whose +0xc is 0x260a0 = `mov eax,ds:0xcec28; ret` and whose
-    +0xd8/+0xdc are a setter and a getter for the count at [obj+0xf6];
-    it is built EMPTY, and 0x53ff0 (160 call sites) first lays a base
-    part under it - the view pair 0xa23b8/0xa23b0 at +8/+0xc and a
-    request block at [obj+0xd6]. The array is NOT private to whoever
-    holds the header: 0x24aa0, 0x259b0, 0x1ece0, 0x20200 and 0x23360
-    copy the header trio from another object, and three of those five
-    are the sites PR-99 read as the LION's two-view idiom, so a LION
-    object always carries a header aliasing someone else's array. So
-    the port - which measures every class against the level's array -
-    gives those 29 a frozen surface where the engine has a shareable
-    record object. Seven of the 23 +0xb0 companion ids of the
+    THAT ARRAY AND IT IS SURFACE DATA: 13-byte records holding x at +0
+    and y at +4 and a flag byte at +0xc, kept SORTED BY x - 0x45200
+    translates every record by the delta (that is why a plain add is
+    legal) and 0x45380 brackets a query x in it, handing the two
+    bracketing records to 0x455a0, PR-352's c1, or returning 0x7fffffff.
+    PR-370 read the paths that copy that field and PR-371 what it IS:
+    [obj+0xee]/[+0xf2]/[+0xf6] is ONE EMBEDDED container - vtable,
+    record array, count - constructed in place by 0x44fe0 at 47 sites
+    that do `add eax,0xee` first (PR-279's 0xa0cc0 family). Its base
+    table has nine verbs; 37 derived sub-tables change only +0x0, +0x4
+    and +0x10 and keep the six surface verbs (bracket-to-c1, the ask,
+    the relative ask, the scaled slope, the parser); 28 of the 219
+    class blobs hold such a sub-table, 13 of the 29 0x3ddf0 classes at
+    blob+0xec, and a derived destructor proves the sub-object's this is
+    obj+0xee (`sub eax,0xee`). The records are authored as TEXT:
+    0x45120 reads "%d" then a " %c" separator - ';' storing flag 1, '#'
+    flag 2 - and grows the array by (count+1)*13+4; 0x45002 copies a
+    container and 0x45070 asks twice and stores the answers. Arrays are
+    shared, not private: 0x24aa0, 0x259b0, 0x1ece0, 0x20200 and
+    0x23360 copy the three words, and three of those five are the
+    sites PR-99 read as the LION's two-view idiom - yet 0x96874's own
+    blob carries no sub-table. So the port, which measures every class
+    against the level's array, is missing the object that answers
+    surface questions for its owner. Seven of the 23 +0xb0 companion
+    ids of the
     31-family are named as the +0xc id of a second-family table (ANITAB
     0xa1eb4 names ds:0xceea4 = 0xa1f90). The companion verb is 0x45320
-    (installed at +0x104 by 12 of the 29): it calls the aim filler
+    - the container's +0x18 verb, which PR-369 mistook for a class verb
+    at +0x104 of 12 of the 29: it calls the aim filler
     0x541f0, then adds [other+0xca]/[other+0xce] and calls 0x45400.
     0x45200 has ten call
     sites, eight in PR-340's element region; 0x52b10 appends {next, ?,
     x, y} nodes to a list at [x+0x10] (66 sites) which 0x52b50 drains
     by running each node target's +0x10 verb, and 0x52b80 drains and
-    then runs the owner's +0x14 - six call sites. Still open: what a
-    13-byte record is beyond x,y, and who FILLS an array - the builder
-    leaves it empty and nothing read here allocates count*13 or writes
-    [obj+0xf2] (the stride-13 multiplies at 0x45012, 0x4505b, 0x4514a
-    and 0x45293 are unread), what the 281 five-dword blocks
+    then runs the owner's +0x14 - six call sites. Still open: what the
+    flag byte means where 0x45258 compares it with ecx (`cmp edi,ecx;
+    jg`) against PR-344's mode 2, what a derived table's +0x0/+0x4
+    verbs add (0x2b2a0 calls 0x3df50, 0x2b295 calls 0x3df90), the four
+    sites that build the container at [obj+0xa5], what 0x98274 is (the
+    request-block signature's neighbour, used at 0x34885 where the
+    level array is read), what the 281 five-dword blocks
     {code, code, code, a value, 0} at stride 0x14 are (they name the
     builders, every one sits at 1 mod 4, and 0x25970 hands its block
     0x98310 to 0x74bc0 and 0x74a4c), whether 0x5c320 returns a pointer
     inside a larger block, whether the lion's own standing query ever
-    consults such a per-object array (0x96874 has neither the list pass
-    nor a +0x104 verb), what the [x+0x10] queue drives, which classes
-    the 29 are by name, 16 of the 23 +0xb0 companion ids, the six
+    consults such a per-object array (0x96874 carries neither the list
+    pass nor a container sub-table), what the [x+0x10] queue drives,
+    which classes the 29 are by name - of the 28 that carry a
+    sub-table only 0x9daf8 = KKULA is named - 16 of the 23 +0xb0
+    companion ids, the six
     seeded ids no table names (ds:0xcee6c, 0xcee80, 0xceed4, 0xcf05c,
     0xcf4e0, 0xcf4e4) and the two ids named but never seeded
     (ds:0xceba0, 0xcf0e4).
