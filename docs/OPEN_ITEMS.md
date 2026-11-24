@@ -5685,8 +5685,32 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     merged: ds:0xcee68 is one of those ids (written only at 0x3d119,
     read only by 0x4fb60), and 0xa2178 belongs to a REQUEST BLOCK -
     0x4fb70 fills {0xa2178, 0, 0, 0x98278, 0} into a caller-supplied
-    buffer, which is PR-237's ask signature. What stays open here:
-    what the shared id groups mean in the data, whether the
-    +0xc/+0xb0 pair is really "my family, the class I attach to", and
-    why ds:0xceba0 and ds:0xcf0e4 are named by class tables but
-    seeded by no run.
+    buffer, which is PR-237's ask signature. PR-368 ANSWERS THE FIRST OF
+    THOSE and corrects the family counts above. What an id IS, measured:
+    the tables of one id share every class verb - over the 11 id groups
+    with more than one table (90 tables) 32 slot offsets are identical in
+    every member, including +0x54, +0x58 and +0x6c, and no group mixes a
+    position writer or a position mover (0 of 11); what differs per class
+    is a short hook list - +0x90, +0x14/+0x18, +0x10, +0x60, +0x64,
+    +0x78, +0x7c, +0xa8, +0xd0, +0xd8, +0xdc. The id is finer than the
+    behaviour, never coarser: 0x55070 serves 66 distinct ids. Two more
+    corrections: the two-family law is +0x58/+0xb0 (those two 155-table
+    sets were checked to be identical), NOT +0x54 - that slot holds
+    0x55070 in 124, 0x53df0 in 31 and 0x3ddf0 in 29 of the 186; and the
+    kind-table set is 219, not 186, because +0x6c = 0x23b50 anchors a
+    second family of 33 whose position verbs are bare `ret` (0x23b50,
+    0x23bb0) - classes that are carried and do not carry, and PR-366's
+    five record tables are among them, all five with an id getter at
+    +0xc. 0x3ddf0 is the standing writer PLUS a second pass: it runs
+    0x55070, asks +0x6c for &[obj+0x89] and issues the request-block
+    entry [0x98278+4] = 0x23ea0 for offsets read from the lists at
+    [obj+0xee] and [obj+0xfa], stores to [obj+0x106] and translates the
+    [obj+0xee] list through 0x45200 - 29 classes keep a list of points
+    that move with them, which nothing in the port models. Seven of the
+    23 +0xb0 companion ids are now named as the +0xc id of a
+    second-family table (ANITAB 0xa1eb4 names ds:0xceea4 = 0xa1f90); the
+    other 16, the six seeded ids no table names (ds:0xcee6c, 0xcee80,
+    0xceed4, 0xcf05c, 0xcf4e0, 0xcf4e4), the two ids named but never
+    seeded (ds:0xceba0, 0xcf0e4) and what those
+    [obj+0xee]/[obj+0xfa]/[obj+0x106] lists are in the object layout all
+    stay open.

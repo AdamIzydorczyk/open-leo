@@ -51137,3 +51137,157 @@ GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff
   sample-point method in one family and an id getter in the other,
   which is why PR-364's careful reading of 0x544f0 could not be
   generalised - the offset means nothing without the family.
+
+## PR-368 - A KIND ID IS A BEHAVIOUR, NOT A NAME: TABLES OF ONE ID SHARE
+## EVERY CLASS VERB BUT A SHORT LIST OF HOOKS, AND A SECOND CLASS-TABLE
+## FAMILY OF 33 HAS POSITION VERBS THAT ARE BARE `ret`
+```
+KIND: read
+SUBSYSTEM: class identity and class behaviour - what a kind ID decides (the
+  id groups of PR-367), the second anchor family (+0x6c = 0x23b50), the
+  +0x54 position-writer census, and what the 0x3ddf0 writer adds to the
+  standing-query chain of PR-349/PR-352/PR-363/PR-364 (OI-128, OI-129).
+ADDRESSES: 0x23a10, 0x23b50, 0x23bb0, 0x23ba0, 0x23c70, 0x3ed70, 0x55380,
+  0x3ecd0, 0x55070, 0x53df0, 0x3ddf0, 0x2b1a0, 0x3e280, 0x54eb0, 0x544f0,
+  0x54560, 0x52a50, 0x52a00, 0x3de04, 0x3de27, 0x3de2c, 0x3de37, 0x3de5a,
+  0x3de8d, 0x3de94, 0x3dea6, 0x3deb2, 0x3ded8, 0x3df83, 0x45200, 0x52b10,
+  0x23ed0, 0x23ea0, 0x23e00, 0x98278, 0x44350, 0x550a0, 0x96874, 0x96ddc,
+  0x96e94, 0x97cdc, 0x9957c, 0x99828, 0x9a778, 0x9d168, 0x9d220, 0x9da40,
+  0x9daf8, 0x9e294, 0x9e82c, 0x9e8bc, 0x9edd0, 0xa0780, 0xa14f4, 0xa15ac,
+  0xa17dc, 0xa1894, 0xa1eb4, 0xa1f90, 0xa2054, 0xa20f4, 0xa2498, 0xa2550,
+  0x9dbfc, 0x9f7b4, 0x9ec8c, 0x9815c, 0x9ee88, 0xcee70, 0xceec8, 0xcf054,
+  0xcf050, 0xcee78, 0xcee64, 0xceba0, 0xcf0e4, 0xcee74, 0xceea4, 0xceeb8,
+  0xceec4, 0xcebbc, 0xceccc, 0xcf000, 0xcee6c, 0xcee80, 0xceed4, 0xcf05c,
+  0xcf4e0, 0xcf4e4, 0xc, 0x14, 0x18, 0x54, 0x58, 0x6c, 0x90, 0xb0, 0xdc,
+  0xd8, 0xa8, 0xd0, 0x78, 0x7c, 0x64, 0x10, 0x89, 0x60, 0x66, 0xee, 0xfa,
+  0x106, 0x10a, 0x112
+NAMES: kind id, behaviour family, identity getter, position writer, second
+  family, anchor, bare ret, attached point list, point list translate,
+  request block entry, companion id, companion class, record class,
+  id-determined slot, per-class hook, ANITAB, BAL, KTRASA, TUNTRAS,
+  DRABINKA, KPAJECZ, KKULA, GRABOBJ, MOVEPLAT, MOVERECT, DEMOTEXT,
+  ANIBACK, pr368_id_groups.py, pr368_groups.txt, pr368_uniformity.py,
+  pr368_slot_law.py, pr368_two_families.py, pr368_families.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 rows that called the +0x54 writer part of the
+  two-family split, the HANDOFF section 8 F6 paragraph, and the L15
+  comment in ported/ll_level.c that keyed the 155/31 split on +0x54.
+HOOKS: PR-237 gave the anchor law and the request-block signature whose
+  slots are 0x23ed0/0x23ea0/0x23e00. PR-349 read +0x6c as `add eax,0x89;
+  ret` and PR-352 the standing query that uses it. PR-364/PR-365/PR-366
+  measured the two-family law and left the +0xb0 companion unexplained;
+  PR-366 named the five 0x3ed70 tables (KTRASA, TUNTRAS, and three
+  unnamed) and the ANITAB link. PR-367 found the id getters and the
+  0x44350 seed chain and asked what an id means. PR-338 names KAMIEN,
+  KPAJECZ and KKULA by table base; PR-106 the LION's base 0x96874;
+  PR-303 ANITAB 0xa1eb4 and BAL 0xa17dc; PR-357 DRABINKA 0x97cdc.
+OPENS: what the lists at [obj+0xee], [obj+0xfa], [obj+0x106]/[obj+0x10a]
+  are and who fills them - 103, 27 and 16 dword stores name those offsets,
+  but plain 0/1 stores land on the same addresses, so the object layout
+  there is wide or overloaded and this pass did not resolve it; what
+  [obj+0x112] means (0x3df83 stores an argument there while OR-ing 0x20
+  into a packet at [obj+0x60]); what 0x52b10 does (only its call site was
+  read); whether the 11 or 29 tables of the 0x3ddf0 writer are the script
+  record classes - the ledger text near their bases names GRABOBJ,
+  DEMOTEXT, ANIBACK, MOVEPLAT and MOVERECT, which is an association of
+  this pass's grep, not a measurement; the 16 of 23 +0xb0 companion ids
+  that are NOT a second-family id; the six seeded ids no table names;
+  and the non-code dword 0x38b3300 at 0x9e294's +0xb0.
+CLOSES: PR-367's open item "what an id means in the data": it is the
+  behaviour signature, measured, not a guess - see (c). It also closes
+  "whether the record-class tables of PR-366 carry a +0xc getter at all":
+  all five do, and they are members of the second family. And it narrows
+  PR-367's "13 seeded ids no table names" to six. On the +0xc/+0xb0
+  reading PR-367 guessed: supported for 7 of the 23 companion ids, which
+  are the +0xc ids of second-family tables - ANITAB 0xa1eb4's +0xb0 names
+  ds:0xceea4, and that id belongs to 0xa1f90, one of PR-366's five
+  0x3ed70 tables. 16 of 23 remain unexplained, so the reading stays open.
+CORRECTS: PR-367 on three counts, all of them mine. (1) The family split
+  is not +0x54: over the 186 anchor tables +0x54 holds 0x55070 in 124,
+  0x53df0 in 31, 0x3ddf0 in 29 and one-off writers 0x2b1a0 and 0x3e280
+  once each; the split is exactly +0x58 (0x54eb0 in 155, 0x23ba0 in 31)
+  and +0xb0 (0x544f0 in the SAME 155 tables - the two sets were checked
+  to be identical). (2) The id census was incomplete because the anchor
+  law was treated as the whole class-table set: there is a second anchor,
+  +0x6c = 0x23b50, whose 33 tables are disjoint from the 186, and the
+  kind-table count is 219, not 186. (3) "123 distinct ids, 13 seeded and
+  unanchored" is superseded: the two families name 129 ids between them
+  and 128 of them are in the seed chain; six seeded ids are named nowhere
+  (ds:0xcee6c, 0xcee80, 0xceed4, 0xcf05c, 0xcf4e0, 0xcf4e4) and the two
+  ids PR-367 flagged (ds:0xceba0, 0xcf0e4) are still named but unseeded.
+MEASURED: (a) THE SECOND FAMILY (pr368_two_families.py section 1): the
+  dword 0x23b50 appears at vtable offset +0x6c of 33 tables none of which
+  is in the 186; 0x23b50 is one instruction, `ret`, so their +0x6c verb
+  returns the caller's own eax; all 33 put 0x23bb0 at +0x54, which is
+  also one instruction, `ret` - they write no position - and all 33 put
+  0x23ba0 at +0x58; their +0x14 slot is 0x23c70 in 18, 0x3ed70 (PR-366's
+  latched record handler) in 5, 0x55380 in 4, 0x3ecd0 in 3, one-off in 3.
+  (b) ALL 219 TABLES ANSWER +0xc WITH THE ID GETTER (section 2): 186 of
+  186 and 33 of 33 hold the byte-exact `mov eax,ds:ID; ret`; the 186
+  name 107 ids, the 33 name 22, and the two id sets do not intersect;
+  106 + 22 = 128 of the 134 ids seeded by the 0x44350 chain belong to a
+  table. (c) THE ID DECIDES THE BEHAVIOUR (pr368_slot_law.py): the 107
+  id groups include 11 with more than one table, covering 90 tables; over
+  those groups 32 slot offsets are identical in every member - +0x4,
+  +0x8, +0xc, +0x1c through +0x5c, +0x68, +0x6c, +0x70, +0x80, +0x88,
+  +0x8c, +0x94, +0x98, +0x9c, +0xa0, +0xa4, +0xac, +0x54 and +0x58
+  among them - and NO group of size>1 mixes a +0x54 or a +0x58 target
+  (0 of 11). The slots where same-id tables DO differ, by how many of
+  the 11 mix: +0xdc 8, +0x90 7, +0x18, +0x64, +0xd8 6, +0x78, +0xa8,
+  +0xd0 5, +0x7c 4, +0x10 3, +0x14, +0x60 2, and +0x74, +0x84, +0xb0,
+  +0xb4 through +0xcc 1 each. In the other direction the id is finer than
+  the behaviour: 0x55070 serves 66 distinct ids, 0x53df0 20, 0x3ddf0 19.
+  The one group that "mixes" +0xb0 is ds:0xcf050's 12 tables, whose +0xb0
+  getters are the same shape naming different companion ids. (d) THE
+  0x3ddf0 WRITER READ END TO END (dis from 0x3ddf0, ret at 0x3dee6): it
+  calls 0x55070 first (0x3ddfb), so it is the standing writer plus more;
+  then it copies a pair out of the list head at [obj+0xee] into a block,
+  asks its own +0x6c (0x3de2c - 0x23a10, `add eax,0x89; ret`, so the
+  point is &[obj+0x89]), and for the list at [obj+0xfa] calls the
+  request-block entry at [0x98278+4] = 0x23ea0 with coordinates measured
+  against that point (0x3de43-0x3de5a, 0x3de8d); it stores the result
+  into [obj+0x106]/[obj+0x10a], then calls 0x45200 - a loop that walks a
+  record list 13 bytes per record and adds (x,y) into fields +0 and +4 of
+  each (0x45214-0x45227) - on the [obj+0xee] list, and when [obj+0x112]
+  is set calls 0x52b10 with that pair (0x3ded8). No `call 0x3ddf0` exists
+  anywhere: it is reached only as slot +0x54. (e) THE COMPANION IDS POINT
+  AT THE SECOND FAMILY (section 3): 26 of the 186 tables hold an id
+  getter at +0xb0, naming 23 ids; 7 of those ids are the +0xc id of a
+  second-family table - 0x96ddc names ds:0xcebbc owned by 0x96e94,
+  0x9d168 names ds:0xceccc owned by 0x9d220, 0xa17dc (BAL) names
+  ds:0xcee74 owned by 0x9e82c/0x9e8bc/0xa1894, 0xa1eb4 (ANITAB) names
+  ds:0xceea4 owned by 0xa1f90, 0xa14f4 names ds:0xceeb8, 0x9edd0 names
+  ds:0xceec4, 0xa2498 names ds:0xcf000 owned by 0x9e294/0xa0780/0xa2550.
+  (f) PR-366'S FIVE TABLES, IN LIGHT (their bases are all second-family):
+  0x9dbfc's +0xc getter names ds:0xcecfc, 0x9e294 names ds:0xcf000,
+  0x9f7b4 names ds:0xcee14, 0xa1f90 names ds:0xceea4, 0xa2054 names
+  ds:0xceea8 - all five are in the seed chain, all five have the bare
+  `ret` position verbs. (g) NOT EVIDENCE, FLAGGED: the class names in
+  the OPENS field come from a grep of the ledger for text near the table
+  bases (pr368_id_groups.py, pr368_groups.txt section 2) - it is a hint
+  about which classes the 0x3ddf0 group is, and this pass did not test
+  it. Also 0x98278's three block slots (0x23ed0, 0x23ea0, 0x23e00) were
+  read as data here and not entered as methods.
+GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff
+  includes the comment fix in ported/ll_level.c, so what was run anyway:
+  make rc=0 with 0 warnings and make verify-level rc=0 - 10 (ok) lines,
+  the legs unchanged; the index was regenerated with this record in the
+  tree before the runs.
+```
+
+- WHY. The port has to decide what two objects "of the same kind" means
+  before it can model riding, carrying or being carried. The engine's own
+  test is an id from verb +0xc, and this pass shows the id is not a label
+  but a behaviour: everything the engine calls on those objects is the
+  same inside an id, and the parts that differ are a short, enumerable
+  list of hooks. The second family then says why the 31-family's +0xb0
+  companion matters for F6: the classes it names own no position at all -
+  their +0x54 and +0x6c are `ret` - so they are carried, they do not
+  carry.
+
+- WHAT SURPRISED ME. That a bare `ret` is a position writer. The engine
+  has a whole family of 33 classes whose answer to "write your position"
+  is to do nothing, and the standing-query chain treats them like
+  anything else. And that the id boundary is exact in one direction only:
+  same id, same behaviour, always; same behaviour, many ids. Any port
+  that classifies by behaviour will merge what the original keeps apart.

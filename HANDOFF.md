@@ -5794,7 +5794,22 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         its answer is one of 134 ids seeded at startup by the counter
         0x44350, and callers compare the answer against the same
         global (14 of 62 sites; the lion's id ds:0xcee70 is shared by
-        four tables), so a kind check is a family check.
+        four tables), so a kind check is a family check. PR-368 shows
+        what that id decides: the tables of one id share every class
+        verb (0 of 11 multi-table id groups mix a position writer or a
+        position mover, and 32 slots are identical inside a group), and
+        the per-class parts are only +0x90, +0x14/+0x18, +0x10, +0x60,
+        +0x64, +0x78, +0x7c, +0xa8, +0xd0, +0xd8, +0xdc. It also fixes
+        the split above: that law is +0x58/+0xb0, NOT +0x54 - the same
+        186 tables hold 0x55070 at +0x54 in 124, 0x53df0 in 31 and
+        0x3ddf0 in 29 - and the anchor set is 186 of 219 kind tables,
+        because +0x6c = 0x23b50 anchors 33 more whose +0x54 and +0x6c
+        are a bare `ret`: classes with no position of their own, and
+        the ones the 31-family's +0xb0 companion ids name. Those 29
+        0x3ddf0 classes run 0x55070 and then ask again for offsets read
+        off the point lists at [obj+0xee]/[obj+0xfa], translating the
+        list through 0x45200; the port models none of that and its legs
+        stay the 0x55070 half of the 155.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the
