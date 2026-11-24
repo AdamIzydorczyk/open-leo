@@ -48775,3 +48775,166 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 23 named - PR-335's shape (13 and
   note, which appears on this machine because vendor/SDL2-2.32.10 is
   not staged; counted as printed. No Windows legs (rule 8).
 ```
+
+
+## PR-353 - THE LAND AND LEAVE VERBS +0xB4/+0xB8 ARE ONE SCRIPT DISPATCH
+## IN THE SAME 155 VIEWS THAT GATE THE AIM CHAIN WITH "I HOLD A SURFACE",
+## THE 31 SEAT AND ACTOR VIEWS STEP BACK OVER THEIR EMBEDDED RECORD, AND
+## THE STANDING PATH'S SECOND DISPATCHER LIVES IN A TABLE FAMILY THAT ALSO
+## POSTS THE 0x1b ATTACH
+```
+KIND: read
+SUBSYSTEM: F6's landing half and OI-128's first item - the class verbs
+  +0xB4 (land) and +0xB8 (leave), which views install which pair, and the
+  notice-table family at 0xa0f28 that holds the standing path's second
+  dispatcher 0x45cb0 (PR-345 wrote it as 0x45cb1).
+ADDRESSES: 0x23880, 0x23885, 0x2388c, 0x23893, 0x23896, 0x23899, 0x2389c,
+  0x238b0, 0x238b5, 0x238bc, 0x238c3, 0x238c6, 0x238c9, 0x238cc,
+  0x54226, 0x5422e, 0x54233, 0x5423a, 0x1e560, 0x1e56a, 0x208d0,
+  0x22de0, 0x22dea, 0x20ab0, 0x20a70, 0x23290, 0x20230, 0x20870,
+  0x20a00, 0x457e0, 0x457e9, 0x457ec, 0x45cb0, 0x45cb6, 0x45cbb,
+  0x45cc6, 0x45cd4, 0x45ce0, 0x45cfd, 0x45d10, 0x45d28, 0x45d3a,
+  0x45970, 0x46ac1, 0x49920, 0x91979, 0xa0f28, 0xa1000, 0xa1060,
+  0xa1064, 0xa1078, 0xa10a8, 0xa10ac, 0xa10c0, 0xa11d0,
+  0xa11e8, 0xa0f28, 0xa1000, 0xa1030, 0xa1060, 0x46584, 0x465db,
+  0x4756b, 0x4791c, 0x46ac1, 0x45c80,
+  0x96c38, 0x96d1c, 0x96ddc, 0x97cdc, 0x96a14, 0x96a18,
+  0x96a1c, 0xb4, 0xb8, 0xbc,
+  0x48, 0x33, 0x6d, 0xb1, 0xbd, 0xa5, 0xb6, 0x8, 0xc, 0xa0eec, 0x96574
+NAMES: land verb, leave verb, script dispatch, current script object,
+  notice table, method table family, embedded record, standing query,
+  land/leave dispatcher, pr353_census.py, pr353_census.txt,
+  pr353_notices.py, pr353_notices.txt, pr353_bodies.py, pr353_bodies.txt,
+  PALMA, KATAPULT, SPLYW, KAMIEN, OI-128, OI-123, OI-124, F6
+CODE: no: nothing in ported/ or the Makefile moved. What moves is where
+  F6 has to look for a landing effect: it is script code, not engine
+  code, for every class the ladder uses.
+HOOKS: PR-345's ground-contact verb 0x546a0, which calls the +0xB4 /
+  +0xB8 pair when the standing query's answer changes; PR-351's current-
+  script accessor at [obj+8]+0x48 and the script object's +0x33 table,
+  which the aim chain reaches at 0x5422e/0x5423a; PR-343's message
+  poster 0x52b10 and the 0x1b attach; PR-344's embedded handle at
+  [obj+0xa5] and the `sub eax,0xc` shape its +0xbc verb used.
+MEASURED: (a) THE PAIR IS ONE PAIR. Taking the views the way PR-351 took
+  them - a view is a block whose +0x48 slot is the current-script
+  accessor 0x23aa0 - there are 186 of them, and 155 install the SAME
+  land/leave pair, +0xB4 = 0x238b0 and +0xB8 = 0x23880; the other 31
+  install per-class pairs, 31 distinct pairs, and their +0xbc is never
+  0x23870. The two sets are IDENTICAL: the views with the script pair
+  are exactly the 155 PR-351 found gating the aim chain with the held-
+  surface predicate 0x23870 (script /tmp/opencode/pr353_census.py; it
+  prints both sets and their equality). So the shipped game ships one
+  landing behaviour for everything that asks the standing query, and a
+  private one for the 31 that do not - PALMA 0x96c38 at 0x1e560/0x208d0,
+  KATAPULT 0x96d1c at 0x22de0/0x20a40, SPLYW 0x96ddc at 0x20ab0/0x20a70
+  and the ladder 0x97cdc at 0x23290/0x20230 among them.
+  (b) WHAT THE COMMON PAIR DOES - IT IS NOT ENGINE BEHAVIOUR AT ALL.
+  0x238b0 and 0x23880 are the same eight instructions and differ only in
+  the slot they call: `mov edx,eax` keeps the requester in edx;
+  0x238b5/0x23885 `test BYTE PTR [eax+0xb6],0x1` / `jne` skips the whole
+  verb when that bit is set; otherwise ebx = [obj+8] (the class view) and
+  0x238c3/0x23893 `call DWORD PTR [ebx+0x48]` runs PR-351's accessor
+  0x23aa0, eax = its result, and 0x238c6/0x23896 `mov ecx,[eax+0x33]`
+  takes the SAME table the aim chain takes at 0x5422e; ebx is then
+  loaded with [obj+0x6d] (0x238c9/0x23899) and the verb is
+  `call DWORD PTR [ecx+0x4]` for land (0x238cc) or
+  `call DWORD PTR [ecx+0x8]` for leave (0x2389c). So for 155 of the 186
+  classes - every lion class, KAMIEN and the rest - landing on a surface
+  and leaving one are methods of the object's CURRENT SCRIPT OBJECT, at
+  slots +4 and +8 of its +0x33 table, called with [obj+0x6d] as the
+  argument, and they do not run while [obj+0xb6] bit 0 is set. The
+  engine's own land/leave code is a dispatcher: nothing in it raises,
+  lowers, carries or releases anything.
+  (c) THE 31 PRIVATE PAIRS ARE THE EMBEDDED-RECORD SHAPE. Byte census
+  over the first 48 bytes of each (/tmp/opencode/pr353_pair_shapes.py,
+  which prints these counts and the two field writes; pr353_bodies.py
+  prints the bodies themselves): 29 of the 31 contain
+  the step-back `sub eax,0xc` and 29 the test of bit 2 of the argument
+  (`test reg,0x4`); in 25 of them one verb carries BOTH, and its shape
+  is `push ebx/ecx; mov ecx,edx; sub eax,0xc; mov ebx,eax; test cl,0x4`
+  - the object's embedded record stepped back to the containing object
+  and a branch on bit 2 of the caller's argument, exactly the shape
+  PALMA's +0xbc verb 0x20870 used (PR-350). Two of the extremes show
+  what the pair is for when it is not a dispatcher: PALMA's land verb
+  0x1e560 is `mov DWORD PTR [eax+0xb1],0; ret` and its leave verb
+  0x208d0 is `mov eax,ds:0xcebb8; ret`, a load of a global object
+  pointer; KATAPULT's land verb 0x22de0 is `mov DWORD PTR [eax+0xbd],0;
+  ret`. Those are one-word state resets, not motion.
+  (d) THE SECOND DISPATCHER AND THE ONE DATA SLOT THAT NAMES IT. 0x45cb0
+  is: push ebx/ecx, ecx = eax (the surface handle), ebx = edx, `call
+  0x457e0`, then 0x45cbb `cmp DWORD PTR [ecx+8],0` - the record COUNT of
+  PR-335's grammar - and it calls the requester's +0xB4 at 0x45cc6 when
+  the count is non-zero and its +0xB8 at 0x45cd4 when it is zero, both
+  through [[edx]+8]. 0x457e0 walks [x] to the object the handle names and
+  calls [[that]+4]. No instruction names 0x45cb0 - no xref row has it as
+  a destination and no immediate operand carries it - and no dword in the
+  image holds 0x45cb1 at all. Exactly ONE dword names 0x45cb0: the data
+  slot 0xa10ac, which is slot +4 of the record headed 0xa10a8 - the same
+  block the constructors store at [obj+4] as 0xa10a8 (0x46584, 0x465db,
+  0x4756b, 0x4791c; 0x46ac1 stores 0xa1060 the same way, and 0xa1000,
+  0xa1030 and 0xa10a8 give 14 such sites in the imm table). That block is
+  a run of six-dword records at stride 0x18 - /tmp/opencode/pr353_notices.py
+  finds 25 of them from 0xa0f28 to 0xa11e8, each {a method at +0, a
+  notice verb at +4, 0x45800, 0x45870, 0x458e0, a method at +0x14}, and
+  the +4 verbs are all distinct: 0x45750, 0x459b0, 0x459d0 ... 0x45cb0,
+  0x45ce0, 0x45d10.
+  In the SAME family, the record headed 0xa1060 carries the verb 0x45d10
+  at slot +4, and 0x45d10 posts the ATTACH message 0x1b at 0x45d28 to
+  the object at [[arg]] and then posts value 1 (0x45d3a) with
+  [x+0xc]/[x+8]; the record headed 0xa1078 carries 0x45ce0, which posts
+  value 1 the same way at 0x45cfd. So the attach of PR-343 and
+  PR-347, the message that is the only writer of the attachment apart
+  from the standing query itself, and the land-or-leave decision itself
+  are records of one installed table.
+  (e) WHAT THAT LEAVES FOR F6. A landing lion runs script code (b); the
+  seat classes' own pair only clears a field (c); the standing path's
+  second dispatcher only tells the requester that it is on or off a
+  surface (d). No engine code moves anything at landing, so the
+  crossing of ZARIA.01's first chasm is either a scripted chain reached
+  through the script object's +0x33 table, or the 0x1b attach path of
+  this table family, or the .plt ground of T6 - which is what OI-124
+  now points at.
+OPENS: what the script object's +0x33 table is and who fills it - the
+  same slot the aim chain reaches, and now the landing and leaving
+  methods too; what [obj+0x6d] is, the value handed to those methods,
+  since 0x53e40 compares it against -1 (PR-351) and no port field
+  mirrors it; which bit of [obj+0xb6] gates the pair at 0x238b5 and
+  sets it; who runs the constructors that install the notice tables at
+  [obj+4] (0x46ac1 and its 44 sibling reference sites) and what objects
+  they build; what the six shared verbs 0x45800, 0x45870, 0x458e0,
+  0x457e0 and the per-kind slots +0 and +0x14 do; whether this family
+  is the provider table OI-127 asks for; and the six private pairs
+  without the step-back shape (0x1e560/0x208d0, 0x22de0/0x20a40,
+  0x20cb0/0x20c10, 0x2b060/0x28ca0, 0x337e0/0x32840, 0x55900/0x52960).
+CLOSES: OI-128's first named item - the bodies of the land and leave
+  verbs, PALMA's 0x1e560 first - for the classes the ladder uses, and
+  with them the reading that the pair is a mechanism the engine could
+  use to carry a lion: it is not, for 155 of 186 classes it is a call
+  into the current script object.
+CORRECTS: PR-343's fourth 0x1b poster, "0x45d28 is a method stored only
+  at the data slot 0xa11d0". 0x45d28 is not a method entry but the call
+  instruction inside the method 0x45d10, and 0x45d10 sits at 0xa1064,
+  slot +4 of the record headed 0xa1060; no dword in the image holds
+  0x45d28 at all, and 0xa11d0 holds 0x45970, which copies a 12-byte
+  record and does not post. PR-343's count of five posters and its
+  reading of that post stand - the slot was wrong, not the site.
+  PR-345 gives the standing path's second dispatcher as 0x45cb1 and writes
+  "nothing in the image names 0x45cb1 or 0x45c80 by call or pointer", and
+  PR-348, PR-349 and PR-350 repeat the address. The function head is
+  0x45cb0: 0x45cb1 is one byte into its `push ebx`/`push ecx` prologue,
+  no dword in the image holds 0x45cb1, and the Ghidra entry list has no
+  entry there either; and it IS named - the data slot 0xa10ac, slot +4 of
+  the record headed 0xa10a8, one of the 25 records of that family. Same
+  for 0x45c80: slot +4 of the record headed 0xa10c0. What PR-345 read the
+  dispatcher does - the pair call keyed on [handle+8] - stands.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
+  and no mutation run. Reproducible: /tmp/opencode/pr353_census.py
+  (prints the 186 views, the 31 distinct private pairs, and the equality
+  of the script-pair set with the +0xbc = 0x23870 set) and
+  pr353_notices.py (the 25 notice-table records, their heads and which
+  of their slot +4 verbs call 0x52b10); pr353_bodies.py prints the
+  bodies of the 32 pairs as the index has them. Disassembly:
+  pr353_lion_pair.txt (0x23880 and 0x238b0 in full), pr353_palma_land.txt
+  and pr353_palma_leave.txt, pr353_kat_land.txt, pr353_disp.txt
+  (0x45cb0 and its neighbours).
+```

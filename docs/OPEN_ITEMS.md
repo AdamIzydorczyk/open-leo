@@ -5280,7 +5280,11 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
 OI-128: what landing and leaving a surface does - the class verbs
   +0xB4 and +0xB8, the '#' ejection counter, and the unread head of
   the ground-contact verb
-  status: OPEN
+  status: PARTIALLY CLOSED (PR-353 read the pair: for the 155 views that
+    ask the standing query it is a call into the current script object,
+    and the seat classes' own pair only clears a field. Still open: the
+    script object's +0x33 table, [obj+0x6d], the [obj+0xb6] bit, the
+    0x58c timer posters, the block 0x546de-0x54700, and the '#' census)
   origin: PR-345 (the class verb +0xAC read)
     The ground-contact verb 0x546a0 ends by telling the object about
     its surface: when the standing query's answer differs from the
@@ -5323,3 +5327,29 @@ OI-128: what landing and leaving a surface does - the class verbs
     tested" (ported/ll_level.c, the sl[] table of that leg). So no
     shipped seat table ejects its rider on the 0x58c timer, and this
     row's crossing lead is the land verb, not the timer.
+    PR-353 ANSWERS THE FIRST ITEM OF WHAT WOULD CLOSE IT, and the answer
+    is not engine code. Taking the views the way PR-351 takes them (+0x48
+    = the current-script accessor 0x23aa0), there are 186, and 155 of
+    them install ONE pair, +0xB4 = 0x238b0 and +0xB8 = 0x23880 - exactly
+    the 155 that gate the aim chain with the held-surface predicate
+    0x23870, the same set. That pair is a dispatcher: it skips when
+    [obj+0xb6] bit 0 is set, else it runs the accessor, takes the script
+    object's +0x33 table, and calls slot +4 (land) or +8 (leave) of it
+    with [obj+0x6d] as the argument. The 31 other views install private
+    pairs; 29 of them carry the embedded-record step-back `sub eax,0xc`
+    and the bit-2 test of the caller's argument, and the two read in full
+    are one-word resets - PALMA's land verb 0x1e560 clears [obj+0xb1]
+    and its leave verb 0x208d0 loads the global ds:0xcebb8, KATAPULT's
+    0x22de0 clears [obj+0xbd]. So no shipped land verb moves anything:
+    the crossing of ZARIA.01's first chasm is script code reached through
+    that +0x33 table, or the attach path below, or the .plt ground of T6.
+    And the second dispatcher is named after all: it is 0x45cb0, slot +4
+    of the record headed 0xa10a8 in the family of 25 records at stride
+    0x18 from 0xa0f28, whose other +4 verbs 0x45d10 and 0x45ce0 are the
+    posters of the 0x1b attach and of value 1.
+    WHAT STAYS OPEN HERE is now the script object, not the verb: what
+    fills its +0x33 table and who writes [obj+0x6d]; which code sets
+    [obj+0xb6] bit 0; what the shared verbs 0x457e0, 0x45800, 0x45870,
+    0x458e0 of that record family do and whether the family is the
+    provider table OI-127 asks for; the 0x58c counter; and the block
+    0x546de-0x54700.
