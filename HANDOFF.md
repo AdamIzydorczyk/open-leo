@@ -5895,10 +5895,15 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         [obj+0xb1], the placement damage; the four dispatch sites of
         +0x78 are the ask walks 0x4b500, 0x4bd30 and 0x553e0, whose
         candidate filter at +0x60 is `mov eax,[obj+0x2c]` in 178
-        tables, whose layer test is [obj+0x24] equality with the
-        requester, and which OR-merge the 12-byte answers with 0x49580
-        except on CHECK_LEW, where 0x4bd30 takes the first non-empty
-        answer; across the image the +0x70 facing verb is dispatched at
+        tables - [obj+0x2c] is the contact node, so only an object with
+        a standing shape meet answers - whose plane gate is the
+        [obj+0x24] equality (the parallax plane `plany=` names), and
+        which OR-merge the 12-byte answers with 0x49580 except on
+        CHECK_LEW, where 0x4bd30 takes the first non-empty answer; of
+        the 41 classes installing another filter, 37 always answer (the
+        roads KTRASA/TUNTRAS/TRASA/TRASA2 and the machine group) and
+        four test distance, a rectangle or a counter (PR-385); across
+        the image the +0x70 facing verb is dispatched at
         215 sites; PR-383 also found that the accept verb at +0xdc is
         asked of the companion's own class, through [obj+0x112]+8; and
         32 of

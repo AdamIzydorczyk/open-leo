@@ -5839,11 +5839,23 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     +0x3c (askable) 74, +0xd0 15, +0x9c 5, +0x78 only 4 - and PR-384
     showed those 4 sites are the three ask walks 0x4b500, 0x4bd30 and
     0x553e0: the candidate filter at +0x60 is 0x23b80
-    (`mov eax,[obj+0x2c]`) in 178 of the 219 tables, the layer test is
-    [obj+0x24] equality with the requester, an answer is 3 words plus a
-    flag byte merged by 0x49580, and 0x4bd30 (CHECK_LEW) stops at the
-    first non-empty answer while the other walks merge them all. Still
-    open: who dispatches the property readers (their offsets are
+    (`mov eax,[obj+0x2c]`) in 178 of the 219 tables - [obj+0x2c] is the
+    contact node the port names, written from the class's +0x8 verb at
+    0x1eb9a, so an object passes only while a shape meet stands; the
+    plane gate is the [obj+0x24] equality at 0x4b5a1 ([obj+0x24] is the
+    parallax plane the authored `plany=` names); an answer is 3 words
+    plus a flag byte merged by 0x49580, and 0x4bd30 (CHECK_LEW) stops
+    at the first non-empty answer while the other walks merge them all.
+    PR-385 closed the filter census: of the 41 tables installing
+    something else, 37 are `mov eax,1; ret` - the road group (KTRASA x2,
+    TUNTRAS, TRASA, TRASA2 and the shared 0x9e294) takes the
+    always-allow 0x36170 and the machine block 0x35d50-0x35eb0 covers
+    KMASKA, KBLOKZ, KBOMBA, KKULA, KWINDA, KMIOTLA - and only four test
+    anything: KROPLA/KROPLAS need |x - [[0xcef40]+0x394].x| < 100 via
+    0x52d30, PILAGEN needs that member's +0x68 point inside its own
+    rectangle at [obj+0xf2], PIOR_RAN needs [obj+0x1ba9] >= 0. LION,
+    KAMIEN, DRABINKA and the shared animal class keep the default.
+    Still open: who dispatches the property readers (their offsets are
     dispatched only from inside the answer verbs, and the same
     functions also have direct call sites), and why 0x553e0 asks every
     member of [[obj+0x40]] with no filter at all. PR-383 showed the 25

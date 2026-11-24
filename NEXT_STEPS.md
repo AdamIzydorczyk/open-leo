@@ -53498,3 +53498,135 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/
   written in PR-90, and I re-derived it four records later under a
   different name - a reminder to query the index for the slot before
   naming it.
+
+## PR-385 - WHO MAY ANSWER AN ASK: 178 CLASS TABLES REQUIRE A CONTACT
+## NODE, 37 OF THE 41 EXCEPTIONS ANSWER UNCONDITIONALLY, FOUR TEST
+## ANYTHING
+
+```
+KIND: read
+SUBSYSTEM: the candidate filter of the ask walks of PR-249/PR-384 - the
+  class verb at +0x60 - censused over the 219 class tables, named, and
+  read; the fields it decides on (OI-128, OI-129, the F6 thread;
+  continues PR-384, PR-383, PR-249).
+ADDRESSES: 0x23b80, 0x2c, 0x36170, 0x23280, 0x22d10, 0x26000, 0x26310,
+  0x26330, 0x26350, 0x26e10, 0x2db70, 0x2f730, 0x2fb00, 0x30720,
+  0x30950, 0x31c00, 0x339d0, 0x339f0, 0x33a10, 0x35d50, 0x35df0,
+  0x35e10, 0x35e40, 0x35e90, 0x35eb0, 0x3ab70, 0x3aba0, 0x3b770,
+  0x3baa0, 0x4fca0, 0x260b0, 0x26110, 0x24bb0, 0x339a0, 0x52d30,
+  0x24bd2, 0xf2, 0x1ba9, 0x68, 0x8, 0x23e00, 0x1eb92, 0x1eb9a,
+  0x23176, 0x233fa, 0x238f9, 0x23b7a, 0x26658, 0x28eb6, 0x28ef6,
+  0x2905b, 0x23850, 0x98278, 0x98274, 0xcef40, 0x394, 0x96874,
+  0x9dbfc, 0x9e294, 0x9daf8, 0x9f7b4, 0xa2054, 0x64, 0x4b5a1
+NAMES: candidate filter, contact node, plane gate, point-in-rectangle
+  verb, always-allow stub, distance gate, opt-out class,
+  pr385_filters.py, pr385_filters.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines that asked what [obj+0x2c] is, and the
+  HANDOFF section 8 F6 paragraph, which repeated PR-384's wrong field
+  name. Nothing under ported/ is touched: the port already models the
+  contact node and the plane gate (ll_level.c 6357-6360, 6473-6474), so
+  only the light gate applies.
+HOOKS: PR-384 read the three ask walks and asked "what is [obj+0x2c]
+  written by"; PR-249 named the "+0x60 candidate filter" and the plane
+  test without reading either; PR-244 named [[0xcef40]+0x394] as the
+  no-candidate fallback member; PR-380 mapped the authored names of the
+  class tables (pr380m_pairs.tsv); PR-89/PR-90 put the shape-meet
+  requirement of the answer chain in the port.
+OPENS: whether the road classes' always-allow filter 0x36170 is what
+  lets KTRASA/TUNTRAS/TRASA/TRASA2 and the shared road class 0x9e294
+  answer without contact, and how that interacts with their +0x78 verb
+  0x3f010; what the third slot of PILAGEN's query buffer (the data
+  address 0x98278, stored at 0x24bd2) is - the third sighting of the
+  block that holds the unread 0x98274; what the signed word at
+  [obj+0x1ba9] of PIOR_RAN counts; the 5 opt-out tables that no token
+  names (one behind 0x22d10, one behind 0x23280, two behind 0x339d0 and
+  0x339f0); and whether the six always-allow stubs installed as +0x60
+  differ from the ones installed at +0x9c and +0x34 (0x23a40, 0x23a30)
+  in anything but role.
+CLOSES: PR-384's "what [obj+0x2c] is written by, and the 41 class
+  tables that install something other than 0x23b80 at +0x60": the word
+  is the contact node of the port (written from the class's +0x8 verb at
+  0x1eb9a and at 0x23176, 0x233fa, 0x238f9, 0x23b7a, 0x26658, 0x28eb6,
+  0x28ef6, 0x2905b), and of the 41 exceptions 37 are the unconditional
+  `mov eax,1; ret`, so there is no real per-class filter policy beyond
+  the default; and the field question PR-249 left abstract is settled on
+  both sides - the plane test is the [obj+0x24] comparison at 0x4b5a1
+  and the +0x60 filter is the contact-node test.
+CORRECTS: PR-384's paragraph (a) named the fields the other way round.
+  [obj+0x2c] is not a plane word: it is the contact node, the shape
+  meet the draw pass plants in an object - the port says so twice
+  (ll_level.c 1406 "is `return [obj+0x2c]`, a flag written during the
+  draw pass" and 6180 "`mov eax,[obj+0x2c]`, 'a contact node was
+  planted in me'"). The parallax plane is [obj+0x24], the field the
+  authored `plany=` names (ll_level.c 525, 6473-6474), and the plane
+  gate is the `[cand+0x24] == [requester+0x24]` comparison at 0x4b5a1
+  that PR-384 called "the layer test". PR-384's measurements are
+  otherwise unchanged, and its sentence "the filter reads the object's
+  +0x2c word" is right - only the field's name was wrong.
+MEASURED: (a) THE CENSUS (pr385_filters.py). Over the 219 class tables,
+  +0x60 holds the default 0x23b80 (`mov eax,[obj+0x2c]; ret`) in 178
+  and 32 distinct other addresses in the remaining 41. Reading all 32:
+  37 of the 41 tables are `mov eax,1; ret` stubs (0x22d10, 0x23280,
+  0x26000, 0x26310, 0x26330, 0x26350, 0x26e10, 0x2db70, 0x2f730,
+  0x2fb00, 0x30720, 0x30950, 0x31c00, 0x339d0, 0x339f0, 0x33a10,
+  0x35d50, 0x35df0, 0x35e10, 0x35e40, 0x35e90, 0x35eb0, 0x36170,
+  0x3ab70, 0x3aba0, 0x3b770, 0x3baa0, 0x4fca0), and four test
+  something. Method note: five of those stubs (0x2f730, 0x30720,
+  0x30950, 0x3b770, 0x3baa0) have no row in the `insn` table at their
+  own address - the index's linear sweep left a gap - and read only
+  through `leodb.py dis`, which shows `mov eax,0x1; ret` at each.
+  (b) THE FOUR THAT TEST SOMETHING. 0x260b0 (KROPLAS) and 0x26110
+  (KROPLA) call 0x52d30 for the position of [[0xcef40]+0x394] - the
+  same level member PR-244 named as the no-candidate fallback - and for
+  their own, take the absolute difference of the first word with the
+  `cdq/xor/sub` idiom and answer only if it is below 100
+  (`cmp eax,0x64; setl al`). 0x24bb0 (PILAGEN) calls that member's
+  +0x68 verb, which returns a point, and answers only if that point
+  lies inside its own rectangle at [obj+0xf2] - x between [edx] and
+  [edx+8], y between [edx+4] and [edx+12]; it also puts the data
+  address 0x98278 in the third slot of its query buffer at 0x24bd2.
+  0x339a0 (PIOR_RAN) answers only when the signed word at [obj+0x1ba9]
+  is not negative.
+  (c) WHICH CLASSES OPT OUT. Named through the last column of
+  pr380m_pairs.tsv (the earlier scripts read its second column, which is
+  the token's compare site, not the class table - a method note worth
+  keeping): the four road classes and the shared road class - KTRASA
+  (two tables), TUNTRAS, TRASA, TRASA2, 0x9e294 - all take the
+  always-allow 0x36170; the machinery group 0x35d50-0x35eb0 is one
+  contiguous block of stubs for KMASKA, KBLOKZ, KBOMBA, KKULA, KWINDA
+  and KMIOTLA; the rest are named by tokens the ledger has not
+  classified (STRUMIEN, SPAD, WODOSPAD, SKALA, GLAZ, OLEJ, PODMUCH,
+  SIATKA, ECOIN, STONE, STULB_ST, MURENA, BUTLA_BL, BUTLA_BK, TMPLAT,
+  TWINDA, GEJZER, GORYL, KLODA, DEMOTEXT, PILARYB, GPTAK_RA) and 5
+  tables no token names. The F6 classes are NOT among them: LION
+  0x96874, KAMIEN 0x96a88, DRABINKA 0x97cdc and the shared animal class
+  0x97f64 all keep the default contact-node filter.
+  (d) WHAT THE DEFAULT FILTER DECIDES. [obj+0x2c] is written from the
+  class's +0x8 verb at 0x1eb92-0x1eb9a (`mov ecx,[obj+8]; call
+  DWORD PTR [ecx+0x8]; mov [obj+0x2c],eax`), and 204 of the 219 class
+  tables install 0x23e00 at +0x8: a point-in-rectangle test - the point
+  at [eax]/[eax+4] against the rectangle at [edx], [edx+8], [edx+4],
+  [edx+12] - returning 0 or 1. So an object passes the ask walk's
+  filter exactly while a shape meet has been recorded in it, which is
+  the same condition the port states for the answer chain ("that needs
+  a real shape meet (0x53ae0)", ll_level.c 6560).
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/
+  is touched by this record, so the build and level gates were not run;
+  the index was regenerated with this record in the tree before the
+  run.
+```
+
+- WHY. The ask path in the port filters candidates by plane and by
+  contact, and this record shows the engine's split of that work: the
+  plane rule is one comparison in the walk (0x4b5a1, [obj+0x24]), the
+  contact rule is a class verb (+0x60, and 178 classes take the
+  standard one). If the port ever needs a class that answers without
+  contact, the original's own example is the road group, which installs
+  the always-allow stub.
+
+- WHAT SURPRISED ME. That the 41 exceptions are almost all "always
+  answer" rather than "never", and that the always-answer group is the
+  roads, the machine group and props - the things an ask would
+  otherwise exclude by contact - while the lion and the animals keep the
+  contact requirement.
