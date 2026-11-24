@@ -5008,7 +5008,22 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     0x45491). STRUMIEN is the one difference: its +0x6c is a bare
     `ret` (0x23b50) and samples the live position. Every input of the
     crossing law is now known; the open half is whether any ZARIA.01
-    position and table satisfy it, which is a port leg.
+    position and table satisfy it, which is a port leg. PR-350 narrowed
+    what that leg has to satisfy: the ask is aimed at a three-dword
+    block 0x45320 builds on its own frame (0x4532c-0x45338), whose
+    y-component is only filled by the class verbs +0x48/+0x50 and the
+    script method at [[obj+0x48]+0x33]+4 - a chain that runs exactly
+    when the object holds no surface, because the lions' and KAMIEN's
+    +0xbc verb 0x23870 is `cmp [eax+0xa9],0; setne al` - so an aimed
+    y of 0x98278 + vy, a value no coordinate competes with, is what a
+    holder asks with; the two 0x455a0 calls measure one clearance with
+    the record pair reversed, and the first one's subtrahend is zero
+    because all six askers `xor ecx,ecx` before `call 0x45320`
+    (0x1e594, 0x1e983, 0x2890b, 0x38100, 0x3df2d, 0x3f026). So first
+    contact needs the AIMED point on the slope to within the `idiv`
+    truncation, and a surface already held at [obj+0xa9] re-accepts
+    itself at any non-positive clearance at the snapshot - which is the
+    carrying mechanism, and the leg is to test it against ZARIA.01.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that

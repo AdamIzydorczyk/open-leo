@@ -48339,3 +48339,164 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   are 0x45462/0x45468 and 0x4548b/0x45491 of
   /tmp/opencode/pr344_45400.txt.
 ```
+
+## PR-350 - THE ASK IS AIMED AT A POINT ONLY THE CONTROLLER CHAIN
+## FILLS, AND 0x45400 ACCEPTS A SURFACE IT DOES NOT HOLD ONLY AT ZERO
+## CLEARANCE AT THAT POINT WHILE THE ONE IT HOLDS RE-ACCEPTS ITSELF AT
+## ANY DEPTH
+```
+KIND: read
+SUBSYSTEM: F6's crossing law - the point block 0x45320 builds, the
+  class predicate 0x541f0 asks before filling it, and what the two
+  0x455a0 calls of 0x45400 actually compare.
+ADDRESSES: 0x451f0, 0x541f0, 0x541f6, 0x541f8, 0x541fa, 0x541fd,
+  0x541f1, 0x541f6, 0x541fd, 0x54200, 0x54209, 0x5420e, 0x54214,
+  0x54218, 0x5421f, 0x54221,
+  0x54226, 0x5422b, 0x54233, 0x5423a, 0x5423d, 0x5423f, 0x45320,
+  0x4532c, 0x4533c, 0x45340, 0x45345, 0x45348, 0x45349, 0x4534f,
+  0x45355, 0x45357, 0x4535d, 0x4535f, 0x45363, 0x4536b, 0x4536f,
+  0x45400, 0x4540a, 0x45417, 0x45468, 0x4546d, 0x45477, 0x4547d,
+  0x4547b, 0x45481,
+  0x45485, 0x45488, 0x4548d, 0x4548f, 0x45491, 0x45496, 0x45498,
+  0x4549a,
+  0x454a2, 0x454a8, 0x455a0, 0x1e594, 0x1e983, 0x2890b, 0x38100,
+  0x3df2d,
+  0x3f026, 0x23870, 0x20870, 0x20874, 0x20879, 0x20897,
+  0x2089c, 0x208ab, 0x23a00, 0x44f90, 0x53a30, 0x98274,
+  0x98278, 0x48, 0x50, 0x33, 0x6c, 0x89, 0x8d, 0xa9, 0xb6, 0xbc,
+  0xca, 0xce, 0xea, 0x18, 0x1c
+NAMES: point block, aim, controller chain, clearance, exact contact,
+  incumbent, waiver, held surface, seat ask, PALMA, KATAPULT,
+  STRUMIEN, KAMIEN, TLewZaria, TLewZariaB, OI-072, OI-123, OI-124,
+  F6, pr350_541f0.txt, pr350_23870.txt
+CODE: no: nothing in ported/ or the Makefile moved. What moves is what
+  a crossing leg may assume.
+HOOKS: the query and its sampler (PR-336, PR-344, PR-348), the
+  ground-contact tail that keeps [obj+0xa9] (PR-345), the class verbs
+  +0x48, +0x50 and +0x33 the land verb of PR-345 also used. No port
+  behaviour moves.
+MEASURED: (a) THE BLOCK AND WHO FILLS IT. 0x45320 builds three dwords
+  on its own frame - 0, 0 and the code table 0x98278 (0x4532c-
+  0x45338) - and hands it to 0x541f0, which overwrites block[0] with
+  [obj+0] and block[1] with [obj+4], the LIVE position (0x541f6-
+  0x541fd), then tests [obj+0xb6] bit 2 (0x54200) and otherwise calls
+  the class verb +0xbc with edx still = the block (0x54209-0x5420e).
+  Read by how 0x45320 uses it afterwards, block[0] is the live x,
+  block[1] becomes the AIMED x (0x4536b) and block[2] the aimed y, and
+  ebx = &block[1] (0x4535f) is exactly the {x, y} pair the sampler
+  reads. The +0xbc verb is not a coordinate for the classes this
+  ladder uses: for every
+  lion class and for KAMIEN it is 0x23870, `cmp DWORD PTR [eax+0xa9],
+  0x0; setne al`, a predicate that says "I already hold a surface"
+  (0x23870-0x541f0's 0x54214 then skips the rest), and the answer it
+  returns is used only to branch. The chain that could write the third
+  dword is the one at 0x54221-0x5423a: the class verbs +0x48 and +0x50
+  and the script method at [[obj+0x48 result]+0x33]+4, the same three
+  the land verb 0x238b0 of PR-345 calls. STRUMIEN's +0xbc is 0x23a00,
+  `mov eax,[eax+0x54]; ret`, one instruction. PALMA's 0x20870 is a
+  different shape again: it saves the block pointer in ecx (0x20872),
+  moves `this` back 0xc to reach its own base (0x20874 `sub eax,0xc`),
+  and tests bit 2 of the low byte of block[0] - the live x, so that
+  test is on the position (0x20879 `test cl,0x4`); when that bit
+  is clear it calls 0x44f90 with edx=1 on `this+0xa5` (0x20897 `add
+  eax,0xa5`, 0x2089c) - PALMA's own embedded handle - and then
+  0x53a30 on the same field (0x208ab). So that verb reads the block as
+  a flag word and answers with a handle: a handle accessor, not a y.
+  (b) THE AIM. 0x45320 then sets ebp = block[0] + [obj+0xca] - the
+  live x plus the x-velocity - writes that into block[1] (0x4536b) and
+  adds [obj+0xce] to block[2] (0x45357-0x45363), and passes ebx =
+  &block[1] (0x4535f). The sampler reads [ebx] and [ebx+4] (PR-348),
+  so the ask is aimed at {x + vx, block[2] + vy}: the x is the live x
+  plus the velocity, and the y is whatever the controller chain left
+  in block[2] plus the y-velocity - or, if that chain did not run,
+  the code table 0x98278 plus the y-velocity, a number no coordinate
+  can compete with. The branch order makes this exact: the chain runs
+  unless bit 2 of [obj+0xb6] is set (0x54200) AND the +0xbc verb
+  answers non-zero, and for the lions and KAMIEN that verb is
+  "[obj+0xa9] != 0" - so the chain runs exactly when the object holds
+  no surface, and a holder keeps the table value as its aimed y.
+  (c) THE FIRST TEST IS THE RAW CLEARANCE: THE SUBTRAHEND IS ZERO.
+  0x45400's first sampler call at 0x45468 is followed by a load at
+  0x4546d of [esp+0x18] and a subtraction at 0x45477. Reading the
+  frame: 0x45400-0x45403 pushes esi, edi, ebp and takes 8 local bytes,
+  so [esp+0x18] is the first argument pushed by its caller - the dword
+  0x45320 pushed at 0x45348, which is 0x45320's own ecx, and 0x541f0
+  does not disturb it (0x541f1 pushes ecx, 0x5423f pops it back). The
+  convention this family uses is `this` in eax with the other argument
+  in edx - 0x45320 passes (eax,edx) to 0x541f0 unchanged (0x4533e-
+  0x4533f) and to 0x45400 as (eax=this handle, edx=requester,
+  ebx=mode, ecx=its own ecx), which is also how PR-344 read the flag
+  gate at 0x45417, where ecx is the mode. So the subtrahend at 0x45477
+  is 0x45320's ecx, and every one of the six askers zeroes it on the
+  way to the call: 0x1e594, 0x1e983, 0x2890b, 0x38100, 0x3df2d,
+  0x3f026 are all `xor ecx,ecx` one instruction before `call 0x45320`.
+  The test at 0x4547d `jl` is therefore the bare clearance. Note that
+  this is the mode=0x45320 supplies, not the mode in ebx: a caller
+  that reaches 0x45400 directly, as the handle-table slot +8 does
+  (PR-346), would put its own ecx in that slot.
+  (d) THE TWO CALLS USE THE TWO POINTS AND THE SAME SLOPE, SO THE
+  ACCEPTED SET IS ZERO CLEARANCE. The first call at 0x45468 has
+  eax = [esp+0x4] and edx = [esp] - the pair record i and record i-1
+  built at 0x4543c-0x4545e - and ebx = the class verb +0x6c result
+  (0x45462), which PR-349 showed is the SNAPSHOT point at obj+0x89.
+  The second call at 0x45491 is built at 0x45481-0x4548f from the same
+  bracket index with the pair reversed, and its ebx = ebp is the
+  AIMED block (0x4540a), the same point the bracket test at 0x4541f
+  used. Algebraically the two expressions are negatives of each other:
+  with A = record i, B = record i-1 and t = (x-A.x)/(B.x-A.x), the
+  first is (1-t)(B.y-A.y) + A.y - p.y and the reversed second is
+  -t(A.y-B.y) + B.y - q.y, and their difference is
+  (B.y-A.y)(1-t-t') with t' = (x-B.x)/(A.x-B.x) = 1-t, i.e. zero - so
+  both calls measure ONE clearance, in opposite signs, each off the
+  other by at most 1 because `idiv` truncates toward zero. The gates
+  then read: reject if the first is negative (0x4547d) unless the
+  queried handle is the one already held (0x45479, 0x4547b); reject if
+  the second is positive (0x45498) or worse than the incumbent
+  [requester+0xea] (0x4549a). A surface the requester is NOT holding
+  is therefore accepted only where the AIMED point lies on the slope
+  to within the division's truncation; a surface it IS holding skips
+  that first gate and is accepted at any non-positive clearance
+  measured at its SNAPSHOT point.
+  (e) WHY THAT IS THE CARRYING LAW. The held surface is the last
+  answer the standing path accepted (PR-345, 0x5478e/0x547bc). So a
+  seat's table can hold the lion at a depth, which is what a moving
+  seat needs to carry it - but only after some earlier frame's ask
+  landed on that same table at exact contact. That is the first link
+  F6 needs, and it is a measurement of the level, not of the law: the
+  question is whether any ZARIA.01 position puts the lion's aim on a
+  seat's slope at zero clearance while that seat's cursor is running.
+OPENS: what the controller chain (+0x48, +0x50 and the [obj+0x33]
+  script method) writes into block[2] and with what - that is the
+  lion's aimed y and it is unread; what [obj+0xea] holds before the
+  first accepted ask, since the "worse than the incumbent" test needs
+  its initial value; how far the snapshot at [obj+0x89] lags the live
+  position (PR-349's open half); and PALMA's +0xbc answering with its
+  own handle at obj+0xa5, which suggests a seat asks about itself.
+CLOSES: PR-348's open item about 0x4546d's subtrahend - it is zero,
+  because all six askers reach 0x45320 with ecx cleared (0x1e594,
+  0x1e983, 0x2890b, 0x38100, 0x3df2d, 0x3f026) - and the shape of the
+  acceptance law OI-124 needs: first contact must land the AIMED point
+  on the slope to within the truncation, and after that the held
+  surface re-accepts itself at any non-positive clearance at the
+  snapshot. The crossing itself is still unmeasured and is now a leg,
+  not a read.
+CORRECTS: PR-349's paragraph (b), which attached the class verb
+  +0x6c's point to the REJECTING call and the aimed block to the
+  second call and the incumbent test: the registers are the other way
+  round. The first call at 0x45468 runs with ebx = the +0x6c result
+  (0x45462) - the snapshot - and the second at 0x45491 runs with
+  ebx = ebp, the caller's aimed block (0x4540a, 0x4548b); the bracket
+  test at 0x4541f uses that aimed point too. The measurement point
+  PR-349 identified - obj+0x89 for the lions, KAMIEN, PALMA, KATAPULT
+  and SPLYW - is right; the call it feeds is not. PR-344's reading of
+  the flag gate's mode register (ebx at 0x45417) and PR-348's
+  expression stand.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: 0x541f0 is dumped in
+  /tmp/opencode/pr350_541f0.txt and the +0bc verbs in
+  /tmp/opencode/pr350_23870.txt; the block construction is
+  0x4532c-0x4536f and the two tests are 0x45468-0x4549a of
+  /tmp/opencode/pr344_45400.txt; the substitution is written out at
+  paragraph (d) and the six cleared ecx call sites are the instructions
+  just before `call 0x45320` at the addresses in the ADDRESSES field.
+```

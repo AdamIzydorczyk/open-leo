@@ -5619,6 +5619,22 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         bare `ret` (0x23b50) and samples the live position. The law is
         fully measured; what is left for F6 is whether any ZARIA.01
         position satisfies it, which is a port leg and not a read.
+        PR-350 measured the last of the inputs and corrected PR-349's
+        assignment of the two points: 0x45320 aims at a three-dword
+        block on its own frame whose y-component only the class verbs
+        +0x48/+0x50 and the script method at [[obj+0x48]+0x33]+4 fill,
+        and that chain runs only when the object holds no surface (the
+        lions' +0xbc verb 0x23870 is `cmp [eax+0xa9],0; setne al`), so
+        a holder asks with y = 0x98278 + vy; the first sampler call
+        uses the SNAPSHOT point (0x45462) and the second the AIMED
+        block (0x4540a, 0x4548b) with the record pair reversed; and
+        the first test's subtrahend is zero, since every asker clears
+        ecx before the call (0x1e594, 0x1e983, 0x2890b, 0x38100,
+        0x3df2d, 0x3f026). Net law: first contact must put the aimed
+        point on the slope within the `idiv` truncation, and the
+        surface already held at [obj+0xa9] then re-accepts itself at
+        any non-positive clearance at the snapshot - the carrying
+        mechanism F6 needs, pending a ZARIA.01 measurement.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the
