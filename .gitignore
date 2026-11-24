@@ -22,6 +22,10 @@ build/ghidra/
 build/setup/
 build/*.log
 /build/leo/
+# Generated ledger search layer (PR-355): build/journal.db is built by
+# tools/re_db.py from NEXT_STEPS.md (make journal-db). Derived bytes, like
+# build/*.raw - never in git, never a source of truth.
+build/journal.db
 tools/__pycache__/
 __pycache__/
 

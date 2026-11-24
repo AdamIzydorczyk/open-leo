@@ -3257,10 +3257,15 @@ OI-101: the 'levels' config file loader (the 0x91ee5 error text
 
 OI-102: re_index's correction pointers stay prose-co-occurrence
   until records carry a CORRECTS: line the generator can read
-  status: OPEN
+  status: CLOSED BY PR-355
   origin: PR-197 OPENS
   notes: records DO carry CORRECTS: lines since PR-198; the
-    generator upgrade never happened, so the thread stands.
+    generator upgrade landed in PR-355. tools/re_db.py parses the
+    structured CORRECTS: field into a queryable corrections table
+    (147 correction edges over the 340 records) and jq.py's `corr`
+    reads it, so the
+    correction graph is now read from the field the records already
+    carry, not from prose co-occurrence. re_index itself is unchanged.
 
 === documentation program + tooling ===============================
 

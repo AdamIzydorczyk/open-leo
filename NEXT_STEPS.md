@@ -49143,3 +49143,121 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
   this pass at 0x54f40, 0x54f90, 0x54fe0, 0x55020,
   0x45c20, 0x45c50, 0x45c80 and the `end_level` arm at 0x46bc0.
 ```
+
+## PR-355 - THE LEDGER GETS A QUERY LAYER BESIDE THE INDEX: tools/
+## re_db.py builds build/journal.db on the SAME parser the index and P4
+## use, tools/jq.py answers "which record, at what line" in one call,
+## and the generator finally READS the structured CORRECTS: field -
+## which closes OI-102, the correction-pointer thread PR-197 opened
+```
+KIND: gate
+SUBSYSTEM: docs structure (a generated ledger search layer)
+ADDRESSES: none
+NAMES: tools/re_db.py, tools/jq.py, build/journal.db, journal-db,
+  record_fts, addr_mentions, corrections, docs/RE_INDEX.md, OI-102
+CODE: yes: new tools/re_db.py + tools/jq.py; the Makefile gains a
+  journal-db leg called from verify-docs; .gitignore drops the DB
+HOOKS: none
+OPENS: none
+CLOSES: OI-102
+CORRECTS: none
+GATE: make 0 warnings; verify-all fixtures rc=0 14 (ok); the same
+  suite run twice - default DATA=/tmp/opencode/iso_stage/LEO and
+  DATA=/tmp/opencode/nope HD=/tmp/opencode/nope - then verify-docs and
+  verify-index, rc=0. THIS BOX HAS NO LL.iso TO STAGE: only top-level
+  .IS files sit in iso_stage, so every ISO/HDD leg (llrs/pcx/seq/pcm/
+  menu/sel/quit/save/music/help/utf8/fuzz/platform/userdir/level/play/
+  stage/endlevel/golden and the cmake byte-exact halves) prints a NAMED
+  SKIP in BOTH modes. Measured, identical both times: 14 data-free legs
+  (ok) + 22 named verify-SKIPs, "ALL TESTS PASSED", rc=0. The fixture-
+  backed half is DEFERRED to a machine with the ISO/HDD staged - a SKIP
+  is not proof (section 2 STOP rule); this change moves no port code
+  and reads no fixture, so the only legs it can touch are the green
+  ones (docs/index/journal-db) plus the shared build, which is warning-
+  free. The new journal-db leg reads only tracked markdown, runs in
+  BOTH modes, and adds one (ok) each, so build/journal.db can never sit
+  stale behind a committed ledger.
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - the
+  DATA=/tmp/opencode/nope run, identical here only because the fixtures
+  are absent on this box, not because the change made them skip. The
+  mutation control /tmp/opencode/pr355_control.py reads no fixture: drop
+  a CORRECTS line and the correction edge vanishes (a field read, not a
+  leg).
+```
+
+- WHY. The owner asked to load the ledger into a database so a search
+  is cheap at every step. The index already answers "which records
+  mention key X" (PR-197's docs/RE_INDEX.md), but it is a flat page:
+  it returns PR numbers, not jump-to-line ranges, and it cannot do
+  free-text plus kind/supersession filters in one step. This PR adds
+  that query layer WITHOUT replacing the pinned index and WITHOUT
+  becoming a second source of truth. The one property that makes it
+  safe is the one PR-197 argued for: ONE parser. re_db.py imports
+  doc_census and re_index and reuses their regexes and their
+  real-heading record boundary; it defines no new vocabulary. A second
+  parser is the PR-55 "twins that both look right but drift" failure.
+
+- WHAT SHIPPED. (1) tools/re_db.py: reads NEXT_STEPS.md through
+  re_index.records() and doc_census's record boundary, and emits a
+  SQLite file build/journal.db (gitignored, like build/*.raw) with a
+  records table (pr, kind, start/end lines), an FTS5 table over record
+  text, and addr/field/name/oi/corrections/pr_cites link tables. The
+  field block itself supplies the columns (KIND/SUBSYSTEM/CORRECTS are
+  already structured). (2) tools/jq.py: a query CLI that rebuilds the
+  DB first if NEXT_STEPS.md is newer (it can never answer from a stale
+  index), auto-routes a bare token (0x->addr, [->field, OI->oi,
+  PR->show, else free-text), and prints one line per hit -
+  `PR-nn [kind]  NEXT_STEPS.md:START-END` - so the reader opens that
+  slice instead of the 49k-line file. (3) The journal-db Makefile leg,
+  called from verify-docs, so the search layer is regenerated whenever
+  the docs structure is checked. (4) .gitignore: build/journal.db.
+
+- IT SHARES THE PARSER, AND THAT IS MEASURED. Both tools read the
+  whole tree. re_index reports 339 records; re_db parses 339 records
+  (340 with this one) from the SAME boundary, and reuses doc_census's
+  ADDR_RE/FIELD_RE/NAME_RE/DES_RE verbatim. The DB is never cmp-pinned
+  (it is untracked), so the guarantee is not byte-identity but this:
+  every record the index sees, re_db sees, because it calls re_index
+  and doc_census. The DB is a derived artifact and a client of jq.py
+  is a client of that - nothing here can read a different ledger than
+  `make verify-docs` and `make verify-index` do.
+
+- THE OI-102 CLOSURE, MEASURED. OI-102 (PR-197 OPENS) said the
+  index's correction pointers "stay prose-co-occurrence until records
+  carry a CORRECTS: line the generator can read," and noted records
+  HAVE carried CORRECTS: lines since PR-198 but "the generator upgrade
+  never happened." On this tree re_index flags correction pointers on
+  71 address entries by matching an address and a correction word on
+  one physical line - sparse, direction-agnostic. The structured
+  CORRECTS: field the records actually write encodes 147 correction
+  edges across the 340 records. re_db parses that field into a
+  corrections table and jq.py `corr PR-nn` walks it: it shows both
+  that PR-350 corrects PR-349 and that PR-351 and PR-352 correct
+  PR-350. The generator now reads the field, exactly what OI-102
+  asked for, so OI-102 flips CLOSED in this same commit. re_index is
+  left unchanged: the field-graph is an addition beside it, not a
+  rewrite of its prose heuristic.
+
+- CONTROLS (data-free, /tmp/opencode/pr355_control.py, no fixtures,
+  no window; a synthetic two-record ledger). C1: re_db parses 2 records
+  and reads the correction edge (10 -> PR-9) straight from the
+  CORRECTS: field. C2: an address shared by the two records is linked
+  to BOTH, so the mention graph is queryable. Mutation 1: rewrite the
+  field to CORRECTS: none and the edge disappears. Mutation 2: break
+  the field name (CORRECT:) and no edge is read - the parser follows
+  the exact field name, not a stem, exactly as P4 requires. The two
+  mutations are the red-check: the count moves only when the field
+  does.
+
+- WHAT IT IS NOT. Not the source of truth: docs/RE_INDEX.md stays the
+  pinned, git-diffable human index; journal.db is a disposable build
+  product and re-indexing is unchanged. No vector/embedding store:
+  the ledger's whole discipline is exact tokens and citations, and FTS5
+  plus the structured fields match that; an embedding model would add a
+  dependency and fuzzy recall that contradicts "name the evidence or
+  stop." jq.py `corr` reads only the structured CORRECTS: field, not
+  prose retractions that were never marked - the same honest limit
+  OI-102 named, now resolved for marked claims only. The kind and
+  supersession filters cover records >= PR-196 only, because earlier
+  records predate the field block (P4's TEMPLATE_FROM); that is the
+  correct behavior, not a bug.
