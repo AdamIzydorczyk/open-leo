@@ -51807,3 +51807,179 @@ GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff includes a
   census stop working past +0xdc. Two days of "same-id tables agree at 32
   slots and differ at eleven" were partly a reading of a class's own methods
   next to its members' vtables.
+
+## PR-372 - A CLASS TABLE IS ONE METHOD ARRAY WITH TWO DISPATCH POINTS
+## ([obj+0x8] AND [obj+0xc] = IT-8, 383 SITES), AND EVERY POINT-LIST CLASS
+## PUTS THE CONTAINER'S NINE VERBS AT ITS OWN TABLE-0x24: 37 CLASSES, ALL 29
+## OF THE 0x3ddf0 FAMILY, NONE OF THE 124 0x55070 ONES
+
+```
+KIND: read
+SUBSYSTEM: how a class's method array is attached to its objects - the pair
+  of fields [obj+0x8] and [obj+0xc] and the container vtable at [obj+0xee] -
+  and which classes own a point list at all (OI-128, OI-129, the F6 thread;
+  continues PR-371 and PR-370 and reads the element region PR-340 found).
+ADDRESSES: 0x1e512, 0x1e514, 0x1e51c, 0x1e52a, 0x1e58f, 0x1e596, 0x1e630,
+  0x1e638, 0x1e640, 0x1e64c, 0x1e670, 0x1e6be, 0x1e723, 0x1e788, 0x1e7f3,
+  0x1e886, 0x1e970, 0x1e97e, 0x1e985, 0x1ed08, 0x1f2b5, 0x1f2ba, 0x1fb60,
+  0x1fc36, 0x207ea, 0x2097a, 0x288d0, 0x288d5, 0x28903, 0x2890d, 0x28e20,
+  0x28e3d, 0x28e4b, 0x28e55, 0x28e5d, 0x28e82, 0x28e85, 0x28e91, 0x28e96,
+  0x29a32, 0x29a51, 0x29a58, 0x29a62, 0x29a69, 0x29a70, 0x2a18d, 0x2a194,
+  0x2a1a5, 0x2a1ac, 0x34a4d, 0x35109, 0x380fb, 0x38102, 0x3dcc2, 0x3dccd,
+  0x3dd6a, 0x3dd72, 0x3de94, 0x3deb2, 0x3df25, 0x3df2f, 0x3efe6, 0x3efe9,
+  0x3f023, 0x3f028, 0x44fe0, 0x45002, 0x45070, 0x45120, 0x45200, 0x45250,
+  0x45320, 0x53a30, 0x53ff0, 0x96874, 0x9686c, 0x96d1c, 0x96d34, 0x96d94,
+  0x98278, 0x98274, 0x99718, 0x997fc, 0x99804, 0x99828, 0x9a674, 0x9a66c,
+  0x9a74c, 0x9a754, 0x9a778, 0x9dbfc, 0x9f7b4, 0xa0cc0, 0xa23b8, 0xa23b0,
+  0xcef40, 0x126, 0x12a, 0x12e, 0x2b1a0, 0x394, 0x44, 0x8, 0xc, 0x2c, 0x24,
+  0xa5, 0xee, 0xf2, 0xf6, 0x106, 0x10a, 0x54, 0x6c, 0x89, 0xca, 0xce
+NAMES: dispatch base, second base, method array, one array two bases, three
+  bases, embedded container, field offset, address-of, verb block, prefix,
+  request-block signature, element region, pr372_dispatch.py,
+  pr372_dispatch.txt, pr372b_dispatch.py, pr372b_dispatch.txt,
+  pr372c_trace.py, pr372_offsets.py, pr372_offsets.txt, pr372b_offsets.py,
+  pr372b_offsets.txt, pr372_law.py, pr372_law.txt, pr372b_law.py,
+  pr372b_law.txt, pr372c_counts.py, pr372c_counts.txt, pr372d_owners.py,
+  pr372d_owners.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is this
+  record, the OI-128 sentences that named one field offset and the wrong
+  owner count, the HANDOFF section 8 F6 paragraph, and the L15 comment in
+  ported/ll_level.c that PR-371 had written with [obj+0xee] as if it were
+  the only offset.
+HOOKS: PR-370 read that 0x53ff0 lays "the view pair 0xa23b8/0xa23b0 at
+  +8/+0xc" and PR-99 read the same shape in the LION's constructors as a
+  two-view idiom. PR-371 read the container, its base table 0xa0cc0, and the
+  37 tables that differ from it in three slots. PR-368 fixed the class-table
+  anchor (the +0x6c = 0x23a10 word) that this record uses to tell a class's
+  method array from any other run of dwords, and counted the 0x3ddf0 family
+  at 29. PR-340 read the 0x1e500 region as level "element" methods that
+  translate a record array; PR-279 read the loader that feeds it text.
+OPENS: which classes use which container offset - the numbers here are call
+  sites, and attributing a site to a class by the nearest preceding [obj+0x8]
+  store is a lead, not a proof (the factory functions at 0x1f870 and 0x202d0
+  build several objects in one function); the two fixup functions 0x29a32 and
+  0x2a183, which install both a class array and its container block and also
+  write 0x98278 at [obj+0x12e]; who installs a derived block for the 35
+  classes whose constructors call 0x44fe0 (which writes the base 0xa0cc0) -
+  if nobody, those classes use the base verbs, and the derived slots +0x0,
+  +0x4, +0x10 are dead data; the 0x45200 site that translates a container at
+  [obj+0x106] (0x3de94), the same field pair PR-369 saw the 0x3ddf0 writer
+  store its ANSWERS in; the jump table at 0x1e670 whose entries point at the
+  six element methods; why the element region hands its container constant
+  deltas (5,13) (6,13) (10,13) (10,3) (-0x1f,-0x2a) while the 0x3ddf0
+  writer hands it the object's position; the 5 0x44fe0 sites with no offset
+  instruction nearby (0x2a31a, 0x2d4da, 0x3a744, 0x3c5da, 0x3ce9a); and the
+  one array whose second base is 0x14 lower (0x3f5bd, 0xa0780/0xa076c).
+CLOSES: PR-371's open item "only four constructors store a derived table,
+  the install path of the rest is unmeasured": there is no install path, the
+  derived verb block is a prefix of the class's own method array and the
+  class's table pointer is 0x24 above it. It also closes PR-370's "the view
+  pair" - one array, two bases - and PR-369's question of which classes own
+  surface records: the 37 named by the verb block, which is exactly the
+  0x3ddf0 family plus 8 others.
+CORRECTS: PR-371 (my own) three times and PR-370 (my own) once, plus one
+  method point.
+  (1) PR-371 (d) counted "28 of the 219 class blobs hold such a sub-table,
+  13 of the 29 0x3ddf0 classes at blob+0xec". The scan read forward from a
+  blob and found blocks belonging to the NEXT class. The rule is the other
+  way round: a class owns a point list iff a table whose +0x8 word is
+  0x45250 sits at its own table address minus 0x24. Measured over the whole
+  image there are 38 such blocks; 37 of them have a kind blob starting
+  exactly 0x24 later and one - 0xa0cc0, the base table - belongs to no
+  class. So 37 classes own a point-list verb block: 29 of the 29 0x3ddf0
+  classes, 2 of the 31 0x53df0 ones, 5 of the 33 second-family tables, 1
+  whose +0x54 is 0x2b1a0, and 0 of the 124 0x55070 ones. Named classes
+  among them: KTRASA (0x9dbfc) and TUNTRAS (0x9f7b4). My "0x9daf8 = KKULA
+  is one" is wrong: the block I found at KKULA+0xe0 belongs to KTRASA, whose
+  table starts 0x24 after that block.
+  (2) PR-371 (c) implied the derived tables are separate tables attached to
+  the container. They are the nine dwords immediately below the class's own
+  method array - the container's vtable word IS that prefix (0x29a58 stores
+  0x9a754 at [obj+0xee], and 0x9a754+0x24 = 0x9a778 is the class array the
+  same function stores at [obj+0x8]) - and PR-371's derived-table count of
+  37 is the number of owning classes, which is consistent but was not
+  understood as such.
+  (3) PR-371 and OI-128 said the container sits at [obj+0xee]. Not always:
+  the verbs are handed containers at +0xee, +0xa5, +0x44 and once +0x106.
+  What is universal is that the argument is the ADDRESS of the field - every
+  site uses `lea reg,[obj+off]` or `add reg,off` and none loads a pointer -
+  so the container is embedded in all of them and only the offset varies.
+  (4) PR-370 wrote that the base part "installs the view pair
+  0xa23b8/0xa23b0 at +8/+0xc", and PR-99 called the same shape a two-view
+  idiom: it is one array installed twice. 0xa23b0 = 0xa23b8-8.
+  Method point: PR-371's census that matched an indirect call to any mention
+  of a field within 0x60 bytes over-counts, because the object's dispatch
+  array is itself at [obj+0x8]. 0x28e96 is the counterexample:
+  `mov esi,[eax+0x8]; call [esi+0x8]` there is a class method call
+  (0x9a674's +0x8 is 0x23e00), not a container verb. Only direct calls to a
+  verb count, and they are few: 0x44fe0 63, 0x45200 10, 0x45320 6, 0x45120
+  5, 0x45400 1.
+MEASURED: (a) THE PAIR LAW (pr372c_counts.py). Instructions
+  `mov [reg+0x8],T` followed within 0x20 bytes by `mov [reg+0xc],U`: 470
+  sites. U = T-8 at 383; T = U = 0 at 72 (a cleared pair); T is one of the
+  219 kind blobs with another shift at 5 (0x2c at 4 sites, 0x14 at 1); the
+  other 10 store non-tables, and one of those forms is the request-block
+  signature 0x98278 written at [obj+0x8]. Restricting to sites whose first
+  value IS a kind blob: 388 sites over 160 of the 219 blobs - 0x55070 115,
+  0x53df0 24, second family 18, 0x3ddf0 2, 0x3e280 1 - and the shift is 8
+  for 157 of those 160 arrays. Six named classes are in it; the LION's is at
+  0x1ed08, which stores 0x96874 and 0x9686c.
+  (b) THREE BASES INTO ONE ARRAY. The fixup function at 0x29a32 (and its
+  twin at 0x2a183) shows it directly: `mov [eax+0x8],0x9a778`,
+  `mov [eax+0xee],0x9a754`, `mov [eax+0xc],0x9a74c` - one method array
+  addressed three times: the class's verbs at array+0, the container's verbs
+  at array-0x24 (nine slots), and the second base at array-0x2c, which is
+  the container's block minus one slot. A call at [obj+0xc]+0x10 and a call
+  on the container at +0x8 therefore reach the same function 0x45250. The
+  same function also clears [eax+0x126] and [eax+0x12a] and writes the
+  request-block signature 0x98278 at [eax+0x12e].
+  (c) THE CONTAINER IS PASSED BY ADDRESS, AT FOUR FIELD OFFSETS. For every
+  call to a container verb, the instruction that set up the argument within
+  0x30 bytes: `0x44fe0` (build) - 47 at `+0xee`, 7 at `+0x44`, 4 at
+  `+0xa5`, 5 with none nearby; `0x45200` (translate) - 8 at `+0xa5` (all in
+  the 0x1e5xx element region), 1 at `+0xee` (0x3dcc2, the 0x3ddf0 writer),
+  1 at `+0x106` (0x3de94); `0x45320` (relative ask) - 2, 2, 2 at +0xee,
+  +0xa5, +0x44; `0x45120` (parse a text line) - 2 at `+0xee` (0x288d0,
+  0x3dd6a), 2 at `+0xa5` (0x1e514, 0x1e638), 1 at `+0x44` (0x3efe6);
+  `0x45070` (ask twice and store) - 1 at `+0x44`. All are `lea` or `add`.
+  (d) WHAT THE TRANSLATE ARGUMENTS ARE. The element region hands the
+  container at [obj+0xa5] and passes compile-time deltas: 5 and 13, 6 and
+  13, 10 and 13, 10 and 3, -0x1f and -0x2a, two sites from [ebx] and
+  [ecx]/[ecx+0x4]. The 0x3ddf0 writer at 0x3dccd uses [ecx+0x8] and
+  [ecx+0xc] - the object's own position - and 0x3deb2 uses [ecx+0x106] and
+  [ecx+0x10a]. Same verb, three sources of the delta.
+  (e) THE OWNERSHIP CENSUS (pr372d_owners.py). Scanning every address in
+  the table region for `+0x8 = 0x45250` gives 38 verb blocks. For 37 of
+  them a kind blob begins at exactly block+0x24; those 37 owners are all
+  29 of the 0x3ddf0 family, 2
+  of the 31 0x53df0, 5 of the 33 second-family and 1 with +0x54 = 0x2b1a0.
+  Not one of the 124 0x55070 classes owns one, which is PR-368's split seen
+  from the other side: the 0x55070 family measures the level's records, the
+  0x3ddf0 family keeps its own.
+  (f) A REAL CONTAINER DISPATCH AND A FALSE ONE. Real: 0x28e4b-0x28e5d,
+  `mov eax,[obj+0xee]; test eax,eax; je 0x28e5f; mov esi,[eax+0x8];
+  mov edx,2; call [esi]` - guarded by a null test, so a class may hold an
+  empty container slot; the enclosing function is the +0 verb 0x28e20 of the
+  array 0x9a674, and it runs 0x53a30 with edx=1 afterwards. False:
+  0x28e82-0x28e96, which loads the object's array at [obj+0x8] and calls
+  slot +0x8 with the object at [ds:0xcef40+0x394] as argument - that is
+  PR-344's asking path, not a container verb.
+GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff includes a
+  comment fix in ported/ll_level.c, so what was run anyway: make rc=0 with 0
+  warnings and make verify-level rc=0 - 10 (ok) lines, the legs unchanged;
+  the index was regenerated with this record in the tree before the runs.
+```
+
+- WHY. PR-371 said the port is missing the object that answers surface
+  questions for its owner. This says who has one and how it is attached: 37
+  classes, every one of the 0x3ddf0 family and eight others, carrying the
+  container's nine verbs as a prefix of their own method array and the
+  container itself inline at an offset of their own choosing. The 124
+  classes of the 0x55070 family have no such thing and answer only from the
+  level's records - which is exactly what the port models.
+
+- WHAT SURPRISED ME. That my own forward scan had the ownership backwards:
+  the block I read as "inside a class blob at +0xec" belongs to the class
+  whose table starts 0x24 later, and correcting that turns "13 of 29" into
+  "all 29", which makes the two-writer split of PR-368 an ownership law
+  rather than a behaviour difference.

@@ -10450,14 +10450,17 @@ static int seat_motion_selftest(void)
  * (PR-368): over the same 186 tables it holds 0x55070 in 124,
  * 0x53df0 in 31, 0x3ddf0 in 29 and one-off writers twice. A 0x3ddf0
  * class runs 0x55070 and then a second pass over surface records it
- * does not necessarily own: [obj+0xee]/[+0xf2]/[+0xf6] is one
- * embedded point-list container of the 0xa0cc0 family, filled from
- * authored text by its +0x20 verb, and its 13-byte records are held
- * sorted by x, translated by whatever moves the holder (0x45200) and
- * bracketed by 0x45380 into the pair 0x455a0 measures - and copied
- * whole into every object built from it (PR-369, PR-370, PR-371).
- * Nothing here models that. The legs below model the 155 family with
- * the 0x55070 writer only. */
+ * owns: [obj+0xee]/[+0xf2]/[+0xf6] is one embedded point-list
+ * container of the 0xa0cc0 family - inline, at an offset that is per
+ * class (+0xee, +0xa5, +0x44) - whose nine verbs sit at the start of
+ * the class's own method array, 0x24 below its table. 37 classes own
+ * one, all 29 of the 0x3ddf0 family and none of the 124 0x55070 ones
+ * (PR-372). It is filled from authored text by its +0x20 verb, and
+ * its 13-byte records are held sorted by x, translated by whatever
+ * moves the holder (0x45200) and bracketed by 0x45380 into the pair
+ * 0x455a0 measures - and copied whole into every object built from it
+ * (PR-369, PR-370, PR-371). Nothing here models that. The legs below
+ * model the 0x55070 half of the 155 family only. */
 static int seat_bracket(const short *sx, int n, int x)
 {
     int i;

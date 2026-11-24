@@ -5816,24 +5816,35 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         +4) held SORTED BY x, translated by the delta that moves the
         object through 0x45200 and bracketed by 0x45380, whose two
         bracketing records are handed to 0x455a0 - the port's c1.
-        PR-370 read how that field is copied and PR-371 what it is:
-        [obj+0xee]/[+0xf2]/[+0xf6] is ONE embedded container of the
-        0xa0cc0 family PR-279 found, built in place by 0x44fe0 at 47
-        sites that do `add eax,0xee` first. Its base table's six
-        surface verbs - bracket-to-c1, the ask, the relative ask, the
-        slope scaled by 1000, the parser - are shared by every class,
-        and the 37 derived sub-tables override only +0x0, +0x4 and
-        +0x10. 28 of the 219 class blobs hold such a sub-table (13 of
-        the 29 0x3ddf0 classes at blob+0xec; 0x9daf8 = KKULA is one),
-        and a derived destructor proves the sub-object's this is
-        obj+0xee (`sub eax,0xee`). The records are authored as text:
-        0x45120 reads "%d" then a " %c" separator, ';' storing flag 1
-        and '#' flag 2. Arrays are shared, not private: 0x24aa0,
-        0x259b0, 0x1ece0, 0x20200 and 0x23360 copy the three words,
-        three of them the sites PR-99 read as the LION's two-view
-        idiom. The port measures every class against the level's array
-        and is missing the object that answers surface questions for
-        its owner.
+        PR-370 read how that field is copied and PR-371/PR-372 what it
+        is and who has one: [obj+0xee]/[+0xf2]/[+0xf6] is ONE embedded
+        container of the 0xa0cc0 family PR-279 found, built in place by
+        0x44fe0, and every call hands it the ADDRESS of the field, so
+        it is inline and the offset is per class - 47 build sites at
+        +0xee, 7 at +0x44, 4 at +0xa5, one translate at +0x106. A
+        class owns a point list iff a table with 0x45250 at +0x8 sits
+        at its method array minus 0x24: the container's nine verbs are
+        a PREFIX of the class's own method array, and one fixup writes
+        the three bases of that one array (0x29a51-0x29a70: class
+        array 0x9a778 at [obj+0x8], the verb block 0x9a754 at
+        [obj+0xee], block-minus-one-slot 0x9a74c at [obj+0xc]). 37
+        classes own one - all 29 of the 0x3ddf0 family, 2 of the 31
+        0x53df0, 5 of the 33 second family (KTRASA, TUNTRAS) - and no
+        class of the 124-strong 0x55070 family does, which is the
+        two-writer split above restated as an ownership law. The base
+        table's six surface verbs (bracket-to-c1, the ask, the
+        relative ask, the slope scaled by 1000, the parser) are shared
+        by every owner. The records are authored as text: 0x45120
+        reads "%d" then a " %c" separator, ';' storing flag 1 and '#'
+        flag 2. Arrays are shared, not private: 0x24aa0, 0x259b0,
+        0x1ece0, 0x20200 and 0x23360 copy the three words. And the
+        second half of PR-372: [obj+0x8] and [obj+0xc] are ONE method
+        array at two bases, the second being the first minus 8 at 383
+        of 470 sites over 160 of the 219 arrays - PR-99's "two views"
+        and PR-370's "view pair" are one array read twice. The port
+        measures every class against the level's array and is missing
+        the object that answers surface questions for 37 kinds of
+        owner.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

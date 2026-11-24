@@ -5711,26 +5711,42 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     translates every record by the delta (that is why a plain add is
     legal) and 0x45380 brackets a query x in it, handing the two
     bracketing records to 0x455a0, PR-352's c1, or returning 0x7fffffff.
-    PR-370 read the paths that copy that field and PR-371 what it IS:
-    [obj+0xee]/[+0xf2]/[+0xf6] is ONE EMBEDDED container - vtable,
-    record array, count - constructed in place by 0x44fe0 at 47 sites
-    that do `add eax,0xee` first (PR-279's 0xa0cc0 family). Its base
-    table has nine verbs; 37 derived sub-tables change only +0x0, +0x4
-    and +0x10 and keep the six surface verbs (bracket-to-c1, the ask,
-    the relative ask, the scaled slope, the parser); 28 of the 219
-    class blobs hold such a sub-table, 13 of the 29 0x3ddf0 classes at
-    blob+0xec, and a derived destructor proves the sub-object's this is
-    obj+0xee (`sub eax,0xee`). The records are authored as TEXT:
-    0x45120 reads "%d" then a " %c" separator - ';' storing flag 1, '#'
-    flag 2 - and grows the array by (count+1)*13+4; 0x45002 copies a
-    container and 0x45070 asks twice and stores the answers. Arrays are
-    shared, not private: 0x24aa0, 0x259b0, 0x1ece0, 0x20200 and
-    0x23360 copy the three words, and three of those five are the
-    sites PR-99 read as the LION's two-view idiom - yet 0x96874's own
-    blob carries no sub-table. So the port, which measures every class
-    against the level's array, is missing the object that answers
-    surface questions for its owner. Seven of the 23 +0xb0 companion
-    ids of the
+    PR-370 read the paths that copy that field and PR-371/PR-372 what it
+    IS and WHO HAS ONE: [obj+0xee]/[+0xf2]/[+0xf6] is ONE EMBEDDED
+    container - vtable, record array, count - built in place by 0x44fe0
+    (PR-279's 0xa0cc0 family); the argument handed to its verbs is always
+    the ADDRESS of the field (`lea reg,[obj+off]` or `add reg,off`, never
+    a loaded pointer), so it is inline, and the offset is per class: 47
+    build sites at +0xee, 7 at +0x44, 4 at +0xa5, and one translate at
+    +0x106. The ten 0x45200 sites of PR-340's element region all use
+    +0xa5 and pass COMPILE-TIME deltas (5,13) (6,13) (10,13) (10,3)
+    (-0x1f,-0x2a), while the 0x3ddf0 writer at 0x3dccd passes the
+    object's own position from [obj+0x8]/[obj+0xc]. Ownership is now a
+    structural test: a class owns a point list iff a table with 0x45250
+    at +0x8 sits at its method array MINUS 0x24 - the container's nine
+    verbs are a PREFIX of the class's own method array, and one fixup
+    function writes the three bases of that one array: class array at
+    [obj+0x8], the verb block at [obj+0xee], the block minus one slot at
+    [obj+0xc] (0x29a51-0x29a70 with 0x9a778/0x9a754/0x9a74c; its twin at
+    0x2a183). 37 classes own one: ALL 29 of the 0x3ddf0 family, 2 of the
+    31 0x53df0, 5 of the 33 second family (KTRASA 0x9dbfc and TUNTRAS
+    0x9f7b4 among them) and 1 of a third writer - and NONE of the 124
+    0x55070 classes, which is PR-368's two-writer split restated as an
+    ownership law. The other half of PR-372: [obj+0x8] and [obj+0xc] are
+    ONE method array at two bases, the second being the first minus 8 at
+    383 of 470 such sites and over 160 of the 219 arrays (the LION's at
+    0x1ed08: 0x96874 and 0x9686c) - so PR-370's "view pair
+    0xa23b8/0xa23b0" is one array, 0xa23b0 = 0xa23b8-8, and a call at
+    [obj+0xc]+0x10 reaches the container verb 0x45250. The records are
+    authored as TEXT: 0x45120 reads "%d" then a " %c" separator - ';'
+    storing flag 1, '#' flag 2 - and grows the array by (count+1)*13+4;
+    0x45002 copies a container and 0x45070 asks twice and stores the
+    answers. Arrays are shared, not private: 0x24aa0, 0x259b0, 0x1ece0,
+    0x20200 and 0x23360 copy the three words - and the LION, being of the
+    0x55070 family, owns no container at all, exactly as the law predicts.
+    So the port, which measures every class against the level's array, is
+    missing the object that answers surface questions for 37 kinds of
+    owner. Seven of the 23 +0xb0 companion ids of the
     31-family are named as the +0xc id of a second-family table (ANITAB
     0xa1eb4 names ds:0xceea4 = 0xa1f90). The companion verb is 0x45320
     - the container's +0x18 verb, which PR-369 mistook for a class verb
@@ -5743,8 +5759,14 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     then runs the owner's +0x14 - six call sites. Still open: what the
     flag byte means where 0x45258 compares it with ecx (`cmp edi,ecx;
     jg`) against PR-344's mode 2, what a derived table's +0x0/+0x4
-    verbs add (0x2b2a0 calls 0x3df50, 0x2b295 calls 0x3df90), the four
-    sites that build the container at [obj+0xa5], what 0x98274 is (the
+    verbs add (0x2b2a0 calls 0x3df50, 0x2b295 calls 0x3df90) and whether
+    anyone installs them at all - only the two fixup functions 0x29a51 and
+    0x2a183 store a derived block into the container's vtable word, while
+    the 47 0x44fe0 sites write the base 0xa0cc0, which would make the
+    other 35 blocks unread; which classes use which container offset (the
+    nearest-[obj+0x8]-store attribution is a lead, not a proof, and the
+    factories at 0x1f870 and 0x202d0 build several objects in one
+    function); what 0x98274 is (the
     request-block signature's neighbour, used at 0x34885 where the
     level array is read), what the 281 five-dword blocks
     {code, code, code, a value, 0} at stride 0x14 are (they name the
@@ -5753,8 +5775,8 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     inside a larger block, whether the lion's own standing query ever
     consults such a per-object array (0x96874 carries neither the list
     pass nor a container sub-table), what the [x+0x10] queue drives,
-    which classes the 29 are by name - of the 28 that carry a
-    sub-table only 0x9daf8 = KKULA is named - 16 of the 23 +0xb0
+    which classes the 37 owners are by name - only KTRASA and TUNTRAS
+    are - 16 of the 23 +0xb0
     companion ids, the six
     seeded ids no table names (ds:0xcee6c, 0xcee80, 0xceed4, 0xcf05c,
     0xcf4e0, 0xcf4e4) and the two ids named but never seeded
