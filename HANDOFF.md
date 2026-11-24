@@ -5453,9 +5453,16 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         reader, the KATAPULT pad (307,633)-(340,633) and the
         PALMA spans (838,475)-(900,475), (885,380)-(947,380)
         and (930,320)-(992,320): a rising chain whose top ends
-        28 px short of the exit column at x 1020, so the seat
-        has to move while the lion stands on it, which is what
-        0x45200's per-tick (0,+-1) step of 0x1e5c0 is for.
+        28 px short of the exit column at x 1020. PR-339 measured
+        the seat's own motion and it does NOT climb: the class
+        +0xa4 verb runs at the row admit (0x52341, on the admitted
+        branch of the row law 0x52320) and at the state change
+        (0x535db in 0x535a0), never per tick; 0x1e5c0's sign is the
+        CURRENT ROW'S THRESHOLD, so with every authored ZARIA.01
+        seat row at threshold >= 7 each admitted row lowers PALMA's
+        table by 1 px, and KATAPULT's +0xa4 is a five-way state-
+        change jump table (+13,+5 .. -42,-42, OI-125). The chain's
+        heights are the four authored placements and nothing else.
         PR-334 read that chain and PR-336 READ IT CORRECTLY
         (0x45120 builds the object's own 13-byte surface table
         into [obj+0xa5] and 0x45200 places it; the ask verb -
@@ -5524,7 +5531,10 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         until something writes that attachment (0x54624, OI-123), and
         no shipped state of the 22 seat-owning objects - 290 states -
         carries SOLID, so the push-out path cannot stand the lion on a
-        seat either.
+        seat either. PR-339 then measured the seat's authored motion
+        itself - 1 px down per admitted row for PALMA, five fixed
+        jumps per state change for KATAPULT (OI-125) - so a first F6
+        seat leg is the table shift at the row admit, not a climb.
         What the ground/contact
         pass writes WHILE a lock holds is unread and named in
         PR-321's OPENS - it matters the moment that leg runs

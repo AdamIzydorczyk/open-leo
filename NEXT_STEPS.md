@@ -46877,3 +46877,135 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
   the corrected script, and its 0xf000 base is the error this record
   measures.
 ```
+
+## PR-339 - THE SEAT ROW-CLOCK IS RUN BY THE ROW ADMIT AND THE STATE
+## CHANGE, NOT BY A TICK, AND ITS SIGN IS THE ROW THRESHOLD: EVERY SHIPPED
+## SEAT ROW MOVES THE TABLE DOWN 1 PX, AND KATAPULT HAS NO ROW-CLOCK AT ALL
+```
+KIND: read
+SUBSYSTEM: the seat surface-table motion of OI-072/OI-124 - who runs the
+  class +0xa4 verb, what decides how far a surface table moves, and what
+  the shipped .MOV row thresholds make that. Read-only: no port code moves.
+ADDRESSES: 0x1e5c0, 0x1e5c8, 0x1e5d4, 0x1e5da, 0x1e5dd, 0x1e5e2, 0x1e5e9,
+  0x1e5ee, 0x1e5f8, 0x1e5fd, 0x1e605, 0x1e624, 0x1e690, 0x1e69e, 0x1e6a7,
+  0x1e6aa, 0x1e6ad, 0x1e6b0, 0x1e6b6, 0x1e670, 0x1e6be, 0x1e723, 0x1e788,
+  0x1e7f3, 0x1e886, 0x1e95d, 0x45200, 0x45209, 0x45214, 0x45217, 0x4521a,
+  0x45225, 0x520c0, 0x52320, 0x52323, 0x52329, 0x52334, 0x52338, 0x52341,
+  0x5234a, 0x52354, 0x535a0, 0x535aa, 0x535b0, 0x535b2, 0x535db, 0x535e1,
+  0x535ed, 0x96a88, 0x96b88, 0x96c14, 0x96c38, 0x96cf8, 0x96d1c, 0xa0cc0,
+  0xcef40, 0x394, 0xa1, 0x5c, 0x50, 0xa5, 0xbd, 0xc1, 0x10, 0xa4, 0x154,
+  0x254, 0x18
+NAMES: 0x1e5c0, 0x1e690, 0x45200, 0x520c0, 0x52320, 0x535a0, ROW CLOCK,
+  ROW THRESHOLD, FEED ACCUMULATOR, STATE TYPE, SURFACE TABLE, TABLE MOVE,
+  KATAPULT, PALMA, KAMIEN, KILOF_PL, KAT.MOV, PALM.MOV, PALML.MOV,
+  A_RUN, OI-072, OI-124, OI-125, F6
+CODE: no: nothing in ported/ or the Makefile moved. What this changes is
+  what an F6 seat leg would have to model - a 1 px per-row-admit descent
+  and per-state-jump offsets, not a per-tick climb.
+HOOKS: none. Every claim is machine code (leodb dis), the instruction
+  index (insn, for the count of +0xa4 call sites), the call index (xref),
+  the data bytes at the class views and the jump table, or the port's own
+  .MOV parser run over the shipped ANIMACJE container.
+MEASURED: (a) THE +0xa4 VERB HAS EXACTLY TWO RUNNERS. 0x1e5c0 and
+  0x1e690 carry no call edge at all (the xref index returns nothing for
+  either), so they are reached only as the object class's +0xa4 method.
+  One instruction in the image calls that slot from a class-bearing
+  register, `call DWORD PTR [edx+0xa4]` at 0x52341 and
+  `call DWORD PTR [edi+0xa4]` at 0x535db, and both are inside named
+  machinery the port already models. 0x52320-0x5235c is the row-admit
+  epilogue of 0x520c0: `mov eax,[ebx+0x10]` is the CURRENT ROW'S
+  THRESHOLD, `mov ebx,[edx+0xa1]` is the feed accumulator, `cmp eax,ebx;
+  jge 0x52354` is the PR-115 one-row law, and the +0xa4 call sits on the
+  ADMITTED branch right after the row handler at [[rec+0x44]+0x18], with
+  `mov DWORD PTR [eax+0x95],1` after it. 0x535a0 is the state applier the
+  port already knows from PR-172:
+  `mov edi,[eax+0x5c]` the current state index, `cmp esi,edi; je 0x53602`
+  no change, no call, and on the changed path 0x535db calls +0xa4 before
+  the new record's ENTER at [[rec+0x44]+0x1c] (0x535e1-
+  0x535ea) and the state-word write `mov [ecx+0x5c],esi` (0x535ed). So a
+  seat's surface moves once per admitted row and once per state change -
+  never "every tick".
+  (b) THE SIGN IS THE ROW THRESHOLD, NOT THE ROW POSITION. 0x1e5c0:
+  0x1e5c8 reads [obj+0x5c], 0x1e5d4-0x1e5da indexes the state record
+  through [obj+0x50], 0x1e5da `mov eax,[eax+0x4]` is that record's
+  record-object pointer (the same chained deref 0x1e570 of PR-334 uses at
+  +0x4), and the value
+  compared at 0x1e5dd is the word at [[state record]+0x10], the same
+  threshold the row admit reads at 0x52320, and `cmp eax,0x7` has two
+  arms, `mov esi,1` (0x1e5e2) and `mov esi,-1` (0x1e5e9). esi is then
+  handed to the table move in its y argument: 0x1e5ee
+  `lea eax,[ecx+0xa5]`, 0x1e5f6 `mov ebx,esi`, 0x1e5f8 `call 0x45200`;
+  and 0x45200 is the record loop
+  0x45214-0x45227, which adds edx to each record's x at [rec+0] and ebx
+  to its y at [rec+4], for [hdr+8] records at stride 0xd from [hdr+4]
+  (0x45209 reads the count, 0x45225 the loop bound). The threshold word
+  is the same one the row admit compares with [obj+0xa1] in paragraph
+  (a), so the seat's direction per row is authored: threshold >= 7 moves
+  the table 1 px DOWN, threshold < 7 moves it 1 px UP. The second half of
+  0x1e5c0, 0x1e5fd-0x1e624, is skipped unless [obj+0xb1] is non-null,
+  and the KATAPULT installer zeroes that field (0x1fb7d).
+  (c) WHICH SEAT CLASSES CARRY A ROW-CLOCK AT +0xa4. Read at the views
+  the installers store (the corrected convention of PR-338): 0x96c38,
+  PALMA's own class stored at [obj+8], holds 0x1e5c0 at +0xa4. 0x96d1c,
+  KATAPULT's class, holds 0x1e690 - not a row-clock but a state-type
+  dispatcher: 0x1e6a7 reads the state record's +0x4 word, 0x1e6aa/0x1e6ad
+  subtract 3 and compare 4, `ja` skips everything, and the jump table at
+  0x1e670 reads 0x1e6be, 0x1e723, 0x1e788, 0x1e7f3, 0x1e886. Each of
+  those moves the table by a FIXED offset through 0x45200 on
+  [obj+0xa5]: (dx,dy) = (+13,+5), (+13,+6), (+13,+10), (+3,+10) and
+  (-42,-42). Then, gated on [obj+0xbd] (0x1e6d3) or [obj+0xc1]
+  (0x1e808, 0x1e89b), it runs [[obj+0xbd or 0xc1]+8]+0x10 with the block
+  {0, 1, dxdy} built at [esp+0x10] - the same protocol as 0x1e5c0's
+  half, on different fields. The word [rec+0x4] is not observable in the
+  shipped data for KATAPULT, whose only state is the single A_RUN of
+  KAT.MOV. The two other seat types PR-338 named hold 0x1e5c0 at
+  +0x254 (KAMIEN's 0x96a88) and at +0x154 (KILOF_PL's 0x96b88) - other
+  slots, so their row-clock is not the +0xa4 one. The three sub-object
+  views - 0x96c14, 0x96cf8 and the table class 0xa0cc0 - hold no verb at
+  +0xa4 at all (0x96c14 and 0x96cf8 hold 0x531b0; 0xa0cc0's own extent
+  ends long before +0xa4).
+  (d) THE CENSUS OF THE AUTHORED THRESHOLDS, THROUGH THE PORT'S OWN
+  PARSER. /tmp/opencode/pr339_rowclock.c opens the shipped ANIMACJE
+  container with ported/llrs.c and parses every .MOV member with
+  ported/ll_play.c's ll_mov_parse - the same walk tools/endlevel_census.c
+  has used since PR-199 - and counts st->fr[].thresh, the value the
+  engine puts at [rec+0x10]. Over the whole install: 777 members, 2317
+  states with rows, 18823 rows. Thresholds range 1..40000; 1509 rows are
+  below 7 (the 1 px UP branch) and 17314 are at or above 7 (the DOWN
+  branch). Per state the net of one pass over its rows: 2167 states net
+  DOWN, 149 net UP, 1 exactly balanced; 2164 states move down on every
+  row and 117 up on every row. ZARIA.01 is at the down-only extreme:
+  KAT.MOV's A_RUN is 10 rows all >= 7, PALM.MOV and PALML.MOV are 14
+  rows each all >= 7, so each admitted row lowers those objects' surface
+  tables by exactly 1 px and each state change adds the fixed offsets of
+  paragraph (c). That voids PR-336 paragraph (g)'s reading, which turned
+  the ORDER of the rows into the sign and reported "7 of +1 then 3 of
+  -1" for KATAPULT and "7 and 7" for PALMA: there is no oscillation in
+  any shipped seat text, and no seat rises.
+OPENS: OI-125, named by this record: the state-change surface jumps -
+  five authored (dx,dy) offsets behind one dispatcher, gated by
+  [obj+0xbd] and [obj+0xc1], two fields no PR has read. Also: the state
+  record's +0x4 type word, which selects that dispatcher's branch, is not
+  observable in the shipped data for KATAPULT (one state, one A_RUN), so
+  which of the five offsets ZARIA.01's catapult actually takes is open.
+  And what a descending table does to an attached actor: the ask chain of
+  PR-336 answers through [obj+0x89]/[obj+0xa9] and nothing in the image
+  re-attaches a standing actor when its table moves - the 0x1b message
+  poster of OI-123 is still the gate.
+CLOSES: PR-338 OPENS item three, the row-clock question of PR-336, for
+  the seat objects: the direction and the step are measured, and for
+  ZARIA.01 they are uniform - 1 px down per admitted row.
+CORRECTS: PR-336 paragraph (g)'s sign rule (row POSITION) and the counts
+  that came from it. HANDOFF section 8 T5's F6 sentence that the seat
+  "has to move while the lion stands on it, which is what 0x45200's
+  per-tick (0,+-1) step of 0x1e5c0 is for": it is per admitted row and
+  per state change, and for the shipped seat texts it is down, always.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
+  and no mutation run. Reproducible: /tmp/opencode/pr339_rowclock.c and
+  its output /tmp/opencode/pr339_rowclock.out are the threshold census
+  (paragraph (d)), built with the same source list as the endlevel_census
+  target; the call-site count of paragraph (a) is one instruction-index
+  query, `select va,mnem,ops from insn where ops like '%+0xa4]%' and
+  mnem='call'`, and the verb bodies are dumped in
+  /tmp/opencode/pr339_1e5c0.txt and /tmp/opencode/pr339_1e690.txt.
+```
