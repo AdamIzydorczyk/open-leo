@@ -4989,6 +4989,16 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     chasm's own tiles give, which is T6. The seat chain's own motion
     is ported (PR-342) and returns to its authored place every row
     cycle, so the 28 px is not coming from it.
+    THE ARITHMETIC IS NOW MEASURED (PR-348). The clearance the seat
+    chain grants is not a lookup: the sampler 0x455a0 returns
+    `(x - A.x) * (B.y - A.y) / (B.x - A.x) + A.y - point.y` for the
+    bracketing record pair A and B - a slope, truncated toward zero by
+    `idiv`, with no guard when B.x == A.x - and the point it samples
+    is whatever the requester's class verb +0x6c hands back as a
+    POINTER to {x, y} (0x455b1, 0x455c8), which answers PR-344's
+    second open item. A ZARIA.01 crossing leg therefore has to
+    reproduce that expression and its truncation; what is still
+    unmeasured is the point +0x6c returns for the lion and for PALMA.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that

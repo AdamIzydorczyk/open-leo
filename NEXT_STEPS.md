@@ -48146,3 +48146,109 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   0x917c4` and the same region, and the port's own belt grammar is in
   ported/ll_level.c at the lines the NAMES field quotes.
 ```
+
+## PR-348 - THE GROUND HEIGHT IS A SLOPE, NOT A LOOKUP: 0x455a0 IS
+## `(x - A.x) * (B.y - A.y) / (B.x - A.x) + A.y - point.y`, A
+## CLEARANCE WITH TRUNCATING SIGNED DIVISION AND NO ZERO GUARD, AND
+## THE CLASS VERB +0x6c HANDS IT THE POINT, NOT A NUMBER
+```
+KIND: read
+SUBSYSTEM: F6's seat chain and OI-124's crossing arithmetic - the
+  segment sampler 0x455a0 that 0x45400 uses for its clearance and the
+  height probe 0x453d0 uses for its answer.
+ADDRESSES: 0x455a0, 0x455a3, 0x455a5, 0x455a7, 0x455aa, 0x455ad,
+  0x455b1, 0x455b3, 0x455b5, 0x455bc, 0x455be, 0x455c1, 0x455c3,
+  0x455c5, 0x455c8, 0x455cb, 0x455cd, 0x453d0, 0x453d6, 0x453db,
+  0x453df, 0x453e3, 0x453e6, 0x453ed, 0x453f5, 0x45400, 0x4543c,
+  0x45440, 0x45447, 0x45451, 0x45458, 0x45462, 0x45464, 0x45468,
+  0x4546d, 0x45477, 0x45481, 0x4548d, 0x4548f, 0x45491, 0x45496,
+  0x4549a, 0x454a8, 0x45380, 0x45397, 0x4539f, 0x453b3, 0x453b8,
+  0x455e2, 0x455e6, 0x455e9, 0x455ec, 0x4a0b0, 0x49920, 0x9183d,
+  0x91840, 0xd, 0x4, 0x8, 0x10, 0x6c, 0x31, 0x7fffffff
+NAMES: segment sampler, slope, clearance, height probe, bracket,
+  segment index, sample point, truncation, signed division,
+  OI-072, OI-123, OI-124, F6, pr348_455a0.txt
+CODE: no: nothing in ported/ or the Makefile moved. What moves is the
+  arithmetic a crossing leg would have to reproduce.
+HOOKS: the query 0x45320/0x45400 and its winner triple (PR-336,
+  PR-344), the height probe 0x453d0 installed at +0 of every surface
+  handle table (PR-344, PR-346), the seat tables the port parses with
+  place_seat_table (PR-335). No port behaviour moves.
+MEASURED: (a) THE SAMPLER. 0x455a0(eax = A, ebx = a POINT POINTER,
+  edx = B) takes two records A and B of a seat table - each 0xd
+  dwords, x at +0, y at +4 - and returns how far the segment A-B is
+  BELOW the sample point at that point's own x. The instructions:
+  0x455aa `mov edx,[edx+4]; sub edx,[ecx+4]` is B.y - A.y; 0x455ad
+  `mov edi,[ecx]` is A.x; 0x455b1 `mov edx,[ebx]` reads the SAMPLE
+  POINT from [ebx], so ebx is a pointer to {x, y}, not a number;
+  0x455b3 `sub edx,edi` is x - A.x; 0x455b5 `imul edx,esi` is that
+  times B.y - A.y; 0x455bc-0x455c1 take B.x - A.x - esi = [B] - edi;
+  0x455be-0x455c3 sign-extend with `sar edx,31` and divide with
+  `idiv esi`, so the quotient is TRUNCATED TOWARD ZERO with the sign
+  of the dividend; 0x455c5 `mov edx,[ecx+4]` is A.y and 0x455c8
+  `mov ecx,[ebx+4]` is the sample point's OWN y, added and subtracted
+  at 0x455cb/0x455cd. So the result is
+  `(x - A.x) * (B.y - A.y) / (B.x - A.x) + A.y - (*ebx).y`, which is
+  `ground(x) - point.y`: the clearance, in the engine's down-positive
+  y. There is no test for B.x == A.x: a vertical segment makes this
+  fault, and nothing on the path checks it.
+  (b) THE PROBE IS THE SAME CALL WITH THE OBJECT AS THE POINT.
+  0x453d0(eax = the surface handle, edx = the object) calls 0x45380
+  for the segment index, returns 0x7fffffff when the point is outside
+  the table (0x453f5), and otherwise forms the pair with 0x453df
+  `imul edx,eax,0xd` and 0x453e3 `imul eax,eax,0xd` after `dec eax`,
+  adds the record base [handle+4] at 0x453e6-0x453eb, and calls the
+  sampler with ebx = the object (0x453d4 `mov ebx,edx`) - valid
+  because the object's x and y are at [obj+0] and [obj+4] (PR-159),
+  the same shape the sampler reads. This is the method every surface
+  handle table installs at +0 (PR-344, PR-346), and 0x54632 calls it
+  on attach (PR-345).
+  (c) THE QUERY USES IT TWICE AND ITS SIGN DECIDES. 0x4543c-0x45458
+  build the same pair from the bracket index: [handle+4] + i*0xd and
+  + (i-1)*0xd; 0x45462 puts the requester's class verb +0x6c result
+  into ebx, and since the sampler dereferences ebx twice - [ebx] for
+  x and [ebx+4] for y - THAT VERB RETURNS THE POINT TO SAMPLE, which
+  is what PR-344 left open. The first call at 0x45468 then has a
+  value loaded at 0x4546d from [esp+0x18] and subtracted at 0x45477;
+  by the frames that slot is the dword the caller pushed at 0x45348,
+  the asker's own ecx as 0x541f0 left it, and what that is remains
+  open. A negative result is the rejection at 0x4547d, waived only
+  for the held surface (0x45479). The second call at 0x45491, with
+  the pair reversed at 0x4548d/0x4548f, is rejected when it is
+  positive (0x45496) or worse than the incumbent [requester+0xea]
+  (0x4549a), and the accepted value is what is stored at [+0xea]
+  (0x454a8).
+  (d) WHY THAT IS THE CROSSING LAW. A seat's table moves by the row
+  cursor of PR-342, so its x and y per record move with it; the
+  clearance the lion gets is a slope evaluated at the sample point's
+  x and compared against that point's own y, and the sign of
+  `(x - A.x) * (B.y - A.y) / (B.x - A.x) + A.y - point.y` is what
+  decides whether the ask answers. Any ZARIA.01 crossing leg has to
+  reproduce this expression, including the truncation: the division is
+  not rounded and the sign comes from the dividend, so an off-by-one
+  in the quotient changes a rejection.
+OPENS: the records' other dwords - +8 and the 0xd-stride tail, which
+  0x45622 compares as ranges ([eax+4]/[eax+8]/[eax+0x10] against
+  [ebx+0xc]) and which PR-335 parsed but did not use; whether a
+  shipped seat table can produce B.x == A.x, which would fault in the
+  sampler; what the class verb +0x6c actually RETURNS as that point -
+  the object itself, its rider, or a per-frame block - for the lion
+  and for PALMA; and the two record-line shapes 0x455e2 parses with
+  the extra 0x49920 fields at 0x9183d and 0x91840, a second grammar
+  beside 0x4a0b0's.
+CLOSES: PR-344's first open item, the type of the class verb +0x6c's
+  result - it is the sample point pointer, read as [ebx] and [ebx+4];
+  and it gives OI-124 the exact arithmetic of the clearance the seat
+  chain grants, which PR-336 measured only as a rejected number. The
+  crossing itself is still unmeasured.
+CORRECTS: PR-344's OPENS wording, which asked what +0x6c "returns,
+  since it is the x at which the segment is interpolated" - it is not
+  an x but a pointer to {x, y}. PR-344's bracket law, its gate order
+  and its winner triple stand; PR-336's measured rejection stands and
+  is now reproducible as an expression.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: 0x455a0 and 0x453d0 are
+  dumped in /tmp/opencode/pr348_455a0.txt; the expression is the
+  instruction sequence quoted at paragraph (a), and the pairing at
+  paragraph (c) is 0x4543c-0x45468 of /tmp/opencode/pr344_45400.txt.
+```

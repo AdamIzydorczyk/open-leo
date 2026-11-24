@@ -5603,6 +5603,13 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         a chasm carrier. F6's crossing goes back to T6 - the .plt
         ground of the chasm read as a slope or a scripted chain - and
         the standing path of PR-345 stays the live mechanism.
+        PR-348 measured the slope itself: 0x455a0 returns
+        `(x - A.x) * (B.y - A.y) / (B.x - A.x) + A.y - point.y` for
+        the bracketing record pair, truncating toward zero and with no
+        guard for a vertical segment, and the point it samples is the
+        {x, y} pointer the requester's class verb +0x6c returns - so
+        the crossing is an arithmetic question now, and the missing
+        input is that point, not the law.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the
