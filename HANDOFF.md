@@ -5786,9 +5786,15 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         velocity test against a box that raises the asker's Y velocity on
         a hit. PR-365 also split the families: over the 186 anchor kind
         tables, +0x58 is 0x54eb0 in 155 and the plain pair copy 0x23ba0
-        in 31, and in those 31 the +0xb0 slot is an object getter or an
-        asked-marker, never a provider - so the port's L15/L17 model is
-        the 155 family only.
+        in 31, and in those 31 the +0xb0 slot is an ID getter (26 of
+        31, PR-367) or one of five markers/object getters, never a
+        point provider - so the port's L15/L17 model is the 155 family
+        only. PR-367 also gives the port the engine's kind test: the
+        class verb +0xc is an identity getter in all 186 anchor tables,
+        its answer is one of 134 ids seeded at startup by the counter
+        0x44350, and callers compare the answer against the same
+        global (14 of 62 sites; the lion's id ds:0xcee70 is shared by
+        four tables), so a kind check is a family check.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

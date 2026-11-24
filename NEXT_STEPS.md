@@ -50983,3 +50983,157 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code or comment was
   three instructions. Elaborate implementation, minimal use. And the
   position handed across the link is the owner's own pair through +0x90,
   not a computed target: the "placement path" turns out to be "follow me".
+
+## PR-367 - THE CLASS VERB +0xc IS THE KIND TEST: ALL 186 ANCHOR TABLES
+## ANSWER IT WITH A TWO-INSTRUCTION GETTER OF A STARTUP-SEEDED ID, AND
+## THE 31-FAMILY'S +0xb0 GETTERS NAME ANOTHER CLASS'S ID
+```
+KIND: read
+SUBSYSTEM: class identity - the verb +0xc of every kind table, the id
+  constants written into ds:0xceba4..0xcf4e8 at startup, the counter
+  0x44350 that hands them out, and what the 31-family's +0xb0 slot
+  really returns (the two-family law of PR-364/PR-365/PR-366).
+ADDRESSES: 0x44350, 0x44351, 0x44356, 0x44359, 0x4435f, 0x44360,
+  0x4fb60, 0x4fb70, 0x4fb91, 0x4fb97, 0x4fb00, 0x2b9b0, 0x2dd00,
+  0x1e540, 0x22df0, 0x23a10, 0x52a90, 0x544f0, 0x54eb0, 0x23ba0,
+  0x53df0, 0x55070, 0x24743, 0x24748, 0x2474b, 0x24751, 0x1eaf9,
+  0x3409c, 0x3409f, 0x52aa5, 0x3d100, 0x3d119, 0x3d1c8, 0x1dfca,
+  0x96874, 0x96960, 0x96a88, 0x96c38, 0x96d1c, 0x97cdc, 0x9a07c,
+  0x9a134, 0x9ab18, 0x9abd4, 0x9ad48, 0x9b9a8, 0x9c5b4, 0x9da40,
+  0x9daf8, 0x9dc9c, 0x9e740, 0xa17dc, 0xa17d4, 0xa1748, 0xa1750,
+  0xa17e8, 0xa2178, 0xa90ac, 0x98278, 0xcf0e4, 0xceba0,
+  0xcee68, 0xcee70, 0xcee74, 0xcebb0, 0xcebc0, 0xceec8, 0xcecf0,
+  0xcecf8, 0xcf050, 0xcf054, 0xa5, 0xb0, 0xc, 0xc4, 0xd8, 0xe4,
+  0xec, 0xf8, 0x54, 0x58, 0x6c, 0x8, 0x39, 0x394, 0xbf
+NAMES: kind test, identity getter, id constant, counter, seed, startup
+  run, anchor table, family id, companion id, provider, kind id, lion,
+  KAMIEN, KKULA, KPAJECZ, DRABINKA, BAL, LION base, request block,
+  pure getter, id chain, pr367_singletons.py, pr367_read.txt,
+  pr367_id_source.py, pr367_ids.txt, pr367_anchor_ids.py,
+  pr367_anchor.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 rows that called the +0xb0 handler an object
+  provider, the HANDOFF section 8 F6 paragraph, and the L15 comment in
+  ported/ll_level.c that repeated PR-365's "28 hand back a companion
+  object".
+HOOKS: PR-340 already read 0x44350 as a counter and knew the globals
+  are ids, but only for the KATAPULT fields [obj+0xbd]/[obj+0xc1].
+  PR-237 gave the anchor law (+0x6c = 0x23a10) and the request-block
+  signature whose third word is 0x98278. PR-365 called 0x44350 an
+  allocator and ds:0xcee68 "the singleton with vftable 0xa2178",
+  installed by "initialiser 0x4fb70". PR-106 established 0x96874 as
+  the LION's class base and PR-214/PR-337 the lion-contact tables
+  0x9a134, 0x9ad48, 0x9e740. PR-338 names 0x96a88 KAMIEN, 0x9da40
+  KPAJECZ, 0x9daf8 KKULA; PR-357/PR-303 name 0x97cdc DRABINKA and
+  0xa17dc BAL. HANDOFF's factory-template note (the "30" for ARMED)
+  is open precisely because those ids were never mapped.
+OPENS: what an id means in the data - 107 distinct ids serve 186 kind
+  tables, and one id (ds:0xceec8) serves 30 of them, so the id is not
+  the .des type name; what the shared groups are (0xceec8 x30,
+  0xcf054 x14, 0xcf050 x12, 0xcee78 x11, 0xcee64 x7); whether the
+  +0xc/+0xb0 pair is "my family id, the class I attach to" - 23 of
+  the 31 name different ids and 3 name the same, and the reading is
+  this pass's guess, not a measurement; the two ids named by class
+  tables but seeded nowhere (ds:0xceba0 has one reader and no writer,
+  ds:0xcf0e4 is read at 13 sites, one of them 0x52aa5 inside the
+  universal +0x28 verb); the 13 seeded ids no anchor table names; what the
+  62 - 14 remaining `call [reg+0xc]` sites do with the answer; and
+  whether the record-class tables of PR-366 (0x9dbfc and friends,
+  outside the anchor law) carry a +0xc getter at all - not measured.
+CLOSES: PR-365's open item "what the six singletons ds:0xcee60..0xcee74
+  that the BAL's helper belongs to are" - they are ids, part of a
+  134-global chain seeded by one counter function in 16 runs. It also
+  closes the PR-364/PR-365 question of what the 31-family +0xb0
+  handlers return: in 26 of 31 cases it is a two-instruction getter of
+  some class's id, so for those classes +0xb0 has nothing to do with
+  sample points, and the port must not read it as a point provider.
+CORRECTS: PR-365 on three counts. (1) 0x44350 is not an allocator - it
+  is the id counter PR-340 named, and its counter word ds:0xa90ac is
+  statically 1 in the image. (2) ds:0xcee68 is not an object: the only
+  writer is 0x3d119 in the seed chain and the only reader is its
+  getter 0x4fb60; the vftable 0xa2178 belongs to a different thing -
+  0x4fb70 is a block constructor that fills a caller-supplied buffer
+  with {0xa2178, 0, 0, 0x98278, 0}, PR-237's request-block signature,
+  so 0x45500's owner is a request block, not a singleton. (3) "the 27
+  of 31 whose +0xb0 is `mov eax, ds:0xceXX; ret`" is 26 read
+  byte-exactly, and "exactly one kind table installs 0x4fb60" is right
+  only after de-duplicating: it is 4 slot entries on 1 dword, 0xa17e8,
+  because the base set holds the same table under four views.
+MEASURED: (a) THE COUNTER (pr367_id_source.py section 1, dis from
+  0x44350): `push edx; mov eax,ds:0xa90ac; lea edx,[eax+1]; mov
+  ds:0xa90ac,edx; pop edx; ret` - it returns the counter and
+  increments it. ds:0xa90ac holds 1 in the image file, and the only
+  index row naming it anywhere is the store at 0x44359; the read at
+  0x44351 is in the bytes and in the disassembly but has no insn row,
+  an index gap worth knowing. (b) THE SEEDING (section 2): exactly 134
+  `call 0x44350` sites in the image and exactly 134 globals written by
+  `mov ds:0xGLOB,eax` in the instruction right after, one per call, in
+  16 runs - 0x1dfca x20, 0x23f20 x11, 0x26440 x4, 0x26f50 x12,
+  0x2b510 x1, 0x2dd40 x10, 0x31f30 x7, 0x33bd0 x13, 0x39d30 x6,
+  0x3ac80 x10, 0x3d100 x21, 0x40be0 x8, 0x44340 x1, 0x4fcc3 x1,
+  0x5152d x6, 0x611e0 x3 - covering ds:0xceba4..0xcf4e8. The run
+  PR-365 called "six singletons at 0x3d100-0x3d13c" is 21 globals
+  (ds:0xcee60..0xceeb0). (c) THE LAW AT +0xc (pr367_anchor_ids.py
+  section 2, byte-level on the 186 anchor tables): 186 of 186 have
+  `mov eax, ds:0xID; ret` at +0xc; 107 distinct ids serve them, shared
+  by 30/14/12/11/7/4 tables at the top. Other slots that hold the same
+  shape: +0xd8 34, +0xe4 34, +0xec 32, +0xb0 26, +0xf8 24, +0xc4 23,
+  +0xdc 13, +0xf0 14, +0xe8 10, +0xd0 8 (all of them on the same
+  186-table census). (d) THE KIND TEST (sections 7-8): 62 sites do
+  `call [reg+0xc]`; 14 of them are followed immediately by
+  `cmp eax, ds:0xID`. The shape at 0x24743-0x24751 is `mov eax,edx;
+  mov edx,[edx+8]; call [edx+0xc]; cmp eax,ds:0xcee70; jne` - and
+  ds:0xcee70 is the LION's id: its +0xc owners are 0x96874 (PR-106's
+  lion base), 0x9a134, 0x9ad48 and 0x9e740 (PR-214/PR-337's lion
+  contact tables). The others name PR-338's classes: 0x1eaf9 asks
+  against ds:0xcebb0, owned at +0xc by 0x96a88 KAMIEN; 0x3409c asks
+  against ds:0xcecf8, owned by 0x9daf8 KKULA; 0x33e84 asks against
+  ds:0xcee64, owned by 9 tables starting at 0x9c5b4. So the engine
+  tests an object's kind by asking it, not by comparing its table
+  pointer. (e) THE 31-FAMILY +0xb0, byte-exact (pr367_singletons.py
+  section 4): 26 id getters naming 20 distinct ids; the five others
+  are 0x1e540 and 0x22df0 (PR-340's asked-markers), 0x2b9b0
+  (`mov eax,ds:0xcef40; mov eax,[eax+0x394]; ret` - PR-340's
+  singleton object), 0x2dd00 (`mov eax,[eax+0xbf]; ret` - an object
+  field) and 0x4fb00 (the state test). In 23 of the 31 the +0xb0 id
+  differs from that table's own +0xc id, and both ids are owned at
+  +0xc by tables: DRABINKA 0x97cdc is id ds:0xceeac with +0xb0 naming
+  ds:0xcee8c; KPAJECZ 0x9da40 is ds:0xcecf4 with +0xb0 naming
+  ds:0xcecf8, which KKULA 0x9daf8 owns at +0xc; BAL 0xa17dc is
+  ds:0xcee68 with +0xb0 naming ds:0xcee74. Over the 155-family tables
+  the same census finds 0 id getters at +0xb0 - all of them are the
+  method 0x544f0 of PR-364. (f) THE CENSUS TRAP that forced the
+  re-measure (pr367_singletons.py sections 1-3): the "table bases"
+  gathered from constructor immediates number 590, but 558 of them lie
+  within 0x110 of another, because constructors store shifted views of
+  one table (PR-99's two-view ctor). Counting per base gives 1389
+  getter slots; counting distinct dwords gives 439. All of (c), (d)
+  and (e) were therefore measured on PR-237's 186 anchor tables only,
+  where +0x6c = 0x23a10 fixes the base. (g) 0x4fb70 read from its own
+  address: `add eax,4; mov [eax],0; sub eax,4; mov [eax+8],0; mov
+  [eax+0xc],0x98278; mov [eax+0x10],0; mov [eax],0xa2178; ret`, and
+  0xa2178's slot +0x18 is 0x45500 - the method PR-365 read.
+GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff
+  includes the comment fix in ported/ll_level.c, so what was run
+  anyway: make rc=0 with 0 warnings and make verify-level rc=0 - 10
+  (ok) lines, the legs unchanged; the index was regenerated with this
+  record in the tree before the runs.
+```
+
+- WHY. The F6 thread keeps meeting objects whose kind has to be known:
+  the +0xb0 provider of the 155 family, the 31 family's "object getter",
+  PR-366's named companion. This pass gives the port the mechanism the
+  engine actually uses: an object is asked (verb +0xc) and answers with
+  an id, and the caller compares it with a global. The id is shared by
+  related classes, so a kind test in the engine is a family test - the
+  lion check at 0x24748 accepts four class tables at once. A port that
+  compares `[obj+8]` pointers would be stricter than the original and
+  would silently break anything that rides, is ridden, or carries.
+
+- WHAT SURPRISED ME. The identity getter is not one instruction per
+  class: 107 ids for 186 classes, with 30 classes sharing one - so the
+  "kind" the engine tests is coarser than the class table, and the
+  table set is not the type system. And the same slot +0xb0 is a
+  sample-point method in one family and an id getter in the other,
+  which is why PR-364's careful reading of 0x544f0 could not be
+  generalised - the offset means nothing without the family.

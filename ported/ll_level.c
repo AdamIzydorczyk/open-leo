@@ -10439,9 +10439,14 @@ static int seat_motion_selftest(void)
  * of the 186 kind tables, 155 are the family above (+0x54 = 0x55070,
  * +0x58 = 0x54eb0) and 31 are the other one - those install 0x53df0
  * and the plain pair copy 0x23ba0, and their +0xb0 is no provider at
- * all: 28 hand back a companion object, two mark the object asked
- * ([obj+0x66] bit 0x40), one tests [obj+0x5c]. The legs below model
- * the 155 family only. */
+ * all: 26 of the 31 hand back a kind ID, the same two-instruction
+ * getter `mov eax, ds:0xID; ret` that +0xc uses engine-wide (PR-367:
+ * all 186 anchor tables answer +0xc that way, and the ids come from
+ * the counter 0x44350), and in those 31 tables it names ANOTHER
+ * class; 0x2b9b0 hands back the singleton object, 0x2dd00 reads
+ * [obj+0xbf], two mark the object asked ([obj+0x66] bit 0x40) and
+ * 0x4fb00 tests [obj+0x5c]. The legs below model the 155 family
+ * only. */
 static int seat_bracket(const short *sx, int n, int x)
 {
     int i;

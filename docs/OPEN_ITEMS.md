@@ -5647,13 +5647,10 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     0x22df0 doing the same to [obj+0xbd], so it is a marker shape, not
     a one-off), who calls the +0x58 placement path at 0x3ede2's
     function, and what the six singletons ds:0xcee60..0xcee74 that the
-    BAL's helper belongs to are. CLOSED by PR-365: what the 31 private
-    +0xb0 handlers each answer - 27 are `mov eax, ds:0xceXX; ret`, one
-    more is the same through [0xcef40+0x394], and the rest are the
-    asked-marker pair 0x1e540/0x22df0 and the state test 0x4fb00; and
-    whether those tables install a different +0x58 - all 31 install
-    0x23ba0, the plain pair copy without the anchor delta. CLOSED by
-    PR-366: the +0x58 caller. Its one call site sits in 0x3ed70-0x3ee27,
+    BAL's helper belongs to are. CLOSED by PR-365: whether those
+    tables install a different +0x58 - all 31 install 0x23ba0, the
+    plain pair copy without the anchor delta. CLOSED by PR-366: the
+    +0x58 caller. Its one call site sits in 0x3ed70-0x3ee27,
     the latched +0x14 handler of five record-class tables (two named by
     PR-338: KTRASA 0x9dbfc, TUNTRAS 0x9f7b4); the companion it moves was
     resolved BY NAME at the class's +0x18 (0x3ed40 matches the string
@@ -5663,3 +5660,33 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     pair copy - so the anchor delta is not what carries the rider. What
     is left of that item: which of the 33 `call [reg+0x14]` sites runs
     the handler, and what the three unnamed tables are.
+    CLOSED by PR-367, the rest of the +0xb0 question and the
+    "singletons": those 31 handlers are 26 getters of the form `mov
+    eax, ds:0xID; ret` (PR-365 said 27; 26 is what the bytes give),
+    and what they hand out is an ID, not an object. EVERY one of the
+    186 anchor kind tables answers the class verb +0xc with exactly
+    that getter; the ids come from 16 startup runs of `call 0x44350`
+    (a post-increment counter over ds:0xa90ac, statically 1 in the
+    image) writing 134 globals across ds:0xceba4..0xcf4e8, one per
+    call site; and the engine tests an object's kind by ASKING +0xc
+    and comparing that global - 14 of the 62 `call [reg+0xc]` sites
+    do exactly that, and the test at 0x24743-0x24751 against
+    ds:0xcee70 accepts the lion's four tables (0x96874 plus PR-214's
+    0x9a134, 0x9ad48, 0x9e740). 107 ids serve 186 classes, 30 of
+    them sharing ds:0xceec8, so an id is a family tag and not a type
+    name. In those 31 tables the +0xb0 id is NOT the table's own:
+    DRABINKA 0x97cdc is ds:0xceeac and names ds:0xcee8c, KPAJECZ
+    0x9da40 is ds:0xcecf4 and names KKULA's ds:0xcecf8 (PR-338's
+    names), BAL 0xa17dc is ds:0xcee68 and names ds:0xcee74 - so
+    +0xb0 in that family is a companion reference, and the remaining
+    five handlers are the asked-markers 0x1e540/0x22df0, the object
+    getters 0x2b9b0 and 0x2dd00 and the state test 0x4fb00. PR-365's
+    "singleton ds:0xcee68 with vftable 0xa2178" was two things
+    merged: ds:0xcee68 is one of those ids (written only at 0x3d119,
+    read only by 0x4fb60), and 0xa2178 belongs to a REQUEST BLOCK -
+    0x4fb70 fills {0xa2178, 0, 0, 0x98278, 0} into a caller-supplied
+    buffer, which is PR-237's ask signature. What stays open here:
+    what the shared id groups mean in the data, whether the
+    +0xc/+0xb0 pair is really "my family, the class I attach to", and
+    why ds:0xceba0 and ds:0xcf0e4 are named by class tables but
+    seeded by no run.
