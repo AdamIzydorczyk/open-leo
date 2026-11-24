@@ -5527,7 +5527,8 @@ OI-128: what landing and leaving a surface does - the class verbs
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -
   which of those three statements is wrong
-  status: OPEN
+  status: PARTIAL (PR-390 answers the ordinary landing; the named
+    ground_on script remains unexercised)
   origin: PR-360 (the .SEQ element anchor census)
   notes: PR-357 read the land/leave pair (0x42980/0x429d0) as one
     inverse transform over the object's live position; PR-359 modelled it
@@ -5919,12 +5920,27 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     pointer inside a larger block, whether the lion's own standing query ever
     consults such a per-object array (0x96874 carries neither the list
     pass nor a container sub-table), what the [x+0x10] queue drives, what
-    0x57500's per-plane scale tables are authored by (it computes
-    [d+0x10] * [[d+0x20]+4*plane] / [[d+0x1c]*4+plane] for a descriptor at
-    [[0xcef40]+0x390], PR-389), and what 0x42de0's frame-list walk decides,
+    0x57500's per-plane scale tables are authored by (PR-390 corrects
+    PR-389's formula: it is [d+0x10] * T[plane] / T[[d+0x1c]], where
+    T=[d+0x20]; 0x57532 is [d+0x14] * U[plane] / U[[d+0x1c]] +
+    W[plane], where U=[d+0x24] and W=[d+0x28]. [d+0x1c] is a
+    reference-plane index, not a table), and what 0x42de0's frame-list
+    walk decides,
     which classes the 37 owners are by name - only KTRASA and TUNTRAS
     are - 16 of the 23 +0xb0
     companion ids, the six
     seeded ids no table names (ds:0xcee6c, 0xcee80, 0xceed4, 0xcf05c,
     0xcf4e0, 0xcf4e4) and the two ids named but never seeded
     (ds:0xceba0, 0xcf0e4).
+    PR-390 MEASURED AN ORDINARY LANDING. The player object named by
+    the live TLewZaria table 0x96960 changed `[obj+0xa9]` from the
+    surface provider's element 0 to 0 when leaving the floor and back
+    to that element when landing. Its `[obj+0xB6]` byte stayed 0xc0,
+    and its live position showed no separate `(0,-31)` step in that
+    transition; the measured `[obj+0x89]/[obj+0xd6]` sample pair was
+    31 px while grounded, 32 px during the fall, and 27 px after the
+    landing pose was selected. The question's ordinary-landing half is
+    answered: `ground_on` is not the normal platform-landing path.
+    Still open: whether authored script state ever invokes the
+    0x54f40 runner, and what provider-record geometry makes the
+    ask choose a particular element.

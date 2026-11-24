@@ -114,8 +114,13 @@ cp -f "$MSDOS622" "$GOLDEN/boot_floppy.img"
 mdel -i "$GOLDEN/boot_floppy.img" ::AUTOEXEC.BAT 2>/dev/null || true
 # DOS 6.22 defaults FILES=8 when CONFIG.SYS exists; the game opens more
 # handles and then reports "Could not open resource file: C:\leo\sound".
+# STACKS=64,512 (the DOS maximum): without it a session that is read through
+# the QEMU monitor dies with DOS's own "Internal stack overflow / System
+# halted" (measured 2026-11-24). Every monitor command pauses the vCPU for a
+# moment, the timer interrupts that were due then arrive back to back and
+# nest, and the default pool of interrupt stacks runs out.
 mcopy -i "$GOLDEN/boot_floppy.img" ::CONFIG.SYS "$GOLDEN/cfg_orig.sys" >/dev/null
-{ cat "$GOLDEN/cfg_orig.sys"; printf 'FILES=40\r\nBUFFERS=40\r\n'; \
+{ cat "$GOLDEN/cfg_orig.sys"; printf 'FILES=40\r\nBUFFERS=40\r\nSTACKS=64,512\r\n'; \
   if [ "${CD:-0}" = 1 ]; then printf 'DEVICE=A:\\OAKCDROM.SYS /D:MSCD000\r\n'; fi; } \
     > "$GOLDEN/newcfg.sys"
 mdel -i "$GOLDEN/boot_floppy.img" ::CONFIG.SYS

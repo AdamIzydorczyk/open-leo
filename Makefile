@@ -3506,6 +3506,69 @@ golden_rig_ddir:
 	    --ddisk $(GOLDEN)/leo_d.qcow2 --frame-interval 0.3 \
 	    --sendkey-at "30=esc" --want-art --timeout 120
 
+TRACE ?= 90         # golden_level_trace.py: seconds of in-level sampling
+LTRACE_ARGS ?=      # extra args for it, e.g. --smoke (mapping check only)
+TRACE_MAX ?= 1800   # golden_play: how long the hand-driven session may run
+SAMPLE_HZ ?= 4      # golden_play / trace: RAM samples per second
+GOLDEN_ACCEL ?= tcg
+GOLDEN_ICOUNT_SHIFT ?= 8
+GOLDEN_KEYS ?= $(GOLDEN)/keys_play.in
+GOLDEN_VIEW ?= $(GOLDEN)/live_frame.ppm
+GOLDEN_VIEW_INTERVAL ?= 0.25
+
+#   OI-129: the in-level RAM trace (tools/golden_level_trace.py) - reads the
+#   ORIGINAL's live objects inside a playable level instead of its screen.
+#   The .LE image is loaded block by block, so the tool first measures the
+#   runtime base from two marker strings and only then uses the image
+#   ledger's class and field offsets. TCG at icount shift 8 is the measured
+#   playable rate: KVM was unstable here and shift 7 was too fast.
+#   `make golden_level_trace LTRACE_ARGS=--smoke` checks the mapping only;
+#   the default drives the chapter map menu and traces for TRACE seconds.
+golden_level_trace:
+	@ISO=$(ISO) MSDOS622=$(MSDOS622) GOLDEN=$(GOLDEN) DDIR=1 \
+	    bash tools/golden_build_rig.sh
+	@python3 tools/golden_level_trace.py --workdir $(GOLDEN) \
+	    --ddisk $(GOLDEN)/leo_d.qcow2 --display none --accel $(GOLDEN_ACCEL) \
+	    --icount-shift $(GOLDEN_ICOUNT_SHIFT) --census-every -1 \
+	    --trace-seconds $(TRACE) --sample-hz $(SAMPLE_HZ) $(LTRACE_ARGS)
+
+#   make golden_play starts the rig, the RAM recorder, and the monitor-frame
+#   viewer together. QEMU's own GTK window goes black in the game's VESA
+#   mode, so the viewer is the display and key bridge; q quits it. This is
+#   the only form that lets a person walk, jump, and land on purpose while
+#   the recorder samples RAM. --trace-all-level-objects is deliberately used
+#   for discovery because the visible level's lion class is not always the
+#   image's base LION table; --trace-object can then be used for a focused,
+#   high-rate second pass on a measured object.
+golden_play:
+	@ISO=$(ISO) MSDOS622=$(MSDOS622) GOLDEN=$(GOLDEN) DDIR=1 \
+	    bash tools/golden_build_rig.sh
+	@rm -f $(GOLDEN_KEYS); : > $(GOLDEN_KEYS)
+	@(python3 tools/golden_level_trace.py --workdir $(GOLDEN) \
+	  --ddisk $(GOLDEN)/leo_d.qcow2 --display none --accel $(GOLDEN_ACCEL) \
+	  --icount-shift $(GOLDEN_ICOUNT_SHIFT) --no-esc --manual-menu \
+	  --trace-all-level-objects --census-every -1 --live-frames $(GOLDEN_VIEW) \
+	  --keys-from $(GOLDEN_KEYS) --max-seconds $(TRACE_MAX) \
+	  --trace-seconds $(TRACE_MAX) --sample-hz $(SAMPLE_HZ) \
+	  $(LTRACE_ARGS) & tracer=$$!; \
+	 trap 'kill $$tracer 2>/dev/null' EXIT INT TERM; sleep 5; \
+	 python3 tools/golden_live_view.py --workdir $(GOLDEN) --keys \
+	   --keys-from $(GOLDEN_KEYS) --interval $(GOLDEN_VIEW_INTERVAL); true)
+
+#   Attaching to a rig that is already running (started by another terminal):
+#   same controls, but no new QEMU guest. Closing the viewer stops the new
+#   recorder, not the emulator.
+golden_trace_attach:
+	@rm -f $(GOLDEN_KEYS); : > $(GOLDEN_KEYS)
+	@(python3 tools/golden_level_trace.py --workdir $(GOLDEN) \
+	  --attach --display none --trace-all-level-objects --census-every -1 \
+	  --live-frames $(GOLDEN_VIEW) --keys-from $(GOLDEN_KEYS) \
+	  --max-seconds $(TRACE_MAX) --trace-seconds $(TRACE_MAX) \
+	  --sample-hz $(SAMPLE_HZ) $(LTRACE_ARGS) & tracer=$$!; \
+	 trap 'kill $$tracer 2>/dev/null' EXIT INT TERM; sleep 5; \
+	 python3 tools/golden_live_view.py --workdir $(GOLDEN) --keys \
+	   --keys-from $(GOLDEN_KEYS) --interval $(GOLDEN_VIEW_INTERVAL); true)
+
 verify-golden: py-refs ll_cutscene
 ifeq ($(PX_DATA),1)
 	@mkdir -p $(GOLDEN)/port_frames; rm -f $(GOLDEN)/port_frames/map_*.ppm

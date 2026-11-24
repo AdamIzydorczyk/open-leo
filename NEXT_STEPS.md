@@ -54101,3 +54101,90 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   plain and the rescaled path, with the 0x98274 request block as the only
   difference - the engine treats "a box" and "a box on a named plane" as
   the same object with one extra word.
+
+## PR-390 - A LIVE LANDING NAMES THE HELD SURFACE AT [obj+0xa9],
+## NOT B6 BIT 0x01 OR A 31-PX MOVEMENT OF THE LIVE POSITION
+
+```
+KIND: read
+SUBSYSTEM: original-side in-level surface contact
+ADDRESSES: 0x95c20, 0x95c40, 0x96960, 0xa0cc0, 0xa0cb4, 0x42980,
+  0x429d0, 0x45320, 0x541f0, 0x544f0, 0x54f40, 0x54f90, 0x55070,
+  0x57500, 0x57532
+NAMES: [obj+0x00], [obj+0x04], [obj+0xa9], [obj+0x89], [obj+0xd6],
+  [obj+0xB6], TLewZaria, held surface, surface provider, ground_on,
+  golden_level_trace.py, golden_live_view.py, pr390_scale.py
+CODE: yes: tools/golden_level_trace.py reads live object fields
+  through non-stopping QMP reads, tracks the held-surface handle,
+  and can follow an explicitly measured object; golden_live_view.py
+  bridges the monitor frame and keyboard; the disk-D rig supplies
+  STACKS=64,512 to keep DOS responsive. Nothing in ported/ changes.
+HOOKS: none
+OPENS: OI-129's scripted half: whether any shipped level actually
+  reaches the 0x54f40 runner, and which geometry selects a provider
+  element during an ordinary landing.
+CLOSES: OI-129's ordinary-landing half: the measured landing uses
+  the held-surface handle, not the standing-bit runner or a live
+  31 px translation of the player position.
+CORRECTS: PR-389: 0x57500 and 0x57532 do not use [d+0x1c] as the
+  base of the divisor table. Their numerator and denominator share
+  that table; [d+0x1c] indexes the reference plane.
+GATE: make 0 warnings; verify-all fixtures rc=0 69 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs
+MEASURED: (a) THE LIVE RIG. The disk-D original runs under TCG
+  with `icount shift=8,align=on -rtc clock=vm`, about 3.9 MIPS.
+  QEMU's GTK window goes black in the game's VESA mode, so the
+  recorder writes live PPM frames and tools/golden_live_view.py
+  displays them and queues keys for the recorder to forward.
+  Both runtime marker strings at image VAs 0x95c20 and 0x95c40
+  measured the image base at guest 0x16c000. The player object
+  at heap 0x524400 carried runtime class table 0x202960; minus
+  that base is authored TLewZaria table 0x96960.
+  (b) AN ORDINARY JUMP, SAMPLED AT 20 Hz. While the lion was at
+  (88,681), `[obj+0xa9]` held 0x51f144: element 0 of the world's
+  surface-provider array. At t=39.510 it changed to 0 as the
+  position moved to (87,636). It remained 0 through the arc and
+  changed back to 0x51f144 at t=42.940 as the position reached
+  (87,681). `[obj+0xB6]` was 0xc0 in every sample before and
+  after those transitions. An earlier 4 Hz capture gave the same
+  handle pattern. This is the ask's held-surface field (PR-345,
+  PR-346), not the `ground_on` flag runner of PR-354.
+  (c) NO SEPARATE (0,-31) MOVEMENT. While grounded,
+  `[obj+0x89]/[obj+0xd6]` were (88,681)/(88,650), a 31 px sample
+  offset. During the fall they were (position+32)/position; after
+  landing they became position/(position-27). The live position
+  went from 646 to 681 in the same monitor interval in which the
+  surface handle was restored. Its preceding y deltas were those
+  of the falling arc; no extra, discrete 31 px displacement of
+  [obj+0x00]/[obj+0x04] is present.
+  (d) WHAT THE HANDLE NAMES. The live provider array contained
+  45 stride-12 entries. Each is {the class table at image VA
+  0xa0cc0, a pointer to that entry's record, a kind value}. The
+  handle is the address of the triple, not its payload. For
+  element 0, the record's first dword pair was -50,680 and its
+  class pointer resolves to image VA 0xa0cb4; the player's foot
+  position is y=681.
+  (e) PR-389'S PLANE DESCRIPTOR ARITHMETIC (pr390_scale.py).
+  0x57500 computes `[d+0x10] * T[plane] / T[[d+0x1c]]`, where
+  `T=[d+0x20]`. 0x57532 computes the same-shape transform with
+  `[d+0x14]` and `U=[d+0x24]`, then adds `W[plane]`, where
+  `W=[d+0x28]`. A single multiply by the plane entry is followed
+  by a divisor from the SAME table at [d+0x1c]; that field is a
+  reference-plane index. The transform is a ratio to that
+  reference plane plus a per-plane offset.
+```
+
+- WHY. OI-129 asked whether the port's unmodelled `ground_on`
+  pair mattered on an ordinary landing. It does not: the measured
+  game changes the held-surface answer and keeps the separate
+  standing bit clear. The authored vector is present as the live
+  pair used by the aim chain, exactly as PR-364's static reading
+  said; it is not applied to the player's position in this path.
+  The contradiction between the fixture suite and the shipped
+  `.SEQ` values is removed without inventing a position snap.
+
+- WHAT SURPRISED ME. That the visible landing was represented by
+  an address-valued provider handle rather than the boolean the
+  first tracer was built to watch. The object's aim anchors were
+  continuously changing with the animation frame, while the flag
+  that names PR-354's scripted state stayed untouched.
