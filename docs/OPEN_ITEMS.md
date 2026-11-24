@@ -5805,26 +5805,37 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     runs on the SAME cursor as the point list, right after it. So still
     open: which signal bit that
     is (the ledger's numbering stops at 54), which class reads which
-    property key - PR-379 answered that one: none, per class. No
-    property reader is installed in any kind table and no call reaches
-    one (the only exception is the `F`-chain caller 0x378c0, installed
-    at 0x9e970 +0x128); the readers are shared segments of the factory,
-    which decides the class
-    by exactly one token compare per authored name (DRABINKA 0x1f8ac,
-    RYBA 0x1f963, KAMIEN 0x1fad4, WODA 0x1fc5d, TREE 0x1fdcd,
-    TLewZariaB 0x1ff26, KPAJECZ 0x35049, KKULA 0x35083, KTRASA 0x350bd,
-    TUNTRAS 0x3a254, ANITAB 0x4df15, BAL 0x4e6aa) and then runs the
-    property segments over the same cursor. Still open there: how a
-    factory branch reaches those segments, and which classes the 11
+    property key - PR-379 said "none, per class", and PR-380 corrected
+    that: the 19 scan positions it found are not table values because
+    they are not function entries, but the 11 functions containing them
+    ARE installed as class verbs, at slots that differ per class
+    (0x41180 hit_time/coef/levels/Fcontrol in 83 slots of 53 tables,
+    usually +0xd0; 0x40eb0 damage and the `, %d` pairs 73 of 45, +0x18;
+    0x3e060 50 of 38, +0xa8; the `F`-chain 0x3dd60 47 of 34, +0x18;
+    0x6fb10 group/new_bounds in none). The class is chosen by a chain of
+    360 token compares of which 165 build an object - pr380m_pairs.tsv
+    maps 185 token/table pairs onto 157 of the 219 class tables, and
+    33 of the 37 point-list owners are named by a token. That settles
+    the askable-token question: SEVEN of the 15 are named, and they are
+    exactly the 'TLew' group tokens - TLewZaria 0x96960, TLewZariaB
+    0x97a98, TLewEna2 0x98f34, TLewKadmar2 0x9b4d4, TLewKara 0x9e134,
+    TLewJunction 0x9f540, TLewTunga1 0x9f668 - and eight (0x97970,
+    0x988ec, 0x9a54c, 0x9c958, 0x9d338, 0x9f170, 0xa0624, 0xa2218) are
+    named by nothing. Still open there: which classes the 11
     `F`-chain call sites (0x1f583, 0x2783c, 0x34477, 0x378c3, 0x3b506,
-    0x3e776 and 5 more) belong to; what 0x3e060's [obj+0x116] flag from
-    a signal byte is, and
-    the six scanner sites whose format is not pushed in front of the
-    call; what 0x1f330/0x1f590 test
-    and what [obj+0x5c] == 6/9 selects, the tokens of the other 14
-    askable classes (their ctors are at 0x1ff15, 0x1e0a6, 0x22ee5,
-    0x2413d, 0x269c2, 0x2703e, 0x2bfd6, 0x2dfa0, 0x3204d, 0x33dcd,
-    0x3624d, 0x3a489, 0x3a455, 0x3b1d2, 0x5011b), and why 0x3dd60 has
+    0x3e776 and 5 more) belong to, and the 62 class tables no token
+    names; note the load verb at table +0x78 is 0x3df00 for 23 classes
+    (it asks the class through +0xd8, PR-377's accept-companion verb,
+    then clears [obj+0xee] with 0x45320), 0x50f80 for exactly the 15
+    askable ones and 0x3f010 for the road classes (clears [obj+0x44]);
+    what 0x3e060's [obj+0x116] flag from
+    a signal byte is, and what 0x1f330/0x1f590 test
+    and what [obj+0x5c] == 6/9 selects, the six scanner sites whose
+    format is not pushed in front of the call, the eight askable classes
+    with no authored token (their ctor stores are at 0x1ff15, 0x1e0a6,
+    0x22ee5, 0x2413d, 0x269c2, 0x2703e, 0x2bfd6, 0x2dfa0, 0x3204d,
+    0x33dcd, 0x3624d, 0x3a489, 0x3a455, 0x3b1d2, 0x5011b), and why
+    0x3dd60 has
     only 11
     sites for 29 [obj+0xee] owners when 0x3efe0 parses the same text at
     [obj+0x44] and 0x288d5 is unread. Settled at the same time:

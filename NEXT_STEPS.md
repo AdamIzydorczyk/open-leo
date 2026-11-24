@@ -52887,3 +52887,137 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
 - WHAT SURPRISED ME. That the class of an authored object is decided by
   exactly one string compare per class, twelve of which this pass located
   for the first time, sitting in the same code as the property readers.
+
+## PR-380 - THE CLASS-NAME FACTORY: 165 AUTHORED TOKENS NAME 157 OF THE
+## 219 CLASS TABLES AND 33 OF THE 37 POINT-LIST OWNERS; READING A PROPERTY
+## IS A CLASS VERB PRESENT IN 53 OF THE TABLES, AND 7 OF THE 15 ASKABLE
+## CLASSES ARE NAMED 'TLew*'
+
+```
+KIND: read
+SUBSYSTEM: how an authored object name becomes an object - the token
+  compare chain, the allocation and builder calls, and which class table
+  each token names; and which functions carry the property reads of PR-378
+  (OI-128, OI-129, the F6 thread; continues PR-378, PR-379, PR-375).
+ADDRESSES: 0x76a69, 0x5c320, 0x53ff0, 0x531f0, 0x52860, 0x44fe0, 0x500b0,
+  0x341e0, 0x34670, 0x349d0, 0x3a000, 0x3d990, 0x3e060, 0x3e470, 0x40eb0,
+  0x41180, 0x6fb10, 0x3dd60, 0x3ddf0, 0x3df00, 0x50f80, 0x3f010, 0x552e0,
+  0x53c90, 0x23b10, 0x45320, 0x4e934, 0x4e971, 0x4e980, 0x4ea00, 0x3a250,
+  0x1f870, 0x24f60, 0x1ff26, 0x1ff49, 0x350bd, 0x3a254, 0x4e788, 0x4e720,
+  0x4df15, 0x4e6aa, 0x4e81d, 0x1fad4, 0x1f8ac, 0x9e294, 0x9dbfc, 0x9f7b4,
+  0xa2054, 0xa1f90, 0x97a98, 0x96960, 0x98f34, 0x9e134, 0x9f540, 0x9f668,
+  0x9b4d4, 0x97cdc, 0xa1eb4, 0xa1a08, 0x9e4c0, 0x1e0a0, 0x78, 0x70,
+  0x54, 0x3c, 0x18, 0xd0, 0xa8, 0x11a, 0xee, 0x44
+NAMES: class-name factory, token compare, matcher, group token, road
+  companion, alias token, builder helper, allocation size, load verb,
+  property verb, pr380_handlers.py, pr380b_verbs.py, pr380c_factory.py,
+  pr380d_map.py, pr380e_names.py, pr380f_final.py, pr380g_chain.py,
+  pr380i_map.py, pr380j_cross.py, pr380k_xtab.py, pr380m_map.py,
+  pr380m_pairs.tsv, pr380n_xtab.py
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines about the askable classes' names and the
+  property readers, and the HANDOFF section 8 F6 paragraph. Nothing under
+  ported/ is touched, so only the light gate applies.
+HOOKS: PR-378 censused the property keys; PR-379 read 12 token compares
+  and concluded the grammar was factory code; PR-375/PR-376/PR-377 read
+  the F-chain, the askable test and the link pair. PR-335 counted the
+  authored class tokens in the shipped level files, which is the list
+  this map names.
+OPENS: the 62 class tables no token names, including 8 of the 15 askable
+  classes - who constructs them, since their class-table immediates sit in
+  factory code with no compare in front (0x1e0a6, 0x2413d, 0x2dfa0,
+  0x3b1d2 and others); the verb slots of the property readers are
+  numbered but not named (+0xd0, +0x18, +0xa8) while the dispatch census
+  measures +0x70 x215, +0x4 x146, +0x68 x145, +0x6c x91, +0x3c x74;
+  whether a property line cuts the point list; what 0x44fe0 does in the
+  actor branches; what 0x9e294 is, the class the four road tokens also
+  instantiate; the second table of LINA at 0xa1dfc; and the companion
+  tables named by SCHODY4, ZOLW, STULB_ST, TAB_KOLO, BRAMA_B, GRABOBJ*,
+  SPAD, WODOSPAD, TABLICA, STRUMIEN, ZWODOSPD and GRUPA2.
+CLOSES: OI-128's "the tokens of the other 14 askable classes" - 7 have
+  them: TLewZaria 0x96960, TLewZariaB 0x97a98, TLewEna2 0x98f34,
+  TLewKadmar2 0x9b4d4, TLewKara 0x9e134, TLewJunction 0x9f540,
+  TLewTunga1 0x9f668; 8 have none. Also closes PR-379's "how a factory
+  branch reaches the property segments": the readers are not reached by
+  name at all - their enclosing functions are installed as class verbs.
+CORRECTS: PR-379's paragraph (b), which reported "one compare per
+  authored class name, twelve of which this pass located". The chain has
+  360 literal token compares and 165 tokens build an object: my
+  segmentation used the literal compares as boundaries, and a group or
+  alias branch contains further literal compares, so each run swallowed
+  the next branch's stores and the count collapsed. PR-379's paragraph
+  (a), "not one address appears in any slot of the 219 kind tables", is
+  also wrong in its conclusion: those 19 positions are not table values
+  because they are not function entries, but the functions that contain
+  them ARE verbs of 53 tables (paragraph (c)). PR-377's and PR-378's
+  slot lists are quoted against the builder table, which sits 0x24 below
+  the class table: their +0x3c is +0x60 and their +0x78 is +0x9c. The
+  first three scripts of this session (pr380c, pr380d, pr380e, pr380f,
+  pr380g) each got the branch boundary wrong in a different way; the map
+  below is from pr380m_map.py, which ends a branch at its first ret after
+  its allocation call.
+MEASURED: (a) THE FACTORY BRANCH (pr380m_map.py). 360 sites compare an
+  authored token through the string helper 0x76a69; 165 distinct tokens
+  are followed by a branch that allocates (`mov eax,<size>; call
+  0x5c320`), calls one of four builder helpers (0x53ff0, 0x531f0,
+  0x52860, 0x44fe0) and stores a class table T at [reg+disp] - usually
+  [eax+8], or at a negative displacement when the allocation covers a
+  bigger object (KRA1 allocates 0x136 and stores at [eax-0xfe]) -
+  together with T-8 at the next slot, then returns a pointer inside the
+  allocation. 185 token-to-table pairs (183 with a recorded allocation
+  size, 0x40..0x3ee), 157 distinct class tables of the 219, and 27
+  tables instantiated by two or more tokens (FOKA/KRAB/ROZGW/ZWIERZ ->
+  0x97f64; PICT/SPAD/STRUMIEN/GRABOBJ*/TABLICA/WODOSPAD -> 0x9815c;
+  KGARNEK/MOVEPLAT/PLATF/WINDA -> 0x9957c). The full pair list is
+  /tmp/opencode/pr380m_pairs.tsv.
+  (b) WHO IS NAMED. Cross-tabbing the map against the 219-table census
+  (pr380n_xtab.py): by family, 0x55070 74 named of 124 (its 15 askable
+  tables split 7 named / 8 not), 0x53df0 30 of 31, 0x23b50-form 26 of
+  33, 0x3ddf0 26 of 29, 0x2b1a0 1 of 1. 33 of the 37 point-list owners
+  are named; 62 class tables are named by no token. The seven named
+  askable classes are exactly the tokens spelled 'TLew...'.
+  (c) READING A PROPERTY IS A CLASS VERB. The 11 functions that contain
+  PR-378's property scans are installed as verbs of the class tables:
+  0x41180 (hit_time/coef/levels/Fcontrol) in 83 slots of 53 tables,
+  usually +0xd0; 0x40eb0 (damage and the two `, %d` pairs) 73 slots of
+  45 tables, usually +0x18; 0x3e060 50 of 38, usually +0xa8; 0x3dd60 the
+  F-chain 47 of 34, usually +0x18; 0x3d990 16 of 16; 0x341e0 (id/spawn),
+  0x34670, 0x349d0, 0x3a000, 0x3e470 2-4 each; 0x6fb10 (group/new_bounds)
+  none. Their slot differs from class to class, so the property read is
+  dispatched through the class table, not through one fixed slot.
+  (d) THE LOAD VERB AT +0x78. 0x552e0 in 78 tables, 0x3df00 in 23,
+  0x50f80 in exactly the 15 askable ones, 0x53c90 in 14, 0x23b10 in 8,
+  0x3f010 in 4. 0x3df00 asks the class through [T+0xd8] and, if it
+  agrees, clears the container with 0x45320 on [obj+0xee] before falling
+  through to the 0x55070-family load verb; 0x3f010 (the three named road
+  classes KTRASA, TUNTRAS, TRASA2 and one more) clears [obj+0x44] with
+  the same 0x45320. The +0xd8 gate is the companion-accept verb of
+  PR-377, so the load path already asks a class whether it takes a
+  companion before clearing its point list.
+  (e) GROUP AND ROAD TOKENS. 19 tokens name two or more class tables.
+  KTRASA 0x350bd builds 0x9dbfc and also names 0x9e294, which TUNTRAS,
+  TRASA and TRASA2 name too - a shared road class beside the per-road
+  one; TRASA's branch names 0xa1f90, the ANITAB companion of PR-377;
+  BERLO's branch first tries its own token and otherwise calls eleven
+  member matchers (0x1f870, 0x24f60, 0x26860, 0x29090, 0x2ba90, 0x2ea00,
+  0x33370, 0x34c20, 0x3a250, 0x3acf0, 0x383c0), each of which is the
+  first instruction of that member token's matcher; LINA names DRABINKA's
+  0x97cdc and 0xa1dfc. So one authored line can select a family of
+  classes, and the road classes carry a second class beside their own.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port knows the authored class names from the level files and
+  maps a handful of them. The original's mapping is 166 tokens naming 157
+  of its 219 classes, with every point-list-owning class named, and the
+  classes the port has never seen a name for are mostly named too. It
+  also settles what the port's property handling should attach to: in the
+  original, reading properties is a class verb - the code is shared, but
+  every class decides whether and where it is reachable.
+
+- WHAT SURPRISED ME. That I had been reading the same factory for three
+  records and had extracted 12 of its 166 branches; and that the seven
+  classes allowed to be asked a question are the seven whose authored name
+  begins 'TLew', which is the group-object prefix the level files use.
