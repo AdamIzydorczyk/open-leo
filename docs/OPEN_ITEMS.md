@@ -5794,9 +5794,21 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     directly), and 6 owners carry no link verb anywhere - 0x96c38,
     0x96d1c, 0x977f0, 0x9dbfc (KTRASA), 0xa1f90, 0xa2054. Only 2 of the
     15 askable tables carry the pair, so askability and linking are
-    independent switches. So still open: which signal bit that
-    is (the ledger's numbering stops at 54), what the authored
-    key ` F = %d, %d ` at 0x91446 controls, what 0x1f330/0x1f590 test
+    independent switches. PR-378 settled the key question: ` F = %d, %d `
+    at 0x91446 is one of 14 named property keys read by the same scanner
+    0x498f0 that the container parser 0x45120 uses (` id = `,
+    ` spawn = `, ` damage = `, ` expldist = `, ` type = `, ` sample = `,
+    ` div = `, ` hit_time = `, ` coef = `, ` levels = `, ` Fcontrol = `,
+    ` F = `, ` group = `, ` new_bounds = `), each with compiled
+    defaults - `coef` eight floats 0.6/0.02/0.12/0.08/0.06/0.04/0.02/
+    0.01, `levels` 0.1/0.2/0.35, `hit_time` 0.6 - and the ` F = ` scan
+    runs on the SAME cursor as the point list, right after it. So still
+    open: which signal bit that
+    is (the ledger's numbering stops at 54), which class reads which
+    property key (only one reader, 0x378c0, is a class verb, at 0x9e970
+    +0x128), what 0x3e060's [obj+0x116] flag from a signal byte is, and
+    the six scanner sites whose format is not pushed in front of the
+    call; what 0x1f330/0x1f590 test
     and what [obj+0x5c] == 6/9 selects, the tokens of the other 14
     askable classes (their ctors are at 0x1ff15, 0x1e0a6, 0x22ee5,
     0x2413d, 0x269c2, 0x2703e, 0x2bfd6, 0x2dfa0, 0x3204d, 0x33dcd,

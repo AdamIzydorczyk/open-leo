@@ -52650,3 +52650,134 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   about - KTRASA, the two element-region classes, and three others with
   authored point lists - have no way to accept a companion at all, while
   twenty ordinary 0x55070 classes do.
+
+## PR-378 - THE AUTHORED RECORD GRAMMAR, CENSUSED THROUGH THE KEY SCANNER
+## 0x498f0: 29 CALL SITES AND 14 PROPERTY KEYS, ` F = %d, %d ` IS ONE OF
+## THEM AND FILLS THE PAIR THE COMPANION QUERY READS; THE DEFAULTS ARE
+## COMPILED IMMEDIATES, ELEVEN OF THEM FLOATS WITH NAMED VALUES
+
+```
+KIND: read
+SUBSYSTEM: the property lines of an authored object record - every call
+  of the key scanner 0x498f0, the format string it is given, and where
+  the matched values are stored (OI-128, OI-129, the F6 thread; also
+  reaching the record-cutting question in OI at line 826; continues
+  PR-375, PR-377, PR-336's pair reader and PR-279's loader).
+ADDRESSES: 0x498f0, 0x45120, 0x4a0b0, 0x3dd60, 0x3ddbb, 0x3e155,
+  0x3e159, 0x3e632, 0x3e060, 0x3e06a, 0x3e07e, 0x3e08b, 0x3e094,
+  0x3e0a8, 0x3df90, 0x3434a, 0x3438a, 0x3497c, 0x349b4, 0x34b7f,
+  0x3a0f4, 0x3db0d, 0x40ec7, 0x40f17, 0x40f73, 0x411ca, 0x4121a,
+  0x41291, 0x412c8, 0x451e8, 0x49965, 0x49978, 0x499c5, 0x499d8,
+  0x4a0ca, 0x51960, 0x57d6c, 0x6eb88, 0x6ebaf, 0x6fb48, 0x6fb76,
+  0x91017, 0x91021, 0x9106c, 0x91087, 0x91097, 0x91300, 0x9142c,
+  0x91446, 0x9149b, 0x915be, 0x915ea, 0x915fe, 0x91604, 0x91614,
+  0x91643, 0x9165b, 0x91cda, 0x91cea, 0x91d0f, 0x92122, 0x951d4,
+  0x91d15, 0x9e970, 0x378c0, 0x3f08b, 0x50722, 0x3dd20, 0x11a,
+  0x11e, 0x112, 0x107, 0x10b, 0x10f, 0x113, 0x117, 0x11b, 0x11f,
+  0x123, 0x12f, 0x133, 0x137, 0x120, 0x124, 0x128, 0xb1, 0xfa,
+  0xfe, 0xee, 0xf2, 0x12e, 0x122, 0x116, 0x63, 0x67, 0x3c, 0x70
+NAMES: key scanner, property line, authored grammar, property key,
+  default value, float default, decay series, spawn, hit time, control
+  word, new bounds, rate pair, signal byte, pr378_loaders.py,
+  pr378_loaders.txt, pr378b_writers.py, pr378b_writers.txt,
+  pr379_grammar.py, pr379_grammar.txt, pr378c_formats.py,
+  pr378c_formats.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 line that asked what the key at 0x91446
+  controls, and the HANDOFF section 8 F6 paragraph. Nothing under
+  ported/ is touched, so only the light gate applies.
+HOOKS: PR-375 found the ` F = %d, %d ` scan and the pair it fills;
+  PR-376/PR-377 showed what the pair is used for and which classes can
+  link a companion. PR-336 read the pair reader 0x4a0b0 with "%d,%d";
+  PR-279 and PR-336 read the record grammar for points; the port's
+  ll_level.c already names the `damage=`, `bounds=`, `koniec=`, `R=`
+  and `frame=` property lines and stops its walk at one.
+OPENS: the six scanner sites whose format string is not pushed in the
+  window before the call (0x3ddbb is one of them - its format 0x91446
+  is pushed 6 instructions earlier and was missed by the first window);
+  which class reads which key, since the reader functions are ordinary
+  code and only one of them, 0x378c0, is installed as a class verb
+  (at 0x9e970 +0x128); whether a property line cuts the point list or
+  continues the same stream - the same scanner is used for both, which
+  says the stream is shared, but the cut question in OI at line 826
+  stays open; what 0x3e060 does for a companion-bearing object: it
+  stores at [obj+0x116] the negation of bit 3 of a signal byte reached
+  as [[obj+0x4]+7] and then builds a mask with bit 0x04 while
+  [obj+0x112] is non-null; and whether the coef/levels float defaults
+  are the engine's own defaults or placeholders (the authored values
+  that override them are unread here).
+CLOSES: the OI-128 question "what the authored key ` F = %d, %d ` at
+  0x91446 controls" - it is one key among 17 in a census of the whole
+  scanner: ` id = `, ` spawn = `, ` damage = `, ` expldist = `,
+  ` type = `, ` sample = `, ` div = `, ` hit_time = `, ` coef = `,
+  ` levels = `, ` Fcontrol = `, ` F = `, ` group = `, ` new_bounds = `
+  plus the three structural forms (` %1[;]`, `%d,%d`, `,%hi`); ` F = `
+  fills the rate pair that the companion query multiplies.
+CORRECTS: nothing published. One earlier script of this session
+  (/tmp/opencode/pr378_loaders.py, run but not logged as a record) said
+  that 0x288d5 and 0x1e51c/0x1e640 are "call sites" of the parser
+  verb 0x45120: they are rows of the xref table, not `call`
+  instructions found by scanning - the only real callers of 0x45120 are
+  0x3dd72, 0x3efe9 and the element code PR-336 read.
+MEASURED: (a) THE CENSUS (pr379_grammar.py). 29 call sites of 0x498f0.
+  By format string: 4 x ` %1[;]` (the ';' separator inside 0x45120's
+  record parser), 2 x ` damage = %d `, 2 x ` expldist = %d `,
+  2 x ` , %d`, and one each of ` id = %d `, ` spawn = %d , %d `,
+  ` type = %d `, ` sample = %d `, ` div = %d `, ` hit_time = %d `,
+  ` coef = %f , %f ; %f , %f ; %f , %f ; %f , %f `,
+  ` levels = %f , %f , %f `, ` Fcontrol = %4s `, ` group = %d `,
+  ` new_bounds = %d , %d `, `%d,%d` and `,%hi`; 6 with the format not
+  in the preceding 0x40 bytes (including the ` F = %d, %d ` at 0x3ddbb
+  and 0x3e159).
+  (b) WHERE THEY LAND. `damage=` -> [obj+0xb1] and [obj+0xfa] (0x40ec7)
+  - the same field the port's comment at ll_level.c:1119 calls the
+  placement damage; `expldist=` -> [obj+0xee] with default 0x64 and
+  [obj+0xf2] with default 0x14; `div=` -> [obj+0xfa]/[obj+0xf2]
+  (0x3e632); ` , %d` -> [obj+0xfa]/[obj+0xfe] and [obj+0xad]=100
+  (0x40f17), which is the pair the standing second query adds;
+  `spawn=` -> stored through [ecx+0x8] (0x3438a); ` F = ` ->
+  [obj+0x11a]/[obj+0x11e] (0x3ddbb); `hit_time=` -> [obj+0x107];
+  `Fcontrol=` -> [obj+0x10b]; `coef=` -> eight floats at
+  [obj+0x10f..0x123]; `levels=` -> three floats at
+  [obj+0x12f]/[0x133]/[0x137]; `group=` -> [obj+0x120]; `new_bounds=`
+  -> [obj+0x124]/[0x128]; `sample=` -> [obj+0x40]/[obj+0x44].
+  (c) THE DEFAULTS ARE COMPILED IMMEDIATES. When the scan matches fewer
+  values than the format asks for, the code writes its own: `hit_time`
+  defaults to the float 0.6; the eight `coef` slots at
+  [obj+0x10f..0x12b] default to the floats 0.6, 0.02, 0.12, 0.08, 0.06,
+  0.04, 0.02, 0.01 (0x41226-0x4126c); the three `levels` floats default
+  to 0.1, 0.2, 0.35 (0x41291's follow-up); `expldist` defaults to 100 in
+  one class and 20 in another; `damage` and `div` land with a literal
+  100 at [obj+0xad] in the same reader. So a property line absent from
+  the authored text still leaves a defined curve on the object - these
+  are the engine's own defaults, not sentinels.
+  (d) ` F = ` IS ONE KEY OF ONE GRAMMAR, AND THE POINT LIST IS IN THE
+  SAME STREAM. The same scanner serves the container's record parser
+  0x45120 (` %1[;]`, `%d,%d`) and the property readers, and 0x3dd60
+  calls 0x45120 on [obj+0xee] and then the ` F = ` scan on the same
+  text argument it was given (`mov ecx,edx` at 0x3dd68, `push ecx` at
+  0x3ddba): one cursor, points first, then properties.
+  (e) WHO CALLS THE LOAD HOOK (pr378_loaders.py, pr378b_writers.py).
+  0x3dd60 has 11 call sites in 11 different functions; only 0x378c0 of
+  them is installed as a class verb (0x9e970 +0x128, a point-list
+  owner); 0x3efe0 has one caller, 0x3f08b. The rate pair is also
+  written by 0x50722 (7 stores), 0x3dd20 - which is itself installed as
+  a verb at 0x970bc +0x2c0 - and a dozen one-store sites in 0x3e1xx
+  and 0x500xx.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port reads a handful of property lines and stops its walk at
+  one. The engine has a closed set of 14 named keys plus the point-list
+  grammar, read by one scanner through one cursor, and every key has a
+  compiled default. That is the difference between "an object authored
+  with a patrol and damage" and "an object authored with a patrol,
+  damage, spawn point, hit time, eight coefficient floats, a control word
+  and a companion rate".
+
+- WHAT SURPRISED ME. That the defaults are not zero sentinels but named
+  floats written at the call site - 0.6, 0.02, 0.12, 0.08, 0.06, 0.04,
+  0.02, 0.01 - and that the `F` key I had been chasing for three records
+  is one ordinary entry in a fifteen-key list.

@@ -5869,7 +5869,12 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         slot pair reaching 0x3df50/0x3df90, 31 owners (28 of them at
         table +0xdc/+0xe0, the block's own +0x0/+0x4) and 33 classes
         with no point list, while 6 owners (including KTRASA) carry no
-        link verb at all; and 32 of
+        link verb at all; and PR-378 read the grammar that authored the
+        companion rate in the first place - the load hook's ` F = %d,
+        %d ` scan is one of 14 named property keys on the same scanner
+        0x498f0 and the same text cursor as the point list, each with
+        compiled defaults (`coef` eight floats 0.6/0.02/0.12/0.08/0.06/
+        0.04/0.02/0.01, `levels` 0.1/0.2/0.35); and 32 of
         the 37 replace the base ask hook 0x45230 while the five
         second-family owners keep it. The two slots below each block are
         per-class functions taking [obj+0xc] as this (0x206f0 opens `sub
