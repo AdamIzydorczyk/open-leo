@@ -391,6 +391,56 @@ void ll_seq_anchor_origin(const ll_seq_elem *e, int x, int y, int mirror,
     }
 }
 
+/* PR-357: the element's land method, 0x42980 - slot +0x04 of the method
+ * block 0xa0c08 the record carries at +0x33 (installed at 0x41f4d). The
+ * engine runs it when an object ENTERS the standing state: the class verb
+ * +0xB4 (0x238b0), the `lock`/`ground_on` ON runner 0x54f40, the
+ * `unlock2` runner 0x55020, the +0x54 frame step 0x53df0, the ask block
+ * 0x541f0 and the +0xB0 provider 0x544d0. Arguments: eax = the element,
+ * edx = the position pair, ebx = the facing, used only as
+ * `test ebx,ebx`/`jle`. Instruction for instruction: `movsx ecx,[eax]`,
+ * `cmp ecx,0x7fff`, `je` to the epilogue WITHOUT writing (0x42984-0x4298d);
+ * then esi = f2 - f6 and `sub [edx+4],esi` (0x42993-0x4299c); then for
+ * facing > 0 eax = f0 - f4 and `sub [edx],eax` (0x429a2-0x429ab), and for
+ * facing <= 0 the same value ADDED (0x429b2-0x429bf). */
+void ll_seq_anchor_land(const ll_seq_elem *e, int facing, int *x, int *y)
+{
+    int dx, dy;
+
+    if (e->f0 == SENT_7FFF)             /* 0x4298d: the sentinel, no write */
+        return;
+    dy = (int)(short)e->f2 - (int)(short)e->f6;
+    *y -= dy;
+    dx = (int)(short)e->f0 - (int)(short)e->f4;
+    if (facing > 0)                     /* 0x429a0 */
+        *x -= dx;
+    else
+        *x += dx;                       /* 0x429bd */
+}
+
+/* PR-357: the element's leave method, 0x429d0 - slot +0x08 of the same
+ * block, run by the class verb +0xB8 (0x23880), the OFF runner 0x54f90,
+ * the `lock2` runner 0x54fe0 and the +0xB0 provider 0x544d0. Same eight
+ * instructions with add and sub exchanged: `add [ecx+4],esi` at 0x429ec,
+ * `add [edx],eax` at 0x429fb for facing > 0 and `sub ebp,eax` at 0x42a0d
+ * for the other sign, so the pair it returns is the one
+ * ll_seq_anchor_land was given. Nothing else in the engine is touched by
+ * either method: no flag, no counter, no velocity. */
+void ll_seq_anchor_leave(const ll_seq_elem *e, int facing, int *x, int *y)
+{
+    int dx, dy;
+
+    if (e->f0 == SENT_7FFF)             /* 0x429dd */
+        return;
+    dy = (int)(short)e->f2 - (int)(short)e->f6;
+    *y += dy;                           /* 0x429ec */
+    dx = (int)(short)e->f0 - (int)(short)e->f4;
+    if (facing > 0)
+        *x += dx;                       /* 0x429fb */
+    else
+        *x -= dx;                       /* 0x42a0d */
+}
+
 int ll_seq_draw_elem_anchor(const ll_seq *s, const ll_seq_elem *e,
                             uint8_t *canvas, int cw, int ch, int x, int y,
                             int mirror, const uint8_t *map)

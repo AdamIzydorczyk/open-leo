@@ -49629,3 +49629,182 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - the figure
   untouched; build/journal.db stays a gitignored client, never a source
   of truth. README's "Searching the ledger" note now states the OI
   prose door and the short-hex split so a user hits them knowingly.
+
+## PR-359 - THE LAND AND LEAVE METHODS NOW EXIST IN THE PORT AS ONE
+## INVERSE PAIR OVER A POSITION, AND THE LEG THAT PINS THEM SHOWS THE
+## ANCHOR STEP MOVES THE VERY POINT THE STANDING QUERY IS ASKED FROM
+```
+KIND: port
+SUBSYSTEM: the .SEQ element's method block, ported side - the two verbs
+  PR-357 read (0x42980, 0x429d0) as ll_seq_anchor_land and
+  ll_seq_anchor_leave - plus leg L16 of ll_level's selftest chain, which
+  runs them against the standing-query model PR-352 put in the same file.
+ADDRESSES: 0x42980, 0x42984, 0x4298d, 0x42993, 0x4299c, 0x429a0, 0x429a2,
+  0x429ab, 0x429b2, 0x429bd, 0x429d0, 0x429d7, 0x429dd, 0x429ec, 0x429fb,
+  0x42a0d, 0x41ef3, 0x41f60, 0x41f9d, 0x41fa3, 0x41fb9, 0x41fd0, 0x41da0,
+  0xa0c08, 0x42930, 0x238b0, 0x23880, 0x53df0, 0x541f0, 0x544d0, 0x54f40,
+  0x54f90, 0x54fe0, 0x55020, 0x45380, 0x4538c, 0x45400, 0x45468, 0x45477,
+  0x45479, 0x4547d, 0x45491, 0x454a0, 0x455a0, 0x7fff, 0x33, 0x37, 0x04,
+  0x08, 0x50, 0x6d, 0x89, 0xa9, 0xb4, 0xb6, 0xb8, 0x1c
+NAMES: ll_seq_anchor_land, ll_seq_anchor_leave, ll_seq_anchor_origin,
+  seq_landshift_selftest, seat_ask_core, seat_bracket, seat_slope, L15,
+  L16, land method, leave method, anchor delta, second anchor, position
+  pair, pr359_mutations.py, pr359_selftest.txt, pr359_verify_default.log,
+  pr359_verify_nope.log, pr359_build.log, OI-128, F6
+CODE: yes: ported/ll_seq.h gains the two declarations with the reading
+  note (which call sites supply which sign, and the sentence saying they
+  are NOT wired into the runtime path yet); ported/ll_seq.c gains
+  ll_seq_anchor_land and ll_seq_anchor_leave, quoted instruction by
+  instruction against 0x42980 and 0x429d0; ported/ll_level.c gains leg
+  L16 seq_landshift_selftest and its place at the end of
+  ll_mov_selftest()'s chain, which is verify-level's
+  `./ll_level --mov-selftest` and runs in EVERY configuration, staged
+  data or not. No existing function changed and nothing is wired into
+  the level runtime path: the model stands alone until the .SEQ census
+  says shipped elements use it. No Makefile change, so no new leg is
+  counted.
+HOOKS: PR-357 is the read this implements, and its OPENS named exactly
+  this step ("whether the port's ask model needs the delta"); PR-352 put
+  the standing query in the same file (seat_bracket 0x45380, seat_slope
+  0x455a0, seat_ask_core 0x45400, leg L15), which is what the new leg
+  asks; PR-353 and PR-354 are the callers (the class +0xB4/+0xB8 verbs
+  0x238b0/0x23880 and the four runners); PR-255 named the table 0xa0c08
+  and ported its slot +0 verb as the live box; PR-48/PR-49 are the
+  sibling methods of the same record - ll_seq_anchor_origin already reads
+  f0/f2 with the same 0x7fff test - and seq_anchor_selftest is the blob
+  shape this leg's synthetic .SEQ follows; PR-335 and PR-342 are the
+  seat tables (o->seat_x/seat_y) the ask half of the leg uses.
+OPENS: whether to WIRE the step into the port level path - blocked on
+  the same measurement as PR-357's OPENS: how many shipped .SEQ elements
+  have f0 != 0x7fff and (f4,f6) != (f0,f2) (tools/seq_parse.py, needs a
+  staged fixture, DEFERRED). Which element the runtime would pass at all:
+  the engine reads it from [view+0x48], the current frame's element, so
+  the port needs the current .SEQ element of the object's animation
+  before it can call these two; the ask-block and provider call sites
+  (0x541f0, 0x544d0) also need the [obj+0x89]-style position copy.
+  Whether anything patches f0 after load. And OI-128's rest - the 0x58c
+  counter, the block 0x546de-0x54700, bit 0x04 of [obj+0xB6], and the
+  element block's other slots +0x10 (12 sites) and +0x14 (9).
+CLOSES: PR-357's OPENS question about the port's ask model: measured,
+  the delta is NOT cosmetic - the same seat table that 0x45400 refuses
+  from (890,475) is ANSWERED from the point a landing steps the
+  requester to, and the mirrored X leg takes the ask outside the
+  table's record pair, where 0x4538c finds nothing. The model half of
+  that item is done; the wiring stays open above.
+CORRECTS: none
+MEASURED: (a) THE GRAMMAR SIDE FIRST. The leg's blob is three elements
+  and its first run was RED for a reason worth recording: an element with
+  w0 = 0 is NOT representable - the reader's array loop runs unless the
+  element is shape-only (`!(w0 & 2 && !(w0 & 1))` at ported/ll_seq.c,
+  the same branch as the engine's), so w0 = 0 with b19 = 0 still reads
+  ONE length-prefixed array and the blob ran past its end. The shape
+  that IS exactly the 8 words - w0 = 2, b17 = 0 (the margin read gets a
+  count of 0), b19 = 0 - parses and leaves consumed == len, which the leg
+  now asserts. It then asserts the parser stored the anchors it was
+  given: element 0 (0x7fff,0,0,0), element 1 (10,20,30,8), element 2
+  (10,12,10,0) - f4 and f6 come from the blob, read at 0x41fb9/0x41fd0.
+  (b) THE SENTINEL, ONE METHOD AT A TIME. land alone and leave alone are
+  each run on the 0x7fff element with facing +1 and -1 and neither may
+  write. The first version of this leg ran the PAIR and reported nothing
+  for the mutation that deletes the guard, because the two methods cancel
+  - so the check is split, and dropping the guard now shows up
+  immediately: the position goes to (-32667,100), i.e. an unguarded
+  0x7fff is read as an anchor 32767 px to the left.
+  (c) THE STEP AND ITS EXACT INVERSE, THREE FACINGS. Over element 1
+  (f2-f6 = 12, f0-f4 = -20): facing +1 -> (120,88), facing -1 ->
+  (80,88), facing 0 -> (80,88), because 0x429a0 is `test ebx,ebx`/`jle`
+  and ZERO takes the left-hand branch. Leaving with the same facing
+  returns (100,100) in all three. Landing facing right and leaving facing
+  LEFT ends at (140,100): the y leg cancels, the x leg does not, because
+  the engine passes the sign fresh at every call ([obj+0x6d] in
+  0x238b0/0x23880, the +0x50 verb in the other six sites, PR-357
+  paragraph (f)) and never remembers it. The leg prints that pair as a
+  number rather than leaving it as an implication.
+  (d) THE TWO HALVES JOINED, which is the point of the leg. One seat
+  table (838,463)-(900,463) - the same two records L15 measures on
+  ZARIA.01's lower PALMA, moved 12 px up so the case is a clean
+  off-by-12. Asked from (890,475): refused, seat_slope gives 463-475 =
+  -12 at 0x45477 and the 0x45479 waiver covers only [obj+0xa9]. Land
+  through element 2, whose second anchor is 12 px above its first with
+  the same x: the point becomes (890,463) and the SAME law answers
+  (c1 = c2 = 0, the incumbent test at 0x454a0 accepts 0). Leave: back to
+  (890,475) and refused again. Then the mirrored leg: the same landing
+  through element 1 facing right ends at (910,463) - past the table's
+  last record, so 0x45380/0x4538c name no record pair and the ask is
+  refused - while facing left it ends at (870,463) and answers. So the
+  landing step decides WHICH surface the standing query can see at all:
+  the element's second anchor is a placement offset for the object, not a
+  drawing detail.
+GATE: make 0 warnings; verify-all fixtures rc=0 14 (ok); the same suite
+  run twice (default DATA=/tmp/opencode/iso_stage/LEO and
+  DATA=/tmp/opencode/nope HD=/tmp/opencode/nope), both ALL TESTS PASSED
+  rc=0, then verify-docs, verify-index and the journal-db leg rc=0 - the
+  index regenerates byte-identical. Same state as PR-355..PR-358 for the
+  same reason: no LL.iso staged, so every ISO/HDD leg name-SKIPS in both
+  modes, 14 data-free legs (ok) + 22 named verify-SKIPs, counted from
+  the two logs. L16 adds no leg to that count: it runs inside
+  verify-level's data-free `./ll_level --mov-selftest`, which is why its
+  two printed lines appear in BOTH logs. Red first: the leg's first run
+  failed on the synthetic element shape (paragraph (a)), and the first
+  mutation round exposed a weak check in the leg itself (paragraph (b));
+  both were fixed in this PR before the gate was run. Five mutations of
+  the model, each alone, from /tmp/opencode/pr359_mutations.py: dropping
+  the 0x7fff guard in both methods fails 1 case, an off-by-one facing
+  test (`facing >= 0`) fails 1, pairing f4 where f6 belongs fails 6,
+  making leave not the inverse fails 3, and taking leave's X leg
+  unmirrored fails 2; the file is restored byte-identical and the leg is
+  rc=0 again. Output: /tmp/opencode/pr359_selftest.txt (the two printed
+  measurement lines), pr359_build.log, pr359_verify_default.log,
+  pr359_verify_nope.log.
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - one new
+  data-free CHECK inside verify-level's existing leg (L16 reads no
+  fixture: its .SEQ is synthesized in the source and its seat table is
+  typed), which is why the leg count stays 14. The fixture-backed half
+  stays DEFERRED, and with it the only question that could change this
+  code's reach: the .SEQ element census. No Windows legs (rule 8).
+```
+
+- WHY. PR-357 read the land/leave pair and left one honest open item
+  about the port: "whether the port's ask model needs the delta". It
+  does, and that is not something a record can assert from the dis alone
+  once the model exists - it has to be run. So this PR is the small
+  port half of that read: the two methods in `ll_seq.c` where the
+  element's other position arithmetic already lives (`ll_seq_anchor_origin`
+  reads f0/f2 with the same sentinel test), and one leg that proves the
+  arithmetic AND its effect on the standing query that PR-352 modelled in
+  the same file.
+
+- WHAT IS MODELLED. `ll_seq_anchor_land(e, facing, &x, &y)` and
+  `ll_seq_anchor_leave` in `ported/ll_seq.c`, with the instruction
+  citations in their comments: the `movsx`/`cmp 0x7fff`/`je` guard that
+  writes nothing, the y leg `f2 - f6`, the x leg `f0 - f4` taken the
+  other way for a non-positive facing (0x429a0's `test ebx,ebx`/`jle`),
+  and the leave method as the exact inverse (0x429ec, 0x429fb, 0x42a0d).
+  They take a POSITION PAIR exactly as the engine does - `edx` is the
+  object itself at 0x238b0 and at the four script runners, or a copy of
+  `[obj+0x00]/[obj+0x04]` at 0x53df0's `[obj+0x89]` - and the caller
+  supplies the facing, which is `[obj+0x6d]` in the class verbs and the
+  +0x50 verb's answer in the other six sites.
+
+- WHAT IS NOT DONE, AND WHY THAT IS THE RIGHT STOP. Nothing calls them
+  from the level path. The engine's argument is the CURRENT FRAME'S
+  .SEQ element, reached through `[view+0x48]`, and the port does not
+  model that per-frame element identity for a level object; more to the
+  point, PR-357's measurement of what shipped elements actually carry is
+  still open and needs a staged fixture. Wiring an offset nobody has
+  measured would put an unproven number into the runtime. What this PR
+  does instead is make the law executable and pinned by five mutations,
+  so the day the census is run the wiring is a small, testable step.
+
+- THE LEG'S MEASUREMENT IN ONE LINE (printed by `./ll_level
+  --mov-selftest`, prefix `land shift:`): a seat table 12 px above the
+  requester's row is refused by 0x45400 from his own row; after a
+  landing whose element declares that second anchor the same law
+  ANSWERS; the mirrored x leg of the same landing takes the ask past the
+  table's last record and it is refused again. Landing is a placement
+  step, and it moves the point every surface query is asked from.
+
+- LEDGER NOTE. `tools/jq.py oi OI-128` (the user's PR-358 fix) now lists
+  all 7 records that name OI-128 with prose/structured marked apart, and
+  a bare `0x33` routes to the free-text search instead of an empty addr
+  query - both used in this pass, both working as the record describes.

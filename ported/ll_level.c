@@ -4895,6 +4895,14 @@ static int surface_ask_selftest(void);   /* L15 (PR-352): the engine's OWN
                                             0x45400's two gates - run over
                                             the ZARIA.01 seat tables under
                                             the motion L14 pins */
+static int seq_landshift_selftest(void); /* L16 (PR-359): the element's own
+                                            land and leave methods, 0x42980
+                                            and 0x429d0, slots +0x04/+0x08
+                                            of the block 0xa0c08 every .SEQ
+                                            element record carries at
+                                            +0x33 (PR-357) - and what the
+                                            step does to the ask point L15
+                                            asks with */
 
 /* FIX-13 (X-11) selftest, test-only entry point (ll_level.h): proves the
  * two .MOV duration invariants without any window or game data:
@@ -5063,7 +5071,8 @@ int ll_mov_selftest(void)
         ladder_answer_selftest() != 0 || place_grammar_selftest() != 0 ||
         place_rectclass_selftest() != 0 ||
         rect_class_ask_selftest() != 0 ||
-        seat_motion_selftest() != 0 || surface_ask_selftest() != 0) {
+        seat_motion_selftest() != 0 || surface_ask_selftest() != 0 ||
+        seq_landshift_selftest() != 0) {
         free(sc.mov);
         free(m);
         return 1;
@@ -10795,6 +10804,230 @@ static int surface_ask_selftest(void)
                    yn[r][0], yn[r][1], sep, (ox && !sep) ? "" : "NOT");
         }
     }
+    return bad;
+}
+
+/* L16 (PR-359): the element's OWN land and leave methods - 0x42980 and
+ * 0x429d0, slots +0x04 and +0x08 of the block 0xa0c08 that every .SEQ
+ * element record carries at its last field +0x33 (PR-357 read the chain:
+ * PR-353's class +0xB4/+0xB8 verbs, PR-354's four runners, the +0x54
+ * frame step 0x53df0, the ask block 0x541f0, the +0xB0 provider 0x544d0).
+ * No window and no game data. One synthetic blob, three elements, each of
+ * them shape-only with ZERO rows (w0 = 2, b19 = b15 = b17 = 0) - the one
+ * element shape the grammar reads as nothing but its 8 words: no margin
+ * rows (the reader at 0x41da0 gets a count of 0) and no art arrays (the
+ * array loop is skipped when w0&2 is set and w0&1 is not). The FIRST
+ * keeps the WORD 0x7fff the element initializer 0x41ef3 stamps at +0, the
+ * SECOND declares both anchors (f0,f2) = (10,20) and (f4,f6) = (30,8),
+ * the THIRD a second anchor straight ABOVE its first with the same x.
+ * The first block also pins the parser side, which the landing law needs:
+ * f4 and f6 are read from the blob at 0x41fb9 and 0x41fd0 and nothing in
+ * the grammar hides them. The last block joins the two halves the ledger
+ * has kept apart so far - PR-357's step and PR-352's standing query (L15)
+ * - by asking the same law from the position BEFORE and AFTER a landing. */
+static int seq_landshift_selftest(void)
+{
+    static const unsigned char blob[] = {
+        0x03, 0x00,                                   /* count 3            */
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* w0 b19 b15 b17 */
+        0xff, 0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 7fff f2 f4 f6  */
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* w0 b19 b15 b17 */
+        0x0a, 0x00, 0x14, 0x00, 0x1e, 0x00, 0x08, 0x00,   /* (10,20) (30,8) */
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* w0 b19 b15 b17 */
+        0x0a, 0x00, 0x0c, 0x00, 0x0a, 0x00, 0x00, 0x00,   /* (10,12) (10,0) */
+    };
+    static const struct { int e; unsigned f0, f2, f4, f6; } fields[] = {
+        { 0, 0x7fff, 0, 0, 0 }, { 1, 10, 20, 30, 8 }, { 2, 10, 12, 10, 0 },
+    };
+    /* (x, y, facing, want_x, want_y) for the element at index 1:
+     * dy = f2 - f6 = 12 taken off y, dx = f0 - f4 = -20, and 0x429a0
+     * sends the X leg the other way as soon as the facing is not
+     * positive - that is the whole mirroring. */
+    static const struct { int x, y, face, wx, wy; } steps[] = {
+        { 100, 100, 1, 120, 88 },   /* facing right: 0x429ab sub of -20   */
+        { 100, 100, -1, 80, 88 },   /* facing left:  0x429bd add of -20   */
+        { 100, 100, 0, 80, 88 },    /* test ebx,ebx / jle: 0 is LEFT      */
+    };
+    int bad = 0, i, best, x, y, answered;
+    int upx = 0, upy = 0, rgt_x = 0, rgt_y = 0, lft_x = 0, lft_y = 0;
+    ll_seq sq;
+    lvl_obj a;
+
+    if (ll_seq_parse(blob, (uint32_t)sizeof blob, &sq) != 0) {
+        fprintf(stderr, "land shift selftest: FAILED the synthetic .SEQ did"
+                        " not parse\n");
+        return 1;
+    }
+    if (sq.count != 3) {
+        fprintf(stderr, "land shift selftest: FAILED %u elements, want 3\n",
+                sq.count);
+        ll_seq_free(&sq);
+        return 1;
+    }
+    if (sq.consumed != (uint32_t)sizeof blob) {   /* the element IS 8 words
+                                                   * here: no margins, no
+                                                   * arrays (PR-357 read the
+                                                   * reader's branches) */
+        fprintf(stderr, "land shift selftest: FAILED the grammar consumed"
+                        " %u of %d bytes\n", sq.consumed, (int)sizeof blob);
+        ll_seq_free(&sq);
+        return 1;
+    }
+    for (i = 0; i < 3; i++) {
+        const ll_seq_elem *e = &sq.els[fields[i].e];
+        if (e->f0 != fields[i].f0 || e->f2 != fields[i].f2 ||
+            e->f4 != fields[i].f4 || e->f6 != fields[i].f6) {
+            fprintf(stderr, "land shift selftest: FAILED element %d parsed"
+                            " f0=%u f2=%u f4=%u f6=%u (want %u %u %u %u)"
+                            " - 0x41fb9/0x41fd0 read the second anchor\n",
+                    fields[i].e, e->f0, e->f2, e->f4, e->f6, fields[i].f0,
+                    fields[i].f2, fields[i].f4, fields[i].f6);
+            bad = 1;
+        }
+    }
+
+    /* (1) THE SENTINEL MOVES NOTHING. 0x42984-0x4298d is `movsx
+     * ecx,[eax]`, `cmp ecx,0x7fff`, `je` to the epilogue with no write at
+     * all, and 0x429d7-0x429dd the same in the leave method: an element
+     * that declares no first anchor cannot move the position by an anchor
+     * delta, so EVERY shipped element of that kind lands in place. */
+    for (i = 0; i < 4 && !bad; i++) {
+        int face = (i & 1) ? -1 : 1;
+        x = 100, y = 100;
+        ll_seq_anchor_land(&sq.els[0], face, &x, &y);
+        if (x != 100 || y != 100) {
+            fprintf(stderr, "land shift selftest: FAILED a 0x7fff element's"
+                            " land method moved the position to (%d,%d)\n",
+                            x, y);
+            bad = 1;
+            continue;
+        }
+        x = 100, y = 100;               /* the methods are checked ONE AT A
+                                         * TIME: land and leave cancel each
+                                         * other, so running the pair would
+                                         * hide a missing guard */
+        ll_seq_anchor_leave(&sq.els[0], face, &x, &y);
+        if (x != 100 || y != 100) {
+            fprintf(stderr, "land shift selftest: FAILED a 0x7fff element's"
+                            " leave method moved the position to (%d,%d)\n",
+                            x, y);
+            bad = 1;
+        }
+    }
+
+    /* (2) THE STEP AND ITS EXACT INVERSE. */
+    for (i = 0; i < (int)(sizeof steps / sizeof steps[0]) && !bad; i++) {
+        x = steps[i].x, y = steps[i].y;
+        ll_seq_anchor_land(&sq.els[1], steps[i].face, &x, &y);
+        if (x != steps[i].wx || y != steps[i].wy) {
+            fprintf(stderr, "land shift selftest: FAILED landing facing %d"
+                            " at (%d,%d) gave (%d,%d), want (%d,%d)\n",
+                    steps[i].face, steps[i].x, steps[i].y, x, y,
+                    steps[i].wx, steps[i].wy);
+            bad = 1;
+            continue;
+        }
+        ll_seq_anchor_leave(&sq.els[1], steps[i].face, &x, &y);
+        if (x != steps[i].x || y != steps[i].y) {
+            fprintf(stderr, "land shift selftest: FAILED leaving facing %d"
+                            " did not return (%d,%d) but (%d,%d)\n",
+                    steps[i].face, steps[i].x, steps[i].y, x, y);
+            bad = 1;
+        }
+    }
+
+    /* (3) THE FACING IS READ AT EACH CALL, NOT REMEMBERED. The engine
+     * passes ebx fresh every time - [obj+0x6d] in 0x238b0/0x23880, the
+     * +0x50 verb in the other six sites - so turning around while
+     * standing does NOT undo the landing: the X leg is added twice. That
+     * is a consequence of the reading, and the port must reproduce it. */
+    x = 100, y = 100;
+    ll_seq_anchor_land(&sq.els[1], 1, &x, &y);
+    ll_seq_anchor_leave(&sq.els[1], -1, &x, &y);
+    printf("land shift: element (f0,f2)=(10,20) (f4,f6)=(30,8): landing"
+           " facing right steps (100,100) to (%d,%d) and leaving facing"
+           " LEFT ends at (%d,%d) - the y leg cancels, the x leg does not,"
+           " because 0x429a0 takes the sign from the caller at each call.\n",
+           120, 88, x, y);
+    if (x != 140 || y != 100) {
+        fprintf(stderr, "land shift selftest: FAILED a land-right/leave-left"
+                        " pair gave (%d,%d), want (140,100)\n", x, y);
+        bad = 1;
+    }
+
+    /* (4) AND WHAT THAT DOES TO THE STANDING QUERY. One seat table 12 px
+     * ABOVE the requester's row, asked from the row itself: L15's first
+     * gate (0x45477 with the 0x45479 waiver only for [obj+0xa9]) refuses
+     * it, because seat_slope is surface_y - point_y = 463 - 475 = -12.
+     * Landing through the THIRD element, whose second anchor is 12 px
+     * above its first and whose x delta is 0, moves the point the ask is
+     * made from onto the seat and the same law answers. Then the x leg,
+     * mirrored: the same landing through element 1 with facing right also
+     * steps 20 px along x, past the end of the table, where 0x4538c's
+     * bracket finds no record pair and the ask is refused - facing left
+     * it stays inside and answers. So the landing step is not cosmetic:
+     * it chooses which surface the standing query can even see. */
+    memset(&a, 0, sizeof a);
+    a.nseat = 2;
+    a.seat_x[0] = 838, a.seat_x[1] = 900;
+    a.seat_y[0] = a.seat_y[1] = 463;
+    best = 0;
+    if (seat_ask_core(&a, 2, 890, 475, 890, 475, 0, &best)) {
+        fprintf(stderr, "land shift selftest: FAILED the ask answered a seat"
+                        " 12 px above the requester's row before any"
+                        " landing\n");
+        bad = 1;
+    }
+    x = 890, y = 475;
+    ll_seq_anchor_land(&sq.els[2], 1, &x, &y);
+    best = 0;
+    answered = seat_ask_core(&a, 2, x, y, x, y, 0, &best);
+    if (x != 890 || y != 463 || !answered) {
+        fprintf(stderr, "land shift selftest: FAILED the ask did not answer"
+                        " from the landed point (%d,%d)\n", x, y);
+        bad = 1;
+    }
+    upx = x, upy = y;
+    ll_seq_anchor_leave(&sq.els[2], 1, &x, &y);
+    best = 0;
+    if (x != 890 || y != 475 || seat_ask_core(&a, 2, x, y, x, y, 0, &best)) {
+        fprintf(stderr, "land shift selftest: FAILED leaving did not put the"
+                        " ask back where it was refused (%d,%d)\n", x, y);
+        bad = 1;
+    }
+    x = 890, y = 475;
+    ll_seq_anchor_land(&sq.els[1], 1, &x, &y);
+    rgt_x = x, rgt_y = y;
+    best = 0;
+    if (x != 910 || y != 463 || seat_ask_core(&a, 2, x, y, x, y, 0, &best)) {
+        fprintf(stderr, "land shift selftest: FAILED the ask from the"
+                        " facing-right landing (%d,%d) answered, want refused"
+                        " (0x4538c: past the last record there is no pair)\n",
+                x, y);
+        bad = 1;
+    }
+    x = 890, y = 475;
+    ll_seq_anchor_land(&sq.els[1], -1, &x, &y);
+    lft_x = x, lft_y = y;
+    best = 0;
+    if (x != 870 || y != 463 || !seat_ask_core(&a, 2, x, y, x, y, 0, &best)) {
+        fprintf(stderr, "land shift selftest: FAILED the mirrored landing"
+                        " through (%d,%d) did not answer\n", x, y);
+        bad = 1;
+    }
+    printf("land shift: a seat table (838,463)-(900,463) asked from (890,475)"
+           " is refused (seat_slope = 463-475 = -12 at 0x45477). Landing"
+           " through the element (f0,f2)=(10,12) (f4,f6)=(10,0) asks from"
+           " (%d,%d) instead and it ANSWERS; leaving puts (890,475) back and"
+           " it is refused again. The X leg is the mirrored one: the same"
+           " landing through (10,20)/(30,8) facing right ends at (%d,%d),"
+           " outside the table's last record, so 0x45380 names no pair and"
+           " the ask is refused, while facing left it ends at (%d,%d) and"
+           " answers. The landing step therefore decides WHICH surface the"
+           " standing query can see at all.\n",
+           upx, upy, rgt_x, rgt_y, lft_x, lft_y);
+
+    ll_seq_free(&sq);
     return bad;
 }
 

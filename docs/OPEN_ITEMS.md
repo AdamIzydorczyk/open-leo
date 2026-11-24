@@ -5299,9 +5299,11 @@ OI-128: what landing and leaving a surface does - the class verbs
     themselves: the +0x33 word is the last field of the .SEQ element
     record, its table is 0xa0c08, and slot +4/+8 are one inverse pair
     that shifts the position by the element's second anchor minus its
-    first and undoes it on leaving. Still open: whether any shipped
-    element carries such a second anchor (needs the .SEQ fixture), the
-    0x58c timer posters, the block 0x546de-0x54700, and the '#' census)
+    first and undoes it on leaving; PR-359 models that pair in the port
+    (ll_seq_anchor_land/leave, leg L16) but does not run it. Still
+    open: whether any shipped element carries such a second anchor
+    (needs the .SEQ fixture), the 0x58c timer posters, the block
+    0x546de-0x54700, and the '#' census)
   origin: PR-345 (the class verb +0xAC read)
     The ground-contact verb 0x546a0 ends by telling the object about
     its surface: when the standing query's answer differs from the
@@ -5424,6 +5426,19 @@ OI-128: what landing and leaving a surface does - the class verbs
     no longer the mechanism but the data: how many shipped elements have
     f0 != 0x7fff and (f4,f6) != (f0,f2) - measurable with
     tools/seq_parse.py once an .SEQ fixture is staged, DEFERRED here -
-    whether the port's seat_ask_core has to apply the delta before the
-    seat test, what the block's slot +0x10 (12 sites) and +0x14 (9)
-    verbs do, and the timer items above.
+    what the block's slot +0x10 (12 sites) and +0x14 (9) verbs do, and
+    the timer items above.
+    PR-359 PUTS THAT PAIR IN THE PORT and answers the ask-model half:
+    `ll_seq_anchor_land`/`ll_seq_anchor_leave` (ported/ll_seq.c) are the
+    two methods instruction for instruction, and leg L16
+    (`./ll_level --mov-selftest`, prefix `land shift:`) shows the delta
+    is not cosmetic - a seat table 12 px above the requester's row is
+    refused by 0x45400 from his own row and ANSWERED from the point the
+    landing steps him to, while the mirrored x leg of another element
+    takes the ask past the table's last record and it is refused again.
+    So the landing step decides WHICH surface the standing query can
+    see. It is deliberately NOT wired into the level runtime path: the
+    engine's argument is the current frame's element through
+    [view+0x48], which the port does not track per object yet, and no
+    shipped element has been counted for a second anchor. Wiring it is
+    the step that needs the fixture.

@@ -137,6 +137,24 @@ int ll_seq_patch_draw(const uint8_t *blob, uint32_t len, uint8_t *canvas,
  * own position). */
 void ll_seq_anchor_origin(const ll_seq_elem *e, int x, int y, int mirror,
                           int *ox, int *oy);
+/* PR-357: the element's OWN land and leave methods, 0x42980 and 0x429d0,
+ * slots +0x04 and +0x08 of the block 0xa0c08 that every element record
+ * carries at its last field (+0x33: the record is 0x37 bytes). Both work
+ * on a POSITION PAIR - the engine passes edx = the object, whose
+ * [obj+0x00]/[obj+0x04] is its live position, or a copy of that pair.
+ * With f0 = 0x7fff (the sentinel the element initializer stamps at 0x41ef3)
+ * neither method writes anything. Otherwise the pair is moved by
+ * (f4-f0, f6-f2), the vector from the element's FIRST anchor to its
+ * SECOND, the X leg taken the other way when facing <= 0, and
+ * ll_seq_anchor_leave undoes exactly what ll_seq_anchor_land did. facing
+ * is the sign the caller supplies: [obj+0x6d] (the authored `ldir`/`rdir`
+ * word) in the class +0xB4/+0xB8 verbs, the +0x50 verb's answer in the
+ * other six call sites.
+ * NOT WIRED INTO THE RUNTIME PATH YET. Whether any shipped element
+ * carries a second anchor is unmeasured - leg L16 pins the law, the .SEQ
+ * census waits for a staged fixture (PR-357's OPENS). */
+void ll_seq_anchor_land(const ll_seq_elem *e, int facing, int *x, int *y);
+void ll_seq_anchor_leave(const ll_seq_elem *e, int facing, int *x, int *y);
 int ll_seq_draw_elem_anchor(const ll_seq *s, const ll_seq_elem *e,
                             uint8_t *canvas, int cw, int ch, int x, int y,
                             int mirror, const uint8_t *map);

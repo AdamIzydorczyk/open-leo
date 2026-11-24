@@ -5697,11 +5697,21 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         and nothing at all when f0 holds the 0x7fff sentinel. So
         `ground_on` does not run level script: it sets the standing bit
         and, only for an element that declares a SECOND anchor, steps
-        the lion onto it. What F6 still lacks is a measurement, not a
-        mechanism: no .SEQ element has been counted yet for
-        (f4,f6) != (f0,f2) - tools/seq_parse.py would do it once an
-        .SEQ fixture is staged - and the port counts ground_on,
-        ground_off, lock2 and unlock2 unmodelled (PLAN 8g).
+        the lion onto it. PR-359 made that pair executable in the port:
+        ll_seq_anchor_land/ll_seq_anchor_leave plus leg L16, and the leg
+        shows the step moves the very point the standing query is asked
+        from - a seat 12 px above the requester's row is refused from
+        his own row and ANSWERED from the landed one, and the mirrored x
+        leg of another element takes the ask past the table's last
+        record, where the bracket names nothing. The pair is NOT wired
+        into the level path, deliberately: its argument is the current
+        frame's element through [view+0x48], which the port does not
+        track per object, and no shipped element has been counted for a
+        second anchor. So what F6 still lacks is a measurement, not a
+        mechanism: how many .SEQ elements have (f4,f6) != (f0,f2) -
+        tools/seq_parse.py would say, once an .SEQ fixture is staged -
+        and the port still counts ground_on, ground_off, lock2 and
+        unlock2 unmodelled (PLAN 8g).
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the
