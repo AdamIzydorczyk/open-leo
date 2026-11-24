@@ -5809,7 +5809,15 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         0x3ddf0 classes run 0x55070 and then ask again with the offsets
         at [obj+0xfa]/[obj+0xfe] added to the point their own +0x6c
         returns, store it at [obj+0x106]/[obj+0x10a] and translate a
-        record array through 0x45200; the port models none of that and
+        record array through 0x45200; PR-375 found where those second
+        offsets come from - the load hook 0x3dd60 parses the object's
+        authored list into the container and copies its FIRST RECORD to
+        [obj+0xfa]/[obj+0xfe], and 0x3df90 subtracts [obj+0xfa] from
+        [obj+0x106], so the second pass is measured from the object's
+        own authored home, and 0x3dccd/0x3dcd2 show that writer
+        translating through the same container and re-asking the
+        companion through its class table. The port models none of that
+        and
         its legs stay the 0x55070 half of the 155. PR-369 read what
         they keep: behind the header at [obj+0xee] (`[+4]` is the
         array, `[+8]` the count, 13-byte records with x at +0 and y at
@@ -5845,7 +5853,12 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         descriptor block, runs 0x44f90 and then the outer glue 0x53a30;
         +0x0 and +0x4 forward into the class (0x96c38: `call 0x1e540`,
         PR-340's element region) or, in the 0x3ddf0 family, into
-        0x3df90/0x3df50, a text reader storing at [obj+0x112]; and 32 of
+        0x3df50/0x3df90 - PR-375 corrected that pair: they are not text
+        readers, they OR one byte into the signal key at [obj+0x60] and
+        the +0x0 one stores its argument as the companion at
+        [obj+0x112], while +0x4 then queries that companion through its
+        own +0x3c and +0x70 verbs and queues the authored pair
+        [obj+0x11a]/[obj+0x11e] scaled by the answers; and 32 of
         the 37 replace the base ask hook 0x45230 while the five
         second-family owners keep it. The two slots below each block are
         per-class functions taking [obj+0xc] as this (0x206f0 opens `sub

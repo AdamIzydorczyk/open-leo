@@ -52248,3 +52248,169 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   method array, and that the strongest evidence for it was a `sub eax,0xc`
   in a destructor - a function that knows it was called with the object's
   second interface pointer.
+
+## PR-375 - THE +0x0 HOOK STORES ITS ARGUMENT AS THE COMPANION LINK AND
+## BOTH HOOKS SET ONE BIT IN [obj+0x60]; THE +0x4 HOOK THEN QUERIES THAT
+## COMPANION THROUGH ITS OWN VERBS +0x3c AND +0x70, AND THE LOAD HOOK
+## 0x3dd60 COPIES THE FIRST AUTHORED POINT INTO [obj+0xfa]/[obj+0xfe] -
+## THE OFFSETS PR-369 FOUND THE SECOND QUERY ADDING
+
+```
+KIND: read
+SUBSYSTEM: what the point-list classes' lifecycle hooks actually do - the
+  functions behind the block's +0x0 and +0x4 slots (0x3df50, 0x3df90) and
+  the authored-text hook 0x3dd60 that fills the container and writes
+  [obj+0xfa]/[obj+0xfe], [obj+0x11a] and [obj+0x11e] (OI-128, OI-129, the
+  F6 thread; continues PR-374, PR-373, PR-369 and PR-279's loader).
+ADDRESSES: 0x3dd20, 0x3dd23, 0x3dd28, 0x3dd32, 0x3dd3c, 0x3dd46, 0x3dd4c,
+  0x3dd60, 0x3dd6a, 0x3dd72, 0x3dd7d, 0x3dd80, 0x3dd85, 0x3dd88, 0x3dd8d,
+  0x3dd91, 0x3dd97, 0x3dd9e, 0x3dda4, 0x3dda7, 0x3ddae, 0x3ddb5,
+  0x3ddbb, 0x3ddc0, 0x3ddc8, 0x3ddd2, 0x3ddde, 0x3dce3, 0x3dcf4,
+  0x3ddf2, 0x3df50, 0x3df5f, 0x3df69, 0x3dfad, 0x3dfb0, 0x3dfb3, 0x3dfbb,
+  0x3dfc0, 0x3dfc9, 0x3dfd2, 0x3e009, 0x3e042, 0x3df90, 0x3ed40, 0x3ee80,
+  0x3efe0, 0x3efe9, 0x3dcc2, 0x3dccd, 0x3dcd2, 0x3dcff, 0x44f90, 0x45120,
+  0x49580, 0x498f0, 0x52b10, 0x54e00, 0x55070, 0x749a0, 0x77c00, 0x91446,
+  0x96cf8, 0x9733c, 0x98278, 0x1e540,
+  0x1e560, 0x1f6f0, 0x1f490, 0x1f4e0, 0x27640, 0x27660, 0x34670, 0x5c,
+  0x60, 0x64, 0x68,
+  0x6c, 0x91, 0x98, 0x112, 0x116, 0x11a, 0x11e, 0xfa, 0xfe, 0x20, 0x10
+NAMES: signal key, signal mask, or-mask, companion link, authored key,
+  load hook, first authored point, second-pass offsets, unlinked default,
+  forwarder, sscanf form, pr375_hooks.py, pr375_hooks.txt,
+  pr375_forwarders.py, pr375_forwarders.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 line that called 0x3df50 a text reader and the
+  question about [obj+0x112], and the HANDOFF section 8 F6 paragraph.
+  Nothing under ported/ is touched, so only the light gate applies.
+HOOKS: PR-374 read the shape of these hooks through a 0x40-byte window and
+  so reported calls that belong to the following function; this record
+  bounds each body at its first ret. PR-369 named [obj+0xfa]/[obj+0xfe] as
+  the offsets the 0x3ddf0 second pass adds and [obj+0x112] as a link it
+  walks; PR-246 and the ZARIA notes in section 8 named [obj+0x112] a
+  companion. PR-279 read the loader that drives the container's +0x20 verb
+  0x45120. PR-373 showed the constructor arming the container.
+OPENS: which signal the two hooks light - 0x49580 ORs one byte into the
+  13-byte signal key at [obj+0x60] that PR-101/PR-102 read and the port
+  calls `o->sig` (bit 0x20 of the third dword for +0x0, of the first for
+  +0x4), and the ledger's bit-to-name table stops at bit 54; what the
+  companion's verbs +0x3c and +0x70 are, since the +0x4 hook asks the
+  companion through both (0x3dfd2, 0x3e009) and multiplies their results
+  into the queue entries; what the authored key F at 0x91446 controls -
+  [obj+0x11a]/[obj+0x11e] are read only by 0x3df90, scaled by what the
+  companion says; what 0x3ed40 and 0x3ee80 do after the second family's
+  load hook 0x3efe0 parses into [obj+0x44]; the two blocks whose hooks
+  contain no call at all (0x96cf8 at both +0x0 and +0x4, and the +0x4 of
+  0x9dbd8 and 0x9f790) - a form this census could not classify; the six
+  +0x0 forwarders that are not 0x3df50 (0x1e540, 0x1f6f0, 0x1f490,
+  0x27640, 0x34670) - the element-region one excepted, unread; and
+  whether the stack triple {x, y, 0x98278} built at 0x3dd88 is a query
+  packet, since 0x52b10's node is four dwords with the same kind of third
+  word (PR-370 paragraph (d)) while here the pair only reaches
+  [obj+0xfa]/[obj+0xfe].
+CLOSES: PR-374's open item "what the value 0x3df50 parses into
+  [obj+0x112] is" - it parses nothing: the value is the pointer the verb
+  was handed, the companion link the ledger already knows, and the calls to
+  0x749a0 and 0x49580 only OR a mask into the object's signal key at
+  [obj+0x60]. It also closes PR-369's question about [obj+0xfa]/[obj+0xfe]:
+  they are the FIRST RECORD of the object's own authored point list, copied
+  there by the load hook, and 0x3df90 subtracts [obj+0xfa] from
+  [obj+0x106], so the second query the 0x3ddf0 writer issues is aimed at
+  the object's own first authored point and the companion is told about it.
+CORRECTS: PR-374 (my own, same day): "0x3df50 reads a value (0x749a0, then
+  0x49580) and stores it at [obj+0x112]" and "the +0x4 hook calls
+  0x3df90 then 0x3df50". Both come from reading a 0x40-byte window that
+  runs past the function's ret. Bounded at the ret, +0x0 is
+  `call 0x3df50; ret` in 26 of 32 cases and +0x4 is `call 0x3df90; ret` in
+  28 of 36 - each hook calls exactly one function, never both. And 0x3df50
+  stores its edx ARGUMENT at [obj+0x112]; the two calls OR bits into the
+  signal key, they read nothing; and PR-374's "0x3df90 instead tests
+  [obj+0x11a] and [obj+0x11e]" was cut short by that same window - after
+  that test it queries the companion.
+MEASURED: (a) THE FORWARDER CENSUS (pr375_forwarders.py). Over the 32
+  +0x0 and 36 +0x4 overrides, bodies taken to the first ret: +0x0 = 26 x
+  `call 0x3df50; ret`, and one each to 0x1e540 (the element region),
+  0x1f6f0, 0x1f490, 0x27640, 0x34670, plus a form with no call at
+  0x96cf8. +0x4 = 28 x `call 0x3df90; ret`, one each to 0x1e560, 0x1f4e0,
+  0x27660, 0x44fe0 x2, and no-call forms at 0x96cf8, 0x9dbd8, 0x9f790.
+  (b) THE FLAGS AND THE LINK (pr375_hooks.py). Both 0x3df50 and 0x3df90
+  open the same way: build a 12-byte buffer on the stack - `mov ebx,0xc;
+  xor edx,edx; mov eax,esp; call 0x749a0`, where 0x749a0 replicates one
+  byte 0xc times through 0x77c00 - then set one byte of it (`mov
+  dl,[esp+3]; or dl,0x20` at 0x3df6e for +0x0, `mov dl,[esp]; or dl,0x20`
+  at 0x3dfad for +0x4) and OR the buffer into the object with `lea
+  eax,[obj+0x60]; call 0x49580`, which is a three-dword OR loop (`mov
+  ebx,[edx]; or [eax],ebx` until eax+0xc). So the two hooks set bit 0x20
+  of [obj+0x63] and of [obj+0x60] respectively. Then they part: 0x3df50
+  does `mov [ecx+0x112],esi`, where esi was its edx argument at entry - it
+  records a companion - and returns.
+  (c) THE +0x4 HOOK QUERIES THE COMPANION. 0x3df90 continues: if
+  [obj+0x11a] and [obj+0x11e] are both zero it jumps to 0x3e042 and only
+  does `mov [obj+0x112],0` - the same unlink the default 0x3dd20 does -
+  otherwise it walks the companion three times, all with eax = [obj+0x112]
+  and the call through the companion's own class table: `mov
+  edx,[[obj+0x112]+0x8]; call [[edx]+0x3c]`, and if that returns zero it
+  stops; then `mov eax,[obj+0x106]; sub eax,[obj+0xfa]`, sign that into
+  edi, `call [[edx]+0x70]; imul edi,eax`; then two queue entries,
+  `mov ebx,[obj+0x11a]; imul ebx,edi; mov edx,8; mov ecx,[obj+0x11e];
+  call 0x52b10` and the same with edx=2. So the authored pair
+  [obj+0x11a]/[obj+0x11e] is a per-object action rate scaled by what the
+  companion says, and the companion answers for itself, through its own
+  +0x3c and +0x70 verbs.
+  (d) THE UNLINKED DEFAULT 0x3dd20: `mov [edx+0x112],0; mov
+  [edx+0x116],1; mov [edx+0x11e],0; mov eax,[edx+0x11e]; mov
+  [edx+0x11a],eax` - reached after a call to 0x54e00, and it has no xrefs
+  of its own: it is a table entry. Its shape matches the end of the +0x4
+  hook (0x3e042 does the same first store) and its last three stores match
+  0x3ddc8-0x3ddd8 in the load hook.
+  (d2) THE QUERY PATH NOW SEEN WHOLE. The 0x3ddf0 writer's tail,
+  0x3dcc2-0x3dcff: `add eax,0xee; call 0x45200` - it translates through
+  THIS object's own container; then `mov ebx,[esi+0x112]; test ebx,ebx`,
+  and if there is a companion, `mov eax,ebx; mov edi,[[ebx]+8]; call
+  [[edi]+0x10]` with the stack set from [obj+0x8] and [obj+0xc] - the
+  same surface verb the container's own table answers at slot +0x8, asked
+  of the companion through the companion's class table.
+  (e) THE LOAD HOOK 0x3dd60, in order: `lea esi,[eax+0xee]; call 0x45120`
+  - parse the authored list into the container at [obj+0xee], one of the
+  five sites PR-372 counted for that verb (0x3dd72). Then
+  `mov esi,[esi+4]; mov eax,[esi]; mov eax,[esi+4]` - the FIRST record's
+  x and y. Then the stack triple `{[esp]=x, [esp+4]=y, [esp+8]=0x98278}`.
+  Then `lea esi,[ebx+0xfa]; mov [esi],eax; mov [esi+4],eax` - the pair is
+  stored at [obj+0xfa]/[obj+0xfe]. Then `lea eax,[ebx+0x11e]; lea
+  eax,[ebx+0x11a]; push 0x91446; call 0x498f0; cmp eax,2` - the authored
+  text is scanned with the format at 0x91446, which reads ` F = %d, %d `;
+  if fewer than two values are matched, [obj+0x11e] and [obj+0x11a] are
+  cleared. It has 11 call sites (0x1f583, 0x1f7d9, 0x2783c, 0x27d18,
+  0x34477, 0x346a6, 0x378c3, 0x37b16 and others).
+  (f) THE OTHER LOAD HOOK, THE +0x44 LAYOUT. Only five functions call the
+  parser verb 0x45120: 0x3dd60, PR-340's element code (0x1e51c, 0x1e640),
+  0x288d5, and 0x3efe0, which parses into `eax+0x44` - the container
+  offset of the second family, the five owners that also keep the base
+  +0x0 ask hook - and then calls 0x3ed40 and 0x3ee80. So there are at
+  least two load hooks, at the two container offsets. That is a lead, not
+  a census: 0x3dd60 has 11 call sites and there are 29 [obj+0xee] owners,
+  so some of them are filled another way, and 0x288d5 is unread.
+  (g) THE CONSEQUENCE FOR THE STANDING QUERY. PR-369 recorded that the
+  0x3ddf0 writer asks again with [obj+0xfa]/[obj+0xfe] added to the point
+  its own +0x6c returns. Those two fields are written nowhere else with
+  authored data: 0x3dd60 puts the first authored point of the object's own
+  list there, and 0x3df90 subtracts [obj+0xfa] from [obj+0x106] - the
+  current position minus the authored home. The second query is the object
+  asking about its own first authored surface point.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The F6 thread has been chasing the difference between measuring the
+  level's surface and measuring one's own. Here is the authored origin of
+  that difference: the same load hook that fills an object's point list
+  also puts its first authored point into the fields the standing second
+  query adds. The two halves PR-369 found - the extra pass and the record
+  array - are one authored feature. And the surface query is not private
+  to the asker: the writer translates through its own container and then
+  asks the companion through the companion's verbs, which is how a pair of
+  authored objects keeps one standing on the other's surface.
+
+- WHAT SURPRISED ME. That I had called a flag-setter a text reader because
+  I read past a `ret`. The bounded-body rule is the same one that caught
+  the PR-372 offset mistake: reading a window instead of a function.

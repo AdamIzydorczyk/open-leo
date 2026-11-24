@@ -5771,10 +5771,22 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     replace it; the five that keep it are exactly the second-family
     owners) - the +0x0/+0x4 hooks are one-instruction forwarders into the
     class (0x96c38: `call 0x1e540`/`call 0x1e560`, PR-340's element
-    region) or, for the 0x3ddf0 family, 0x3df90 and 0x3df50, and 0x3df50
-    parses a value through 0x749a0/0x49580 into [obj+0x112] - what is
-    that, given [obj+0xfa]/[obj+0xfe] and [obj+0x106]/[obj+0x10a] are the
-    standing query's offsets and answers; the destructor's descriptor
+    region) or, for the 0x3ddf0 family, into 0x3df50 and 0x3df90
+    (PR-375): they OR one byte into the 13-byte signal key at
+    [obj+0x60] (bit 0x20 of its third dword, of its first one), 0x3df50
+    stores its argument as the companion at [obj+0x112], and 0x3df90
+    then asks that companion through its own verbs +0x3c and +0x70 and
+    queues [obj+0x11a]/[obj+0x11e] scaled by the answers - so still
+    open: which signal bit that is (the ledger's numbering stops at 54),
+    what the companion's +0x3c and +0x70 verbs are, what the authored
+    key ` F = %d, %d ` at 0x91446 controls, and why 0x3dd60 has only 11
+    sites for 29 [obj+0xee] owners when 0x3efe0 parses the same text at
+    [obj+0x44] and 0x288d5 is unread. Settled at the same time:
+    [obj+0xfa]/[obj+0xfe] are the FIRST RECORD of the object's own
+    authored list, copied there by the load hook, and 0x3df90 subtracts
+    [obj+0xfa] from [obj+0x106] - the standing second query is about the
+    object's own authored home, and 0x3dcd2-0x3dcff repeats it against
+    the companion. Still open there: the destructor's descriptor
     block (0x96560, 0x993ac), the one-word form of PR-370's five-dword
     blocks; the second base's own slot +0 (0x20750 only returns).
     Older open items stand: the 5
