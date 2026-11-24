@@ -5770,8 +5770,16 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         F6 still lacks: the current-frame element per
         object (the [view+0x48] chain) if the live-position half is to be
         wired, the port's unmodelled ground_on, ground_off, lock2 and
-        unlock2 and the +0x58 placement path (PLAN 8g), and which branch
-        of 0x45400 re-derives its point through +0xb0 at 0x4552f.
+        unlock2 and the +0x58 placement path (PLAN 8g), and the owner of
+        the 0x45500 box test - PR-365 corrected PR-364 here: 0x45400 ends
+        at 0x454c6, 0x45500 is its own function, and it is the shared
+        helper of the BAL (balloon) class 0xa17dc, a provider-point-plus-
+        velocity test against a box that raises the asker's Y velocity on
+        a hit. PR-365 also split the families: over the 186 anchor kind
+        tables, +0x58 is 0x54eb0 in 155 and the plain pair copy 0x23ba0
+        in 31, and in those 31 the +0xb0 slot is an object getter or an
+        asked-marker, never a provider - so the port's L15/L17 model is
+        the 155 family only.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

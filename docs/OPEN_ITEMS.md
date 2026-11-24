@@ -5500,10 +5500,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     difference of the two sample points - the live position moves to
     the given aim point PLUS the step when the object is not free.
     That is the third mover of the live position, after PR-354's
-    ground_on and lock2 runners, and the ask query itself has a
-    matching second point-derivation nobody had read: at 0x4552f,
-    inside the body entered at 0x45400, before the point-in-record
-    compare at 0x45553. The +0x98 verb the two frame steps call is
+    ground_on and lock2 runners. The second point-derivation PR-364
+    found at 0x4552f is NOT part of that query: PR-365 measured the
+    boundary (0x45400's body ends at 0x454c6 `ret 0x4`, 0x454c9-0x454ff
+    is padding) and read 0x45500 as its own function - it runs the
+    requester's +0x68 accessor and its +0xb0 provider, adds the velocity
+    words, tests the result against three words of the callee
+    ([ecx], [ecx]+[ecx+0xc], [ecx+4]) and on a hit raises the asker's
+    Y velocity [ebx+0xce] by the remaining gap; it is the shared helper
+    of the BAL (balloon) class 0xa17dc, reached only through that
+    class's verb +0xc, and nothing in the image calls it directly.
+    PR-365 also split the two object families: over PR-237's 186 anchor
+    kind tables, +0x58 is 0x54eb0 in 155 and 0x23ba0 - `mov [eax],edx;
+    mov [eax+4],ebx; ret`, a plain pair copy - in the other 31, and the
+    +0xb0 slot of those 31 is not a provider at all (28 return a
+    companion object, 2 mark themselves asked, 1 tests state).
+    The +0x98 verb the two frame steps call is
     now answered too: 0x23a50 in all 155 tables, `lea edx,[eax+0x75]`
     then a call to 0x534e0, and 0x534e0 is one instruction, `ret`.
     It is a no-op, everywhere.
@@ -5622,10 +5634,18 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     0x53683, reached when the state record's +0x12 byte bit 3 is set
     (0x5367e `test dh,0x8`), on top of the ldir/rdir writes PR-320
     named (the immediates 0x1 seven times and 0xffffffff four). WHAT
-    IS NEW OPEN: which branch of 0x45400 reaches its second
-    point-derivation at 0x4552f (+0x68, then the requester's own
-    +0xb0, then velocity, then a point-in-record compare at 0x45553),
-    what PALMA's provider stub stores into [obj+0xb1] and feeds to
-    bit 0x40 of [obj+0x66], who calls the +0x58 placement path at
-    0x3ede2's function, and what the 31 private +0xb0 handlers each
-    answer.
+    IS NEW OPEN: who calls the vftable slot +0x18 that holds 0x45500 -
+    PR-365 read that function (its own body, not 0x45400's: 0x45400
+    ends at 0x454c6) and it is the BAL class's shared helper, reached
+    only through the class's verb +0xc, with no direct call anywhere in
+    the index; what PALMA's provider stub stores into [obj+0xb1] and
+    feeds to bit 0x40 of [obj+0x66] (PR-365 found a second handler
+    0x22df0 doing the same to [obj+0xbd], so it is a marker shape, not
+    a one-off), who calls the +0x58 placement path at 0x3ede2's
+    function, and what the six singletons ds:0xcee60..0xcee74 that the
+    BAL's helper belongs to are. CLOSED by PR-365: what the 31 private
+    +0xb0 handlers each answer - 27 are `mov eax, ds:0xceXX; ret`, one
+    more is the same through [0xcef40+0x394], and the rest are the
+    asked-marker pair 0x1e540/0x22df0 and the state test 0x4fb00; and
+    whether those tables install a different +0x58 - all 31 install
+    0x23ba0, the plain pair copy without the anchor delta.

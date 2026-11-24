@@ -50669,3 +50669,178 @@ GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff is the
   provider finding itself came from pairing two slots nobody had joined -
   the +0x54 census of PR-363 and the +0xb0 body of PR-308 were each half
   of a law that only shows up as a difference.
+
+## PR-365 - THE 0x45500 BOX TEST IS NOT THE STANDING QUERY'S BODY: IT IS
+## THE BAL (BALLOON) CLASS'S SHARED HELPER, IT RAISES THE ASKER'S
+## Y-VELOCITY, AND THE 186 KIND TABLES SPLIT 155/31 ON +0x58 AND +0xb0
+```
+KIND: read
+SUBSYSTEM: the class-verb split between the two object families (the
+  point-provider vs getter meaning of +0xb0, 0x54eb0 vs 0x23ba0 at +0x58),
+  the owner of the 0x45500 box test that PR-364 mis-placed inside the
+  standing query, and the BAL (balloon) class's shared helper singleton.
+ADDRESSES: 0x454ae, 0x454c0, 0x454c6, 0x454d0, 0x454fd, 0x45500, 0x45508,
+  0x4550c, 0x4550f, 0x45511, 0x45516, 0x45519, 0x4551b, 0x45526, 0x45528,
+  0x4552f, 0x45535, 0x4553c, 0x45548, 0x45553, 0x45559, 0x4555f, 0x45566,
+  0x45569, 0x4556c, 0x45570, 0x45576, 0x4557a, 0x4557c, 0x45584, 0x4558a,
+  0x45591, 0x4559b, 0x4a0b0, 0x49920, 0x91836, 0x91839, 0xa2178, 0xa2190,
+  0xa218c, 0x4fb60, 0x4fb70, 0x4fb91, 0x4fbeb, 0x4fba0, 0x4fc00, 0x4fc10,
+  0x4fc20, 0x4ee20, 0x4ee50, 0x39d00, 0x74bc0, 0x74be0, 0x3d100, 0x3d114,
+  0x3d119, 0x3d137, 0x44350, 0xcee60, 0xcee64, 0xcee68, 0xcee6c, 0xcee70,
+  0xcee74, 0xcef40, 0xa17dc, 0xa17d4, 0x4e6ba, 0x4e6ce, 0x4e6d3, 0x531f0,
+  0x5c320, 0xa0624, 0x3d0f0, 0x23a10, 0x23ba0, 0x2b9b0, 0x4ef80, 0x4fb00,
+  0x22df0, 0x1e540, 0x23900, 0x23b50, 0x23b60, 0x54eb0, 0x544f0, 0x53df0,
+  0x55070, 0x98278, 0x68, 0x58, 0x54, 0xb0, 0xc, 0x66, 0x6d, 0xb1, 0xbd,
+  0xca, 0xce, 0xd6, 0x40, 0x18
+NAMES: point provider, getter verb, box test, aim point, helper singleton,
+  vftable, second base, deleting destructor, BAL, balloon, the 0x53df0
+  family, the 0x55070 family, kind table, anchor, sample point, ask marker,
+  bit 0x40, OI-128, OI-129, F6, PLAN 8g, pr365_45500_read.py,
+  pr365_read.txt, pr365_vtable_probe.py, PALMA, KATAPULT, DRABINKA
+CODE: no: image reading. The tracked diff is prose plus comments: this
+  record, the PR-364 sentences corrected in OI-128 and OI-129, the HANDOFF
+  section 8 F6 paragraph, and two sentences added to the L15 block comment
+  in ported/ll_level.c about the other family. No port behaviour changed
+  and no leg was added.
+HOOKS: PR-364 is the record being corrected; PR-327/PR-329 read the
+  rectangle-ask family and its +0x78 answers, which is the shape this box
+  test resembles; PR-305 named the two accessors every ask test runs
+  through, and the +0x68 used here is PR-236/PR-27x's `add eax,0xd6; ret`
+  in the 155 family (0x23900) and `ret` in this one (0x23b60); PR-303's
+  name census names 0xa17dc BAL, and PR-70 read "the balloon pickup ...
+  builds the object with vtable 0xa17dc"; PR-237 supplies the kind-table
+  anchor (+0x6c = 0x23a10, 186 tables) this census re-uses and read the
+  ask side setting [obj+0x66] bit 0x40, which the two marker handlers here
+  set from the other side; PR-340 named the allocator 0x44350 and the
+  singleton member at [0xcef40+0x394], which is what 0x2b9b0 returns.
+OPENS: who calls the vftable +0x18 slot - the index has NO direct call to
+  0x45500 (zero xref rows for it, its nine sibling methods, its
+  initializer 0x4fb70 and its accessor 0x4fb60), so the call must come
+  through the object's own vftable, which the index cannot attribute; what
+  the six singletons ds:0xcee60/64/68/6c/70/74 allocated at 0x3d100-0x3d140
+  are and why the BAL's +0xc verb hands one out; whether the eax that
+  reaches 0x45500 is the singleton itself or a record - the same field
+  [obj+0xc] is initialised to the empty table 0x98278 by 0x4fb83 and read
+  as a box width at 0x45559, and 0x454d0 passes a pointer to it to 0x4a0b0
+  and prints two %d values, so the field has at least two readers with
+  different shapes; which of the 62 `call [reg+0xc]` sites runs the BAL's
+  accessor; what the four non-getter +0xb0 handlers feed ([obj+0xb1],
+  [obj+0xbd] and the [obj+0x66] bit 0x40 they share with PR-237's ask
+  side); and the 27 companion objects those getters return.
+CLOSES: two PR-364 OPENS items. (1) "whether the 31 views outside this
+  census install a different +0x58" - yes, all 31: over PR-237's 186
+  anchor kind tables, +0x58 is 0x54eb0 in exactly 155 and 0x23ba0 in
+  exactly 31, the same split as +0x54 = 0x55070 / 0x53df0, and 0x23ba0 is
+  three instructions - `mov [eax],edx; mov [eax+4],ebx; ret` - a plain
+  copy of the caller's pair into the object's position, with no AC_BUTLA
+  raise, no anchor delta and no re-aim. (2) "what the 31 private +0xb0
+  handlers each answer" - measured shape census in pr365_read.txt section
+  10: 27 are `mov eax, ds:0xceXX; ret` and a 28th, 0x2b9b0, is the same
+  getter through one indirection (`mov eax,ds:0xcef40; mov eax,[eax+0x394]`
+  - PR-340's singleton); 3 are not getters: PALMA's 0x1e540, 0x22df0
+  (`lea edx,[eax+0x64]; or BYTE PTR [edx+0x2],0x40; mov [eax+0xbd],ebx`)
+  and 0x4fb00 (`mov eax,[eax+0x5c]; cmp eax,1; sete al`). So +0xb0 is
+  polymorphic: a point provider in the 155 family, an object getter or an
+  "I was asked" marker in the 31.
+CORRECTS: PR-364, twice. (a) Its MEASURED (d) and its OPENS both say the
+  second point-derivation at 0x4552f sits "inside the body entered at
+  0x45400", and its question was which branch of 0x45400 reaches it. It
+  does not: 0x45400's body ends at 0x454c6 with `ret 0x4`, 0x454c9-0x454ff
+  is padding, and 0x45500 opens its own function ending at 0x4559b `ret`.
+  The pass made exactly the mistake the same record warns about - it
+  believed a Ghidra function-list entry over the disassembly - and the
+  discipline (dis from a boundary, and the end of a body is marked by its
+  `ret`, not by the next entry) is what caught it. The branch question is
+  void; what replaces it is in OPENS. (b) Its sentence that the 31 tables
+  "each install their own" +0xb0 provider reads as if all 31 are providers;
+  the census says only the 155 family fills the caller's pair buffer. Its
+  own note about PALMA's 0x1e540 ("ignores the buffer, stores the address,
+  sets bit 0x40") was right and turns out to be a second instance of the
+  marker shape at 0x22df0, not a one-off.
+MEASURED: (a) THE BOUNDARY, from the index rows (pr365_45500_read.py
+  section 1): 0x454c0 `add esp,0x8`, 0x454c3-0x454c5 pops, 0x454c6
+  `ret 0x4`; 0x454c9-0x454ff is `add BYTE PTR [eax],al` padding; 0x45500
+  starts `push ebx/ecx/esi/edi/ebp; sub esp,0xc` and ends at 0x4559b
+  `ret`. 0x45400 has three call sites and no fourth: 0x45423 (0x45380),
+  0x45439 ([kind+0x6c]) and 0x45491 (0x455a0), and its winner store is
+  [view+0xe2]/[view+0xe6]/[view+0xea] at 0x454a2-0x454ba (PR-336's
+  surface triple).
+  (b) 0x45500 WHOLE, the law: eax = an object holding a box (its [ecx],
+  [ecx+4] and [ecx+0xc] are the three words the test reads), edx = the
+  requester ebx. 0x4550c `mov edx,[edx+0x8]` takes the requester's kind
+  table; 0x45516 runs its +0x68 accessor into esi; 0x45519-0x45522 seeds
+  the {0, 0, 0x98278} buffer (the same third word the ask wrapper 0x45320
+  seeds at 0x45338 - PR-237's request block); 0x4552f runs the
+  requester's +0xb0 into it; 0x45535-0x4554f reads the pair back and adds
+  [ebx+0xca]/[ebx+0xce], the velocity words PR-346 measured, so the test
+  point is the aim point one frame ahead; then four guards, each jumping
+  to the `xor eax,eax` at 0x45591: [ecx] <= x (0x45555), x <= [ecx] +
+  [ecx+0xc] (0x4555f-0x45564), the requester's own accessor word
+  [esi+4] >= [ecx+4] (0x45566-0x4556e), and [ecx+4] - y > 0
+  (0x45576-0x4557a). On success 0x4557c-0x45584 does
+  [ebx+0xce] = [ebx+0xce] + ([ecx+4] - y) - the asker's Y velocity is
+  raised by the gap from its aim point to the box's other edge - and
+  0x4558a returns 1. In the 155 family +0x68 is 0x23900 (`add eax,0xd6;
+  ret`, PR-236/PR-27x), so [esi+4] there is the PR-364 second sample
+  point, not the live position; in this class +0x68 = 0x23b60 is `ret`,
+  so esi is the object and [esi+4] its live Y.
+  (c) WHO OWNS IT. Exactly one aligned dword in the image holds 0x45500:
+  0xa2190 = 0xa2178 + 0x18. 0xa2178 is a vftable: 0x4fb91 is the only
+  instruction that stores it, inside the initializer 0x4fb70-0x4fb97 which
+  also zeroes [obj], [obj+8], [obj+0x10] and writes [obj+0xc] = 0x98278,
+  and 0x4fbeb installs the second base 0xa218c at [obj+0x10]; the sibling
+  at vftable +0x1c, 0x4fba0, is the deleting destructor (`test dl,4`,
+  0x74bc0/0x74be0), the same shape as 0x5140b/0x5144b/0x5148b for the
+  neighbouring vftables 0xa2198/0xa21ac/0xa21c0. The object is the
+  singleton ds:0xcee68, allocated at 0x3d119 in the run 0x3d100-0x3d13c
+  that creates six of them (0xcee60, 0xcee64, 0xcee68, 0xcee6c, 0xcee70,
+  0xcee74) through the 0x44350 allocator, and its accessor 0x4fb60
+  (`mov eax, ds:0xcee68; ret`) is installed as verb +0xc of exactly one
+  kind table in the image: 0xa17dc. That is PR-303's BAL and PR-70's
+  balloon pickup, built at 0x4e6ba-0x4e6da (`mov eax,0xa5; call 0x5c320`,
+  then the DRABINKA ctor 0x531f0, then [obj+8] = 0xa17dc and [obj+0xc] =
+  0xa17d4) - the same pair shape PR-238 measured for the placed rope.
+  (d) THE 155/31 SPLIT, over PR-237's anchor (all 186 kind tables have
+  +0x6c = 0x23a10): +0x58 = 0x54eb0 in 155 and 0x23ba0 in 31; +0x54 =
+  0x55070 in 155 and 0x53df0 in 31. The 31 are listed in
+  pr365_read.txt sections 9 and 10 with their +0x58, +0xb0 and +0x54, and
+  0xa17dc is one of them (+0x54 = 0x53df0, +0x58 = 0x23ba0, +0xb0 =
+  0x4ef80 = `mov eax, ds:0xcee74; ret`).
+  (e) THE SIBLING at vftable +0x14, 0x454d0: `add ecx,0xc; call 0x4a0b0`,
+  then two 0x49920 calls with the format strings "%d" (0x91836) and " , "
+  (0x91839) - a debug dump of the same fields, which is what shows the
+  field at [obj+0xc] has more than one reader.
+  (f) NO DIRECT CALL exists: the xref table has zero rows for 0x45500,
+  0x454d0, 0x4fb60, 0x4fb70, 0x4fc00, 0x4fc10, 0x4fc20, 0x4ee20, 0x39d00
+  and 0x4fba0, and no data reference outside 0xa2190 and the two
+  initializer stores.
+GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff includes
+  comments in ported/ll_level.c, so what was run anyway: make rc=0 with 0
+  warnings and make verify-level rc=0 with its (ok) lines unchanged, the
+  index regenerated with this record in the tree before the runs, and
+  verify-docs P4 counting every record including this one.
+```
+
+- WHY. PR-364 had left one thread open that mattered for F6: an ask path
+  that re-derives a point through the provider and then tests it. It is
+  not in the standing query at all, so the seat legs are not affected -
+  but the test that does exist is worth knowing: it is the aim-point-plus-
+  velocity box test, and on a hit it adds the gap to the box edge into the
+  asker's Y velocity. That is a second measured writer of the velocity
+  pair, and it belongs to the balloon pickup's helper, not to the ground.
+  The other half of the pass matters more for the port: the two families
+  of classes disagree about the verbs themselves. The port's L15/L17 model
+  is the 155 family; for the other 31 the same slot numbers mean
+  something else, and any future port of a 0x53df0-class behaviour must
+  not reuse the provider code.
+
+- WHAT SURPRISED ME. I corrected a claim I wrote less than an hour
+  earlier, and the reason is instructive: I had let the function-list
+  entry decide where a body ended. The disassembly says otherwise -
+  0x454c6 is a `ret 0x4` and 0x45500 has its own prologue - and once I
+  read the body properly its owner turned out to be a completely
+  different object, a singleton the balloon class hands out. Two rules
+  came out of one mistake: a body's end is its `ret`, and an orphan
+  method is worth chasing to its vftable and from there to whoever
+  installs it, because that is how an "unreachable" function turns into
+  a named class.
