@@ -5539,8 +5539,15 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         itself: a 1 px shift keyed to the row index and balanced to
         zero net over ZARIA.01's 14-row PALM cycles, and for
         KATAPULT a closed five-jump path with a (+42,+31) in-cycle
-        excursion (OI-125) - so a first F6 seat leg is that shift at
-        the row admit, and no seat carries the lion anywhere.
+        excursion (OI-125). PR-342 PORTED THAT LEG: the port now moves
+        the tables it already parses, at the admitted row and keyed to
+        the same cursor - (0,+1) for cursors 0..6 and (0,-1) from 7 on
+        a PALMA, the five jumps on a KATAPULT, nothing on a
+        KAMIEN/KILOF_PL - and leg L14 measures all three on ZARIA.01's
+        own PALM.MOV/KAT.MOV lists and table lines. That does not carry
+        the lion anywhere - the cycle returns the table to its authored
+        place - so F6's crossing still waits on the [obj+0x89]
+        attachment of OI-123.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

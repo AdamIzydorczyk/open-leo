@@ -47277,3 +47277,130 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
   jump table entries are the five dwords at 0x1e670, read at the image
   offset 0x1e670 minus 0x10000.
 ```
+
+## PR-342 - THE PORT NOW MOVES THE SEAT SURFACE TABLES THE WAY THE CLASS
+## +0xa4 VERB DOES AT THE ROW ADMIT: ONE PIXEL BY THE ROW CURSOR FOR PALMA
+## AND A CLOSED FIVE-JUMP PATH FOR KATAPULT, PINNED ON ZARIA.01'S OWN TEXTS
+```
+KIND: port
+SUBSYSTEM: F6's seat chain, OI-072/OI-124/OI-125 - the port's first model
+  of the surface-table motion the object class's +0xa4 verb makes at the
+  row admit, and the leg that pins it on ZARIA.01's authored row lists.
+ADDRESSES: 0x1e5c0, 0x1e5dd, 0x1e5e2, 0x1e5e9, 0x1e5ee, 0x1e5f4, 0x1e5f6,
+  0x1e5f8, 0x1e5fd, 0x1e624, 0x1e690, 0x1e6a7, 0x1e6aa, 0x1e6ad, 0x1e670,
+  0x1e6be, 0x1e723, 0x1e788, 0x1e7f3, 0x1e886, 0x1e95d, 0x45200, 0x45217,
+  0x52338, 0x52341, 0x535db, 0x96c38, 0x96d1c, 0x96a88, 0x96b88, 0x239c0,
+  0x45320, 0xa4, 0xa5, 0xb1, 0xbd, 0xc1, 0x4, 0x7, 0x3, 0x8, 0x9, 0xa,
+  0xb, 0xc, 0xd, 0x18, 0x20
+NAMES: obj_seat_shift, seat_motion_selftest, L14, ZARIA.01, ANIPL2, PALMA,
+  KATAPULT, KAMIEN, KILOF_PL, PALM.MOV, PALML.MOV, KAT.MOV, A_RUN, SURFACE
+  TABLE, TABLE MOVE, ROW CURSOR, MOV SELFTEST, OI-072, OI-123, OI-124,
+  OI-125, F6
+CODE: yes: ported/ll_level.c only - obj_seat_shift and the two-entry class
+  table in it, its call in obj_advance after the admitted row's own
+  directives, the new leg L14 seat_motion_selftest wired into the mov
+  selftest chain, and PR-335's struct comment about this verb corrected.
+  No new hook, no return code, no Makefile or tool change.
+HOOKS: obj_advance, the object step, unchanged in its own law; the reader
+  place_seat_table of PR-335, unchanged; ll_mov_row_admit, PR-333's
+  admission law, unchanged - the shift is applied AFTER a row the admit
+  accepted, which is where 0x52341 sits. The leg runs inside
+  ./ll_level --mov-selftest and needs no game data.
+MEASURED: (a) WHAT RUNS NOW. In the step that admits a row, after the
+  row's own directives, the port moves the object's surface table - the
+  same two writes 0x45200 makes, its record loop adding edx to [rec+0] and
+  ebx to [rec+4] for every record (0x45217-0x4521a, PR-338). Which verb
+  runs is decided by the class the shipped installer picks for the entry's
+  first field, and only two of the four seat-family tokens carry a table
+  verb at +0xa4: PALMA's stored view 0x96c38 holds 0x1e5c0 and KATAPULT's
+  0x96d1c holds 0x1e690, while KAMIEN's 0x96a88 holds 0x239c0 and
+  KILOF_PL's 0x96b88 the query 0x45320 (PR-339) - so a KAMIEN's or
+  KILOF_PL's table is not touched at all. The flag bytes stay: 0x45200
+  writes x and y only, and the leg checks that.
+  (b) THE LAW IS PR-341'S. Both verbs read the state record's word at
+  +0x4, the row cursor this port keeps as o->fi. 0x1e5c0: `cmp eax,0x7`,
+  `mov esi,1` at 0x1e5e2 for a cursor below 7, `mov esi,-1` at 0x1e5e9
+  from 7 up, and 0x1e5f6 `xor edx,edx` - x is always 0 (y grows down, so
+  the table goes DOWN first). 0x1e690: `sub eax,3; cmp eax,4; ja 0x1e95d`
+  and the jump table at 0x1e670, whose five arms call 0x45200 with
+  (+13,+5), (+13,+6), (+13,+10), (+3,+10) and (-42,-31) at cursors 3, 4,
+  5, 6 and 7; those five offsets sum to exactly (0,0), so the catapult's
+  table is taken to (+42,+31) and put back inside one list cycle.
+  (c) THE FIXTURES ARE THE SHIPPED TEXTS. L14 runs three objects through
+  one full list cycle, ending on the port's own list-end wrap:
+  a PALMA with ANIPL2's own line `1 18,40;80,40` at the authored
+  placement 820,435 and PALM.MOV's fourteen rows with their authored
+  thresholds 0,100,100,100,200,200,200,200,200,300,300,300,300,300; a
+  KATAPULT with `1 7,45;40,45` at 300,588 and KAT.MOV's ten rows, 0 then
+  nine of 300; and a KAMIEN given the same list and the same table as the
+  control. The first row of both shipped states opens with a `WAIT K_GEN1`
+  clause and both carry `seq=`/`sample=`/`smpauto` art-and-sample
+  directives; the clause and those are left out of the fixture because
+  this port clears o->sig at the top of every step (PR-262), so a WAIT
+  first row never admits in a fixture that raises nothing - PR-333's leg
+  owns that half - and no row number, threshold or count is changed.
+  Measured: the PALMA table reaches exactly 7 px below its authored place
+  and ends exactly at it, never moving in x; the KATAPULT table peaks at
+  (+42,+31) and ends exactly at its authored place; the KAMIEN's table
+  never moves by one pixel. Both records of each table move identically
+  and every flag byte is unchanged.
+  (d) RED FIRST, THEN THE MUTATIONS. With the leg wired but no shift, it
+  fails as recorded: "seat motion selftest: FAILED ZARIA.01 ANIPL2's
+  PALMA at 820,435 ... the table peaked at (0,0) and ended at (0,0), want
+  peak (0,7) and end (0,0)". With the shift in, two mutations: moving the
+  cursor bound to 6 fails with "peaked at (0,6) and ended at (0,-2)", and
+  adding KAMIEN to the class gate fails on the control case with "peaked
+  at (0,7) and ended at (0,4), want peak (0,0) and end (0,0)". The
+  unmutated tree passes both the leg and the whole suite.
+  (e) WHICH SHIPPED OBJECTS THIS MOVES. Over the 103 dumped .des members
+  of PR-335's set, exactly four entry lines name the two types that carry
+  a table verb, and all four are ZARIA.01 ANIPL2: KATAPULT,kat.ani,
+  kat.mov,300,588 - PALMA,palm.ani,palm.mov,820,435 - and two
+  PALMA,palm.ani,palml.mov at 965,335 and 1010,275, each followed by its
+  table line. No other level in the shipped install places either type.
+  The port's seat motion is therefore exactly this level's chain: three
+  PALMA tables of two records oscillating 7 px down and back over their
+  14-row cycle, and the KATAPULT's two-record table tracing the closed
+  (+42,+31) path over its 10-row one.
+  (f) WHAT THE LEG DOES NOT DO. The element half of either verb is not
+  modelled - 0x1e5fd-0x1e624 behind [obj+0xb1], and the
+  [[0xcef40+0x394]+8]+0x10 calls the five arms make behind [obj+0xbd] and
+  [obj+0xc1] - which stays OI-125. The slot's second runner, 0x535db in
+  the state applier, is not modelled: it reads the OLD state's cursor and
+  runs before the new record's ENTER, and no shipped seat script has a
+  second state to change to. And nothing consumes the moved table: the ask
+  chain still fails at the [obj+0x89] clearance of OI-123, so this does
+  not open the exit. OI-124's 28 px is untouched - the excursion lives
+  inside the cycle and returns to the authored place, which is what the
+  leg measures.
+OPENS: the phase question PR-341 left open is a model choice in this leg:
+  the port keys the move to the row it has just admitted, while the
+  engines cursor step lives in the walk body 0x520c0, which PR-324 reads
+  as running before the step - a fixture cannot settle that, only the
+  order of those two bodies can; the second runner at 0x535db, whose
+  fixture needs a seat script with two states, none of which ships; and
+  the element half, which needs the two fields of OI-125 named.
+CLOSES: the port half of OI-125 for the row-admit runner: the authored
+  seat motion is no longer only read, it runs, and ZARIA.01s four seat
+  objects measure it. It does not close OI-072, OI-123 or OI-124: with no
+  consumer of the table and a cycle that returns, the exit is still not
+  reachable.
+CORRECTS: PR-335's struct comment that 0x1e5c0 makes this shift "per
+  tick": it runs once per admitted row and once per state change, and
+  PR-341 read the word it switches on. Nothing else.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same suite
+  with DATA=/tmp/opencode/iso_stage/LEO HD=/tmp/opencode/hd_files; red
+  first, then the two mutations of (d) reported; no Windows legs
+  (rule 8). One gate note, reported as measured: two of the three -j
+  verify-all runs of this tree failed only the golden leg, "port pose set
+  changed: 27 vs 30 hashes" and "28 vs 30", while the first -j run of
+  the same seat code passed 71 of 71, `make verify-golden` alone passes,
+  and `make -k verify-all` with no -j passes rc=0 71 (ok). That pin
+  reads a capture window the leg closes with a 120 s timeout and
+  LEO_MENU_PPM_MAX, so a loaded machine can truncate the cycle: OI-126.
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 23 named with
+  DATA=/tmp/opencode/nope HD=/tmp/opencode/nope - PR-335's shape (13 and
+  22) plus one further named line, the vendored-SDL2 build-parity note,
+  which appears on this machine because vendor/SDL2-2.32.10 is not
+  staged; counted as printed.
+```

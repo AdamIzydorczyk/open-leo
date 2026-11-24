@@ -605,11 +605,17 @@ typedef struct {                     /* one placement of a script        */
      * follows the parse with 0x45200(point, dx = [obj+0], dy =
      * [obj+4]) (0x1e521-0x1e52a), which adds that pair to EVERY record
      * (0x45217-0x4521a), so the table is stored ABSOLUTE like the
-     * contact points; the same verb is also the runtime shift - 0x1e5c0
-     * calls it per tick with (0, +1) or (0, -1) from the state record's
-     * own field +4 (0x1e5dd-0x1e5f6). This port stores the load-time
-     * table only; nothing acts on it yet. nseat = 0 is the engine's no
-     * table. Measured through this reader over the shipped install:
+     * contact points; the same verb is also the runtime shift - the
+     * class +0xa4 verb 0x1e5c0 runs it once per admitted row (0x52341)
+     * and once per state change (0x535db), never per tick, with (0,+1)
+     * or (0,-1) taken from the state record's ROW CURSOR at +4
+     * (0x1e5dd-0x1e5f6, PR-341; PR-335 wrote "per tick" and PR-336
+     * "field +4", and PR-341 settled which). PR-342 applies that shift
+     * to these tables for the two shipped types whose class carries the
+     * verb (PALMA 0x1e5c0, KATAPULT 0x1e690); nothing else acts on the
+     * table yet - OI-123 still gates the ask chain. nseat = 0 is the
+     * engine's no table. Measured through this reader over the shipped
+     * install:
      * 147 lines in 15 .des files of 9 levels, 309 records stored
      * absolute, one line with text after its records (ZARIA.01 ANIPL2's
      * KATAPULT), none over the cap, none with a stale count, none with a
@@ -1504,6 +1510,66 @@ static unsigned obj_row_tick(lvl_obj *o, unsigned dt_ms)
     return n;
 }
 
+/* PR-342: the SURFACE-TABLE MOVE of the object class's +0xa4 verb, which
+ * the row admit runs at 0x5233b-0x52341 - after the row handler at
+ * [[rec+0x44]+0x18], on the admitted branch of the row law, with eax =
+ * [rec+0], the record's owner. PR-339 read what each shipped seat class
+ * carries at that slot, at the class view its installer stores: PALMA's
+ * 0x96c38 holds 0x1e5c0 and KATAPULT's 0x96d1c holds 0x1e690, while
+ * KAMIEN's 0x96a88 holds 0x239c0 and KILOF_PL's 0x96b88 the query
+ * 0x45320 - so only the first two move a table at all. PR-341 read what
+ * those two switch on: the state record's word at +0x4, the same word
+ * the applier writes with the transition's start row (0x53616) and the
+ * walk zeroes and increments (0x521c5, 0x521d7) - the ROW CURSOR, which
+ * this port keeps as o->fi. 0x1e5c0 compares it with 7 (0x1e5dd) and
+ * hands 1 or -1 to 0x45200 as its y argument with x = 0
+ * (0x1e5e2-0x1e5f8); 0x1e690 subtracts 3, compares 4, and jumps through
+ * the table at 0x1e670 to five arms that call 0x45200 with the fixed
+ * pairs below. 0x45200 adds edx to [rec+0] and ebx to [rec+4] of every
+ * record of the table at [obj+0xa5] (PR-338), which is what
+ * o->seat_x/o->seat_y mirror (PR-335). What is NOT modelled here: the
+ * element half of either verb - 0x1e5fd-0x1e624 behind [obj+0xb1], and
+ * the [[0xcef40+0x394]+8]+0x10 calls the five arms make behind
+ * [obj+0xbd]/[obj+0xc1] - and the slot's SECOND runner, 0x535db in the
+ * state applier, which runs with the OLD state's cursor before the new
+ * record's ENTER (no shipped seat script has a second state to change
+ * to). Both are OI-125.
+ * MODEL CHOICE, counted open (PR-341 paragraph (c)): the engine's cursor
+ * step lives in the walk body 0x520c0, which PR-324 reads as running
+ * BEFORE the step, so its +0xa4 call may see the NEXT row's index. This
+ * port keys the move to the row it has just admitted. A cycle carries the
+ * cursor through 0..n-1 either way, so what the seat leg measures - the
+ * balanced 14-row PALM.MOV cycle, the closed KAT.MOV one - is the same
+ * under both readings; only the phase within the cycle differs. */
+static void obj_seat_shift(lvl_obj *o, unsigned row)
+{
+    /* 0x1e690's five arms, index = cursor - 3: the jump table 0x1e670
+     * answers 0x1e6be, 0x1e723, 0x1e788, 0x1e7f3 and 0x1e886, whose
+     * edx/ebx pairs are these. They sum to exactly (0,0). */
+    static const short jdx[5] = { 13, 13, 13, 3, -42 };
+    static const short jdy[5] = { 5, 6, 10, 10, -31 };
+    int clock, jump, dx = 0, dy = 0;
+
+    if (!o->nseat || !o->sc || !o->sc->leaf[0])
+        return;
+    clock = !strcasecmp(o->sc->leaf, "PALMA");      /* 0x96c38 +0xa4 */
+    jump = !strcasecmp(o->sc->leaf, "KATAPULT");    /* 0x96d1c +0xa4 */
+    if (!clock && !jump)
+        return;
+    if (clock) {
+        dy = row < 7 ? 1 : -1;
+    } else {
+        if (row < 3 || row > 7)       /* `sub eax,3; cmp eax,4; ja 0x1e95d` */
+            return;
+        dx = jdx[row - 3];
+        dy = jdy[row - 3];
+    }
+    for (unsigned i = 0; i < o->nseat; i++) {
+        o->seat_x[i] = (short)(o->seat_x[i] + dx);
+        o->seat_y[i] = (short)(o->seat_y[i] + dy);
+    }
+}
+
 static void obj_advance(lvl_obj *o, unsigned dt_ms)
 {
     ll_mov_t *mov = (o->sc && o->sc->mov) ? o->sc->mov : NULL;
@@ -1649,6 +1715,13 @@ static void obj_advance(lvl_obj *o, unsigned dt_ms)
         if (f->atc & LMOV_ATC_OFF)    /* it, an ATC_OFF frame closes it). */
             o->atc = 0;               /* The ENEMY hitting the LION with  */
                                       /* it is T3, not this PR.           */
+        /* PR-342: the surface-table move the object class's +0xa4 verb
+         * makes in THIS step - 0x52341 follows the row handler 0x52338 on
+         * the admitted branch, and the word both verbs switch on is the
+         * state record's row cursor, which is o->fi at this point. It
+         * moves only the seat tables (0x1e5c0 / 0x1e690), and only for
+         * the two shipped types whose class stores one of those two. */
+        obj_seat_shift(o, (unsigned)o->fi);
         /* PR-324: the answer-6 cursor jump, the object half of F2b
          * (the player half is PR-323). PR-322 read the law: 0x520c0
          * walks the closing row's +0x10 verbs BEFORE stepping
@@ -4812,6 +4885,10 @@ static int place_points_selftest(void);  /* L9 (PR-243): defined with the
                                           readers it belongs to */
 static int place_seat_selftest(void);    /* L13 (PR-335): the entry's own
                                             surface table, 0x45120 */
+static int seat_motion_selftest(void);   /* L14 (PR-342): the +0xa4 verb's
+                                            move of that table at the row
+                                            admit - 0x1e5c0's row-cursor
+                                            sign and 0x1e690's five jumps */
 
 /* FIX-13 (X-11) selftest, test-only entry point (ll_level.h): proves the
  * two .MOV duration invariants without any window or game data:
@@ -4979,7 +5056,8 @@ int ll_mov_selftest(void)
         plany_selftest() != 0 ||
         ladder_answer_selftest() != 0 || place_grammar_selftest() != 0 ||
         place_rectclass_selftest() != 0 ||
-        rect_class_ask_selftest() != 0) {
+        rect_class_ask_selftest() != 0 ||
+        seat_motion_selftest() != 0) {
         free(sc.mov);
         free(m);
         return 1;
@@ -5114,9 +5192,19 @@ int ll_mov_selftest(void)
            " reader), 0x45200's placement step making the table"
            " ABSOLUTE like the contact points, and the order of"
            " the four continuation grammars, ladder list first"
+           " + PR-342 the SURFACE TABLE MOVE of the class +0xa4 verb at"
+           " the row admit - the row cursor PR-341 read: PALMA's 0x1e5c0"
+           " steps the table 1 px down while the cursor is under 7 and up"
+           " from 7, so ZARIA.01's own 14-row PALM.MOV cycle ends where"
+           " it began, and KATAPULT's 0x1e690 jumps it by (+13,+5),"
+           " (+13,+6), (+13,+10), (+3,+10), (-42,-31) at cursors 3..7,"
+           " a path whose farthest point is (+42,+31) and which closes;"
+           " a KAMIEN, whose class holds 0x239c0 at that slot and no"
+           " table verb, keeps its table exactly where it was authored)"
            " (ok)\n");
     return 0;
 }
+
 
 /* find "<stem>.<ext>" (case-insensitive) in a block record list */
 static const llrs_slot *rec_find(const llrs_slot *recs, unsigned n,
@@ -10116,6 +10204,153 @@ static int place_seat_selftest(void)
                 return 1;
             }
         }
+    }
+    return 0;
+}
+
+/* L14 (PR-342): the SURFACE-TABLE MOTION of the object class's +0xa4 verb
+ * at the row admit. PR-341 read where that verb runs - 0x52338 calls the
+ * row handler [[rec+0x44]+0x18] and 0x52341 is the +0xa4 call, both on the
+ * admitted branch of the row law, with eax = [rec+0] the owner - and what
+ * it switches on: the state record's row cursor at [rec+0x4], which is
+ * this port's o->fi. PALMA's class (the view 0x96c38 its installer stores)
+ * holds 0x1e5c0 at that slot: `cmp eax,7` then `mov esi,1` / `mov
+ * esi,-1`, handed to 0x45200 as its y argument with x = 0, so the table
+ * goes 1 px DOWN while the cursor is under 7 and 1 px UP from cursor 7.
+ * KATAPULT's view 0x96d1c holds 0x1e690: `sub eax,3; cmp eax,4; ja` and
+ * the jump table at 0x1e670, whose five arms move the table by (+13,+5),
+ * (+13,+6), (+13,+10), (+3,+10), (-42,-31) at cursors 3,4,5,6,7 - a path
+ * that closes. KAMIEN's view 0x96a88 holds 0x239c0 there and KILOF_PL's
+ * 0x96b88 the query 0x45320 (PR-339), so those tables do not move.
+ * The fixtures are ZARIA.01's own row lists and tables: PALM.MOV's
+ * fourteen rows (thresholds 0,100,100,100,200,200,200,200,200,300,300,
+ * 300,300,300) with ANIPL2's `1 18,40;80,40` for the PALMA at 820,435,
+ * and KAT.MOV's ten rows (0 then nine of 300) with the KATAPULT's
+ * `1 7,45;40,45` at 300,588. Both shipped states open their first row
+ * with a `WAIT K_GEN1` clause and carry `seq=`/`sample=`/`smpauto`
+ * art-and-sample directives; the clause and those directives are left out
+ * here because this port clears o->sig at the top of every step (PR-262),
+ * so a WAIT first row never admits in a fixture that raises nothing -
+ * PR-333's leg owns that half. Nothing else about the lists is changed. */
+static int seat_motion_selftest(void)
+{
+    static const char palm_mov[] =
+        "A_RUN\n\n[A_RUN]\ncontrol=BY_TIME\n"
+        "1,0\n2,100\n3,100\n4,100\n5,200\n6,200\n7,200\n8,200\n9,200\n"
+        "10,300\n11,300\n12,300\n13,300\n14,300\n";
+    static const char kat_mov[] =
+        "A_RUN\n\n[A_RUN]\ncontrol=BY_TIME\n"
+        "1,0\n2,300\n3,300\n4,300\n5,300\n6,300\n7,300\n8,300\n9,300\n"
+        "10,300\n";
+    static const struct {
+        const char *type;      /* the entry's first field, as authored */
+        const char *mov;
+        const char *table;
+        int x, y, rows;
+        int peak_dx, peak_dy;  /* the farthest the table is taken */
+        const char *what;
+    } fx[] = {
+        { "PALMA", palm_mov, "1 18,40;80,40\n", 820, 435, 14, 0, 7,
+          "ZARIA.01 ANIPL2's PALMA at 820,435 with its own PALM.MOV"
+          " list: 7 px down over cursors 0..6 and back over 7..13, so"
+          " the table is never left displaced and never moves in x" },
+        { "KATAPULT", kat_mov, "1 7,45;40,45\n", 300, 588, 10, 42, 31,
+          "ZARIA.01 ANIPL2's KATAPULT at 300,588 with its own KAT.MOV"
+          " list: the five jumps of the table 0x1e670 carry it to"
+          " (+42,+31) at cursor 6 and put it back at cursor 7" },
+        { "KAMIEN", kat_mov, "1 7,45;40,45\n", 1360, 250, 10, 0, 0,
+          "the same list on a KAMIEN, whose class holds 0x239c0 at"
+          " +0xa4 and no table verb: its table stays where it was"
+          " authored" },
+    };
+
+    for (unsigned q = 0; q < sizeof fx / sizeof fx[0]; q++) {
+        ll_mov_t *m = calloc(1, sizeof *m);
+        obj_script sc;
+        lvl_obj o;
+        obj_stats stt;
+        short ax[OBJ_MAXSEAT], ay[OBJ_MAXSEAT];
+        unsigned char af[OBJ_MAXSEAT];
+        int dx = 0, dy = 0, peak_dx = 0, peak_dy = 0, it, same;
+
+        memset(&sc, 0, sizeof sc);
+        memset(&o, 0, sizeof o);
+        memset(&stt, 0, sizeof stt);
+        if (!m) {
+            fprintf(stderr, "seat motion selftest: out of memory\n");
+            return 1;
+        }
+        if (ll_mov_parse(fx[q].mov, m) <= 0 || m->nst < 1 ||
+            m->st[0].nfr != fx[q].rows) {
+            fprintf(stderr, "seat motion selftest: FAILED %s: the row"
+                            " list did not parse as authored (%d states,"
+                            " %d rows)\n", fx[q].what, m->nst,
+                    m->nst ? m->st[0].nfr : 0);
+            free(m);
+            return 1;
+        }
+        snprintf(sc.leaf, sizeof sc.leaf, "%s", fx[q].type);
+        sc.mov = m;
+        o.sc = &sc;
+        o.x = o.bx = fx[q].x;
+        o.y = o.by = fx[q].y;
+        place_seat_table(fx[q].table, fx[q].table + strlen(fx[q].table),
+                         &o, &stt);
+        if (o.nseat != 2 || stt.seat_lines != 1) {
+            fprintf(stderr, "seat motion selftest: FAILED %s: the authored"
+                            " table line did not give 2 records (nseat"
+                            " %d)\n", fx[q].what, o.nseat);
+            free(m);
+            return 1;
+        }
+        for (int k = 0; k < o.nseat; k++) {
+            ax[k] = o.seat_x[k];
+            ay[k] = o.seat_y[k];
+            af[k] = o.seat_flag[k];
+        }
+        for (it = 0; it < 400; it++) {
+            obj_advance(&o, LL_ITER_MS);
+            dx = o.seat_x[0] - ax[0];
+            dy = o.seat_y[0] - ay[0];
+            if (dx > peak_dx)
+                peak_dx = dx;
+            if (dy > peak_dy)
+                peak_dy = dy;
+            if (o.brk_arm)              /* the list wrapped: one full cycle
+                                           of cursors 0..rows-1 is done */
+                break;
+        }
+        same = o.seat_x[1] - ax[1] == dx && o.seat_y[1] - ay[1] == dy;
+        if (it >= 400 || !o.brk_arm) {
+            fprintf(stderr, "seat motion selftest: FAILED %s: the row list"
+                            " never completed a cycle (%d iterations)\n",
+                    fx[q].what, it);
+            free(m);
+            return 1;
+        }
+        if (peak_dx != fx[q].peak_dx || peak_dy != fx[q].peak_dy ||
+            dx != 0 || dy != 0 || !same) {
+            fprintf(stderr, "seat motion selftest: FAILED %s: the table"
+                            " peaked at (%d,%d) and ended at (%d,%d),"
+                            " want peak (%d,%d) and end (0,0)%s\n",
+                    fx[q].what, peak_dx, peak_dy, dx, dy, fx[q].peak_dx,
+                    fx[q].peak_dy, same ? "" : " (its two records did not"
+                                              " move together)");
+            free(m);
+            return 1;
+        }
+        for (int k = 0; k < o.nseat; k++) {
+            if (o.seat_flag[k] != af[k]) {
+                fprintf(stderr, "seat motion selftest: FAILED %s: record"
+                                " %d's flag byte changed (%d -> %d) - the"
+                                " move verb of 0x45200 writes x and y"
+                                " only\n", fx[q].what, k, af[k],
+                        o.seat_flag[k]);
+                free(m);
+                return 1;
+            }
+        }
+        free(m);
     }
     return 0;
 }

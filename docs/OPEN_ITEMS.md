@@ -789,6 +789,13 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   (LEVELDES +0x19b9c5c6) `ani_plat=none,anipl2.des,none`.
   PR-334 ANCHORED THE ENGINE SIDE and PR-335 PORTED THE PARSE,
   so what is left here is the USE of the records, nothing else.
+  PR-342 PORTS THE AUTHORED MOTION of those records: the class
+  +0xa4 verb runs at the row admit (0x52341) and moves a
+  PALMA-typed object's table (0,+1) for cursors 0..6 and (0,-1)
+  from 7, or a KATAPULT-typed one through the five jumps of
+  0x1e670, and nothing at all for KAMIEN/KILOF_PL, whose class
+  slots hold 0x239c0 and the query 0x45320. Leg L14 measures it
+  on ZARIA.01's own texts. Still nothing READS the moved table.
   The parsed law (PR-335, byte-exact): the .des entry's lines
   after the coordinates are the object's OWN surface table -
   0x45120 reads a count and then N passes of one separator and
@@ -804,7 +811,9 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   record, so the table is stored ABSOLUTE, exactly like the
   ladder's contact points, and the same verb at run time
   (0x1e5c0 -> 0x45200(point, 0, ±1), 0x1e5f6) walks the seat
-  one pixel a tick vertically. What the reader sees in the
+  one pixel per ADMITTED ROW, by the state record's row cursor
+  - PR-341 corrected this row's "a tick", and PR-342 ports the
+  shift. What the reader sees in the
   shipped install: 147 such lines in 15 .des files of 9 levels,
   309 records, and one line (ZARIA.01's KATAPULT) whose
   trailing `-6300,-1350` 0x1e630 reads as a PAIR into
@@ -4889,7 +4898,7 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     'KATAPULT' view 0x96d1c resolves the table reader 0x1e630 at
     +0x18 and the ask 0x1e970 at +0x78, and the 'PALMA' view
     0x96c38 resolves 0x1e510 at +0x18, the gated ask 0x1e570 at
-    +0x78, the per-tick (0,+-1) table move 0x1e5c0 at +0xa4 and
+    +0x78, the row-admit (0,+-1) table move 0x1e5c0 at +0xa4 and
     0x1e630 at +0xfc. The seat chain IS the mechanism the shipped
     game has at that place. What still keeps the crossing un-
     modelled is the rest of PR-336's read, unchanged by this:
@@ -4981,9 +4990,14 @@ OI-125: the element half of the object class +0xa4 verb - the five
     `call 0x52c70`; neither setter is stored in any of the ten
     views, so their caller is the open part.
     WHY IT MATTERS: the seat's authored motion is now fully known and it
-    is a cycle, not a carry - the port parses those tables (OBJ_MAXSEAT
-    since PR-335) and moves none of them, and no seat can lift the lion
-    anywhere. WHAT WOULD CLOSE IT: the callers of 0x20964/0x22dfa/
+    is a cycle, not a carry - no seat can lift the lion anywhere.
+    PR-342 PORTED THE ROW-ADMIT RUNNER: ported/ll_level.c now shifts
+    those tables at the admitted row, keyed to o->fi, for the two types
+    whose class stores a table verb, and leg L14 pins it on ZARIA.01's
+    own texts. What is left here: the element half of both verbs; the
+    slot's second runner 0x535db, whose fixture needs a seat script with
+    two states and none ships; and the reads below.
+    WHAT WOULD CLOSE IT: the callers of 0x20964/0x22dfa/
     0x22e18 and what 0x52c70 does; whether [obj+0xbd]/[obj+0xc1] are
     the rectangle words of PR-246 - the cursor-7 arm 0x1e93e-0x1e944
     hands [obj+0xb5] and [obj+0xb1] to 0x52b10, and PR-246 stores the
@@ -4991,7 +5005,37 @@ OI-125: the element half of the object class +0xa4 verb - the five
     PR-340's counter block; what 0x52b10 does with that pair; the
     element blocks each of the five arms passes; which cursor value
     pairs with the admitted row, since the cursor step of 0x520c0 runs
-    before the step of 0x521f0; and what [obj+0xc2] bit 7 and
-    [obj+0x66] bit 6 gate. Then a port leg that applies the shift at
-    the row admit and the state change, which ZARIA.01's own seat
-    texts can measure.
+    before the step of 0x521f0 - PR-342 keys the move to the admitted
+    row and says so; and what [obj+0xc2] bit 7 and
+    [obj+0x66] bit 6 gate. Then the second runner at the state
+    change, which no shipped seat script can measure.
+
+OI-126: the golden-master menu pose-set pin is a wall-clock capture, so
+  a loaded machine can truncate it and the leg then fails on poses the
+  port still draws
+  status: OPEN
+  origin: PR-342 (the full gate of this tree)
+    verify-golden runs ./ll_cutscene --demo with LEO_MENU_PPM_DIR and
+    LEO_MENU_PPM_MAX=300 under a 120 s timeout, and
+    tools/golden_menu_cmp.py then compares the SET of distinct composed
+    frames against the 30 hashes of tools/golden_expect.json. The set is
+    meant to be timing-independent - the map animation is a fixed cycle
+    - but the capture is not: it ends at a wall clock. Two of the three
+    "make -k -j$(nproc)" verify-all runs of the PR-342 tree failed ONLY
+    this leg: "port pose set changed: 28 vs 30 hashes (extra [] missing
+    ['7d5a74c394d2', '5651642ef3fa'])" and, in another run, "27 vs 30
+    ... missing ['5651642ef3fa', '85dd304dcffa', '7d5a74c394d2']".
+    Nothing extra was ever drawn and the missing hashes are WHOLE poses,
+    not near-matches. The same tree's FIRST -j run passed 71 of 71,
+    "make verify-golden" alone passes and "make -k verify-all" with no
+    -j passes rc=0 71 (ok), so the failure is the window, not the port.
+    WHY IT MATTERS: this is the one gate leg whose result depends on
+    machine load, so a -j verify-all EXIT=0 is not reproducible on a
+    busy box and a red there is not evidence about the port. Every PR
+    record that reports 71 (ok) reports a run that happened to fit.
+    WHAT WOULD CLOSE IT: make the capture a frame count and not a clock
+    - the port writes those frames itself, so a fixed count, or a stop
+    tied to the cycle (its 30th distinct pose), takes the timeout out
+    of the law; or pin frame indices as well as the set, so a truncated
+    capture reads as a gap and not as a missing pose. Then re-measure
+    this leg over several -j runs of one tree.
