@@ -5670,6 +5670,28 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         land/attach path of OI-128, where PALMA's +0xB4 IS the ask
         verb, or the lion's launch through KATAPULT's landing verb,
         and the .plt ground of T6 - not the standing query.
+        PR-353 and PR-354 read that land/attach path, and it is
+        script, not engine. 155 of the 186 class views install ONE
+        +0xB4/+0xB8 pair, 0x238b0/0x23880, and it only calls slot +4
+        and +8 of the object's current script +0x33 table with
+        [obj+0x6d] as its argument; the 31 private pairs (PALMA
+        0x1e560 clears [obj+0xb1], KATAPULT 0x22de0 clears
+        [obj+0xbd]) move nothing. The tables that name that
+        dispatcher are the level script's clause nodes - twelve
+        bytes, [node+4] the command's verb table, [node+8] the
+        argument the builder scanned - and `ground_on`/`ground_off`
+        build TWO of them: 0xa10d8 and the land/leave node 0xa10a8,
+        whose verb 0x45cb0 branches on the command's own argument.
+        Every effect reaches the same two script methods through four
+        runners, 0x54f40/0x54f90/0x54fe0/0x55020, and they own the
+        flag byte every gate reads: bit 0x01 of [obj+0xB6] is the
+        script's standing state, bit 0x02 the `lock2`/`unlock2`
+        suspend, bit 0x20 what `atc_on`/`atc_off` write and what
+        0x546a0's tail sets. So the crossing has to be driven by the
+        level's own land and leave methods, reached by `ground_on` -
+        that +0x33 table is still unnamed - and the port already
+        parses those words and counts ground_on, ground_off, lock2
+        and unlock2 unmodelled (PLAN 8g).
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the
