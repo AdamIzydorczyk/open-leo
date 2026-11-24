@@ -119,6 +119,19 @@ def create_schema(db):
         CREATE INDEX ix_field ON field_mentions(field);
         CREATE INDEX ix_name  ON name_mentions(name);
         CREATE INDEX ix_oi    ON oi_refs(oi);
+        -- PR-356: the hot lookup paths in jq.py. `corr` walks the
+        -- correction graph both ways and `show` resolves a PR number to
+        -- its line range, so corrects/pr need an index (without one the
+        -- planner SCANS). rid-keyed indexes turn the mention->record
+        -- join and the PR-citation walk into index lookups too.
+        CREATE INDEX ix_corr_out ON corrections(pr);
+        CREATE INDEX ix_corr_in  ON corrections(corrects);
+        CREATE INDEX ix_rec_pr   ON records(pr);
+        CREATE INDEX ix_cite     ON pr_cites(cited);
+        CREATE INDEX ix_cite_pr  ON pr_cites(pr);
+        CREATE INDEX ix_addr_rid ON addr_mentions(rid);
+        CREATE INDEX ix_field_rid ON field_mentions(rid);
+        CREATE INDEX ix_name_rid ON name_mentions(rid);
         """)
 
 

@@ -164,6 +164,12 @@ make -k verify-windows    # the deferred Windows pass: verify-win + verify-mod
 #              only - never frames. Skips entirely when the game fixture
 #              is absent; without a QEMU capture it still checks the port
 #              pose pins (make golden_rig builds the original-side capture)
+# journal-db   NOT a test: rebuilds build/journal.db (the generated
+#              ledger search layer) from NEXT_STEPS.md via
+#              tools/re_db.py; `make verify-docs` calls it so it is
+#              never left stale behind a committed ledger change;
+#              tools/jq.py queries it. The DB is gitignored output,
+#              a client of the ledger, never a source of truth.
 ```
 
 CI hooks used by verify-menu (env): `LEO_DEMO_SKIP_FRAMES` (auto-skip demo
@@ -343,3 +349,26 @@ index and supersession table:
 `VERIFICATION_2026-11-16.md`,
 `HANDOFF_SECTION7_OPEN_QUESTIONS.md` (the pre-register
 open-questions ledger, extracted verbatim by PR-202).
+
+Searching the ledger - a generated tool, not a document (so it is not
+in the closed set above). The journal is append-only and now ~49k
+lines, so `make verify-docs` also builds a disposable SQLite index
+over it (build/journal.db, gitignored like build/*.raw) and
+`tools/jq.py` queries it. Both sit BESIDE docs/RE_INDEX.md and change
+neither it nor P4. The generator (`tools/re_db.py`) imports doc_census
+and re_index and reuses their regexes and record boundary, so it
+cannot read a different ledger than the index and `make verify-docs`
+do (the PR-55 "two parsers drift" rule). Records: NEXT_STEPS.md
+PR-355 (the layer, closing OI-102) and PR-356 (its indexes).
+
+    python3 tools/jq.py 0xcef40                       # records citing an
+           # address, each as NEXT_STEPS.md:LINE-LINE (read that slice)
+    python3 tools/jq.py free "audio sync" --snippet   # ranked full text
+    python3 tools/jq.py corr PR-350                   # correction graph
+    python3 tools/jq.py show PR-355                   # one record: Read range
+
+A bare token auto-routes (0x->address, [..]->field, OI->open item,
+PR->show, else full text). jq.py rebuilds the DB first if
+NEXT_STEPS.md is newer, so an answer never comes from a stale index.
+`corr` reads the structured CORRECTS: field into a queryable graph -
+the generator upgrade that closed OI-102, deferred since PR-197.

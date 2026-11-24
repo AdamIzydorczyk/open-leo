@@ -49261,3 +49261,81 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - the
   supersession filters cover records >= PR-196 only, because earlier
   records predate the field block (P4's TEMPLATE_FROM); that is the
   correct behavior, not a bug.
+
+## PR-356 - THE SEARCH LAYER IS INDEXED: re_db.py create_schema adds
+## the eight CREATE INDEXes that turn jq.py's hot paths (correction
+## graph, PR->line-range resolution, mention->record joins, PR-citation
+## walk) from full SCANs into index seeks; the schema only, no reader
+## behaviour changes; documents the layer in README
+```
+KIND: gate
+SUBSYSTEM: docs structure (the generated ledger search layer, its
+  indexes)
+ADDRESSES: none
+NAMES: tools/re_db.py, tools/jq.py, ix_corr_out, ix_corr_in, ix_rec_pr,
+  ix_cite, ix_cite_pr, ix_addr_rid, ix_field_rid, ix_name_rid,
+  corrections, records, pr_cites, EXPLAIN QUERY PLAN
+CODE: yes: re_db.py create_schema gains 8 indexes; build-only, the
+  readers in jq.py are unchanged and the query results are identical
+HOOKS: none
+OPENS: none
+CLOSES: none
+CORRECTS: none
+GATE: make 0 warnings; verify-all fixtures rc=0 14 (ok); the same
+  suite run twice (default DATA=/tmp/opencode/iso_stage/LEO and
+  DATA=/tmp/opencode/nope HD=/tmp/opencode/nope), then verify-docs,
+  verify-index and the journal-db leg, rc=0. IDENTICAL state to PR-355
+  and for the same reason: this box has no LL.iso to stage, so every
+  ISO/HDD leg name-SKIPS in BOTH modes - 14 data-free legs (ok) + 22
+  named verify-SKIPs, ALL TESTS PASSED, rc=0, twice. The fixture-backed
+  half stays DEFERRED (a SKIP is not proof, section 2 STOP rule); this
+  change adds no leg and reads no fixture, so the green half is the
+  whole reachable surface.
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - same as the
+  line above; the index change cannot move a fixture leg. The control
+  /tmp/opencode/pr356_index_control.py reads only the generated
+  build/journal.db (no fixture): it asserts EXPLAIN QUERY PLAN uses an
+  index for each hot path.
+```
+
+- WHY. PR-355 built the search layer but declared indexes only on the
+  four vocabulary tables (addr/field/name/oi). Checking the generated
+  DB with EXPLAIN QUERY PLAN showed jq.py's other hot paths were full
+  table SCANs: the correction graph (`corr PR-nn` walking corrections by
+  `pr` and by `corrects`), resolving a PR number to its Read range
+  (`show`, `records WHERE pr=?`), and the PR-citation walk
+  (`pr_cites`). The tables are small (340 records, 147 correction
+  edges) so those scans were sub-millisecond and correct - but a layer
+  meant to be queried at every step should seek, not scan, and the
+  schema was simply unfinished.
+
+- WHAT SHIPPED. re_db.py's create_schema gains eight indexes on top of
+  the four that already exist: ix_corr_out on corrections(pr) and
+  ix_corr_in on corrections(corrects) (the `corr` graph both ways);
+  ix_rec_pr on records(pr) (`show` resolving a PR to its line range);
+  ix_cite / ix_cite_pr on pr_cites(cited) and pr_cites(pr); and
+  ix_addr_rid / ix_field_rid / ix_name_rid on the mention tables' rid
+  so the mention->record join and a per-record lookup seek instead of
+  scan. The FTS5 index (record_fts) was already a real inverted index;
+  nothing there changed. Twelve explicit indexes total now.
+
+- CONTROL + MUTATION (data-free, /tmp/opencode/pr356_index_control.py;
+  it reads only the GENERATED build/journal.db, no fixtures and no
+  window). It runs EXPLAIN QUERY PLAN on all six hot paths and asserts
+  each names its index - ix_addr, ix_corr_out, ix_corr_in, ix_rec_pr,
+  ix_cite_pr, and the FTS VIRTUAL TABLE INDEX - and that none falls
+  back to SCAN of the driving table. MUTATION: copying the DB and
+  dropping ix_corr_in makes `corr PR-350` reverse the plan to
+  `SCAN corrections`, so the assertion has teeth (it fails when an
+  index is missing). This is the red-check for a schema change: the
+  plan is the observable, and it moves only with the index.
+
+- WHAT IS UNCHANGED. The query results are byte-identical - an index
+  changes the plan, never the answer - so the PR-355 numbers in its
+  record (340 records, 147 correction edges, the 71-vs-147 contrast)
+  all still hold. The layer is still a client of the ledger, never a
+  source of truth: docs/RE_INDEX.md and P4 are untouched, the DB stays
+  gitignored, and jq.py's readers are unchanged. README now documents
+  the layer (it was undocumented before): a make-target line in the
+  verify legend and a "Searching the ledger" subsection that states it
+  is a tool, not a document, so it is not part of the P5 closed set.
