@@ -47118,3 +47118,162 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
   bodies are dumped in /tmp/opencode/pr340_208d0.txt,
   /tmp/opencode/pr340_22dd0.txt and /tmp/opencode/pr340_1dfd9.txt.
 ```
+
+## PR-341 - THE SEAT VERBS SWITCH ON THE STATE RECORD'S ROW CURSOR, NOT ON
+## THE ROW THRESHOLD: PR-339 MISREAD ONE DEREF, THE PALMA CYCLE IS BALANCED
+## 7 DOWN AND 7 UP, AND THE KATAPULT'S FIVE TABLE JUMPS CLOSE AT EXACTLY 0,0
+```
+KIND: read
+SUBSYSTEM: the seat surface-table motion of OI-072/OI-124/OI-125 - what
+  0x1e5c0 and 0x1e690 actually switch on, what one cycle of the shipped
+  ZARIA.01 seat texts does to those tables, and what the same word gates in
+  the ask. Read-only: no port code moves.
+ADDRESSES: 0x1e5c0, 0x1e5c8, 0x1e5ca, 0x1e5cd, 0x1e5d4, 0x1e5d7, 0x1e5da,
+  0x1e5dd, 0x1e5e0, 0x1e5e2, 0x1e5e9, 0x1e5ee, 0x1e5f4, 0x1e5f6, 0x1e5f8,
+  0x1e690, 0x1e69e, 0x1e6a1, 0x1e6a4, 0x1e6a7, 0x1e6aa, 0x1e6ad, 0x1e6b0,
+  0x1e6b6, 0x1e670, 0x1e6be, 0x1e6c3, 0x1e6c8, 0x1e6ce, 0x1e723, 0x1e788,
+  0x1e7f3, 0x1e7af, 0x1e7e0, 0x1e886, 0x1e88b, 0x1e890, 0x1e896, 0x1e93e,
+  0x1e944, 0x1e952, 0x1e957, 0x1e95d, 0x1e570, 0x1e579, 0x1e57c, 0x1e57f,
+  0x1e582, 0x1e585, 0x1e588, 0x1e58f, 0x1e596, 0x1e970, 0x1e979, 0x1e985,
+  0x521f0, 0x52311, 0x52317, 0x52320, 0x52323, 0x52329, 0x5232b, 0x52331,
+  0x52338, 0x5233b, 0x52341, 0x5234a, 0x520c0, 0x52135, 0x52158, 0x52195,
+  0x521b9, 0x521c1, 0x521c5, 0x521d4, 0x521d7, 0x535a0, 0x535b4, 0x535b6,
+  0x535b9, 0x535bc, 0x535bf, 0x535db, 0x535e1, 0x535e7, 0x535ea, 0x535ed,
+  0x53602, 0x53609, 0x5360c, 0x5360f, 0x53612, 0x53616, 0x52b10, 0x45200,
+  0x45320, 0x5c, 0x50, 0xa4, 0xa5, 0x4, 0x8, 0x10, 0x12, 0x2e, 0x44, 0x95,
+  0x9d, 0xa1, 0xb1, 0xb5, 0xc1, 0x18, 0x1c, 0x20, 0x78, 0xd, 0x7, 0x3
+NAMES: ROW CURSOR, STATE RECORD, TABLE SHIFT, KATAPULT, PALMA, KAT.MOV,
+  PALM.MOV, PALML.MOV, A_RUN, 0x1e5c0, 0x1e690, 0x1e570, 0x1e970, 0x53616,
+  0x521c5, 0x521d7, 0x52341, 0x535db, 0x45200, o-fi, OI-072, OI-124,
+  OI-125, F6
+CODE: no: nothing in ported/ or the Makefile moved. What moves is the law
+  an F6 seat leg would carry: a shift keyed to the row index, and a
+  catapult cycle that closes.
+HOOKS: none. Every claim is machine code (leodb dis over the four bodies),
+  the data bytes of the jump table at 0x1e670, or the port's own .MOV
+  parser run over the shipped ANIMACJE container.
+MEASURED: (a) 0x1e5c0 HAS FOUR LOADS AND NO FIFTH. 0x1e5c8 `mov ecx,eax`
+  keeps the object; 0x1e5ca `mov eax,[eax+0x5c]` is its state index;
+  0x1e5cd `lea edx,[eax*4]`; 0x1e5d4 `mov eax,[ecx+0x50]` is the state
+  array; 0x1e5d7 `mov eax,[edx+eax*1]` is the state record; 0x1e5da `mov
+  eax,[eax+0x4]` is a word in THAT record; 0x1e5dd `cmp eax,0x7` with
+  `jge 0x1e5e9` to `mov esi,-1` and below to `mov esi,1` at 0x1e5e2. Then
+  0x1e5ee `lea eax,[ecx+0xa5]`, 0x1e5f4 `mov ebx,esi`, 0x1e5f6 `xor
+  edx,edx`, 0x1e5f8 `call 0x45200` - x zero, y the sign, the record loop
+  of PR-338 adding edx to [rec+0] and ebx to [rec+4]. There is no other
+  load in the body. PR-339 paragraph (b) said 0x1e5da yields a "record-
+  object pointer" and that the compared word sits "at [[state record]+0x10]
+  - the same threshold the row admit reads at 0x52320". There is no such
+  second deref, and 0x52320 `mov eax,[ebx+0x10]` is a load through the ROW
+  entry in another body: the threshold and this word are different fields.
+  (b) THE WORD IS THE ROW CURSOR - THE PORT ALREADY RUNS IT AS o-fi. The
+  applier 0x535a0 addresses the same record with the same pair of
+  instructions: 0x53602 `lea esi,[edi*4]`, 0x53609 `mov eax,[eax+0x50]`,
+  0x5360c `mov eax,[esi+eax*1]` - and then treats +4 as a row number:
+  0x5360f `mov esi,[eax+0x4]`, 0x53612 `cmp esi,edx`, 0x53616 `mov
+  [eax+0x4],edx`, which is PR-172's "write the transition's authored start
+  row". The walk keeps it: 0x521b9 `mov ecx,[esi+0x4]`, 0x521bc-0x521bd
+  compare against the row count minus one at [[rec+0x2e]+8], and at the
+  last row 0x521c1 `or BYTE PTR [ebp+0x0],4` plus 0x521c5 `mov
+  [esi+0x4],0`, elsewhere 0x521d4 `lea edi,[ecx+1]` and 0x521d7 `mov
+  [esi+0x4],edi`. esi is that record: 0x52158 tests its control byte at
+  +0x12 (PR-147's mode bits) and 0x52195 takes its row list at +0x2e
+  (PR-162 F1b). So the sign of a seat's table shift is the ROW POSITION,
+  as PR-336 paragraph (g) had it; 0x1e570 reads it the same way
+  (0x1e579-0x1e582) and `cmp ebx,0xd` at 0x1e585: PALMA's ask runs the
+  table query 0x45320 on [obj+0xa5] only while the cursor is below 13,
+  while KATAPULT's ask 0x1e970 runs it with no gate at all (0x1e979 `mov
+  ebx,2`, 0x1e985 `call 0x45320`).
+  (c) WHEN THE VERB RUNS AND WHAT CURSOR IT SEES. The step 0x521f0 ends
+  its admitted path like this: 0x52311-0x52317 the owner's +0xa0 verb,
+  0x52320-0x5232b the row threshold against the feed accumulator [obj+0xa1]
+  and `jge 0x52354` for a step that admits nothing, then 0x52331 `mov
+  esi,[ebp+0x44]` with 0x52338 `call [esi+0x18]` for the row handler, then
+  0x5233b `mov eax,[ebp+0x0]` - the record's owner field, which is the
+  +0xa4 verb's eax - and 0x52341 `call [edx+0xa4]`, then 0x5234a `mov
+  [eax+0x95],1`. So the shift happens in the same step as the admit, after
+  the row handler. The cursor step of paragraph (b) is in the other body
+  0x520c0-0x521e1, which PR-324 reads as running BEFORE the step: whether
+  the verb sees the admitted row's index or the next one is not settled by
+  these bytes, and it cannot be, from one cycle's arithmetic - a cycle
+  walks the cursor through 0..n-1 exactly once either way. At the state
+  change the second runner 0x535db runs while the object is still in the
+  OLD state: 0x535b4-0x535b9 index the old record for its +0x20 verb,
+  0x535db is the +0xa4 call, the new record's ENTER is 0x535e1-0x535ea and
+  the state word is written after it at 0x535ed. That call therefore uses
+  the OLD state's cursor.
+  (d) THE ARITHMETIC OF ONE CYCLE, MEASURED THROUGH THE PORT'S PARSER.
+  For a state whose list admits its rows in order, one cycle shifts the
+  table by min(n,7) minus max(0,n-7) in y, y growing down, where n is the
+  number of rows. Over the shipped install - 777 members, 2317 states with
+  rows, 18823 rows - 1890 states come out screen-DOWN, all of them with 13
+  rows or fewer; 366 come out screen-UP, all with 15 rows or more, the
+  worst -83 px; and exactly 61 states balance at zero, which are exactly
+  the 61 states with 14 rows. No state's in-cycle descent exceeds 7 px,
+  because only cursors 0..6 add. ZARIA.01: PALM.MOV and PALML.MOV are
+  both 14-row A_RUN states, so each of that level's four PALMA objects
+  lowers its surface table by 1 px for seven admits and raises it back for
+  seven - net zero, never a carry - and KAT.MOV's A_RUN is a 10-row
+  state. PR-339's census counted row THRESHOLDS instead, and its "every
+  shipped seat row moves the table down 1 px" is void: thresholds at or
+  above 7 have no bearing on this shift.
+  (e) THE KATAPULT DISPATCHER SWITCHES ON THE SAME CURSOR AND ITS JUMPS
+  CLOSE. 0x1e690's head is the identical chain - 0x1e69e, 0x1e6a1,
+  0x1e6a4, then 0x1e6a7 `mov eax,[eax+0x4]` - and 0x1e6aa `sub eax,3`,
+  0x1e6ad `cmp eax,4`, ja to 0x1e95d, so it acts only for cursor 3, 4, 5,
+  6 or 7, through the jump table at 0x1e670 whose five entries are 0x1e6be,
+  0x1e723, 0x1e788, 0x1e7f3, 0x1e886. Each moves the table by a fixed
+  amount through 0x45200 and then, if its element field is set, runs the
+  element: cursor 3 0x1e6c3/0x1e6be (+13,+5); cursor 4 (+13,+6); cursor 5
+  (+13,+10); cursor 6 0x1e7f3/0x1e7f8 (+3,+10), which also writes 1 into
+  [obj+0xc1] at 0x1e7e0 with ecx = 1 from 0x1e7af; cursor 7 0x1e886, `mov
+  edx,0xffffffd6` and `mov ebx,0xffffffe1` = (-42,-31) - PR-339's fifth
+  offset "(-42,-42)" misreads that second immediate - and its tail
+  0x1e93e-0x1e957 reads [obj+0xb5] and [obj+0xb1], calls 0x52b10 with
+  edx=2 and ebp=0, and writes 0 to [obj+0xc1]. The five offsets sum to
+  exactly (0,0): KAT.MOV's ten rows carry the cursor through 3..7 once per
+  cycle, so the catapult's table is displaced by up to (+42,+31) between
+  the cursor-6 admit and the cursor-7 admit and is put back exactly where
+  the author put it. Note the shape of that tail: [obj+0xb1..0xbd] is
+  where PR-246 stores the AUTHORED RECTANGLE x0,y0,x1,y1, so the fields
+  OI-125 asks about may be rectangle words on these objects rather than
+  only the id of PR-340's counter block.
+OPENS: the phase of paragraph (c) - which cursor value the admitted row
+  pairs with, which fixes the order of a cycle but no net; rows skipped by
+  a GOTOREL cursor jump of PR-324, which change which values a cycle
+  visits and are not in the census arithmetic; the element calls those five
+  arms make, with the block values each one passes; whether [obj+0xbd] and
+  [obj+0xc1] are rectangle words or PR-340 counter ids on the same object,
+  and what 0x52b10 does with the pair it is handed; and the standing gate
+  OI-123, the poster of the 0x1b message that would attach a requester to
+  a surface - with a seat table that returns to its authored place every
+  cycle, no seat can carry the lion to the ZARIA.01 exit anyway.
+CLOSES: PR-339 OPENS item two, which of the five offsets ZARIA.01s
+  catapult takes: all five, in jump-table order, once per 10-row cycle,
+  with a net of zero - the word that selects them is the row cursor, which
+  the port already runs as o-fi. It also settles OI-125s question of
+  whether the seat has an authored motion: it does, and its size is 1 px a
+  row against a 14-row list and a closed five-jump path for the catapult.
+CORRECTS: PR-339 - paragraph (a) is unchanged, but paragraph (b)s sign
+  source is the row cursor at [[state record]+0x4], not the row threshold
+  at [[row]+0x10]; paragraph (d) and the title measure and claim the wrong
+  field, and the shipped seats do not all move down; paragraph (c)s fifth
+  offset is -42,-31 and its "the state record's +0x4 type word is not
+  observable" is wrong, the word is the row count the shipped texts do
+  carry; its OPENS claim that the offsets KATAPULT takes are unknown is
+  closed by paragraph (e). PR-336 paragraph (g) stands: its 7-of-+1-then-3-
+  of--1 and 7-and-7 counts were the cursor values. OI-124, OI-125 and
+  HANDOFF section 8 T5 F6 lose PR-339s sentence that a seat descends 1 px
+  per admitted row.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
+  and no mutation run. Reproducible: /tmp/opencode/pr341_cursor.c and its
+  output /tmp/opencode/pr341_cursor.out are the cycle arithmetic of
+  paragraph (d) and the five-offset sum of paragraph (e), built like the
+  endlevel_census target over ported/ll_play.c, ported/llrs.c and
+  ported/fs_ci.c and run on /tmp/opencode/hd_files/ANIMACJE; the bodies
+  are dumped in /tmp/opencode/pr339_1e5c0.txt, /tmp/opencode/pr339_1e690.txt,
+  /tmp/opencode/pr341_52190.txt, /tmp/opencode/pr341_52310.txt,
+  /tmp/opencode/pr341_535a0.txt and /tmp/opencode/pr341_1e570.txt; the
+  jump table entries are the five dwords at 0x1e670, read at the image
+  offset 0x1e670 minus 0x10000.
+```

@@ -4901,53 +4901,62 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     0x54560, and no poster of that message is in the image
     (OI-123). And the chain's top still ends 28 px short of the
     authored exit x 1020, so the seat's own motion matters as much
-    as the table - and PR-339 measured it: PALMA's class carries the
-    row-clock 0x1e5c0 at its +0xa4 and every one of its 14 authored
-    rows has a threshold at or above 7, so each admitted row moves
-    that object's surface table 1 px DOWN; KATAPULT's +0xa4 is no
-    row-clock but a state-change dispatcher with five fixed table
-    jumps (OI-125). Nothing raises a seat, so the chain's authored
-    heights come from the four placements alone and the crossing
-    stays out of reach. The port's walk (2 px a tick) and jump
-    (measured vertical) cannot cross either way.
+    as the table - and PR-341 measured it, correcting PR-339: the
+    class +0xa4 verb takes its sign from the state record's ROW
+    CURSOR at [rec+0x4], not from any row threshold, so 0x1e5c0
+    shifts the table 1 px down for cursors 0..6 and 1 px up from
+    cursor 7 - and ZARIA.01's PALM.MOV and PALML.MOV are 14-row
+    states, which balances to exactly zero net with a 7 px
+    in-cycle descent. KATAPULT's +0xa4 dispatcher keys the same
+    cursor and its five jumps (+13,+5) to (-42,-31) sum to exactly
+    (0,0): its table is displaced up to (+42,+31) inside the cycle
+    and then put back (OI-125). No seat drifts, so the chain's
+    authored heights come from the four placements alone and the
+    crossing stays out of reach. The port's walk (2 px a tick) and
+    jump (measured vertical) cannot cross either way.
     WHAT WOULD CLOSE IT: the poster of the 0x1b message that
     attaches a requester to a surface (OI-123) - with it, the
     chain of this level's own objects becomes the carrier, a
-    carrier that descends 1 px per admitted row, and the question
-    is the 28 px and the five state-change offsets (OI-125);
-    without it, the carrier is something else, and the candidates
-    are the .plt ground of the chasm read as a slope or a
-    scripted chain (T6).
+    carrier that returns to its authored place every row cycle,
+    and the question is the 28 px against that cycle's excursion
+    (OI-125); without it, the carrier is something else, and the
+    candidates are the .plt ground of the chasm read as a slope or
+    a scripted chain (T6).
 
-OI-125: the state-change surface jumps of the object class +0xa4 verb -
-  five authored table offsets and the two fields that gate their
-  element half
+OI-125: the element half of the object class +0xa4 verb - the five
+  row-index table jumps of the catapult dispatcher and the two fields that
+  gate their element calls
   status: OPEN
-  origin: PR-339 (the seat row-clock read)
+  origin: PR-339 (the seat row-clock read), re-keyed by PR-341
   notes: PR-339 found the object class's +0xa4 verb has exactly two
     runners in the image: 0x52341, on the admitted branch of the row
-    law 0x52320 (the current row's threshold [rec+0x10] against the
+    law 0x52320 (the current row's threshold [row+0x10] against the
     feed accumulator [obj+0xa1]), and 0x535db, in PR-172's state
-    applier 0x535a0 before the new row's ENTER. For PALMA that slot
-    resolves 0x1e5c0, a table shift of (0,+-1) whose sign is THAT
-    ROW'S OWN THRESHOLD - at or above 7 moves the table one pixel
-    down, below 7 moves it up - so a seat's surface is authored to
-    move, one pixel per admitted row, not per tick. KATAPULT's slot
-    resolves 0x1e690, a dispatcher on the state record's +0x4 type
-    word: `sub eax,3; cmp eax,4; ja` with the jump table at 0x1e670,
-    whose five targets 0x1e6be, 0x1e723, 0x1e788, 0x1e7f3 and 0x1e886
-    each move the whole table by a fixed amount through 0x45200 -
-    +13,+5; +13,+6; +13,+10; +3,+10; -42,-42 - and then, when
-    [obj+0xbd] or [obj+0xc1] is non-null, run [[that]+8]+0x10 with
-    the block {0,1,dx,dy}, the same element protocol as 0x1e5c0's
-    half but on different fields. Neither [obj+0xbd] nor [obj+0xc1]
-    has a reader or writer named by any PR, and the state record's
-    +0x4 type word is not observable for KATAPULT - KAT.MOV holds one
-    state, one A_RUN - so which of the five offsets ZARIA.01's
-    catapult takes is open. WHY IT MATTERS: if F6's leg runs, the
-    seat's authored motion IS this - a 1 px per-row descent plus
-    state-change offsets - and the port parses those tables
-    (OBJ_MAXSEAT since PR-335) and moves none of them.
+    applier 0x535a0 before the new state's ENTER. For PALMA that slot
+    resolves 0x1e5c0, a table shift of (0,+-1); KATAPULT's slot
+    resolves 0x1e690, a five-way dispatcher with the jump table at
+    0x1e670, whose targets 0x1e6be, 0x1e723, 0x1e788, 0x1e7f3 and
+    0x1e886 each move the whole table by a fixed amount through
+    0x45200 and then, when [obj+0xbd] or [obj+0xc1] is non-null, run
+    [[0xcef40+0x394]+8]+0x10 with an element block.
+    PR-341 FIXED WHAT BOTH SWITCH ON. Neither uses the row threshold:
+    both read [[state record]+0x4], and that word is the state's ROW
+    CURSOR - 0x53616 writes the transition's authored start row into
+    it, 0x521c5 zeroes it and 0x521d7 increments it, on the record
+    whose control byte is at +0x12 and row list at +0x2e. So 0x1e5c0
+    moves the table 1 px DOWN for cursors 0..6 and 1 px UP from
+    cursor 7 on - the row POSITION, as PR-336 said - and 0x1e690
+    acts only at cursor 3,4,5,6,7, by (+13,+5), (+13,+6), (+13,+10),
+    (+3,+10) and (-42,-31) - PR-339's fifth offset was a misread -
+    which sum to exactly (0,0). Measured on the shipped texts:
+    ZARIA.01's PALM.MOV and PALML.MOV are 14-row states, so their
+    four PALMA tables oscillate +7 px down and back with zero net,
+    and KAT.MOV's ten rows carry the catapult's cursor through 3..7
+    once per cycle, so that table is displaced up to (+42,+31) and
+    then put back exactly. Install-wide, 1890 states net down, 61
+    exactly balanced - the 61 fourteen-row states - and 366 net up.
+    The same cursor gates the ask: 0x1e570 runs the table query only
+    while the cursor is below 13; KATAPULT's 0x1e970 has no gate.
     PR-340 ANSWERS PART OF IT. [obj+0xbd] and [obj+0xc1] are real
     fields but only KATAPULT-sized - the object is allocated 0xc5
     bytes at 0x1fb42 while PALMA gets 0xb5 at 0x1fc18 - and what
@@ -4971,10 +4980,18 @@ OI-125: the state-change surface jumps of the object class +0xa4 verb -
     of the KILOF_PL pair - and 0x22e18 clears both fields after
     `call 0x52c70`; neither setter is stored in any of the ten
     views, so their caller is the open part.
-    WHAT WOULD CLOSE IT: the callers of 0x20964/0x22dfa/0x22e18 and
-    what 0x52c70 does, the meaning of the state record's +0x4 word
-    (its control word is elsewhere - 0x543af reads [rec+0x12] and
-    masks 7), and what [obj+0xc2] bit 7 and [obj+0x66] bit 6 gate.
-    Then a port leg that applies the shift at the row admit and the
-    state change, which
-    ZARIA.01's own seat texts can measure.
+    WHY IT MATTERS: the seat's authored motion is now fully known and it
+    is a cycle, not a carry - the port parses those tables (OBJ_MAXSEAT
+    since PR-335) and moves none of them, and no seat can lift the lion
+    anywhere. WHAT WOULD CLOSE IT: the callers of 0x20964/0x22dfa/
+    0x22e18 and what 0x52c70 does; whether [obj+0xbd]/[obj+0xc1] are
+    the rectangle words of PR-246 - the cursor-7 arm 0x1e93e-0x1e944
+    hands [obj+0xb5] and [obj+0xb1] to 0x52b10, and PR-246 stores the
+    authored rectangle x0,y0,x1,y1 at [obj+0xb1..0xbd] - or the ids of
+    PR-340's counter block; what 0x52b10 does with that pair; the
+    element blocks each of the five arms passes; which cursor value
+    pairs with the admitted row, since the cursor step of 0x520c0 runs
+    before the step of 0x521f0; and what [obj+0xc2] bit 7 and
+    [obj+0x66] bit 6 gate. Then a port leg that applies the shift at
+    the row admit and the state change, which ZARIA.01's own seat
+    texts can measure.
