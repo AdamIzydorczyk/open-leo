@@ -5493,8 +5493,12 @@ OI-128: what landing and leaving a surface does - the class verbs
     NOT free. The third method with the identical gate is the class
     verb +0x58: 0x54eb0 installs at slot +0x58 of every one of the
     155 tables in that census, has exactly ONE call site
-    (0x3ede2, in the placement path that reads a target object
-    through [ecx+0x3c]), raises token 0x1b = AC_BUTLA through +0x10
+    (0x3ede2 - PR-366 read the function: the latched +0x14 handler
+    0x3ed70 of five record-class tables, which moves the companion it
+    resolved BY NAME and keeps at [obj+0x3c] to its OWN position,
+    taken through its +0x90 verb; and for the one link that can be
+    named, ANITAB = 0xa1eb4, the +0x58 that runs is 0x23ba0, the
+    plain pair copy), raises token 0x1b = AC_BUTLA through +0x10
     (PR-183's name), then writes the caller's {x, y} pair to
     [obj]/[obj+4] and, under that same predicate, adds the
     difference of the two sample points - the live position moves to
@@ -5648,4 +5652,14 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     more is the same through [0xcef40+0x394], and the rest are the
     asked-marker pair 0x1e540/0x22df0 and the state test 0x4fb00; and
     whether those tables install a different +0x58 - all 31 install
-    0x23ba0, the plain pair copy without the anchor delta.
+    0x23ba0, the plain pair copy without the anchor delta. CLOSED by
+    PR-366: the +0x58 caller. Its one call site sits in 0x3ed70-0x3ee27,
+    the latched +0x14 handler of five record-class tables (two named by
+    PR-338: KTRASA 0x9dbfc, TUNTRAS 0x9f7b4); the companion it moves was
+    resolved BY NAME at the class's +0x18 (0x3ed40 matches the string
+    'ANITAB' = PR-303's 0xa1eb4) and stored at [obj+0x3c]; the pair it
+    passes is the owner's own position, returned by its +0x90 verb
+    (0x36150); and for ANITAB the +0x58 that runs is 0x23ba0, the plain
+    pair copy - so the anchor delta is not what carries the rider. What
+    is left of that item: which of the 33 `call [reg+0x14]` sites runs
+    the handler, and what the three unnamed tables are.

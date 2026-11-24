@@ -50844,3 +50844,142 @@ GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff includes
   method is worth chasing to its vftable and from there to whoever
   installs it, because that is how an "unreachable" function turns into
   a named class.
+
+## PR-366 - THE ONLY CALL OF THE +0x58 VERB IS A NAMED-LINK HAND-OFF: THE
+## +0x14 HANDLER OF FIVE RECORD CLASSES MOVES THE OBJECT IT RESOLVED BY
+## NAME TO ITS OWN POSITION, RAISES AC_EDGE ON IT AND ORS A PACKET IN
+```
+KIND: read
+SUBSYSTEM: what calls the class verb +0x58 (PR-364's re-anchor, PLAN 8g's
+  unmodelled path), the [obj+0x3c] named link and the [obj+0x40] latch,
+  and the record-class tables PR-338 named KTRASA and TUNTRAS.
+ADDRESSES: 0x3ed40, 0x3ed4a, 0x3ed5a, 0x3ed65, 0x3ed70, 0x3ed79, 0x3ed7e,
+  0x3ed81, 0x3ed90, 0x3ed96, 0x3ed9a, 0x3eda3, 0x3edaf, 0x3edb5, 0x3edb7,
+  0x3edd0, 0x3ede2, 0x3ee01, 0x3ee0e, 0x3ee18, 0x3ee1e, 0x3ee27, 0x3ee28,
+  0x3ee2d, 0x3ee3c, 0x3ee80, 0x3ee72, 0x3f080, 0x3efe0, 0x3f080, 0x39f00,
+  0x4dcc0, 0x4dcd2, 0x4df10, 0x49920, 0x49580, 0x49f90, 0x45120, 0x74970,
+  0x77bdc, 0x749a0, 0x95c20, 0x91f2a, 0x91f3d, 0x914ee, 0x91134, 0x9dbfc,
+  0x9dc10, 0x9e294, 0x9e2a8, 0x9e2ac, 0x9f7b4, 0x9f7c8, 0xa1f90, 0xa1fa4,
+  0xa2054, 0xa2068, 0xa1eb4, 0x23a90, 0x23ba0, 0x36150, 0x36180, 0x361a0,
+  0x34850, 0x34859, 0x52a90, 0x53df0, 0x54450, 0x544f0, 0x54eb0, 0xcef40,
+  0x390, 0x394, 0x40, 0x3c, 0x44, 0x60, 0x80, 0x84, 0x88, 0x8c, 0x90, 0x14,
+  0x18, 0x28, 0x58, 0x78, 0xa9bac
+NAMES: named link, attached object, one-shot latch, hand-off, AC_EDGE,
+  packet merge, OR-INTO, position triple, out-parameter, pure virtual,
+  ANITAB, KTRASA, TUNTRAS, re-anchor, placement path, OI-128, OI-129, F6,
+  PLAN 8g, pr366_58_caller.py, pr366_read.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the two OI rows that named the caller as unread, and the
+  HANDOFF section 8 F6 paragraph.
+HOOKS: PR-364 measured that 0x54eb0 has exactly one call site, 0x3ede2,
+  and left the caller unread; PR-365 restated that open item. PR-338's
+  ask-install census names 0x9dbfc KTRASA and 0x9f7b4 TUNTRAS and calls
+  0x3efe0 the resolver of the [obj+0x44] home. PR-303's name census gives
+  ANITAB = 0xa1eb4. PR-237 read the ask/request-block signature whose
+  third word is 0x98278, which the +0x90 verb here writes. The early
+  journal read 0x49580 as OR-INTO ([eax..eax+8] |= [edx..]) and the
+  12-byte packet merge; 0x76a69 is the strcmp the name lookup uses.
+OPENS: which of the 33 `call [reg+0x14]` sites runs this handler and on
+  what trigger - the index cannot attribute an indirect verb call to one
+  class; what the three unnamed tables 0x9e294, 0xa1f90 and 0xa2054 are
+  (0x9dbfc/0x9f7b4 are KTRASA/TUNTRAS by PR-338); what the 12-byte packet
+  means, in particular bit 2 of its 8th byte, which 0x3ee01 sets before
+  the merge into [target+0x60]; whether the object at [obj+0x3c] is ever
+  anything but the named ANITAB - 0x3ed40 resolves exactly that name, and
+  the other three resolvers (0x3f080, 0x39f00, 0x3efe0) parse names too
+  but their target classes are not pinned here; and the field-meaning
+  conflict this pass exposed: an earlier row reads [obj+0x3c] as a
+  state-name table and PR-237 reads [obj+0x3c]/[obj+0x40] as an object
+  array and its count, while here 0x3ed5a stores a resolved object at
+  [obj+0x3c] and 0x3eda3/0x3ee3c/0x3ed65 use [obj+0x40] as a one-shot
+  latch. At least two of those readings are for different class families;
+  which is which is open.
+CLOSES: the PR-364 and PR-365 open item "who calls the +0x58 placement
+  path at 0x3ede2's function". The function is read: 0x3ed70-0x3ee27, and
+  the pair it hands to +0x58 is not a foreign point - it is the caller's
+  OWN position, taken through its +0x90 verb (0x36150 copies [obj] and
+  [obj+4] into a stack triple whose third word is the request signature
+  0x98278 and returns that triple). Also closed as a side effect: the
+  object the verb is run on is a named link resolved by the class's
+  +0x18 verb, not an incidental register.
+CORRECTS: PR-364's sentence "there eax = the object reached through
+  [ecx+0x3c] and its pair is taken from ebx, preceded by another +0x10
+  raise" is right in shape but incomplete in a way that mattered: the pair
+  in edx/ebx is the CALLER's own position (through +0x90), the raise is
+  AC_EDGE (token 8, PR-183's name) not an unexplained second raise, and the
+  handler is a latched one-shot, not a per-frame step. And the implication
+  that the one call site runs the 0x54eb0 re-anchor does not hold for the
+  case that can be named: the link 0x3ed40 resolves is the class ANITAB
+  (the string 'ANITAB' at 0x91f3d, matched against PR-303's 0xa1eb4), and
+  0xa1eb4's +0x58 is 0x23ba0, PR-365's plain pair copy - so the +0x58
+  that provably runs is the three-instruction write, and 0x54eb0's turn at
+  that site depends on a link class not yet pinned.
+MEASURED: (a) THE BOUNDARIES (pr366_58_caller.py sections 1-2). The
+  function that holds 0x3ede2 starts at 0x3ed70 (`push ebx/ecx/edx/esi/
+  edi/ebp; sub esp,0x3c`) and ends at 0x3ee1e-0x3ee27 (`add esp,0x3c;
+  pop; ret`), with a second exit at 0x3ee28. Nothing calls it directly
+  (no xref rows), which is why the census of installs was the only way in.
+  (b) ITS BODY. 0x3ed7e runs the class verb +0x28 (0x52a90, the same in
+  186/186 anchor tables); 0x3ed81 returns early if [obj+0x40] != 0;
+  0x3ed90 runs +0x84 and skips everything if it answers 0; 0x3eda3 sets
+  [obj+0x40] = 1 - the latch; 0x3edaf runs +0x90 with edx = a stack
+  buffer and takes the returned pointer in ebx; 0x3edb7 reads [obj+0x3c],
+  seeds {0, 8, 0, 0} and 0x3edd0 runs THAT object's +0x10 - token 8 =
+  AC_EDGE, PR-183's name; 0x3edd3-0x3ede0 take the pair from the +0x90
+  buffer and 0x3ede2 `call [edi+0x58]` on the linked object, the only
+  such call in the image (measured again here: 1 site); 0x3ee01 sets bit
+  0x04 of byte 8 of a 12-byte packet built at 0x3edf2 with ebx = 0xc and
+  0x3ee0e ORs it into [linked+0x60] through 0x49580; 0x3ee18 runs the
+  class's +0x8c. The 0x3ee28 exit runs +0x88, and when that answers
+  nonzero it CLEARS the latch (0x3ee3c `mov [ecx+0x40],0`) and builds
+  another packet - so the hand-off can happen again.
+  (c) WHO INSTALLS IT: exactly five tables, always at slot +0x14 -
+  0x9dc10, 0x9e2a8, 0x9f7c8, 0xa1fa4, 0xa2068 hold 0x3ed70, which is
+  +0x14 of 0x9dbfc, 0x9e294, 0x9f7b4, 0xa1f90, 0xa2054. Those tables are
+  stored at [obj-0x4c] or [obj-0x3c] (0x35136, 0x350fb, 0x3a2c2, 0x4e76d,
+  0x4e801), the embedded-sub-record idiom PR-353 described, and PR-338
+  names two of them by their +0x78 asks: KTRASA 0x9dbfc, TUNTRAS 0x9f7b4.
+  In those tables +0x84 is 0x361a0 (`mov eax,1; ret`, always true) in four
+  and 0x34850 (a query through [[0xcef40+0x394]+8]'s +0x4c verb) in one;
+  +0x8c is 0x36180 (`ret`); +0x90 is 0x36150 in four and 0x74970 in one -
+  and 0x74970 is the pure-virtual placeholder, the run-time reporter of
+  'pure virtual function called!' (the string at 0x95c20), so that class
+  leaves the position source unimplemented. Compare the 186 anchor kind
+  tables, where +0x84 is 0x23a90 (`xor eax,eax; ret`, always false) in 173
+  and +0x90's commonest is 0x54450: the guard that gates this path is
+  true only for these record classes.
+  (d) THE LINK. 0x3ed40, the +0x18 verb of 0x9e294 and the sibling
+  installed at 0x9e2ac: it calls 0x4dcc0, which parses a name with the
+  format ' %[^,\r\n] , ' (0x91f2a) and looks the object up by comparing
+  names (the string at 0x91f3d is 'ANITAB', the comparison is the PR-238
+  helper 0x76a69 through 0x4df10); it stores the result at [obj+0x3c]
+  (0x3ed5a), runs the class verb +0x80 with it, and clears the latch at
+  0x3ed65. The other four +0x18 verbs (0x3f080, 0x39f00, 0x3efe0) parse
+  and resolve names too; 0x3efe0 is the [obj+0x44] home resolver PR-338
+  named. PR-303 resolves the name ANITAB to the kind table 0xa1eb4, whose
+  +0x54 is 0x53df0 and whose +0x58 is 0x23ba0.
+  (e) THE COUNTS, re-measured: `call [reg+0x58]` = 1 site (0x3ede2);
+  `call [reg+0x14]` = 33 sites.
+GATE: light: verify-index verify-docs rc=0 (ok); no code or comment was
+  touched by this pass, so nothing else was run beyond the light pair;
+  the index was regenerated with this record in the tree before the runs.
+```
+
+- WHY. PLAN 8g lists the +0x58 path as unmodelled, and PR-364 had made it
+  look like a mover of the live position for the 155 family. It is that in
+  principle, but the only place the engine asks for it is a hand-off
+  between two objects that a level line names: a record class resolves a
+  named companion at its +0x18, stores it at [obj+0x3c], and then once
+  (with a latch it can clear) moves that companion to its own position,
+  raises AC_EDGE on it and ORs a packet into its flag block. For the
+  ANITAB case that is provably reachable, the verb that runs is the plain
+  pair copy, so the anchor delta of PR-364 is not what carries the rider -
+  which is exactly the kind of thing the port would get wrong if it wired
+  the re-anchor first.
+
+- WHAT SURPRISED ME. The verb with the elaborate body - the AC_BUTLA
+  raise, the two-sample-point delta, the re-aim - has exactly one caller,
+  and the class that caller can be shown to reach implements +0x58 as
+  three instructions. Elaborate implementation, minimal use. And the
+  position handed across the link is the owner's own pair through +0x90,
+  not a computed target: the "placement path" turns out to be "follow me".

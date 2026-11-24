@@ -5770,7 +5770,16 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         F6 still lacks: the current-frame element per
         object (the [view+0x48] chain) if the live-position half is to be
         wired, the port's unmodelled ground_on, ground_off, lock2 and
-        unlock2 and the +0x58 placement path (PLAN 8g), and the owner of
+        unlock2 and the +0x58 placement path (PLAN 8g) - now read by
+        PR-366: its one call site is the latched +0x14 handler of five
+        record-class tables (KTRASA/TUNTRAS among them), which resolves a
+        companion BY NAME, keeps it at [obj+0x3c], moves it to the owner's
+        own position through its +0x90 verb, raises AC_EDGE on it and ORs
+        a 12-byte packet into its flag block; for the name that can be
+        pinned (ANITAB) the +0x58 that runs is the plain pair copy, so
+        PLAN 8g's "third mover" is a follow-me hand-off, not an anchor
+        shift - and which of the 33 +0x14 call sites runs it is open. The
+        other gap PR-365 left: the owner of
         the 0x45500 box test - PR-365 corrected PR-364 here: 0x45400 ends
         at 0x454c6, 0x45500 is its own function, and it is the shared
         helper of the BAL (balloon) class 0xa17dc, a provider-point-plus-
