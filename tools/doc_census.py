@@ -191,7 +191,7 @@ FIELDS_COMMON = (
     ('HOOKS', re.compile(r'^HOOKS: \S')),
     ('OPENS', re.compile(r'^OPENS: [A-Za-z0-9,;+ ._-]+')),
     ('CLOSES', re.compile(r'^CLOSES: [A-Za-z0-9,;+ ._-]+')),
-    ('CORRECTS', re.compile(r'^CORRECTS: (none|PR-\d+)')),
+    ('CORRECTS', re.compile(r'^CORRECTS: (none\b|no\b|nothing\b|PR-\d+)')),
 )
 # PR-232 (owner ruling): the gate FOLLOWS THE KIND. port/gate
 # records carry the two-line full gate; read/docs records run only

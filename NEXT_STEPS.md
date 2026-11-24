@@ -52534,3 +52534,119 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   two the ledger has known for fifty records, and that the count 204/15
   says the askable answer is a constant written into the table: the engine
   never computes whether something can be asked, the author decided it.
+
+## PR-377 - ACCEPTING A COMPANION IS AN OPT-IN CLASS VERB PAIR: 64 OF THE
+## 219 KIND TABLES CARRY IT, 33 OF THEM CLASSES THAT OWN NO POINT LIST,
+## AND 6 OF THE 37 POINT-LIST OWNERS CARRY NO SUCH VERB
+
+```
+KIND: read
+SUBSYSTEM: where the companion-linking functions (0x3df50, 0x3df90 and
+  their per-class wrappers) are installed as class verbs, which classes
+  carry that pair and which do not, and the authored tokens near the
+  constructors of the 15 askable classes (OI-128, OI-129, the F6 thread;
+  continues PR-376, PR-375, PR-374 and touches PR-371's 0x2b2a0).
+ADDRESSES: 0x3df50, 0x3df90, 0x2b2a0, 0x2b290, 0x26bd0, 0x26bc0,
+  0x21100, 0x210f0, 0x22b80, 0x354f0, 0x354e0, 0x38d20, 0x38d10,
+  0x39a80, 0x39a70, 0x39180, 0x39170, 0x3aa60, 0x3aa50, 0x3ce80,
+  0x3ce70, 0x4f260, 0x4f250, 0x3c5c0, 0x3c5b0, 0x35f90, 0x2d160,
+  0x2d150, 0x9a54c, 0x98f34, 0x99668, 0x9e82c, 0x9e8bc, 0x9ee88,
+  0xa0230, 0xa1894, 0x970bc, 0x97254, 0x9755c, 0x98da4, 0x9719c,
+  0x9ac90, 0x9d6e0, 0x9e4c0, 0x9e578, 0x9ed18, 0x9ef38, 0x9f7b4,
+  0x96c38, 0x96d1c, 0x977f0, 0x9dbfc, 0xa1f90, 0xa2054, 0x97360,
+  0x91446, 0x90795, 0x6c, 0xdc, 0xe0, 0xec, 0xf0, 0x128, 0x12c,
+  0x208, 0x20c, 0x228, 0x22c, 0x112
+NAMES: link verb, opt-in, verb pair, wrapper pair, shared wrapper,
+  askable class, authored token, module name, link-free owner,
+  pr377_slots.py, pr377_slots.txt, pr377b_census.py,
+  pr377b_census.txt, pr377c_split.py, pr377c_split.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines about who links a companion, the HANDOFF
+  section 8 F6 paragraph, and one pattern in tools/doc_census.py P4:
+  CORRECTS accepted only `none` or `PR-nn` as its first word, so a
+  record with nothing to retract had to invent "none" where "nothing" is
+  what it means; the pattern now accepts `none|no|nothing|PR-nn`.
+  Nothing under ported/ is touched, so only the light gate applies.
+HOOKS: PR-376 read the link call sites and the askable guard; PR-374
+  named 0x2b2a0/0x2b290 as the +0x0/+0x4 hooks of the 0x3ddf0 family;
+  PR-372/PR-373 fixed which classes own a point list; PR-322 named the
+  token compare that selects a class table (0x90795 'TLewZariaB').
+OPENS: what the pair means for a class with no point list, since the
+  +0x4 link verb reads [obj+0x11a]/[obj+0x11e], which PR-375 showed are
+  written by the authored ` F = %d, %d ` scan in a point-list load hook -
+  do the 36 link-free-of-point-list classes get those fields another
+  way; the 6 owners with no link verb at all (0x96c38, 0x96d1c,
+  0x977f0, 0x9dbfc KTRASA, 0xa1f90, 0xa2054) - who links their
+  companions, if anyone; which owner each shared wrapper pair belongs to
+  (0x21100/0x210f0 is installed by three different classes); the other
+  13 askable classes' tokens, since the nearest-compare heuristic found
+  none and the window scan only returns candidate name lists; and what
+  0x35f90, 0x3c5c0/0x3c5b0 and the rest of the wrapper families add
+  beyond calling a linker.
+CLOSES: PR-371's "0x2b2a0 calls 0x3df50, 0x2b295 calls 0x3df90" from the
+  other side: those two functions are installed as verbs +0x208/+0x20c of
+  the kind table 0x9a54c - an askable class with no point list - as well
+  as serving as block hooks elsewhere, so they are ordinary class verbs,
+  not a sub-table curiosity. It also settles that linking a companion is
+  per-class opt-in rather than a general object capability: only 64 of
+  the 219 tables carry the pair.
+CORRECTS: nothing of mine. One note on method: PR-376's count of 30 call
+  sites ("26 in-block thunks plus 4 wrappers") is about CALL SITES; the
+  slots here are about installed verbs, and the two counts must not be
+  confused - a wrapper that serves one owner's block slot may also be
+  installed as another class's verb, which is what paragraph (d) measures.
+MEASURED: (a) THE PAIR, AND WHERE IT SITS (pr377c_split.py). For each of
+  the 219 kind tables, slots whose function is 0x3df50/0x3df90 or calls
+  one within its first 0x20 bytes: 64 tables carry such a function,
+  always as an adjacent pair, at varying slots - +0xdc/+0xe0, +0xec/+0xf0,
+  +0x1e0/+0x1e4, +0x1a0/+0x1a4, +0xb8/+0xbc, +0x128/+0x12c,
+  +0x208/+0x20c, +0x228/+0x22c and others.
+  (b) WHO CARRIES IT. 31 of the 37 point-list owners, and for 28 of them
+  the pair sits at +0xdc/+0xe0, which is the block's own +0x0/+0x4 (the
+  block is at table-0x24 for those classes); 3 owners hold it at other
+  slots instead - 0x9ef38, 0x9f7b4 (TUNTRAS) and 0x99718. The other 6
+  owners have no link verb anywhere (paragraph (e)).
+  (c) 33 CLASSES THAT OWN NO POINT LIST CARRY THE PAIR: 20 of the 0x55070
+  family, 7 of the 0x53df0 family and 6 of the second family. 23 of the
+  33 hold 0x3df50/0x3df90 DIRECT in their own slots and 10 hold only a
+  wrapper pair. Two of them are among the 15 askable tables (0x98f34,
+  0x9a54c).
+  (d) WRAPPERS ARE SHARED ACROSS UNRELATED CLASSES. 0x21100/0x210f0 is
+  installed by 0x970bc, 0x97254 and 0x9719c; 0x39a80/0x39a70 by 0x9ee88,
+  0x9ed18 and the owner 0x9ef38; 0x38d20/0x38d10 by 0x9e4c0 and 0x9e578;
+  0x354f0/0x354e0 by 0x9d6e0; 0x3aa60/0x3aa50 by the owner 0x9f7b4;
+  0x26bd0/0x26bc0 by 0x98da4 and 0x98f34. The pair 0x2b2a0/0x2b290 is in
+  the table 0x9a54c at +0x208/+0x20c - the very functions PR-371 and
+  PR-374 found as block hooks of the 0x3ddf0 family.
+  (e) SIX OWNERS CARRY NO LINK VERB: 0x96c38, 0x96d1c (the 0x53df0 pair
+  whose methods are PR-340's element region), 0x977f0, 0x9dbfc (KTRASA),
+  0xa1f90 and 0xa2054 (the second-family ones whose block +0x0 keeps the
+  base ask hook 0x45230). Their blocks' +0x0/+0x4 are element thunks or
+  the base verbs, and no other slot of their tables reaches a linker.
+  (f) ASKABILITY AND LINKING ARE INDEPENDENT: of the 15 askable tables,
+  only 0x98f34 and 0x9a54c carry a link pair; the other 13 do not.
+  (g) THE ASKABLE CLASSES' NAMES, A LEAD. Scanning each constructor that
+  stores one of the 15 tables for string immediates in its neighbourhood
+  gives candidate lists, not identifications (pr377_slots.py): 0x98f34
+  'ECOIN', 'E2BOSS', 'EBECZKA', 'TLewEna2', 'ena2ed.mod'; 0x9a54c
+  'A_DEAD', 'A_LOOKUP', 'A_LOOKDOWN', 'kadmdead.mod'; 0x9f540 and
+  0x9f668 share 'XCHG', 'KLODA', 'GUARD', 'TMPLAT', 'TUNTRAS'; 0xa2218
+  matches the level-module pattern 'XaXnDdOrCz' and neighbours. The
+  nearest-compare form found none of the 15 (pr377b_census.py), so the
+  token per class is still open; PR-322's single proven case is 0x97a98
+  with 'TLewZariaB' at 0x90795.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port asks every object the same surface question and lets every
+  object be asked. The original decides both per class: 64 tables opt in to
+  accepting a companion, 15 agree to be asked, and the two sets barely
+  overlap. If the port is to reproduce which object stands on which, it
+  needs these two per-class flags, not a rule derived from the level.
+
+- WHAT SURPRISED ME. That six of the classes the F6 thread cares most
+  about - KTRASA, the two element-region classes, and three others with
+  authored point lists - have no way to accept a companion at all, while
+  twenty ordinary 0x55070 classes do.

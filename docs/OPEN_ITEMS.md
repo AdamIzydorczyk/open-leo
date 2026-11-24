@@ -5785,7 +5785,16 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     none of them owns a point list, while the four link wrappers
     (0x1f490, 0x1f6f0, 0x27626, 0x34623) only take the link after the
     CANDIDATE's +0x3c answers 1, recording the result as bits 0x40/0x80
-    of the key byte at [obj+0x66]. So still open: which signal bit that
+    of the key byte at [obj+0x66]. PR-377 added that accepting a
+    companion is an opt-in CLASS VERB PAIR: 64 of the 219 tables carry a
+    slot pair reaching 0x3df50/0x3df90 - 31 of the 37 point-list owners
+    (28 at table +0xdc/+0xe0, their block's own +0x0/+0x4) and 33
+    classes with no point list at all (20 of the 0x55070, 7 of the
+    0x53df0, 6 second-family; 23 of the 33 hold the two functions
+    directly), and 6 owners carry no link verb anywhere - 0x96c38,
+    0x96d1c, 0x977f0, 0x9dbfc (KTRASA), 0xa1f90, 0xa2054. Only 2 of the
+    15 askable tables carry the pair, so askability and linking are
+    independent switches. So still open: which signal bit that
     is (the ledger's numbering stops at 54), what the authored
     key ` F = %d, %d ` at 0x91446 controls, what 0x1f330/0x1f590 test
     and what [obj+0x5c] == 6/9 selects, the tokens of the other 14
