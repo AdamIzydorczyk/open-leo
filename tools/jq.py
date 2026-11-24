@@ -21,7 +21,8 @@ usage:
   verbs:
     addr  <0xNNNN>     records citing an engine address
     field <[reg+0xNN]> records citing a field token
-    name  <A_*/AC_*/K_*/word=> records naming an authored token
+    name  <A_*/AC_*/K_*/word=> records naming an authored token (authored
+           game tokens only; a ported C identifier is not a name -> free)
     free  "<phrase>"   ranked full-text (FTS5; AND/OR and "quoted" ok)
     oi    <OI-nnn>     records referencing an open item: prose mentions
            (body text) plus structured OPENS/CLOSES; OI-128 and 128 both
@@ -118,6 +119,7 @@ def _simple_mentions(db, table, col, arg, a, label):
          % (table, col))
     rows = db.execute(q, (arg, a.limit)).fetchall()
     emit(rows, a, '%s %s - %d records' % (label, arg, len(rows)))
+    return len(rows)
 
 
 def v_field(db, arg, a):
@@ -125,7 +127,21 @@ def v_field(db, arg, a):
 
 
 def v_name(db, arg, a):
-    _simple_mentions(db, 'name_mentions', 'name', arg, a, 'name')
+    n = _simple_mentions(db, 'name_mentions', 'name', arg, a, 'name')
+    # PR-361: the names vocabulary is authored game tokens - what
+    # doc_census.NAME_RE/DES_RE match (A_*/AC_*/K_* state and action
+    # names, .des keys, which end in '='), the same split the pinned
+    # index uses. A ported C identifier like ll_seq_anchor_land is not
+    # a name, so `name <ident>` is a question with no answer here; the
+    # free-text verb reaches it (a bare token already auto-routes that
+    # way). Same policy as v_addr's short-hex hint: explain, do not
+    # answer a non-vocabulary question with a bare zero.
+    if n == 0 and not (arg.startswith(('A_', 'AC_', 'K_'))
+                       or re.fullmatch(r'[a-z][a-z0-9_]{3,20}=', arg)):
+        sys.stdout.write('# hint: name covers authored tokens only '
+                         '(A_*/AC_*/K_*, or a .des key WITH its trailing '
+                         '=, e.g. "speed="). %r is not that shape: use '
+                         'jq free "%s".\n' % (arg, arg))
 
 
 def v_free(db, arg, a):

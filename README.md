@@ -359,7 +359,8 @@ neither it nor P4. The generator (`tools/re_db.py`) imports doc_census
 and re_index and reuses their regexes and record boundary, so it
 cannot read a different ledger than the index and `make verify-docs`
 do (the PR-55 "two parsers drift" rule). Records: NEXT_STEPS.md
-PR-355 (the layer, closing OI-102) and PR-356 (its indexes).
+PR-355 (the layer, closing OI-102), PR-356 (its indexes), PR-358 and
+PR-361 (its coverage and routing fixes, from field feedback).
 
     python3 tools/jq.py 0xcef40                       # records citing an
            # address, each as NEXT_STEPS.md:LINE-LINE (read that slice)
@@ -373,6 +374,9 @@ key, so `+0x33`/`0x33` match through the text instead); [..]->field,
 OI->open item, PR->show, else full text. `oi OI-nnn` lists every
 record that NAMES the id - prose mentions and the structured
 OPENS/CLOSES graph - matched by integer, so OI-128 and 128 agree.
+`name` covers authored game tokens only (A_*/AC_*/K_*, .des keys WITH
+their trailing `=`); a ported C identifier like ll_seq_anchor_land is
+not a name, and the verb says so and points at the text door.
 jq.py rebuilds the DB first if
 NEXT_STEPS.md is newer, so an answer never comes from a stale index.
 `corr` reads the structured CORRECTS: field into a queryable graph -

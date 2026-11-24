@@ -50022,3 +50022,81 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs in the
   `name ll_seq_anchor_origin` both return 0 while `free ll_seq_anchor_land`
   finds the records. Function names need either the free-text verb or a
   new vocabulary; nothing in this pass needed more than free text.
+
+
+## PR-361 - THE NAME VERB TELLS YOU WHEN YOU BRING IT A PORTED C
+## IDENTIFIER: jq.py v_name gains the same zero-hit vocabulary hint
+## PR-358 gave v_addr for short hex; the names table stays exactly
+## what doc_census.NAME_RE/DES_RE define, because that is what the
+## pinned index indexes, and the free-text door already reaches code
+```
+KIND: gate
+SUBSYSTEM: docs structure (the generated ledger search layer, the name
+  verb's answer when the token is not in the names vocabulary)
+ADDRESSES: none
+NAMES: tools/jq.py, ll_seq_anchor_land, ll_seq_anchor_origin, NAME_RE,
+  DES_RE, A_WALK, speed=
+CODE: yes: v_name gains the zero-hit hint; _simple_mentions returns its
+  row count so the hint can be conditioned on it; no re_db.py or schema
+  change, no other verb's reader changed
+HOOKS: none
+OPENS: none
+CLOSES: none
+CORRECTS: none
+GATE: make 0 warnings; verify-all fixtures rc=0 69 (ok); the run on
+  this box with LL.iso staged (PR-360 staged it via the documented
+  recipe), 69 data-backed legs + 3 named verify-SKIPs (the
+  no-regression baseline and the two STATUS.LEO installer legs),
+  rc=0; verify-docs incl. journal-db and verify-index byte-identical
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - unchanged
+  from PR-355..PR-360, because this change adds no leg and touches no
+  port code. The same suite run twice, both ALL TESTS PASSED.
+```
+
+- WHY. The layer is now a working step in two sessions' loops. PR-360
+  ran `jq.py addr 0x42980` and `jq.py oi OI-128` as its first lookup
+  step and reported, in its own record, the one caveat this PR fixes:
+  `name ll_seq_anchor_land` and `name ll_seq_anchor_origin` return 0
+  while `free ll_seq_anchor_land` returns PR-359 and PR-360. Checked
+  live before changing anything: exactly that, and the mechanism as
+  PR-360 said - re_db.py feeds name_mentions from doc_census.NAME_RE
+  and DES_RE (A_*/AC_*/K_* state and action names, plus .des keys,
+  which carry a trailing `=`), so a C identifier is not in the
+  vocabulary at all.
+
+- THE FIX IS THE HINT, NOT A VOCABULARY. The split is the same one
+  the pinned index and P1/P3 use, so NAME_RE/DES_RE are not touched
+  (same rule as ADDR_RE in PR-358: never move the shared acceptance to
+  help a client). A new "code symbols" table was considered and
+  rejected: record_fts already indexes every record body, so every
+  identifier a record names is reachable through free - a second noun
+  table with no shared regex behind it is exactly the drift the
+  one-parser rule forbids, and would add no row free does not reach.
+  What was missing is only that the explicit verb answered a
+  non-vocabulary question with a bare "0 records": now a zero-hit
+  `name <tok>` whose token matches neither authored shape (A_*/AC_*/K_*
+  or `[a-z][a-z0-9_]{3,20}=`) prints a hint saying what names ARE -
+  including that .des keys need their trailing `=`, which is how
+  `speed=` works and `speed` does not - and points at the free-text
+  door. A bare token already auto-routed there, so the auto-path was
+  never the trap; only the explicit verb dead-ended silently.
+
+- CONTROL + MUTATION (data-free, runs in seconds). `jq name
+  ll_seq_anchor_land` -> 0 records + the hint naming free; same for
+  ll_seq_anchor_origin. Negative controls, the vocabulary still
+  answers its own nouns with NO hint noise: `jq name A_WALK` -> 15
+  records, `jq name speed=` -> 5 records, and a well-shaped token that
+  simply has no hits gets no lecture. Regressions from PR-358 all
+  hold: `addr 0x33` still hints, bare 0x33 still routes to free,
+  `field [obj+0x33]` -> 3 records, `oi OI-129` (PR-360's new row)
+  finds its mentions. jq.py's docstring and README now state the
+  vocabulary boundary in words, so the hint is not the only place a
+  reader learns it.
+
+- THE BOX STATE, SAID PLAINLY. This is the first search-layer PR
+  gated with LL.iso staged, so its GATE line carries the real
+  fixture-backed counts rather than the deferred caveat PR-355/356/358
+  each carried. Those older records stay accurate as written: their
+  fixture-free numbers are unchanged by this PR and by the staging,
+  and the fixture legs they could not measure are measured now, on
+  the same tree this change sits on.
