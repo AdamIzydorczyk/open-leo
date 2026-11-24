@@ -5805,8 +5805,20 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     runs on the SAME cursor as the point list, right after it. So still
     open: which signal bit that
     is (the ledger's numbering stops at 54), which class reads which
-    property key (only one reader, 0x378c0, is a class verb, at 0x9e970
-    +0x128), what 0x3e060's [obj+0x116] flag from a signal byte is, and
+    property key - PR-379 answered that one: none, per class. No
+    property reader is installed in any kind table and no call reaches
+    one (the only exception is the `F`-chain caller 0x378c0, installed
+    at 0x9e970 +0x128); the readers are shared segments of the factory,
+    which decides the class
+    by exactly one token compare per authored name (DRABINKA 0x1f8ac,
+    RYBA 0x1f963, KAMIEN 0x1fad4, WODA 0x1fc5d, TREE 0x1fdcd,
+    TLewZariaB 0x1ff26, KPAJECZ 0x35049, KKULA 0x35083, KTRASA 0x350bd,
+    TUNTRAS 0x3a254, ANITAB 0x4df15, BAL 0x4e6aa) and then runs the
+    property segments over the same cursor. Still open there: how a
+    factory branch reaches those segments, and which classes the 11
+    `F`-chain call sites (0x1f583, 0x2783c, 0x34477, 0x378c3, 0x3b506,
+    0x3e776 and 5 more) belong to; what 0x3e060's [obj+0x116] flag from
+    a signal byte is, and
     the six scanner sites whose format is not pushed in front of the
     call; what 0x1f330/0x1f590 test
     and what [obj+0x5c] == 6/9 selects, the tokens of the other 14

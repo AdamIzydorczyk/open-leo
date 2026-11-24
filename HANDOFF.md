@@ -5874,7 +5874,11 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         %d ` scan is one of 14 named property keys on the same scanner
         0x498f0 and the same text cursor as the point list, each with
         compiled defaults (`coef` eight floats 0.6/0.02/0.12/0.08/0.06/
-        0.04/0.02/0.01, `levels` 0.1/0.2/0.35); and 32 of
+        0.04/0.02/0.01, `levels` 0.1/0.2/0.35); PR-379 then showed that
+        grammar is factory code, not class code - no property reader is a
+        class verb, and each authored class name has exactly one compare
+        site in that factory (KAMIEN 0x1fad4, KTRASA 0x350bd, TUNTRAS
+        0x3a254, ANITAB 0x4df15, BAL 0x4e6aa and seven others); and 32 of
         the 37 replace the base ask hook 0x45230 while the five
         second-family owners keep it. The two slots below each block are
         per-class functions taking [obj+0xc] as this (0x206f0 opens `sub

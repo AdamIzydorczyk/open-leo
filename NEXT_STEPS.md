@@ -52781,3 +52781,109 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   floats written at the call site - 0.6, 0.02, 0.12, 0.08, 0.06, 0.04,
   0.02, 0.01 - and that the `F` key I had been chasing for three records
   is one ordinary entry in a fifteen-key list.
+
+## PR-379 - THE PROPERTY GRAMMAR IS FACTORY CODE, NOT CLASS CODE: NO
+## PROPERTY READER IS INSTALLED IN ANY KIND TABLE, EACH AUTHORED CLASS NAME
+## HAS EXACTLY ONE COMPARE SITE IN THE FACTORY, AND THE SHARED `F` CHAIN
+## IS CALLED FROM THOSE FACTORY BRANCHES
+
+```
+KIND: read
+SUBSYSTEM: who reads the property lines found by PR-378 - the relation
+  between the shared property readers, the class-token compares and the
+  object constructors, and where the class name is decided (OI-128,
+  OI-129, the F6 thread; continues PR-378 and PR-322's token compare).
+ADDRESSES: 0x34332, 0x34344, 0x34349, 0x34384, 0x34389, 0x3438a,
+  0x3497b, 0x349b3, 0x34b78, 0x3a0ed, 0x3db06, 0x3dd60, 0x3ddbb,
+  0x3e62b, 0x40eb9, 0x40f10, 0x40f6c, 0x411c3, 0x41213, 0x4128a,
+  0x412c1, 0x6fb41, 0x6fb6f, 0x1f583, 0x1f7d9, 0x2783c, 0x27d18,
+  0x34477, 0x346a6, 0x378c3, 0x37b16, 0x3b506, 0x3b6d6, 0x3e776,
+  0x1fad4, 0x1f8ac, 0x1f963, 0x1fc5d, 0x1fdcd, 0x1ff26, 0x35049,
+  0x35083, 0x350bd, 0x3a254, 0x4e6aa, 0x4df15, 0x906ff, 0x90708,
+  0x90731, 0x90750, 0x90772, 0x90795, 0x91017, 0x91021, 0x91100,
+  0x91108, 0x9110e, 0x9130c, 0x91ed6, 0x91f3d, 0x91fed, 0x12e,
+  0x136, 0x13a, 0x498f0, 0x45120
+NAMES: property reader, factory, factory branch, token compare, class
+  name string, fall-through segment, shared chain, load hook call site,
+  pr379_class.py, pr379_class.txt, pr379b_hosts.py, pr379b_hosts.txt,
+  pr379c_tokens.py, pr379c_tokens.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 line that asked which class reads which
+  property, and the HANDOFF section 8 F6 paragraph. Nothing under
+  ported/ is touched, so only the light gate applies.
+HOOKS: PR-378 censused the property keys and their destinations and left
+  "which class reads which key" open. PR-322 read the one class-token
+  compare known before this record ('TLewZariaB' at 0x90795). PR-375
+  read the `F` chain 0x3dd60 and PR-377 who may link its result.
+OPENS: the call graph inside the factory - the property readers are not
+  call targets, so how a branch reaches them (fall-through, jump table,
+  or an indirect call) is unread; the eleven `F`-chain call sites at
+  0x1f583, 0x1f7d9, 0x2783c, 0x27d18, 0x34477, 0x346a6, 0x378c3,
+  0x37b16, 0x3b506, 0x3b6d6, 0x3e776 belong to which classes; whether a
+  property line cuts the record (OI line 826) - one scanner and one
+  cursor read both grammars, which makes a cut unlikely, but the
+  separator handling is unread; and the token strings of the 15 askable
+  classes (PR-377), which this record's method could not find either,
+  since none of the 15 stores is next to a name compare.
+CLOSES: PR-378's "which class reads which property key" - the question
+  has no per-class answer: no property reader is installed as a verb in
+  any of the 219 kind tables and no call instruction reaches any of
+  them; the reads are segments of the shared loading code, so a property
+  is a property of the authored RECORD, and the class only decides which
+  record fields mean.
+CORRECTS: nothing published. A method note: PR-378's paragraph (e)
+  counted "11 call sites in 11 functions" for the `F` chain with a
+  nearest-preceding-push heuristic, which is not a function boundary; the
+  same 11 sites are confirmed here from the call table, but the
+  enclosing functions are not identified.
+MEASURED: (a) NO PROPERTY READER IS A CLASS VERB (pr379_class.py,
+  pr379b_hosts.py). For all 19 property-reader positions found in
+  PR-378 - id, spawn, damage, both expldist, type, sample, div,
+  damage2, the two `, %d` pair readers, hit_time, coef, levels,
+  Fcontrol, group, new_bounds, the `F` scan and the 0x122 one - not one
+  address appears in any slot of the 219 kind tables, and no `call`
+  instruction names them either. They begin with real prologues
+  (`push esi; push edi; push ebp; sub esp,0xc` at 0x34332) but are
+  reached some other way.
+  (b) ONE COMPARE PER AUTHORED CLASS NAME (pr379c_tokens.py). Locating
+  the name strings in the string region and searching every instruction
+  that names one: DRABINKA 0x906ff compared at 0x1f8ac; RYBA 0x90708 at
+  0x1f963; KAMIEN 0x90731 at 0x1fad4; WODA 0x90750 at 0x1fc5d; TREE
+  0x90772 at 0x1fdcd; TLewZariaB 0x90795 at 0x1ff26 (PR-322); KPAJECZ
+  0x91100 at 0x35049; KKULA 0x91108 at 0x35083; KTRASA 0x9110e at
+  0x350bd; TUNTRAS 0x9130c at 0x3a254; ANITAB 0x91f3d at 0x4df15; BAL
+  0x91fed at 0x4e6aa. Each name occurs once in code (KKULA and ANITAB
+  also have a second hit inside the string region itself). So the class
+  of an authored object is decided by a single compare, and the
+  addresses form the factory's decision chain.
+  (c) THE GRAMMAR AND THE FACTORY INTERLEAVE. The ` id = %d ` and
+  ` spawn = %d , %d ` segment at 0x34332 sits in the same address region
+  as the KPAJECZ/KKULA/KTRASA compares (0x35049-0x350bd), and the
+  `F`-chain call sites are scattered through the same code
+  (0x34477, 0x346a6, 0x3b506, 0x3b6d6). Reading a record is therefore
+  one pass of factory code: choose the class by its token, build the
+  object, then run the shared property segments over the same cursor.
+  (d) THE ` id = `/` spawn = ` SEGMENT, IN ORDER. 0x34332: scan
+  ` id = %d ` into [arg+0x12e] (default 0 if unmatched); if that id is
+  0 the rest is skipped; otherwise scan ` spawn = %d , %d ` into
+  [arg+0x136]/[arg+0x13a] (the scan receives `lea ebx,[arg+0x136]` as
+  its out-buffer base) and then compare [ebx+8] with [ebx+0xc].
+  [arg+0x12e] is the same field PR-376's and PR-377's records show
+  holding a kind-table pointer in other objects, so this id field is a
+  second use of one offset - recorded, not resolved.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port stops its record walk at a property line and treats the
+  keys it knows as properties of the object being built. The original has
+  no per-class property readers at all: one shared sequence reads the
+  record, and the class is chosen by one token compare in that same
+  sequence. That is why the same 14 keys appear everywhere - and it tells
+  the port that its property handling belongs to the record reader, not
+  to a per-class hook.
+
+- WHAT SURPRISED ME. That the class of an authored object is decided by
+  exactly one string compare per class, twelve of which this pass located
+  for the first time, sitting in the same code as the property readers.
