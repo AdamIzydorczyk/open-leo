@@ -5824,10 +5824,22 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     named by nothing. Still open there: which classes the 11
     `F`-chain call sites (0x1f583, 0x2783c, 0x34477, 0x378c3, 0x3b506,
     0x3e776 and 5 more) belong to, and the 62 class tables no token
-    names; note the load verb at table +0x78 is 0x3df00 for 23 classes
-    (it asks the class through +0xd8, PR-377's accept-companion verb,
-    then clears [obj+0xee] with 0x45320), 0x50f80 for exactly the 15
-    askable ones and 0x3f010 for the road classes (clears [obj+0x44]);
+    names. PR-381 settled how those verbs are reached: the load verb at
+    +0x78 is the entry of a chain - 0x552e0 (78 tables) builds the
+    12-byte key, calls 0x53ae0 and tail-calls [T+0x9c], where 181 of
+    the 219 tables hold the always-allow stub 0x23a40 (`mov eax,1;ret`)
+    and 5 hold 0x3d980 (`cmp edx,[obj+0xee]` - is the container set?);
+    0x3df00 (23 classes) asks [obj+8+0xd8] first and clears the
+    container with 0x45320, 0x50f80 is the load verb of exactly the 15
+    askable ones and asks [T+0xd0] with [obj+0xb1] when [obj+0x11a]==7,
+    and 0x3f010 serves the road classes on the [obj+0x44] layout. The
+    dispatch census over the image: +0x70 (facing) 215 sites in 76
+    functions, +0x4 146, +0x68 145, +0x6c 91, +0x3c (askable) 74,
+    +0xd0 15, +0x9c 5, +0x78 only 4. Still open: who dispatches the
+    property readers (they are installed at +0xd0/+0x18/+0xa8 but those
+    offsets are dispatched only from inside the load verbs, and the same
+    functions also have direct call sites), and what the real load test
+    is when 181 tables pass the +0x9c gate unconditionally;
     what 0x3e060's [obj+0x116] flag from
     a signal byte is, and what 0x1f330/0x1f590 test
     and what [obj+0x5c] == 6/9 selects, the six scanner sites whose

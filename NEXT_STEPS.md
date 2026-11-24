@@ -53021,3 +53021,130 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   records and had extracted 12 of its 166 branches; and that the seven
   classes allowed to be asked a question are the seven whose authored name
   begins 'TLew', which is the group-object prefix the level files use.
+
+## PR-381 - THE LOAD VERB IS A CHAIN: +0x78 CALLS +0x9c CALLS THE BASE
+## READER, AND EVERY LOAD VERB ASKS THE CLASS AT +0xd0; 215 SITES DISPATCH
+## THE +0x70 VERB AND ONLY 4 THE +0x78 ONE
+
+```
+KIND: read
+SUBSYSTEM: how the class verbs of PR-380 are actually reached - the
+  indirect-call census over the class table, the load-verb chain
+  +0x78 -> +0x9c -> the base reader, and the [obj+0x44] interface
+  (OI-128, OI-129, the F6 thread; continues PR-380, PR-377, PR-375).
+ADDRESSES: 0x552e0, 0x55318, 0x53ae0, 0x749a0, 0x3df00, 0x3df16, 0x50f80,
+  0x50fce, 0x50fdb, 0x50fee, 0x55130, 0x49580, 0x53c90, 0x3f010, 0x553e0,
+  0x4bd30, 0x4b500, 0x523f0, 0x52416, 0x52423, 0x52430, 0x41180, 0x40eb0,
+  0x3e060, 0x3dd60, 0x3d990, 0x341e0, 0x34670, 0x6fb10, 0x1f4e0, 0x1f760,
+  0x277e0, 0x27d10, 0x341e0, 0x34670, 0x37880, 0x37b10, 0x3b440, 0x3b570,
+  0x3e680, 0x68660, 0x72d50, 0x66200, 0x641a0, 0x6b5c0, 0x6fe60, 0x707b0,
+  0x320d0, 0x65240, 0x32840, 0x33040, 0x549f0, 0x5b040, 0x27660, 0xb1,
+  0x9c, 0xd0, 0xd8, 0xa8, 0xac, 0x68, 0x70, 0x78, 0x3c, 0x18, 0xa0b0
+NAMES: verb dispatch, load chain, base reader, ask-companion call,
+  inner interface, copy protocol, indirect call census, host function,
+  pr381_dispatch.py, pr381b_fc.py
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines about the property verbs and the
+  askable classes, and the HANDOFF section 8 F6 paragraph. Nothing under
+  ported/ is touched, so only the light gate applies.
+HOOKS: PR-380 found the load verb at +0x78 and the property readers at
+  +0xd0/+0x18/+0xa8 but could not say who calls them; PR-377 found the
+  accept-companion verb pair at builder +0xdc/+0xe0; PR-375 read the
+  F-chain 0x3dd60 and its 11 call sites; PR-322/PR-321 named the +0x3c
+  askable test and the +0x70 facing word.
+OPENS: what the +0x9c continuation is for the classes that install the
+  default 0x23a40 there (181 of 219) - the base reader then always
+  proceeds, so what the real test is; who dispatches the property
+  reading functions, since the +0xd0 and +0xa8 dispatches belong to the
+  load verbs and +0x18 is used at only 21 sites, while 0x41180,
+  0x40eb0 and 0x3e060 also have 5, 12 and 9 DIRECT call sites - the same
+  code reached both ways, and which path is the load path is
+  unresolved; the eleven 0x3dd60 call sites sit in functions 0x1f4e0,
+  0x1f760, 0x277e0, 0x27d10, 0x341e0, 0x34670, 0x37880, 0x37b10,
+  0x3b440, 0x3b570, 0x3e680, none of which contains a token compare -
+  what selects them; the +0xac verb called by the 0x523f0 copy protocol;
+  and the eleven host functions of the +0x70 facing dispatch (0x68660
+  x12, 0x72d50 x10, 0x66200 x8), the most-dispatched verb in the engine.
+CLOSES: the OI-128 line that asked which verb slots the property
+  readers occupy, in part: the +0x9c slot is the second half of the load
+  verb and +0xd0 is asked by every load verb that reads a companion
+  rate, with [obj+0xb1] as its argument - the placement damage field of
+  PR-378; and
+  the +0xd8 gate PR-380 saw in 0x3df00 is confirmed as a class ask on the
+  load path.
+CORRECTS: nothing published. Two method notes. On PR-380: its
+  paragraph (d) said the load verb 0x3df00 "asks the class through
+  [T+0xd8]" - the register comes from [obj+8], so the form is
+  [obj+8+0xd8]; and its paragraph (c) counted slots against the 37
+  BUILDER tables (the tables with 0x45250 at +8), not against the 219
+  class tables, which is why its +0x78/+0x3c figures disagreed with
+  PR-377's by a constant; paragraph (f) above gives the class-table
+  numbers. On this session's method: reading a table's slots is only
+  meaningful once the table kind is fixed - the builder tables and the
+  class tables both look like runs of code pointers.
+MEASURED: (a) THE DISPATCH CENSUS (pr381_dispatch.py). Every
+  `call DWORD PTR [reg+disp]` in the image, by displacement: +0x70 215
+  sites in 76 functions, +0x4 146 in 106, +0x68 145 in 63, +0x6c 91 in
+  36, +0x8 83 in 59, +0x3c 74 in 62 (the askable test), +0x10 70 in 43,
+  +0xc 62 in 45, +0xd0 15 in 10, +0x18 21 in 21, +0x9c 5 in 5, +0x78 4
+  in 3, +0xa8 1. So the class verb most used by the engine is the +0x70
+  one PR-321 named (the facing word), and the load verb is reached
+  almost never by dispatch.
+  (b) THE LOAD VERB IS A TWO-PART CHAIN. 0x552e0 (the base, installed
+  at +0x78 in 78 tables) builds a 12-byte key with 0x749a0, calls
+  0x53ae0 and on success tail-calls [T+0x9c]. At +0x9c, 181 of the 219
+  tables hold 0x23a40, which is `mov eax,1; ret` - an always-allow gate;
+  5 hold 0x3d980, `cmp edx,[obj+0xee]; setne al` - "is the point-list
+  container set?"; 3 hold 0x53770 and a few others. 0x3df00 (the
+  0x3ddf0-family load verb, 23 tables) instead asks [T+0xd8] - loaded
+  through [obj+8] - and if the class agrees clears the container with
+  0x45320 on [obj+0xee], then calls 0x552e0. The askable classes'
+  0x50f80 asks [T+0xd0] with [obj+0xb1] as the argument when
+  [obj+0x11a] == 7, then calls [T+0x9c], then [T+0x40], then reads the
+  container with 0x55130 and ORs the signal key with 0x49580. The
+  0x53df0-family 0x53c90 follows the same shape ([T+0x9c], [obj+0x44]
+  verbs twice, [T+0xd0] twice).
+  (f) THE CLASS-TABLE SLOTS OF THE READER FUNCTIONS (counted over the
+  219 class tables, replacing PR-380's builder-relative numbers):
+  0x41180 84 slots in 53 tables (+0xd0 x39), 0x3ddf0 95 in 65 (+0x54
+  x29), 0x3df00 70 in 52 (+0x78 x23), 0x50f80 54 in 50 (+0x78 x15),
+  0x3e060 53 in 40 (+0xa8 x18), 0x3dd60 50 in 35 (+0x18 x14), 0x40eb0
+  73 in 45 (+0x18 x30), 0x3d990 16 in 16 (+0x78 x5), 0x341e0/0x34670/
+  0x349d0/0x3a000/0x3e470 2-4 each, and several of them also at +0x78 -
+  that is, a class may take a property reader as its load verb.
+  (c) THE [obj+0x44] INTERFACE. 0x523f0 is the only dispatcher of
+  [x+0xa8]: it takes [obj+0x44] as an object and calls its verbs +0x8,
+  +0xc, +0x10, then the class's [T+0xac] and [T+0xa8] with a 12-byte
+  buffer, and finally copies that buffer through the caller's argument
+  with `repnz movs` - a read/serialise protocol over an inner object.
+  0x50f80 and 0x53c90 call verbs through [obj+0x44] as well
+  ([+0x40], [+0x44]), so the 0x44 field named by PR-375 as a container
+  layout is also an interface base.
+  (d) WHO ASKS +0x70. The 215 sites sit in 76 functions; the heaviest
+  are 0x68660 (12), 0x72d50 (10), 0x66200 (8), 0x40eb0 (7 - one of the
+  property readers of PR-380), 0x641a0, 0x6b5c0, 0x6fe60, 0x707b0 (6
+  each). The +0x68 census concentrates in 0x320d0 (19), 0x65240 (11),
+  0x32840 (10), 0x33040 (7).
+  (e) THE F-CHAIN SITES ARE NOT IN THE TOKEN BRANCHES. All 11 call sites
+  of 0x3dd60 have an enclosing function (0x1f4e0, 0x1f760, 0x277e0,
+  0x27d10, 0x341e0, 0x34670, 0x37880, 0x37b10, 0x3b440, 0x3b570,
+  0x3e680) and not one of those functions contains a token compare -
+  they are request handlers, several of them installed as verbs (PR-380
+  paragraph (c)), which is how the F-chain gets run: not from the
+  factory but from the request path.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port implements one "read the object's text" step. The
+  original has a two-slot chain per class (+0x78 entry, +0x9c
+  continuation), and the entry asks the class whether it takes a
+  companion and, for the askable classes, asks a second question with the
+  authored placement damage as its argument. Naming those slots is what
+  lets the port put its own load step in the right place.
+
+- WHAT SURPRISED ME. That the most-dispatched class verb in the whole
+  engine is the one that returns a facing word (215 sites), while the
+  load verb - the one that turns authored text into an object - is
+  dispatched at four sites and otherwise reached by direct call.

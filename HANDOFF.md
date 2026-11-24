@@ -5885,6 +5885,13 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         property reads are shared code but installed as class verbs (the
         hit_time/coef/levels reader 0x41180 sits in 53 of the tables at
         +0xd0), so a class decides whether it reads properties at all;
+        PR-381 then traced the verbs that are dispatched: the load verb
+        at +0x78 is an entry that tail-calls the +0x9c gate, where 181
+        of the 219 tables hold the always-allow stub 0x23a40 and 5 hold
+        0x3d980 (`cmp edx,[obj+0xee]`, is the container set?), and the
+        askable load verb 0x50f80 asks +0xd0 with [obj+0xb1], the
+        placement damage; across the image the +0x70 facing verb is
+        dispatched at 215 sites while the load verb is dispatched at 4;
         and 32 of
         the 37 replace the base ask hook 0x45230 while the five
         second-family owners keep it. The two slots below each block are
