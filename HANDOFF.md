@@ -5583,6 +5583,15 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         which is OI-128. What F6 must now measure is not whether a
         message is posted but which handle the lion's standing query
         resolves to at each position of the chasm.
+        PR-346 followed the standing path's other half and found the
+        candidate collector: 0x4b600 asks the surface the object
+        already holds through slot +8 of its handle table - which in
+        all 38 of PR-344's tables is the query core 0x45400, so that
+        table is a method table by dispatch - and then asks every entry
+        of the anchor's registry at [0xcef40+0x74] through its +0x1c.
+        One method table answers attach, detach, query, score and
+        "am I under this point"; the entries' own tables, who fills
+        that array, and the pick at 0x4b500 are still OI-127.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

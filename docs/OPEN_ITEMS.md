@@ -5137,6 +5137,24 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     region, which is the census of the classes that own a queryable
     surface. Each is a four-method table immediately FOLLOWED by the
     class view, so the +0x14 of this row is the class view's own +4.
+    PR-346 READS THE SIDE THAT ASKS THEM. The standing path's
+    candidate collector 0x4b600, called from the ground-contact verb's
+    state bits, first asks the surface the object already holds through
+    slot +8 of its handle table (0x4b64f-0x4b669 with the mode 2) -
+    and slot +8 of the 38 handle tables is 0x45400, the query core, so
+    the table PR-344 described is a method table by dispatch and not
+    only by layout - and then walks the SAME array this row names,
+    [anchor+0x74] for [anchor+0x80] entries at stride 0xc, calling
+    each entry's `[[entry]]+0x1c` (0x4b697). One method table
+    therefore answers all five questions: +0 attach, +4 detach, +8 the
+    query core, +0x14 the score, +0x1c "am I under this point". The
+    sibling registries are a second question, not a copy: 0x4b7f0
+    walks [anchor+0x78] for [anchor+0x84] entries at stride 0x14, and
+    0x4b430 asks through 0x534e0. What still is not known is the
+    entry's own table - the 38 tables are the seat classes' own, so an
+    entry's table is elsewhere in the image and unnamed - who fills
+    the array, and what 0x4b500 makes of the candidate list with the
+    global at 0xa94e8.
     The two "notices" of 0x5460e are methods of that table, not
     notifications: 0x5461e calls the OLD surface's +4, which is the
     query 0x45320, so detaching re-runs the standing-surface query for
@@ -5202,3 +5220,9 @@ OI-128: what landing and leaving a surface does - the class verbs
     bits, which read the provider tables of OI-127 from the standing
     path; and a census of the '#' separator over the shipped .MOV
     tables, which the port's parser already sees.
+    ONE ITEM OF THAT LIST IS ALREADY ANSWERED, in the port itself:
+    the surface-table parse selftest carries the '#' shape with the
+    note "NOT in any shipped line - counted here so the grammar stays
+    tested" (ported/ll_level.c, the sl[] table of that leg). So no
+    shipped seat table ejects its rider on the 0x58c timer, and this
+    row's crossing lead is the land verb, not the timer.

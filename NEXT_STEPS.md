@@ -47921,3 +47921,102 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   list of 0x546a0 read against the ctor-pattern views, and the empty
   seat verb is `dis 0x23930 2`.
 ```
+
+## PR-346 - THE STANDING PATH DOES NOT TRUST THE SURFACE IT ALREADY
+## HOLDS: 0x4b600 ASKS IT THROUGH THE +8 SLOT OF ITS HANDLE TABLE AND
+## EVERY ENTRY OF THE GAME ANCHOR'S REGISTRY THROUGH ITS +0x1c SLOT,
+## WHICH PROVES THE HANDLE TABLES OF PR-344 ARE A METHOD TABLE
+```
+KIND: read
+SUBSYSTEM: OI-127's provider registry and OI-128's standing path - the
+  candidate collector 0x4b600 that the ground-contact verb calls from
+  its state bits, the two registries of the game anchor, and the pick
+  that follows.
+ADDRESSES: 0x4b600, 0x4b606, 0x4b616, 0x4b62c, 0x4b631, 0x4b638,
+  0x4b63e, 0x4b64f, 0x4b655, 0x4b659, 0x4b660, 0x4b669, 0x4b66c,
+  0x4b670, 0x4b678, 0x4b682, 0x4b68d, 0x4b693, 0x4b697, 0x4b69f,
+  0x4b6a5, 0x4b6aa, 0x4b6ac, 0x4b6ba, 0x4b6c0, 0x4b7f0, 0x4b7fe,
+  0x4b80c, 0x4b81c, 0x4b821, 0x4b430, 0x4b441, 0x4b45d, 0x4b500,
+  0x4b510, 0x4b552, 0x4b561, 0x4b581, 0x4b6d0, 0x4b760, 0x4b79d,
+  0x4b7ad, 0x541f0, 0x546a0, 0x546d7, 0x54719, 0x54732, 0x5474b,
+  0x453d0, 0x45320, 0x45400, 0x45120, 0x534e0, 0x749a0, 0xa94e8,
+  0x98274, 0x98278, 0x96c28, 0x96d0c, 0xcef40, 0xa5, 0xa9, 0xca,
+  0xce, 0x2, 0x8, 0x14, 0x1c, 0x74, 0x78, 0x80, 0x84, 0x58, 0x44,
+  0x24, 0xc, 0x14, 0x1c
+NAMES: provider registry, candidate, surface handle, method table,
+  standing surface, held surface, anchor, mirror, pick, PALMA,
+  KATAPULT, OI-123, OI-127, OI-128, F6, pr346_4b5f0.txt
+CODE: no: nothing in ported/ or the Makefile moved.
+HOOKS: the ground-contact verb 0x546a0 and its state bits (PR-345),
+  the surface handle and its four-method table (PR-344), the scan pair
+  0x4b6d0/0x4b760 (PR-343, OI-127) - none changed, no port behaviour
+  moves.
+MEASURED: (a) THE COLLECTOR. 0x4b600(eax = the anchor, edx, ebx = the
+  object, ecx = the mode) is what the ground-contact verb calls from
+  its state bits (0x546d7 with ecx = 0, 0x54719 with ecx = 2). It
+  builds the aimed point exactly as 0x45320 does: the position block
+  through 0x541f0 (0x4b616-0x4b62c), then [obj+0xca] and [obj+0xce]
+  added to it (0x4b638-0x4b64b). It is not a query of one surface: it
+  collects candidates.
+  (b) THE SURFACE IT ALREADY HOLDS IS ASKED FIRST, THROUGH SLOT +8 OF
+  ITS HANDLE TABLE. If [obj+0xa9] is non-null (0x4b64f-0x4b657), it
+  loads esi = [[obj+0xa9]] and calls esi+8 (0x4b660, 0x4b669) with
+  eax = the handle, edx = the object, ebx = the aimed point and
+  ecx = 2. Slot +8 of those tables is 0x45400 - the query core - in
+  every one of the 38 handle tables PR-344 counted, PALMA's at 0x96c28
+  and KATAPULT's at 0x96d0c being {0x453d0, 0x45320, 0x45400,
+  0x45120}. That is the proof PR-344 inferred but did not hold: the
+  first word of a surface handle is a METHOD TABLE of that exact
+  layout, because the standing path dispatches its third slot to ask
+  the object's own surface.
+  (c) THEN THE REGISTRY IS ASKED IN FULL. 0x4b66c-0x4b6aa walks the
+  game anchor's array at [anchor+0x74] for [anchor+0x80] entries at
+  stride 0xc - the same array, count and stride as the scan pair
+  0x4b6d0/0x4b760 of OI-127 - and for each entry loads ebp =
+  [[entry]] (0x4b68d) and calls ebp+0x1c (0x4b697) with ebx = the
+  aimed point, edx = the anchor and a pushed zero. So a provider
+  entry's method table answers +0x14 for the scorer, +0 and +4 for the
+  attach and detach of PR-343, +8 for the query core like a handle's,
+  and +0x1c for "am I under this point". That one table answers every
+  surface question the engine asks, which is what OI-127 asked for.
+  (d) THE PICK AND THE SIBLING REGISTRIES. What the walk leaves is
+  handed to 0x4b500 with ecx = ds:0xa94e8 (0x4b6ba, 0x4b6c0) - a
+  second, larger function that walks the object groups at [x+0x58]
+  with counts at [x+0x44] through the compare helper 0x749a0; its
+  detail is not read here. The anchor keeps more than one such array:
+  0x4b7f0(eax = the anchor) walks [anchor+0x78] for [anchor+0x84]
+  entries at stride 0x14 (0x4b7fe, 0x4b80c), and 0x4b430 runs a
+  different question through 0x534e0 with a five-word block ending in
+  the constant 0x98274 (0x4b441-0x4b45d). These are the mirrors
+  0x5da60 rebuilds from the anchor's group heads (PR-343), and the
+  standing path chooses among them by the state record's bits.
+OPENS: what 0x4b500 decides with the candidate list and what the
+  global at 0xa94e8 is; who fills the [anchor+0x74] array and who
+  calls the level record that creates those entries (OI-127's first
+  question, still unanswered); the entries' own method tables, which
+  are NOT among the 38 handle tables PR-344 counted - those 38 are the
+  seat classes' own, and an entry's table must exist somewhere else in
+  the image, unnamed so far; what 0x534e0 asks of 0x4b430, and the
+  stride-0x14 registry at [anchor+0x78] with its count at [anchor
+  +0x84]; and the block 0x546de-0x54700 of the ground-contact verb,
+  which chooses between these three calls.
+CLOSES: OI-128's question about the three scan-and-apply pairs behind
+  the state bits, as far as what they are: 0x4b600 with the mode as
+  its ecx, 0x4b430 and 0x4b7f0, each followed by 0x49580, are three
+  different questions to the anchor's registries, not three copies of
+  one call. It also closes the shape half of OI-127: a provider entry
+  and a seat's embedded handle answer the SAME table of methods, so the
+  "provider" is not a different kind of thing from a surface - the
+  difference is only that the registry holds entries whose tables the
+  level installs. And it confirms PR-344's reading of the handle's
+  first word by dispatch, not by inference.
+CORRECTS: PR-345's paragraph (b), which wrote that 0x546a0 calls
+  "the provider scan 0x4b600 of OI-127" as if it were one scan: it is
+  the candidate collector, and the two other calls in that block are
+  different questions, to the sibling registries.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: 0x4b600 end to end is dumped
+  in /tmp/opencode/pr346_4b5f0.txt and 0x4b500's head in
+  /tmp/opencode/pr346_4b500.txt; the +8 slot of the handle tables is
+  read at 0x96c28 and 0x96d0c, which PR-344's record also quotes.
+```
