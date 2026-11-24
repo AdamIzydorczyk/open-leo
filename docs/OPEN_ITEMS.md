@@ -5899,9 +5899,11 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     family by name: 0x96c38, 0x96d1c (the 0x53df0 pair whose methods are
     PR-340's element region), 0x99938 (+0x54 = 0x2b1a0), 0x9ef38,
     0xa1f90 (ANITAB's +0xb0 companion) and 0xa2054 besides KTRASA and
-    TUNTRAS; also open, what 0x98274 is (the
-    request-block signature's neighbour, used at 0x34885 where the
-    level array is read), what the 281 five-dword blocks
+    TUNTRAS; settled since, what 0x98274 is: PR-150/PR-239 named it the
+    element class of the authored point list and PR-386 showed it is no
+    separate block but the tail of the owner's own table (0x98278 =
+    0x981e8 + 0x90, 0x97f50 = 0x97e74 + 0xdc), the element being 12
+    bytes {x, y, class} made at 0x23eb0; what the 281 five-dword blocks
     {code, code, code, a value, 0} at stride 0x14 are (they name the
     builders, every one sits at 1 mod 4, and 0x25970 hands its block
     0x98310 to 0x74bc0 and 0x74a4c), whether 0x5c320 returns a pointer

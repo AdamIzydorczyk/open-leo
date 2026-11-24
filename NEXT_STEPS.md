@@ -53630,3 +53630,125 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/
   roads, the machine group and props - the things an ask would
   otherwise exclude by contact - while the lion and the animals keep the
   contact requirement.
+
+## PR-386 - THE POINT-LIST ELEMENT CLASS IS NOT ITS OWN TABLE: IT IS THE
+## TAIL OF THE OWNING CLASS'S TABLE, AND A CENSUS OF [obj+8] SHOWS THE
+## SAME SHAPE IN THREE CLASS FAMILIES
+
+```
+KIND: read
+SUBSYSTEM: the class-pointer views - a census of every immediate the
+  ctors and builders store at [obj+8], the values that are not table
+  starts, and a bounds check of the slot censuses of
+  PR-380/PR-381/PR-385 (OI-128, OI-129, the F6 thread; continues
+  PR-385, PR-150, PR-239, PR-380).
+ADDRESSES: 0x98274, 0x98278, 0x9827c, 0x98280, 0x98284, 0x981e8,
+  0x23e30, 0x23ed0, 0x23ea0, 0x23eb0, 0x23e00, 0x97f50, 0x97e74,
+  0x9d574, 0x9d460, 0x44e40, 0x45620, 0x4df10, 0x56b20, 0x44f10,
+  0x44ec0, 0x1f2ba, 0x1f2d2, 0x1f2e0, 0x531f0, 0x53ff0, 0x52860,
+  0x52d30, 0x1eb9a, 0x74bc0, 0x74be0, 0x96858, 0xa5, 0xa9, 0xf2,
+  0x10, 0x8, 0xc, 0x90, 0xdc, 0x114, 0x74bac00, 0x255d000, 0x96874,
+  0x96a88
+NAMES: element class, descriptor block, table tail, sub-table view,
+  class-pointer census, table length, out-of-bounds slot read,
+  pr386_views.py, pr386_block.py
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 line that still asked what 0x98274 is, and no
+  change to any published paragraph other than that line. Nothing under
+  ported/ is touched, so only the light gate applies.
+HOOKS: PR-150 and PR-239 named 0x98274 "the element class" of the
+  authored point list and 0x98278 "the descriptor", with its +0x8 verb
+  0x23e00 = POINT-IN-RECTANGLE, and read the 12-byte elements at
+  [obj+0xa5] allocated by 0x44f10; PR-244 used the same element class
+  in the ANY-test; PR-380 mapped the class tables of the authored
+  tokens (0x981e8 is ZWODOSPD, GRUPA2, GRUPA, GRABG in its map);
+  PR-385 found the 0x98278 buffer slot in PILAGEN's filter and the
+  0x23e00 verb as the +0x8 verb of 204 ordinary tables.
+OPENS: whether the data that follows the element verbs at 0x98284
+  (0x74bac00, 0x255d000, 0x2554000, 0xee00, 0, 0x2411000, ...) is the
+  authored point list of the GRUPA/GRABG class, which would make the
+  element class, its owner's table and the owner's authored points one
+  contiguous block; what 0x23ed0 does (it tests bit 0x4 of dl and then
+  calls 0x74bc0 and 0x74be0 with edx = 0x96858, four bytes below the
+  LION table 0x96874); the third tail case 0x9d574 = 0x9d460 + 0x114
+  (one store, at 0x56b20) and the 9 class tables that are neither
+  token-named nor length-recorded; and whether the shape-meet call at
+  0x1eb9a, which stores into [obj+0x2c], is made against elements as
+  well as against objects - both carry 0x23e00 at +0x8.
+CLOSES: the OI-128 line that still asked "what 0x98274 is (the
+  request-block signature's neighbour, used at 0x34885...)": that line
+  was stale - PR-150 and PR-239 answered it in 2024 - and this record
+  adds the structural part they did not have: 0x98278 is 0x981e8 +
+  0x90, the last three slots of the owning class's own table, not a
+  separate block. The same holds for PR-239's 0x97f50, which is
+  0x97e74 + 0xdc.
+CORRECTS: nothing published. Two notes on my own method, both learned
+  the hard way. First, I re-derived what PR-150/PR-239/PR-244 already
+  published (the index says 0x98274 appears in 45 records and 0x98278
+  in 73) because I searched the image and not the ledger first - the
+  same mistake PR-384 recorded. Second, the ctor law of PR-380 ("a
+  token branch stores the class table T at [obj+8] and T-8 at
+  [obj+0xc]") also fires with values that are not table starts, so a
+  mechanical map of those stores can name an element class instead of a
+  class; PR-380's own 185 pairs contain no such value, so its 157-class
+  result stands.
+MEASURED: (a) THE [obj+8] CENSUS (pr386_views.py, over the index's
+  `loadimm` table). 188 distinct immediates are stored at [reg+8]; 393
+  stores land on a known table start. One value accounts for 86 stores
+  in 41 code regions and is not a start: 0x98278 = 0x981e8 + 0x90,
+  inside the 39-slot table of the GRUPA/GRABG family. Two further cases
+  are the same shape: 0x97f50 = 0x97e74 + 0xdc (3 stores, at 0x44e40,
+  0x45620, 0x4df10) and 0x9d574 = 0x9d460 + 0x114 (1 store at
+  0x56b20). (pr386_block.py breaks the two views down by field: the
+  T-4 value 0x98274 is stored at [reg+0x10] at 40 sites, the T value
+  0x98278 at [reg+8] at 77 and at [reg-0x4] at 65, and both are loaded
+  into registers at 104 sites.)
+  (b) THE ELEMENT CLASS'S VERBS. 0x98274 holds 0x23e30 (computes
+  [eax+0xc] - [eax+0x4] - the width of the element's box), 0x98278
+  holds 0x23ed0 (tests bit 0x4 of dl, then calls 0x74bc0 and 0x74be0
+  with edx = 0x96858), 0x9827c holds 0x23ea0 (`mov [eax],edx; mov
+  [eax+4],ebx` - set x and y) and 0x98280 holds 0x23e00, the
+  point-in-rectangle test PR-239 named. The maker at 0x23eb0 shows the
+  element: `mov ebx,[edx]; mov [eax],ebx; mov edx,[edx+4]; mov DWORD
+  PTR [eax+8],0x98278` - two words of position and a class pointer,
+  the 12-byte element of PR-239's [obj+0xa5] array. Nothing after
+  0x98280 is code.
+  (c) WHO MAKES THEM. Among the 41 regions holding such a store are
+  the three PR-380 builders (0x531f0, 0x53ff0, 0x52860), the point
+  getter 0x52d30, and the token branches of about 35 authored classes
+  (KAMIEN, DRABINKA, RYBA, SEP2, SPLYW, STRUMIEN, ZWODOSPD, LISC,
+  GRUPA2, WINDA, KRZYZYK, LEW_SWT, KDRABINA, KDYBY, KLINA, KMIOTLA,
+  KWINDA, CEBRZYK, FOKA, SOPEL, GUARD, KLODA, TMPLAT, TUNTRAS,
+  PTAKPLAT, ANITAB, MOVEPLAT, GRABOBJ, DEMOTEXT, E2BOSS, TLewEna2,
+  TLewKara and others); 11 of the 41 have a token compare before the
+  store, the rest are shared helper code, which is why the factory map
+  of PR-380 never showed this pattern.
+  (d) A BOUNDS CHECK ON MY OWN CENSUSES. 157 of the 219 tables in the
+  anchor census carry an `mtable` length in the index, 62 do not; a
+  slot read past that length returns data, not a verb. Applying the
+  bound to the published censuses: at +0x60, +0x78 and +0x18 all 157
+  length-recorded tables are in bounds, at +0x9c 156 are (the single
+  exception is 0x981e8, which ends at +0x9c), at +0xa8 and +0xd0 155.
+  So the counts in PR-381 and PR-385 stand, and the stray 0x74bac00 in
+  PR-381's raw output is identified as that one out-of-bounds read.
+  Note too that "length-recorded" and "token-named" are two different
+  sets of the same size: 157 each, 148 in common, 9 in neither - LION
+  0x96874 has a length but no token, KAMIEN 0x96a88 the other way
+  round.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/
+  is touched by this record, so the build and level gates were not run;
+  the index was regenerated with this record in the tree before the
+  run.
+```
+
+- WHY. The port keeps an object's authored points as a plain array. The
+  original gives every point its own 12-byte object whose class is a
+  three-slot tail of the owner's own class table - so a point is an
+  object with verbs, and the owner, its element class and the owner's
+  authored numbers are one contiguous block. Knowing the element class
+  is a table tail is what makes the 0x98274/0x98278 pair readable in
+  any other class: look at the last slots of the owner's table.
+
+- WHAT SURPRISED ME. That I spent an afternoon on a pair of addresses
+  the ledger has cited in 45 and 73 records. The index entry for an
+  address is the first thing to read, not the last.
