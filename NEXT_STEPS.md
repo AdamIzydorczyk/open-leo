@@ -48500,3 +48500,145 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   paragraph (d) and the six cleared ecx call sites are the instructions
   just before `call 0x45320` at the addresses in the ADDRESSES field.
 ```
+
+## PR-351 - THE AIM BLOCK'S y IS NEVER A COORDINATE: THE CLASS VERBS
+## +0x48 AND +0x50 ARE THE SAME TWO FUNCTIONS IN ALL 186 CLASS VIEWS,
+## +0x50 = 0x53e40 STORES A STATE-ACTIVE TEST OF +1 OR -1 THROUGH edx,
+## AND 155 OF THOSE VIEWS GATE THE CHAIN WITH THE HELD-SURFACE PREDICATE
+```
+KIND: read
+SUBSYSTEM: F6's aim block - the controller chain 0x541f0 runs at
+  0x54221-0x5423a, the class verbs it dispatches, and how many class
+  views carry them (PR-350's first open item: what fills the block's
+  y-component).
+ADDRESSES: 0x541f0, 0x541f4, 0x541f6, 0x541fd, 0x54200, 0x54207,
+  0x54209, 0x5420e, 0x54214, 0x54216, 0x54218, 0x5421f, 0x54221,
+  0x54226, 0x54229, 0x5422e, 0x54233, 0x54236, 0x54238, 0x5423a,
+  0x23aa0, 0x23aa2, 0x23aa5, 0x23aa8, 0x23aab, 0x23aae, 0x23ab1,
+  0x23ab3, 0x23ab6, 0x23ab9, 0x23abc, 0x23abf, 0x23ac4, 0x229c0,
+  0x229c7, 0x229c9, 0x53e40, 0x53e44, 0x53e47, 0x53e4a, 0x53e4d,
+  0x53e4f, 0x53e52, 0x53e55, 0x53e58, 0x53e5b, 0x53e5d, 0x53e60,
+  0x53e63, 0x53e69, 0x53e70, 0x53e75, 0x53e80, 0x53e83, 0x53e86,
+  0x53e89, 0x53e8e, 0x53e92, 0x53e9b, 0x23870, 0x23850, 0x23ea0,
+  0x20870, 0x20a00, 0x23e30, 0x23b50, 0x23be0, 0x96874, 0xa6520,
+  0x96c38, 0x96d1c, 0x96ddc, 0x96e94, 0x96f20, 0x97cdc, 0x98278,
+  0x96858, 0x96574, 0x96588, 0x44f90, 0x53a30, 0x74bc0, 0x45320,
+  0x4533c, 0x45345, 0x45349, 0x4534f, 0x4535d, 0x45363, 0x4536b,
+  0x4540a, 0x45462, 0x45498, 0x4549a, 0x50, 0x5c, 0x54, 0x6d,
+  0x33, 0x2e, 0x12, 0x14, 0x48, 0x50, 0x6c, 0xbc, 0xa5, 0xb6,
+  0xca, 0xce, 0x89
+NAMES: controller chain, aim block, state list, state index, state
+  record, row cursor, script accessor, state-active predicate, held
+  surface, class view census, dump table, PALMA, KATAPULT, SPLYW,
+  STRUMIEN, KAMIEN, OI-072, OI-123, OI-124, F6, pr351_census.py,
+  pr351_census.txt, pr351_23aa0.txt, pr351_53e40.txt
+CODE: no: nothing in ported/ or the Makefile moved. What moves is what
+  a crossing leg may assume about the aim.
+HOOKS: the ask 0x45320 and its block (PR-350), the sampler and the
+  two clearance tests (PR-348, PR-350), the state list and index at
+  [obj+0x50]/[obj+0x5c] the port already mirrors as o->st/o->fi
+  (PR-324, PR-341), the class views of PR-344/PR-349. No port
+  behaviour moves.
+MEASURED: (a) THE CHAIN IS UNIVERSAL. Census (the script
+  /tmp/opencode/pr351_census.py, output pr351_census.txt): taking a
+  class view from its +0x48 slot, there are 186 of them in the data
+  region, 0x96874 to 0xa6520, and in every one +0x48 = 0x23aa0,
+  +0x50 = 0x53e40 and +0x6c = 0x23a10. So the three slots 0x541f0 and
+  0x45400 use for the aim are the same two functions and the same
+  sample-point offset for every class in the game; only +0xbc differs,
+  and only in 31 views (paragraph (d)). STRUMIEN 0x96e94 is outside
+  this family: its +0x48/+0x50 are 0x23be0/0x23bc0.
+  (b) THE FIRST TWO CALLS DO NOT TOUCH THE BLOCK. 0x54221-0x54226
+  calls +0x48 = 0x23aa0, which reads [obj+0x5c] and [obj+0x50] - the
+  state index and list - and takes state = [list[idx]]; it then adds
+  0x2e to that record (0x23aab) and indexes [record+4] by
+  [record+0xd6] (0x23aae, 0x23ab3 - the same record-relative
+  second-table shape as [record+0x24] of PR-341), takes the row at
+  [[row+8]] with element index [row+0xc], and returns
+  [[row+8]] + 4*[row+0xc] through the two-instruction helper 0x229c0
+  (`mov eax,[eax]; add eax,edx`). That
+  is the CURRENT SCRIPT OBJECT of the object's state, exactly the
+  accessor the land verb used (PR-345). The result is kept in ecx
+  (0x54229); 0x5422e reads its +0x33 - the script's own method table -
+  into edi. edx, which held the block, is untouched by both calls.
+  (c) THE THIRD CALL IS THE ONE THAT WRITES, AND IT WRITES ±1 THROUGH
+  edx. 0x54233 calls +0x50 = 0x53e40 with eax = the object and edx =
+  the block base. 0x53e40 does a two-level state read: the object's
+  [obj+0x50]/[obj+0x5c] give state, [state] gives the record's object
+  (0x53e4d), that object's own +0x50/+0x5c give a row (0x53e4f-
+  0x53e58), and [obj's record +0x24] indexed by that row is tested at
+  0x53e63 `cmp DWORD PTR [edx+0x14],0x0`: edx = 1 when that word is
+  zero, -1 when it is not (0x53e69, 0x53e70). Then the record's word
+  at +0x12 ANDed with 8 (0x53e80, 0x53e86) and [obj+0x6d] != -1
+  (0x53e83, 0x53e89) select whether that value or its negation is
+  used (0x53e8e-0x53e92). The value is written at [edx] - block[0],
+  NOT block[2] as PR-350 said - and eax is never returned: 0x53e40 has
+  no register result. The last call, 0x5423a `call DWORD PTR [edi+4]`,
+  runs with eax = the script object and ebx = that predicate; for the
+  table 0x98278 that 0x45320 seeds into the block's third dword, that
+  slot is 0x23ed0, a dump verb (it prints the object through 0x74bc0
+  and the name at 0x96858), so it writes nothing either.
+  (d) THE GATE, CENSUSED. 0x54200 tests bit 2 of [obj+0xb6]: set, the
+  chain runs directly. Clear, 0x5420e calls +0xbc and a non-zero
+  answer skips it (0x54214-0x54216); a zero answer then tests bit 1 of
+  [obj+0xb6] (0x54218) and skips the chain if it is set. Of the 186
+  views, 155 carry 0x23870 - `cmp DWORD PTR [eax+0xa9],0x0; setne al`
+  - so for them the chain runs exactly when no surface is held and bit
+  1 is clear. The exceptions: 0x23ea0 in 12 views (it writes [eax] and
+  [eax+4], a different argument convention - not a predicate as used
+  here), 0x23850 in 11 (writes [eax] and [eax+4] then calls +0x54),
+  and one view each of 0x20870 (0x96c38, PR-350's PALMA/seat verb),
+  0x20a00 (0x96d1c, its KATAPULT twin, which likewise `sub eax,0xc`
+  then tests bit 2 of the block's first dword and calls 0x53a30 at
+  0x20a27), 0x2cc90, 0x2cdd0, 0x354e0, 0x38d10, 0x4f450, 0x4f820.
+  (e) THE CONSEQUENCE FOR THE AIM. 0x45320 reads the aimed x BEFORE
+  the chain (0x45345 ebp = block[0], +[obj+0xca] at 0x45355, stored at
+  0x4536b), so the x is unaffected; but the block's y-component,
+  [esp+0x8], is left at the seeded 0x98278 - the dump table's code
+  pointer, which is not a coordinate - unless a +0xbc verb writes it,
+  and the lions', KAMIEN's and every other predicate view's +0xbc does
+  not. So for the classes this ladder uses, the aimed point the second
+  sampler call and the incumbent comparison use is
+  {live_x + [obj+0xca], 0x98278 + [obj+0xce]}: the second test at
+  0x45498 (`jg`) is never taken and 0x4549a only compares which
+  candidate is nearer, while real acceptance comes from the first test
+  at the snapshot point (PR-349's +0x6c = 0x23a10, universal per
+  paragraph (a)) and from the held-surface waiver. The chain does
+  write block[0] = ±1, after the aimed x has been taken, and if the
+  chain is skipped block[0] stays at the live x.
+OPENS: what the word at [record+0x24 row +0x14] is, whose zero makes
+  0x53e40 answer +1, and what [record+0x12] bit 3 and [obj+0x6d]
+  gate - that is the state-active test whose sign becomes the aimed y;
+  why 0x53e40 writes block[0] and not block[2], and whether the
+  callers that reach 0x45400 directly (the handle-table slot +8,
+  PR-346) pass a real block; what the 31 non-predicate +0xbc verbs
+  write when they do run, in particular 0x2cc90/0x2cdd0/0x354e0/
+  0x38d10/0x4f450/0x4f820, unread; and the last call 0x5423a, which
+  for these classes reaches only a dump verb - whether some script
+  table installs a different +4 that fills the block.
+CLOSES: PR-350's first open item. Nothing in the class chain ever
+  supplies a y coordinate: the chain is two accessors that do not
+  touch the block and one state-active predicate that stores ±1 at its
+  head, and the block's y stays the seeded code pointer for the lions,
+  KAMIEN and every seat in ZARIA.01. That fixes the inputs a crossing
+  leg has to use - the aimed point's y is not a prediction of the
+  lion's next y, so the second gate does no spatial filtering and the
+  accept/reject decision is the first test at the snapshot plus the
+  held-surface waiver.
+CORRECTS: PR-350's paragraph (a), which said the chain "could write
+  the third dword" and that the y of the aim is "the controller
+  chain's output plus the y-velocity": 0x53e40 writes through edx at
+  [edx] = block[0], not the third dword, and for the 155 predicate
+  views the chain does not run at all when a surface is held - so the
+  aimed y is the seeded 0x98278 + [obj+0xce], not a chain output.
+  PR-350's symmetry argument, its zero subtrahend and PR-349's
+  measurement point stand.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: the census is
+  /tmp/opencode/pr351_census.py (run from the repository root, it
+  prints the 186 views and the slot table quoted at paragraphs (a) and
+  (d)); 0x23aa0, 0x53e40 and 0x23ed0 are dumped in
+  /tmp/opencode/pr351_23aa0.txt, pr351_53e40.txt and
+  pr351_23ed0.txt, and the chain itself is 0x54221-0x5423a of
+  /tmp/opencode/pr350_541f0.txt.
+```

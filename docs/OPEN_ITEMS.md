@@ -5024,6 +5024,18 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     truncation, and a surface already held at [obj+0xa9] re-accepts
     itself at any non-positive clearance at the snapshot - which is the
     carrying mechanism, and the leg is to test it against ZARIA.01.
+    PR-351 censused that chain and removed its last unknown: all 186
+    class views in the data region carry the SAME +0x48 (0x23aa0, the
+    current-script accessor over [obj+0x50]/[obj+0x5c]) and +0x50
+    (0x53e40), and 0x53e40 writes its state-active test of +1 or -1
+    through edx at the block's HEAD, not at its y-component, which
+    therefore stays the seeded code pointer 0x98278 plus [obj+0xce];
+    155 of the 186 gate the chain with the held-surface predicate
+    0x23870, and only 31 carry a different +0xbc. So the aim is not a
+    prediction of the lion's next position, the second clearance test
+    does no spatial filtering for these classes, and the crossing leg
+    decides on the first test at the snapshot plus the held-surface
+    waiver.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that

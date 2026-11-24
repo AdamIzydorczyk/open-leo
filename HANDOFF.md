@@ -5634,7 +5634,18 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         point on the slope within the `idiv` truncation, and the
         surface already held at [obj+0xa9] then re-accepts itself at
         any non-positive clearance at the snapshot - the carrying
-        mechanism F6 needs, pending a ZARIA.01 measurement.
+        mechanism F6 needs, pending a ZARIA.01 measurement. PR-351
+        censused that chain and took back its half of the claim: the
+        186 class views in the data region all carry +0x48 = 0x23aa0
+        (the current-script accessor over [obj+0x50]/[obj+0x5c]) and
+        +0x50 = 0x53e40, and 0x53e40 writes its state-active test of
+        +1/-1 through edx at the block's HEAD, not at its y, which
+        stays the seeded code pointer 0x98278 plus [obj+0xce]; 155 of
+        the 186 gate the chain with 0x23870 ("I hold a surface") and
+        only 31 differ. So the aim is not a prediction of the next
+        position, the second test does no spatial filtering for these
+        classes, and the decision a ZARIA.01 leg has to reproduce is
+        the first test at the snapshot plus the held-surface waiver.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the
