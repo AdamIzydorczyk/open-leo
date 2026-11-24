@@ -5918,7 +5918,10 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     anything reads them stays open, as does whether 0x5c320 returns a
     pointer inside a larger block, whether the lion's own standing query ever
     consults such a per-object array (0x96874 carries neither the list
-    pass nor a container sub-table), what the [x+0x10] queue drives,
+    pass nor a container sub-table), what the [x+0x10] queue drives, what
+    0x57500's per-plane scale tables are authored by (it computes
+    [d+0x10] * [[d+0x20]+4*plane] / [[d+0x1c]*4+plane] for a descriptor at
+    [[0xcef40]+0x390], PR-389), and what 0x42de0's frame-list walk decides,
     which classes the 37 owners are by name - only KTRASA and TUNTRAS
     are - 16 of the 23 +0xb0
     companion ids, the six

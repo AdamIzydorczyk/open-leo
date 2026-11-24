@@ -53992,3 +53992,112 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   road tables, and that the free branch of a destructor sits on the ask
   path - the engine calls it as a predicate and lets the requester's address
   bits decide whether memory is released.
+
+## PR-389 - THE GEOMETRIC HALF OF THE BLOCK-RESPONSE GATE: 0x53030 TESTS
+## THE PAIR ON THE SAME PLANE DIRECTLY AND RESCALES THROUGH 0x57500
+## ACROSS PLANES, AND THE FOUR GEOMETRY VERBS SPLIT 186/33 BY FAMILY
+
+```
+KIND: read
+SUBSYSTEM: 0x53ae0's first half - the pair test 0x53030, the box block it
+  builds at 0x52dc0, the per-plane rescale 0x57500, and the 186/33 split of
+  the class table's geometry verbs +0x44/+0x48/+0x4c/+0x50 (OI-128, OI-129,
+  the F6 thread; continues PR-388, PR-238, PR-139).
+ADDRESSES: 0x53ae0, 0x53b18, 0x53b2b, 0x53bd7, 0x53bcc, 0x53c36, 0x53030,
+  0x5303f, 0x530dc, 0x5304b, 0x530d1, 0x52dc0, 0x52d30, 0x57500, 0x42de0,
+  0x49580, 0x749a0, 0x23920, 0x23bf0, 0x23aa0, 0x23be0, 0x23a20, 0x23bd0,
+  0x53e40, 0x23bc0, 0x98274, 0x98278, 0xcef40, 0x24, 0x2c, 0x390, 0x44,
+  0x48, 0x4c, 0x50, 0x10, 0x12, 0x50, 0x5c, 0x1000, 0x40400, 0x10000,
+  0x20400, 0x400
+NAMES: block-response gate, pair test, plane rescale, plane scale, box
+  block, actor-class mask, geometry verb, family split, pr389_gate.py,
+  pr389_53ae0.py
+CODE: no: image reading, no port change and no leg. The tracked diff is this
+  record and two new items in the OI-128 open list. Nothing under ported/
+  is touched, so only the light gate applies.
+HOOKS: PR-238 named 0x53ae0 "the block-response gate, answers
+  {AC_BLOK}/{AC_BLOK_Y}"; PR-139 read the +0x44 verb 0x23920 as the row
+  record's flag word [[[obj+0x50]+[obj+0x5c]*4]+0x12] and the port models
+  it; PR-238/PR-388 put the 0x53ae0 call inside the answer entry 0x552e0,
+  before the [T+0x9c] call; PR-385 measured [obj+0x24] as the plane word
+  and PR-150/PR-244 the request block ending in the class word 0x98274;
+  the .des surface-table flag byte (';' 1, '#' 2) is PR-335's.
+OPENS: what 0x57500's per-plane table is - it computes
+  [d+0x10] * [[d+0x20] + 4*plane] / [[d+0x1c]*4 + plane] for a descriptor
+  reached at [[0xcef40]+0x390], which is a fixed-point scale per plane, and
+  who authors those two arrays; what 0x42de0 decides - it walks [obj+0x23]
+  frame lists with words at +0x2 and +0x19 and takes two output pointers;
+  why the 33-table family returns 0 from all four geometry verbs (does that
+  family simply never take part in an AC_BLOK answer?); the asker-side
+  [class+0x10] call at 0x53c0e and 0x53c71 with a 4-dword argument block;
+  and the remaining meaning of the masks 0x1000, 0x40400, 0x20400 and
+  0x10000 beyond the AC_* bits the port already names.
+CLOSES: nothing that OI-128 lists. It supplies the missing half of the gate
+  PR-238 named: the answer path's pair test is geometric and plane-aware
+  before it is a flag test.
+CORRECTS: nothing published. A method note again, the third in three PRs:
+  the +0x44 verb and 0x53ae0's name were already in the ledger (PR-139,
+  PR-238) and the {4 dwords, 0x98274} block is PR-150/PR-244's; I read the
+  image first and the ledger second, which is what the index entry for
+  0x53ae0 would have told me at once.
+MEASURED: (a) THE GATE'S SHAPE (pr389_53ae0.py). 0x53ae0 (eax=the answering
+  object, edx=the requester) makes exactly these calls: 0x53030 once,
+  `[T+0x44]` twice - once on the answerer at 0x53b18 and once on the
+  requester at 0x53b2b - `[T+0x10]` twice on the requester, 0x52b10 twice,
+  0x749a0 twice (the 12-byte answer record of PR-384) and 0x49580 once
+  (the OR-merge). It bails if 0x53030 reports no pair, then requires of the
+  answerer's row-flag word `test ah,0x4` (bit 0x1000) and
+  `and eax,0x40400; cmp eax,0x40400` (bits 0x400 and 0x40000 both set),
+  and of the requester's that bit 0x10000 is clear. The two records it
+  emits are built by 0x749a0 with the flag byte at +0xc forced to 1
+  (`or dl,0x1` at 0x53bcc, copied out with four `movs` to the caller) and
+  to 2 (`or bl,0x2` at 0x53c36, merged through 0x49580) - the AC_BLOK and
+  AC_BLOK_Y answers of PR-238; the choice between the two branches is
+  `and ecx,0x20400; cmp ecx,0x20400` at 0x53bd7. One thing to flag rather
+  than claim: these answer records have the same 13-byte shape as PR-335's
+  authored surface-table records at [obj+0xa5] (class 0x98278) - four
+  dwords and a flag byte at +0xc - and PR-335's separator ';' writes 1 and
+  '#' writes 2 there, the same two values 0x53ae0 forces. Whether the two
+  flag bytes mean the same thing is open.
+  (b) THE PAIR TEST 0x53030 (pr389_gate.py). It opens with
+  `mov eax,[eax+0x24]; cmp eax,[edx+0x24]` - the plane words of PR-385. If
+  they are EQUAL it takes 0x530dc: `call [T+0x4c]` on the requester and on
+  the answerer, which return a 4-dword box, and it tests the classic
+  rectangle overlap (x1 <= X2, X1 >= x2, y1 <= Y2, Y1 >= y2). If the planes
+  DIFFER it calls 0x52dc0 on each object instead: 0x52dc0 calls the same
+  `[T+0x4c]` verb, copies the box to the stack, appends the class word
+  0x98274 at +0x10 - the request block of PR-150/PR-244 - and calls
+  0x57500 with the level context from [[0xcef40]+0x390] and the object's
+  plane [obj+0x24]; the boxes are then compared the same way. Only when the
+  boxes overlap does it go on: `call [T+0x50]`, 0x52d30 (the position
+  getter) and `call [T+0x48]` on each side, then 0x42de0 with the results.
+  (c) THE PLANE RESCALE 0x57500 is a fixed-point scale: with the plane
+  index in edx it computes `imul edx, [ [d+0x20] + 4*plane ]` over
+  [d+0x10] and `idiv [ [d+0x1c]*4 + plane ]`, i.e. one multiply/divide
+  table per plane; 0x57532 is the same shape with an added
+  `add eax, [[d+0x24] + 4*plane]` offset. This is the arithmetic behind the
+  parallax planes that `plany=` names.
+  (d) THE FAMILY SPLIT. Over the 219 class tables the four geometry verbs
+  take exactly two values each, and the split is the family boundary found
+  in PR-380: +0x44 = 0x23920 in 186 and 0x23bf0 in 33; +0x48 = 0x23aa0 /
+  0x23be0; +0x4c = 0x23a20 / 0x23bd0; +0x50 = 0x53e40 / 0x23bc0. The 33
+  tables of the 0x23b50 family answer 0 for the flag word (0x23bf0 is
+  `xor eax,eax; ret`), so the 0x1000 and 0x40400 tests at 0x53b1d and
+  0x53b3b can never pass for them - that whole family is outside the
+  AC_BLOK answer path. Only +0x50 is not a stub in the 186 family: 0x53e40.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The F6 thread asks what the lion stands on. This is the step that
+  decides whether two objects are considered together at all: same plane,
+  compare the authored boxes; different planes, rescale each box by that
+  plane's table first. It also says which classes can ever be in that
+  conversation - the 33 tables of the second family report no box and no
+  flags, so they are excluded by construction.
+
+- WHAT SURPRISED ME. That the same `[T+0x4c]` box verb serves both the
+  plain and the rescaled path, with the 0x98274 request block as the only
+  difference - the engine treats "a box" and "a box on a named plane" as
+  the same object with one extra word.
