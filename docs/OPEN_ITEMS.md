@@ -5521,7 +5521,20 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     (0x53dfa, 0x53e27, 0x53e2b), and 0x55070, which 124 tables install
     (the lion's view among them), hands the same pair to the ask's aim
     filler 0x541f0 as its block (0x55084, 0x5508c), which ends in the
-    same method at 0x5423a. Both
+    same method at 0x5423a. PR-363 READ THOSE TWO WRITERS TO THE
+    INSTRUCTION and they are not one law: 0x53df0 has no test at all, so
+    for the 31 classes that install it (PALMA, KATAPULT, SPLYW) the pair is
+    always anchor-shifted; the 0x541f0 chain has THREE tests, and
+    0x54200/0x54207's test of [obj+0xb6] bit 0x02 - the `lock2` flag
+    PR-354 read as the `2` variants' extra bit - FORCES the chain past
+    both the held-surface predicate and the standing test. The boolean is
+    `bit0x02 || (!held && !bit0x01)`, and leg L17 (`./ll_level
+    --mov-selftest`, prefix `seat sample:`) pins it with 13 cases plus the
+    ask on top: the seat (838,463)-(900,463) is refused with the sample
+    point at the requester's own row and ANSWERS with the incumbent -12
+    once bit 0x02 forces the shift, and the x leg alone decides whether
+    0x45380 names a pair at all (838,463 answers, 798,463 does not) - all
+    of it without the object's position moving a pixel. Both
     are gated so they run only when the requester holds NO surface
     (0x54218 plus the +0xbc predicate). And [obj+0x89] is exactly where
     the standing query measures its first clearance - +0x6c is `add
@@ -5530,14 +5543,16 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     while he holds no surface, and the live position is shifted only by
     PR-354's two runners 0x54f40 (the `lock`/`ground_on` ON runner, which
     sets bit 0x01 immediately after) and 0x55020 (`lock2`), neither of
-    which the port models at all (PLAN 8g). NEAREST TEST, in the port
-    today: drive L15's seat ask with a requester that holds no surface and
-    a c1 point taken as position + (f4 - f0, f6 - f2) for the current
-    element, i.e. ~31 px down in ZARIA.01, and show the answer changes -
-    L16 already has the pieces. THE VIDEO TEST THEN NEEDS REDATING: a
-    ~31 px step of the live position can only appear at a moment where the
-    level script runs `ground_on`/`lock`, so the pose-dump comparison has
-    to key on such a state in the .MOV, not on any landing. STILL OPEN
+    which the port models at all (PLAN 8g). THAT TEST IS WRITTEN (PR-363, leg
+    L17, prefix `seat sample:`): the same ask with c1 at the
+    anchor-shifted pair, refused or answered purely by whether the chain
+    ran, and the x leg deciding whether 0x45380 names a pair at all - no
+    position moved. So what is left of this item is the ORIGINAL's number,
+    not the port's model: a pose-dump across an instant where the script
+    runs `ground_on` (PR-354's 0x54f40, which applies the shift to the
+    LIVE position and sets bit 0x01 immediately after), because the
+    engine's ask is aimed one body-offset below the position while the
+    object holds no surface. STILL OPEN
     FROM PR-362: three of the six leave-shift sites are unread (0x3c3a3,
     0x5453a, 0x5efdb - 0x5453a looks like a second aim chain), who calls
     +0x54 per step (only 0x23850 was found), what [view+0x98] and

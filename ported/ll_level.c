@@ -4903,6 +4903,14 @@ static int seq_landshift_selftest(void); /* L16 (PR-359): the element's own
                                             +0x33 (PR-357) - and what the
                                             step does to the ask point L15
                                             asks with */
+static int seat_sample_selftest(void);   /* L17 (PR-363): the two writers of
+                                            [obj+0x89], the pair the class
+                                            verb +0x6c hands to the standing
+                                            query as its first sample point
+                                            (PR-349) - the class verb +0x54
+                                            in 31 tables (0x53df0, no gate)
+                                            and in 124 (0x55070, gated by
+                                            0x54200-0x5421f) */
 
 /* FIX-13 (X-11) selftest, test-only entry point (ll_level.h): proves the
  * two .MOV duration invariants without any window or game data:
@@ -5072,7 +5080,7 @@ int ll_mov_selftest(void)
         place_rectclass_selftest() != 0 ||
         rect_class_ask_selftest() != 0 ||
         seat_motion_selftest() != 0 || surface_ask_selftest() != 0 ||
-        seq_landshift_selftest() != 0) {
+        seq_landshift_selftest() != 0 || seat_sample_selftest() != 0) {
         free(sc.mov);
         free(m);
         return 1;
@@ -10408,14 +10416,15 @@ static int seat_motion_selftest(void)
  * esi,[edx+0x89]` … `mov edx,esi` (0x53dfa, 0x53e27); 0x55070 hands the
  * same pair to the aim filler 0x541f0 as its block (0x55084
  * `lea edx,[ebx+0x89]`), and 0x541f0's chain ends in the same 0x42980
- * with edx = that block (0x5423a). Both are gated the same way - 0x54218
- * `test BYTE PTR [obj+0xb6],0x1` and the +0xbc predicate skip the chain
- * when the object HOLDS a surface - so the rule is: while the requester
- * holds no surface, the point the standing query measures is the position
- * shifted by the current element's second anchor (about 31 px down in the
- * lion's ZARIA.01 standing states, PR-360); once it holds one, the
- * snapshot is the plain position. Anything here that ever fills a
- * snapshot point has to carry that offset. */
+ * with edx = that block (0x5423a). THE TWO ARE NOT THE SAME LAW, and L17
+ * pins the difference: 0x53df0 has no gate at all, while the 0x541f0 chain
+ * is gated - 0x54200 tests [obj+0xb6] bit 2 and, if set, RUNS the chain
+ * regardless; otherwise the +0xbc held-surface verb (0x54216) and the
+ * standing bit at 0x54218 each skip it. So for every lion the point is
+ * anchor-shifted while it holds no surface and is not standing, or whenever
+ * bit 0x02 is set; for PALMA, KATAPULT and SPLYW it is anchor-shifted
+ * always. Anything here that ever fills a snapshot point has to carry that
+ * offset. */
 static int seat_bracket(const short *sx, int n, int x)
 {
     int i;
@@ -11042,6 +11051,207 @@ static int seq_landshift_selftest(void)
            " answers. The landing step therefore decides WHICH surface the"
            " standing query can see at all.\n",
            upx, upy, rgt_x, rgt_y, lft_x, lft_y);
+
+    ll_seq_free(&sq);
+    return bad;
+}
+
+/* L17 (PR-363): the POINT the standing query measures. PR-349 read the
+ * class verb +0x6c as `add eax,0x89; ret` and PR-352 measured that
+ * 0x45400's first clearance (c1) is taken at the pair it returns; PR-362
+ * read who writes that pair. The class verb +0x54 has two implementations
+ * in the image and they are NOT the same law:
+ *   0x53df0, in exactly 31 class tables (PALMA 0x96c8c, KATAPULT 0x96d70,
+ *     SPLYW 0x96e30 and 28 more): 0x53e00 calls [view+0x98], 0x53e06-
+ *     0x53e0d copies [obj+0]/[obj+4] into [obj+0x89]/[obj+0x8d], then
+ *     [view+0x48] for the current element and [view+0x50] for the sign,
+ *     and 0x53e27 `mov edx,esi` + 0x53e2b `call [edi+0x4]` apply the
+ *     element's anchor shift to the PAIR. No gate of any kind.
+ *   0x55070, in 124 dwords of the image - every lion's view among them
+ *     (0x96960+0x54 = 0x969b4): 0x55084 `lea edx,[ebx+0x89]` and 0x5508c
+ *     `call 0x541f0` run the ask's own aim filler over the same pair, and
+ *     THAT chain is gated: 0x541f6-0x541fd copy the position first and
+ *     unconditionally, then 0x54200 `test BYTE PTR [obj+0xb6],0x2` with
+ *     0x54207 `jne 0x54221` makes the `lock2` flag FORCE the chain past
+ *     both predicates, and otherwise 0x5420e's +0xbc held-surface verb
+ *     (0x23870 = `[obj+0xa9] != 0` for the lions, PR-350) and 0x54218's
+ *     standing-bit test each skip it. 0x55096 then calls [view+0x98]
+ *     AFTERWARDS, where the other writer calls it before.
+ * So "the sample point is anchor-shifted exactly when the object holds no
+ * surface" - the sentence PR-362 wrote - is the 124-table law only. No
+ * window and no game data: the same three shape-only elements L16 builds
+ * (w0 = 2, no margin rows, no art arrays), element 0 keeping the 0x7fff
+ * the element initializer 0x41ef3 stamps at +0. */
+static int seat_chain_runs(int b6, int holds)
+{
+    if (b6 & 0x02)                  /* 0x54207 `jne 0x54221` */
+        return 1;
+    if (holds)                      /* 0x54214 `test eax,eax`, 0x54216 `jne
+                                     * 0x5423d` */
+        return 0;
+    return (b6 & 0x01) == 0;        /* 0x54218, 0x5421f `jne 0x5423d` */
+}
+
+/* 0x53df0: copy, then shift. Returns through sx/sy what [obj+0x89] and
+ * [obj+0x8d] would hold. */
+static void seat_sample_direct(const ll_seq_elem *e, int facing, int x, int y,
+                               int *sx, int *sy)
+{
+    *sx = x;                        /* 0x53e06-0x53e08 */
+    *sy = y;                        /* 0x53e0a-0x53e0d */
+    ll_seq_anchor_land(e, facing, sx, sy);  /* 0x53e27, 0x53e2b */
+}
+
+/* 0x55070 -> 0x541f0: copy, then shift ONLY if the chain runs. */
+static void seat_sample_chain(int b6, int holds, const ll_seq_elem *e,
+                              int facing, int x, int y, int *sx, int *sy)
+{
+    *sx = x;                        /* 0x541f6-0x541f8, before any test */
+    *sy = y;                        /* 0x541fa-0x541fd */
+    if (seat_chain_runs(b6, holds))
+        ll_seq_anchor_land(e, facing, sx, sy);    /* 0x5423a */
+}
+
+static int seat_sample_selftest(void)
+{
+    static const unsigned char blob[] = {
+        0x03, 0x00,                                   /* count 3            */
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* w0 b19 b15 b17 */
+        0xff, 0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 7fff f2 f4 f6  */
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* w0 b19 b15 b17 */
+        0x0a, 0x00, 0x14, 0x00, 0x1e, 0x00, 0x08, 0x00,   /* (10,20) (30,8) */
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* w0 b19 b15 b17 */
+        0x0a, 0x00, 0x0c, 0x00, 0x0a, 0x00, 0x00, 0x00,   /* (10,12) (10,0) */
+    };
+    /* (x,y) is the requester's OWN position; the pair the writer produces is
+     * what the next ask measures. Element 2 steps (0,-12), element 1 steps
+     * (+20,-12) facing right and (-20,-12) facing left, and 0x42980's guard
+     * leaves element 0 alone. */
+    static const struct {
+        int chain, b6, holds, e, face, x, y, wx, wy;
+        const char *what;
+    } tc[] = {
+        { 0, 0, 0, 2,  1, 890, 475, 890, 463, "the ungated writer, free" },
+        { 0, 0, 1, 2,  1, 890, 475, 890, 463, "the ungated writer WHILE"
+          " HOLDING a surface: no predicate exists in 0x53df0" },
+        { 0, 1, 0, 2,  1, 890, 475, 890, 463, "the ungated writer WHILE"
+          " STANDING (bit 0x01): the same, no test" },
+        { 0, 0, 0, 1,  1, 818, 475, 838, 463, "the x leg facing right" },
+        { 0, 0, 0, 1, -1, 818, 475, 798, 463, "the x leg mirrored" },
+        { 0, 0, 0, 0,  1, 890, 475, 890, 475, "a 0x7fff element moves the"
+          " sample point not at all (0x42987-0x4298d)" },
+        { 1, 0, 0, 2,  1, 890, 475, 890, 463, "the gated writer, free:"
+          " 0x54216 and 0x5421f both fall through" },
+        { 1, 0, 1, 2,  1, 890, 475, 890, 475, "the gated writer while"
+          "[obj+0xa9] names a surface: 0x54216 skips the chain" },
+        { 1, 1, 0, 2,  1, 890, 475, 890, 475, "the gated writer while"
+          " standing: 0x5421f skips it" },
+        { 1, 2, 1, 2,  1, 890, 475, 890, 463, "bit 0x02 of [obj+0xb6]"
+          " FORCES the chain past the held-surface predicate (0x54207)" },
+        { 1, 3, 1, 2,  1, 890, 475, 890, 463, "bit 0x02 forces it past the"
+          " standing test too" },
+        { 1, 0, 0, 0,  1, 890, 475, 890, 475, "the sentinel through the"
+          " gated writer" },
+        { 1, 0, 0, 1, -1, 818, 475, 798, 463, "the gated writer mirrors the"
+          " x leg the same way (ebx from [view+0x50], not from [obj+0x6d])" },
+    };
+    int bad = 0, i, best, sx, sy, got;
+    ll_seq sq;
+    lvl_obj o;
+
+    if (ll_seq_parse(blob, (uint32_t)sizeof blob, &sq) != 0 ||
+        sq.count != 3) {
+        fprintf(stderr, "seat sample selftest: FAILED the synthetic .SEQ"
+                        " did not parse\n");
+        return 1;
+    }
+
+    for (i = 0; i < (int)(sizeof tc / sizeof tc[0]); i++) {
+        const ll_seq_elem *e = &sq.els[tc[i].e];
+        if (tc[i].chain)
+            seat_sample_chain(tc[i].b6, tc[i].holds, e, tc[i].face,
+                              tc[i].x, tc[i].y, &sx, &sy);
+        else
+            seat_sample_direct(e, tc[i].face, tc[i].x, tc[i].y, &sx, &sy);
+        if (sx != tc[i].wx || sy != tc[i].wy) {
+            fprintf(stderr, "seat sample selftest: FAILED %s: the sample"
+                            " point from (%d,%d) is (%d,%d), want (%d,%d)\n",
+                    tc[i].what, tc[i].x, tc[i].y, sx, sy, tc[i].wx, tc[i].wy);
+            bad = 1;
+        }
+    }
+
+    /* THE ASK, measured there. One seat table 12 px above the requester's
+     * row, asked with the AIM at his own row throughout: the only thing
+     * that moves is the pair 0x53df0/0x55070 write. Holding a surface
+     * closes the gated chain, and the first clearance is 463 - 475 = -12 at
+     * 0x45477, so the ask is refused. Setting bit 0x02 - the `lock2` flag
+     * PR-354 read as the `2` variants' - forces the chain, the sample point
+     * lands on the seat, c1 is 0 and the ask ANSWERS with the incumbent
+     * -12. No position was ever changed: this is the same seat table L16
+     * reaches by stepping the object, reached here by moving only the point
+     * the query measures. */
+    memset(&o, 0, sizeof o);
+    o.nseat = 2;
+    o.seat_x[0] = 838, o.seat_x[1] = 900;
+    o.seat_y[0] = o.seat_y[1] = 463;
+    seat_sample_chain(0, 1, &sq.els[2], 1, 890, 475, &sx, &sy);
+    best = 0;
+    got = seat_ask_core(&o, 2, 890, 475, sx, sy, 0, &best);
+    if (sx != 890 || sy != 475 || got) {
+        fprintf(stderr, "seat sample selftest: FAILED the ask from the"
+                        " gated sample (%d,%d) answered %d, want refused\n",
+                sx, sy, got);
+        bad = 1;
+    }
+    seat_sample_chain(0x02, 1, &sq.els[2], 1, 890, 475, &sx, &sy);
+    best = 0;
+    got = seat_ask_core(&o, 2, 890, 475, sx, sy, 0, &best);
+    if (sx != 890 || sy != 463 || !got || best != -12) {
+        fprintf(stderr, "seat sample selftest: FAILED the ask from the"
+                        " bit-0x02 sample (%d,%d) answered %d with the"
+                        " incumbent %d, want 1 with -12\n", sx, sy, got,
+                best);
+        bad = 1;
+    }
+    /* And the x leg, at the sample point only: facing right puts the point
+     * on the table's FIRST record, which the bracket of 0x45380 accepts,
+     * and facing left puts it 40 px left of that record, where 0x45393's
+     * `jl` answers no pair at all. The requester's position is (818,475)
+     * in both cases - he never moves. */
+    seat_sample_direct(&sq.els[1], 1, 818, 475, &sx, &sy);
+    best = 0;
+    got = seat_ask_core(&o, 2, sx, sy, sx, sy, 0, &best);
+    if (sx != 838 || sy != 463 || !got || best != 0) {
+        fprintf(stderr, "seat sample selftest: FAILED the ask from the"
+                        " right-facing sample (%d,%d) answered %d with %d,"
+                        " want 1 with 0\n", sx, sy, got, best);
+        bad = 1;
+    }
+    seat_sample_direct(&sq.els[1], -1, 818, 475, &sx, &sy);
+    best = 0;
+    got = seat_ask_core(&o, 2, sx, sy, sx, sy, 0, &best);
+    if (sx != 798 || sy != 463 || got) {
+        fprintf(stderr, "seat sample selftest: FAILED the ask from the"
+                        " left-facing sample (%d,%d) answered %d, want 0 -"
+                        " 0x45393 rejects an x below the first record\n",
+                sx, sy, got);
+        bad = 1;
+    }
+
+    printf("seat sample: the class verb +0x54 is written twice. 0x53df0 (31"
+           " class tables: PALMA, KATAPULT, SPLYW) copies (890,475) into the"
+           " pair and applies the element's anchor delta there, giving"
+           " (890,463), whatever the object holds or claims. 0x55070 (124"
+           " tables, every lion) runs the ask's chain over the same pair and"
+           " is gated: holding a surface or standing keeps the copy at"
+           " (890,475), while bit 0x02 of [obj+0xb6] forces the chain and"
+           " gives (890,463). A seat table (838,463)-(900,463) asked with"
+           " its first clearance at the first pair is refused and at the"
+           " second ANSWERS with the incumbent -12 - and the x leg alone"
+           " decides whether 0x45380 names a pair at all: facing right the"
+           " sample is (838,463) and the ask answers, facing left it is"
+           " (798,463) and it does not. No position moved in any of these.\n");
 
     ll_seq_free(&sq);
     return bad;

@@ -5737,19 +5737,25 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         `mov edx,esi` and 0x53e2b calls the shift on the pair), and the
         lion's path reaches the same place through the ask's own aim
         filler (0x55084 hands &[obj+0x89] to 0x541f0, which ends at
-        0x5423a). Both run only while the requester holds NO surface
-        (0x54218 plus the +0xbc predicate), and [obj+0x89] is exactly
+        0x5423a). THE TWO ARE NOT ONE LAW, and PR-363 legged the
+        difference: 0x53df0 has no test at all, so those 31 classes always
+        measure the shifted pair, while the 0x541f0 chain runs on
+        `[obj+0xb6] bit 0x02 || (no held surface && bit 0x01 clear)` -
+        0x54200/0x54207's bit-0x02 test, the `lock2` flag of PR-354,
+        FORCES it past both predicates. And [obj+0x89] is exactly
         where 0x45400 measures its first clearance (+0x6c is `add
         eax,0x89; ret`, PR-349, fed to 0x455a0 at 0x45462). So the
         ~31 px is first of all where the engine POINTS the standing
         query, and the live position is moved only by PR-354's runners
         0x54f40 (`lock`/`ground_on`, which sets bit 0x01 right after) and
         0x55020 (`lock2`) - which is why the port is green: it models
-        neither, and it has no snapshot. That makes the nearer test
-        fixture-free: drive L15's ask with c1 taken at position plus
-        (f4 - f0, f6 - f2), and the pose-dump test has to be re-dated to
-        a moment where the level script actually runs `ground_on`. What
-        F6 still lacks: that L15/L16 leg, the current-frame element per
+        neither, and it has no snapshot. L17 (`./ll_level --mov-selftest`,
+        prefix `seat sample:`) now models both writers and drives L15's
+        ask from the pair they produce: a seat 12 px above the requester
+        is refused with the chain closed and answered with the incumbent
+        -12 with it open, and the x leg alone decides whether a bracket
+        exists, the object never moving. What
+        F6 still lacks: the current-frame element per
         object (the [view+0x48] chain) if the live-position half is to be
         wired, and the port's unmodelled ground_on, ground_off, lock2 and
         unlock2 (PLAN 8g).

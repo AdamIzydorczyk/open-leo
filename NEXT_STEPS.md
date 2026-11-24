@@ -50307,3 +50307,187 @@ GATE: light: verify-index verify-docs rc=0 (ok); the diff is a comment in
   chain, which may change paragraph (d)'s "both paths" into "more paths".
   The writer of [obj+0x6d] is still unknown - this pass only read how it
   is read.
+
+## PR-363 - THE STANDING QUERY'S SAMPLE POINT IS WRITTEN TWICE, AND THE
+## TWO ARE NOT ONE LAW: 0x53df0 SHIFTS IT ALWAYS, 0x55070 ONLY WHILE THE
+## OBJECT HOLDS NO SURFACE - OR WHEN [obj+0xb6] BIT 0x02 FORCES IT
+```
+KIND: port
+SUBSYSTEM: the port's model of the point the standing query measures -
+  OI-129's nearer half, the class verb +0x54 and the 0x541f0 chain - and
+  leg L17, which runs the two writers against L15's ask.
+ADDRESSES: 0x53df0, 0x53e00, 0x53e06, 0x53e08, 0x53e0a, 0x53e0d, 0x53e15,
+  0x53e1d, 0x53e22, 0x53e25, 0x53e27, 0x53e2b, 0x55070, 0x5507e, 0x55084,
+  0x5508c, 0x55096, 0x541f0, 0x541f6, 0x541f8, 0x541fa, 0x541fd, 0x54200,
+  0x54207, 0x5420e, 0x54214, 0x54216, 0x54218, 0x5421f, 0x54221, 0x54226,
+  0x5422e, 0x54233, 0x54236, 0x5423a, 0x5423d, 0x53e40, 0x23870, 0x23a10,
+  0x42980, 0x42984, 0x42987, 0x4298d, 0x4299c, 0x429a0, 0x45380, 0x45393,
+  0x45400, 0x45462, 0x45468, 0x45477, 0x4547d, 0x45491, 0x45498, 0x4549a,
+  0x455a0, 0x96960, 0x969b4, 0x96c38, 0x96c8c, 0x96d1c, 0x96d70, 0x96ddc,
+  0x96e30, 0xa0c08, 0x48, 0x50, 0x54, 0x6c, 0x98, 0xb0, 0xbc, 0xb6, 0x89,
+  0x8d, 0xa9, 0xd6, 0x33, 0x01, 0x02, 0x7fff
+NAMES: L17, seat_sample_selftest, seat_chain_runs, seat_sample_direct,
+  seat_sample_chain, sample point, position snapshot, aim chain, gated
+  writer, ungated writer, lock2, ground_on, bit 0x02, OI-129, OI-128, F6,
+  PLAN 8g, pr363_mutations.py, pr363_slot_census.py, pr363_selftest.txt,
+  PALMA, KATAPULT, SPLYW, ANIPL2, seat ask, incumbent
+CODE: yes: ported/ll_level.c only. Three new file-scope functions -
+  seat_chain_runs (the gate at 0x54200-0x5421f as a boolean),
+  seat_sample_direct (0x53df0: copy then shift) and seat_sample_chain
+  (0x55070 -> 0x541f0: copy, then shift only if the chain runs) - the new
+  leg L17 seat_sample_selftest appended to the ll_mov_selftest chain with
+  its forward declaration, and a correction inside L15's comment, which
+  carried PR-362's over-general gate sentence. No hook, no return code, no
+  Makefile or tool change. Nothing in the port's own step calls any of it:
+  the port still has no [obj+0x89] and models no ground_on (PLAN 8g).
+HOOKS: L15's seat_ask_core/seat_bracket/seat_slope (PR-352), which L17
+  drives, and L16's ll_seq_anchor_land (PR-359), which the two writers
+  call; PR-349's +0x6c = `add eax,0x89; ret`, PR-348's sampler, PR-350's
+  +0xbc held-surface predicate 0x23870, PR-351's [view+0x48]/[view+0x50]
+  pair, PR-354's reading of [obj+0xb6] bits 0x01/0x02 as the
+  `lock`/`lock2` flags, PR-362's census of the anchor pair's call sites -
+  which is where 0x53df0 and 0x55070 were found and what this leg turns
+  into executable law. No existing leg's expectation moved.
+OPENS: whether the port should fill a sample point at all - its own
+  contact model places the lion from the surface directly, so the question
+  OI-129 asks is now whether the ORIGINAL's position and the port's
+  coincide at a standing instant, and the pose-dump comparison of
+  PR-360/OI-129 is still the only thing that answers that; what the verbs
+  [view+0x98] and [view+0xb0] DO (0x53df0 calls +0x98 BEFORE copying,
+  0x55070 calls it AFTER running the chain, and 0x5507e calls +0xb0 with
+  edx = &[obj+0xd6], a pair no record of this ledger has ever read); why
+  the two writers disagree about gating at all - 31 classes always shift
+  and 124 shift conditionally, which smells like the seat classes keeping
+  their ask point on the body line unconditionally; whether a bit-0x02
+  object that also holds a surface is what the `lock2`/`unlock2` pair of
+  PR-354 really puts the object into; and the items PR-362 left: the three
+  unread leave-shift sites (0x3c3a3, 0x5453a, 0x5efdb), the per-step
+  callers of +0x54, and who WRITES [obj+0x6d].
+CLOSES: the question PR-362 raised and PR-359 could not answer - does the
+  standing query's first sample point carry the anchor offset, or only the
+  object's position? It does, in both of the two writers, and the offset
+  is the element's second anchor exactly; and for the 124-table path the
+  condition is now a legged boolean rather than a guess.
+CORRECTS: PR-362, twice. Its (d) paragraph says "Both paths carry the
+  same gate: 0x54218 ... and the +0xbc held-surface predicate ... skip the
+  chain entirely. So the rule, stated once: while the requester holds NO
+  surface, [obj+0x89] = position + (f4 - f0, f6 - f2) of the current
+  element; once it holds one, the chain does not run." Measured here:
+  0x53df0 carries NO test at all - its body is copy, element, sign, shift,
+  return - so for the 31 classes that install it (PALMA, KATAPULT, SPLYW)
+  the pair is always anchor-shifted. And the 0x541f0 chain has THREE
+  tests, not two: 0x54200 `test BYTE PTR [obj+0xb6],0x2` with 0x54207
+  `jne 0x54221` makes the `lock2` flag FORCE the chain past both the
+  held-surface predicate and the standing test. The 0x55070 half of that
+  paragraph is otherwise unchanged. The same sentence in L15's comment,
+  in the OI-129 row and in HANDOFF section 8 is corrected in this commit.
+  PR-362's census counts and its reading of the pair itself are
+  unaffected.
+MEASURED: (a) THE TWO WRITERS. Class-table slot +0x54 holds 0x53df0 in
+  exactly 31 tables (0x96c38+0x54 = 0x96c8c PALMA, 0x96d1c+0x54 = 0x96d70
+  KATAPULT, 0x96ddc+0x54 = 0x96e30 SPLYW and 28 more) and 0x55070 in 124
+  (the lion view 0x96960 among them, at 0x969b4) - and those counts are
+  counts of SLOTS, not of luck: /tmp/opencode/pr363_slot_census.py reads
+  every dword equal to either verb as slot +0x54 of a table based 0x54
+  earlier and tests the sibling slots; all 155 pass, uniformly - in every
+  one of them +0x48 = 0x23aa0 (PR-351's current-script accessor) and
+  +0x50 = 0x53e40 (PR-362's sign getter). The two verbs sit in one and
+  the same class-table shape and the split is only in slot +0x54.
+  0x53df0: 0x53e00
+  `call [view+0x98]`, 0x53e06-0x53e0d copy [obj+0]/[obj+4] into
+  [obj+0x89]/[obj+0x8d], 0x53e15 `call [view+0x48]` for the current
+  element, 0x53e22 `call [view+0x50]` for the sign, 0x53e27 `mov edx,esi`
+  with esi = 0x53dfa's `lea esi,[edx+0x89]`, 0x53e2b `call [edi+0x4]`,
+  epilogue. No test of any flag. 0x55070: 0x5507e `call [view+0xb0]` with
+  edx = &[obj+0xd6], 0x55084 `lea edx,[ebx+0x89]`, 0x5508c `call 0x541f0`
+  - the ask's own aim filler over the same pair - then 0x55096
+  `call [view+0x98]`. So the order of the +0x98 call differs as well as
+  the gate.
+  (b) THE GATE, AS A BOOLEAN. 0x541f0 runs the chain (its
+  0x54226/0x54233/0x5423a triple: element, sign, shift on the block it was
+  handed) exactly when `([obj+0xb6] & 0x02) || (!held && !([obj+0xb6] &
+  0x01))`. The position copy at 0x541f6-0x541fd is unconditional and comes
+  FIRST. 0x54200/0x54207 test bit 0x02 and branch straight to the chain -
+  PR-354 read that bit as "the extra flag the `2` variants add"; here it
+  is the flag that forces the aim chain on for an object that is standing
+  and holding a surface. 0x5420e calls +0xbc, which for every lion and
+  KAMIEN is 0x23870 `[obj+0xa9] != 0` (PR-350), and 0x54216 skips when it
+  answers nonzero; 0x54218/0x5421f skip on bit 0x01.
+  (c) LEG L17 (`./ll_level --mov-selftest`, prefix `seat sample:`),
+  fixture-free and run in every configuration. Three shape-only elements
+  from the L16 blob - element 0 keeps the 0x7fff, element 1 is
+  (f0,f2)=(10,20) (f4,f6)=(30,8), element 2 is (10,12)/(10,0) - and 13
+  sample-point cases, each with its value taken from the instructions: the
+  ungated writer shifts from (890,475) to (890,463) whether or not the
+  object holds a surface and whether or not it stands; its x leg gives
+  (838,463) facing right and (798,463) facing left from (818,475); a
+  0x7fff element leaves the pair at (890,475). The gated writer, free,
+  gives the same (890,463); holding a surface keeps (890,475); standing
+  keeps it; bit 0x02 with a surface held forces (890,463); bits 0x03 force
+  it too; and its x leg mirrors identically, because its sign comes from
+  [view+0x50] (0x53e40) rather than from [obj+0x6d].
+  (d) WHAT THAT DOES TO THE ASK, WITH NO POSITION EVER CHANGING. The seat
+  table (838,463)-(900,463) of L16, asked with its aim at the requester's
+  own row (890,475): first clearance measured at the gated writer's pair
+  while a surface is held is seat_slope 463 - 475 = -12, so 0x45477/0x4547d
+  refuse it. With bit 0x02 set the pair is (890,463), c1 = 0, and the same
+  law ANSWERS with the incumbent -12. The x leg alone decides whether a
+  pair exists at all: from the requester at (818,475) the shifted sample is
+  (838,463) - the table's first record, which the bracket accepts, answer
+  with incumbent 0 - facing left it is (798,463), below the first record's
+  x, and 0x45393's `jl` gives no bracket. So the ask can be moved across
+  the accept boundary without the object moving a pixel, which is the
+  difference between L16's route (step the object) and L17's (move the
+  point the engine measures).
+  (e) EVIDENCE THAT THE MODEL IS THE LAW AND NOT THE TEST. There was no
+  red first: the leg passed its first run, because its expected values and
+  the model were written from the same instructions. What pins it is
+  /tmp/opencode/pr363_mutations.py, five single edits of the model, each
+  applied alone and rebuilt: dropping the bit-0x02 force fails 3 cases;
+  ignoring the held-surface predicate fails 2; ignoring the standing bit
+  fails 1; not applying the shift in the ungated writer fails 7; and
+  always passing facing +1 (never mirroring) fails 1. Restored, the
+  selftest is rc=0 with no FAILED line.
+GATE: make 0 warnings; verify-all fixtures rc=0 69 (ok); the three named
+  SKIPs are the standing ones - no-regression (no pre-fix baseline frame
+  given), verify-save and verify-userdir (both need STATUS.LEO, which the
+  installer creates). The same suite with DATA=/tmp/opencode/nope
+  HD=/tmp/opencode/nope rc=0, and verify-docs plus verify-index rc=0;
+  those two and the index regeneration were run again with this record in
+  the tree, which is the state the commit ships in. L17 runs inside
+  verify-level's `./ll_level --mov-selftest` and prints the numbers of
+  paragraphs (c) and (d).
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs in the
+  DATA=/tmp/opencode/nope HD=/tmp/opencode/nope run - the same counts as
+  PR-361: L17 is a leg INSIDE the existing verify-level
+  `./ll_level --mov-selftest`, whose data-free half runs in that
+  configuration too (`seat sample:` prints at log line 41 there), so no
+  target was added. No Windows legs (rule 8).
+```
+
+- WHY. PR-362 had just shown that the engine measures its first clearance
+  at a pair somebody else writes, and PR-359 had refused to wire the
+  landing step because it could not say what that step was for. L17 is the
+  smallest thing that turns that into a claim the port can be wrong about:
+  two functions, one boolean, one ask.
+
+- WHAT SURPRISED ME. The `lock2` flag. I had the two gates from PR-362 as
+  "not standing and not holding", and the first thing I did for this leg
+  was read the chain head to the instruction - and 0x54200's test of bit
+  0x02 branches straight INTO the chain, over both predicates. So the
+  engine's own authoring has a way to keep aiming at the body line while
+  standing, and PR-354, which read that bit as the `2` variants' extra
+  flag, had no use for it. That is also why the leg tests bit 0x02 with
+  and without a held surface: the two mutations that drop either branch
+  are caught.
+
+- WHY THE PORT STILL DOES NOT CALL THIS. Nothing in the port fills
+  [obj+0x89], because it has no standing query in its step (ground_on,
+  ground_off, lock2 and unlock2 are still unmodelled, PLAN 8g). So L17 is
+  not a step toward wiring the anchor shift; it is the other half of
+  OI-129's question made concrete: if the original's ask is aimed at the
+  body line while the lion is free, then the position the ask accepts him
+  at is his position PLUS that offset, and a port that places him from the
+  surface directly is one body-offset away from the original's number. That
+  is a number a pose-dump can show or refute, and OI-129 now says so with
+  the exact quantity in it.
