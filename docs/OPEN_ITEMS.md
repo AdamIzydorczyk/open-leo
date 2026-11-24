@@ -5036,6 +5036,38 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     does no spatial filtering for these classes, and the crossing leg
     decides on the first test at the snapshot plus the held-surface
     waiver.
+    THAT LEG HAS NOW BEEN RUN, AND IT ANSWERS NO FOR THE STANDING
+    QUERY (PR-352). The port models 0x45380, the flag gate and 0x45400
+    (seat_bracket, seat_slope, seat_ask_core in ported/ll_level.c) and
+    a new selftest leg, L15 `surface_ask_selftest` in the
+    `./ll_level --mov-selftest` chain, drives ZARIA.01's four ANIPL2
+    tables through the row lists their classes move on. Two measured
+    facts decide the row. (a) THE ACCEPT WINDOW OF A COLUMN IS BOUNDED
+    BY THE TWO SAMPLER CALLS: 0x45468 (the bracket's own record order,
+    at the position snapshot) requires the requester's row y <= the
+    table's top at that x, and 0x45491 (the pair REVERSED, at the
+    aimed block) requires his aim y >= that top; `idiv` truncates
+    toward zero, so the two forms put the line at its true value or at
+    the whole pixel beside it, and depending on the sign of the slope
+    a column answers no row, exactly one, or two - measured both ways
+    on a 1:2 slope at x 33 (empty there, two rows at x 33 of the
+    mirrored line, one row where the interpolation is exact). A LEVEL
+    table, which is what all four authored seat tables are (both
+    records of every sampled row pair carry the same y), answers
+    exactly its top row. (b) A STEP FROM ONE SEAT TABLE TO ANOTHER
+    THEREFORE NEEDS THEIR TOPS AT THE SAME ROW AND AT AN OVERLAPPING
+    x. Measured over one full cycle of their own row lists the four
+    tables cover x 838..900, 885..947, 930..992 and 307..382 with
+    tops y 475..482, 380..387, 320..327 and 633..664; every pair's
+    top bands are 53..306 px apart, so 0x45400 carries none of the
+    authored steps of the chain. The 0x45479 waiver is the only path
+    to a surface above the requester and it covers ONLY the table at
+    [obj+0xa9]; 0x454a0 keeps the most negative clearance, so among
+    answerable tables the HIGHEST wins, and 0x45498 is indeed never
+    taken for the classes PR-351 censused. What closes this row is
+    therefore the land/attach path of OI-128 - PALMA's +0xB4 IS the
+    ask verb - or the lion's launch through KATAPULT's landing verb,
+    and the .plt ground of T6, not the standing query.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that

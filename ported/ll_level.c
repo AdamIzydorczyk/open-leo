@@ -4889,6 +4889,12 @@ static int seat_motion_selftest(void);   /* L14 (PR-342): the +0xa4 verb's
                                             move of that table at the row
                                             admit - 0x1e5c0's row-cursor
                                             sign and 0x1e690's five jumps */
+static int surface_ask_selftest(void);   /* L15 (PR-352): the engine's OWN
+                                            standing query - 0x45380's
+                                            bracket, 0x455a0's slope and
+                                            0x45400's two gates - run over
+                                            the ZARIA.01 seat tables under
+                                            the motion L14 pins */
 
 /* FIX-13 (X-11) selftest, test-only entry point (ll_level.h): proves the
  * two .MOV duration invariants without any window or game data:
@@ -5057,7 +5063,7 @@ int ll_mov_selftest(void)
         ladder_answer_selftest() != 0 || place_grammar_selftest() != 0 ||
         place_rectclass_selftest() != 0 ||
         rect_class_ask_selftest() != 0 ||
-        seat_motion_selftest() != 0) {
+        seat_motion_selftest() != 0 || surface_ask_selftest() != 0) {
         free(sc.mov);
         free(m);
         return 1;
@@ -5201,6 +5207,22 @@ int ll_mov_selftest(void)
            " a path whose farthest point is (+42,+31) and which closes;"
            " a KAMIEN, whose class holds 0x239c0 at that slot and no"
            " table verb, keeps its table exactly where it was authored)"
+           " + PR-352 the ENGINE'S OWN STANDING QUERY on those tables -"
+           " 0x45380's bracket (left end inside, right end NOT, a hit is"
+           " the first record past x), the flag gate of 0x4540c reading"
+           " record 0 ONLY, and 0x45400's two 0x455a0 calls: the first"
+           " with the bracket's record order at the position snapshot, the"
+           " second with the pair reversed at the aimed block, so the"
+           " column's answerable rows are L2..L1 - no row, one row or two"
+           " depending on the sign of the slope, since `idiv` truncates"
+           " toward zero; 0x4547d rejects a surface above the requester"
+           " unless it is the one at [obj+0xa9], and 0x4549a keeps the"
+           " MOST NEGATIVE clearance, so the highest answerable surface"
+           " wins. Measured over full cycles, ZARIA.01's four ANIPL2 seat"
+           " tables cover x 838..900, 885..947, 930..992 and 307..382 with"
+           " tops y 475..482, 380..387, 320..327 and 633..664, all of them"
+           " level, so 0x45400 carries no step of the authored chain"
+           " (53..306 px between every pair of top bands)"
            " (ok)\n");
     return 0;
 }
@@ -10353,6 +10375,427 @@ static int seat_motion_selftest(void)
         free(m);
     }
     return 0;
+}
+
+/* L15 (PR-352): the engine's OWN standing query, run over the seat tables
+ * the port already stores. PR-348 measured the sampler 0x455a0, PR-344 the
+ * bracket 0x45380 and the gates of 0x45400, PR-349 the point the first
+ * clearance is measured at and PR-351 what the aim block's y really is.
+ * These functions are that law, instruction for instruction: 0x45380 (the
+ * bracket), 0x455a0 (the slope, with the `idiv` truncation) and 0x45400
+ * (the flag gate on the FIRST record, the two clearances, the held-surface
+ * waiver at 0x45479 and the incumbent at [requester+0xea]).
+ * The requester of this call shape IS the ask block: 0x45320 passes
+ * ebx = &block[1] at 0x4535f and edx = the same pointer at 0x45369, so the
+ * winner triple [obj+0xe6]/[+0xea]/[+0xe2] lives in the caller's structure
+ * (PR-344), and the snapshot point 0x45400 samples at 0x45468 is another
+ * field of it - the class verb +0x6c is `add eax,0x89; ret` in 186 of 186
+ * class views (PR-349, PR-351). */
+static int seat_bracket(const short *sx, int n, int x)
+{
+    int i;
+
+    if (!n)                         /* 0x45388 `cmp DWORD PTR [eax+8],0` */
+        return 0;
+    if (x < sx[0])                  /* 0x45393 `jl 0x453c4`: only the left
+                                     * end is tested at all */
+        return 0;
+    /* 0x453a3-0x453bd: edx starts at 1 and the compare at 0x453b8 is
+     * `cmp [edi],[ebx+eax]` with `jg` KEEPING the scan, so the walk stops
+     * at the first record whose x is > x and the value returned is that
+     * record's index: the pair is (record i, record i-1). Off the end of
+     * the array (edx passes the count at 0x4538c) the answer is 0. */
+    for (i = 1; i <= n; i++)
+        if (x < sx[i])
+            return i;
+    return 0;
+}
+
+static int seat_slope(int ax, int ay, int bx, int by, int x, int py)
+{
+    /* 0x455a0: (x - A.x) * (B.y - A.y) / (B.x - A.x) + A.y - point.y.
+     * C's `/` is the engine's `idiv` (0x455be `sar edx,31`, 0x455c3):
+     * truncated TOWARD ZERO, sign of the dividend. Reversing the pair -
+     * which is what 0x4548d/0x4548f do - gives the same value up to that
+     * truncation, so the two gates bound the clearance to 0 or 1 (PR-350).
+     * There is no guard for B.x == A.x: PR-348's open item, none here. */
+    return (x - ax) * (by - ay) / (bx - ax) + ay - py;
+}
+
+/* The flag byte of record k: the record is 0xd dwords and the byte sits at
+ * +0xc (0x451a6-0x451db), which is what the port keeps in seat_flag (L13). */
+static int seat_rec_flag(const lvl_obj *o, int k)
+{
+    return o->seat_flag[k];
+}
+
+/* 0x45400. eax = the surface handle (records at +4, count at +8: here a
+ * lvl_obj's seat arrays), ebx = the aimed {x, y}, ecx = the subtrahend of
+ * 0x45477, measured as ZERO for all six askers (PR-350), and edx = the
+ * requester, the same structure for this call shape. held is the object's
+ * [obj+0xa9]: the query it is asked about is exempt from the first gate
+ * (0x45479). Returns 1 when the query answers, having written the winner
+ * triple; best is [requester+0xea], which the first ask leaves at 0. */
+static int seat_ask_core(const lvl_obj *o, int mode, int aimx, int aimy,
+                         int snapx, int snapy, int held, int *best)
+{
+    int i = seat_bracket(o->seat_x, (int)o->nseat, aimx);
+    int ax, ay, bx, by, c1, c2;
+
+    if (seat_rec_flag(o, 0) > mode)     /* 0x4540c-0x45419: [handle+4]+0xc */
+        return 0;
+    if (!i)                             /* 0x4542c-0x4542e */
+        return 0;
+    ax = o->seat_x[i]; ay = o->seat_y[i];
+    bx = o->seat_x[i - 1]; by = o->seat_y[i - 1];
+    c1 = seat_slope(ax, ay, bx, by, snapx, snapy);   /* 0x45468: the
+                                                     * snapshot point */
+    if (c1 < 0 && held != 1)            /* 0x45477, 0x45479, 0x4547d */
+        return 0;
+    c2 = seat_slope(bx, by, ax, ay, aimx, aimy);     /* 0x45491: the aim */
+    if (c2 > 0 || c2 > *best)           /* 0x45498 `jg` on `test eax,
+                                         * eax`, then 0x4549a `cmp eax,
+                                         * [edi+0xea]` / 0x454a0 `jg`: the
+                                         * candidate is dropped when its
+                                         * value EXCEEDS the incumbent, so
+                                         * the winner is the MOST NEGATIVE
+                                         * c2 - the surface highest above
+                                         * the aim line */
+        return 0;
+    *best = c2;                         /* 0x454a8 */
+    return 1;
+}
+
+/* The measured half: ZARIA.01's four authored seat tables of ANIPL2.DES,
+ * driven through the row lists their classes move on (L14 pins the motion;
+ * PR-61 read PALML.MOV as the second PALMA list, and it is the same
+ * balanced 14-row shape as PALM.MOV, so it is not repeated here). For each
+ * table this records the x span and the TOP its two records cover over one
+ * full cycle, and then asks the law above what y of a requester would put
+ * it in contact - the only y the two gates of 0x45400 leave open, since
+ * they bound the clearance to 0 or 1 (PR-350). */
+static int surface_ask_selftest(void)
+{
+    static const char palm_mov[] =
+        "A_RUN\n\n[A_RUN]\ncontrol=BY_TIME\n"
+        "1,0\n2,100\n3,100\n4,100\n5,200\n6,200\n7,200\n8,200\n9,200\n"
+        "10,300\n11,300\n12,300\n13,300\n14,300\n";
+    static const char kat_mov[] =
+        "A_RUN\n\n[A_RUN]\ncontrol=BY_TIME\n"
+        "1,0\n2,300\n3,300\n4,300\n5,300\n6,300\n7,300\n8,300\n9,300\n"
+        "10,300\n";
+    static const struct {
+        const char *type;
+        const char *mov;
+        const char *table;
+        int x, y;
+        int cx0, cx1, top0, top1;  /* the envelope over a whole cycle */
+        const char *what;
+    } fx[] = {
+        { "PALMA", palm_mov, "1 18,40;80,40\n", 820, 435,
+          838, 900, 475, 482, "ZARIA.01 ANIPL2's PALMA at 820,435" },
+        { "PALMA", palm_mov, "1 -80,45;-18,45\n", 965, 335,
+          885, 947, 380, 387, "ZARIA.01 ANIPL2's PALMA at 965,335" },
+        { "PALMA", palm_mov, "1 -80,45;-18,45\n", 1010, 275,
+          930, 992, 320, 327, "ZARIA.01 ANIPL2's PALMA at 1010,275" },
+        { "KATAPULT", kat_mov, "1 7,45;40,45\n", 300, 588,
+          307, 382, 633, 664, "ZARIA.01 ANIPL2's KATAPULT at 300,588" },
+    };
+    int xn[sizeof fx / sizeof fx[0]][2], yn[sizeof fx / sizeof fx[0]][2];
+    int q, bad = 0;
+
+    /* (1) THE LAW, case by case. Every expected value below is arithmetic
+     * done by hand from the instructions quoted above. Writing L1 for the
+     * line value of 0x455a0 with the pair AS THE BRACKET gives it (record
+     * i first) at the SNAPSHOT point, and L2 for the same call with the
+     * pair REVERSED at the AIM point: 0x4547d requires L1 >= snapshot y and
+     * 0x45498 requires L2 <= aim y. The two forms interpolate the same line
+     * with `idiv`, which truncates TOWARD ZERO, so L1 and L2 are the true
+     * line value or the whole pixel beside it - and for ONE point the
+     * answerable rows are L2..L1, which the slope can make empty, one row
+     * or two. The two gates read two different points, and the caller's
+     * (aimed block, position snapshot) pair is what 0x45400 really bounds. */
+    {
+        static const struct {
+            int sx[2], sy[2], flag[2], mode;
+            int aimx, aimy, snapx, snapy, held;
+            int want, want_best;
+            const char *what;
+        } tc[] = {
+            /* The bracket 0x45380. The left end is INSIDE (0x45393 is
+             * `jl`); the right end is NOT: 0x453b8 is `jg`, so x equal to
+             * the last record's x keeps the scan walking until it passes
+             * the count at 0x4538c and 0x4542e rejects. */
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 838, 475, 838, 475,
+              0, 1, 0, "PALMA's authored span at its FIRST record's x" },
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 475, 860, 475,
+              0, 1, 0, "and at an x in the middle of it" },
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 899, 475, 899, 475,
+              0, 1, 0, "and 1 px left of the last record" },
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 900, 475, 900, 475,
+              0, 0, 0, "and AT the last record's x: the scan runs off the"
+              " array" },
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 837, 475, 837, 475,
+              0, 0, 0, "and 1 px left of the first: the ONLY range test the"
+              " bracket makes" },
+            /* The two gates at a level surface: L1 = L2 = 475, so the only
+             * answerable row of that column is y 475 itself - from 1 px
+             * below the seat 0x4547d rejects, from 1 px above it 0x45498
+             * does. The standing query needs the requester AT the seat. */
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 474, 860, 474,
+              0, 0, 0, "1 px ABOVE the seat top: L1 = L2 = 475 > y, so"
+              " 0x45498 rejects" },
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 476, 860, 476,
+              0, 0, 0, "1 px BELOW the seat top: L1 - y = -1, so 0x4547d"
+              " rejects a surface the requester does not hold" },
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 476, 860, 475,
+              0, 1, -1, "the snapshot ON the seat and the aim 1 px into it:"
+              " the two gates read DIFFERENT points, so this answers with"
+              " the incumbent -1" },
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 475, 860, 476,
+              0, 0, 0, "and the same pair the other way: L1 = -1 at the"
+              " snapshot, so it does not" },
+            /* The flag gate 0x4540c-0x45417 reads record 0 ONLY. */
+            { { 838, 900 }, { 475, 475 }, { 1, 1 }, 0, 860, 475, 860, 475,
+              0, 0, 0, "mode 0 against a record 0 whose flag byte is 1" },
+            { { 838, 900 }, { 475, 475 }, { 0, 2 }, 2, 860, 475, 860, 475,
+              0, 1, 0, "a flag 2 on record 1 only - the authored `;` before"
+              " a pair belongs to the record that FOLLOWS it (PR-344)" },
+            /* A rising span: the true line at x 33 is y 66.5. The pair the
+             * bracket gives truncates to L1 = 67 and the reversed pair to
+             * L2 = 66, so that column answers y 66 AND y 67, and nothing
+             * outside them. */
+            { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 66, 33, 66,
+              0, 1, 0, "the rising line, at L2: incumbent 0" },
+            { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 67, 33, 67,
+              0, 1, -1, "the same column at L1: incumbent -1, the more"
+              " negative of the two - and 0x454a0 keeps that one" },
+            { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 65, 33, 65,
+              0, 0, 0, "1 px outside that band above: c2 = +1" },
+            { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 68, 33, 68,
+              0, 0, 0, "and 1 px below it: c1 = -1" },
+            { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 32, 84, 32, 84,
+              0, 1, 0, "a FALLING line sampled where it is exact: 50 +"
+              " trunc(-3400/-100) = 84, so that column answers y 84" },
+            /* The same falling line at x 33: its value is 83.5, the two
+             * truncations give L1 = 83 and L2 = 84, and the band L2..L1 is
+             * EMPTY - no row of that column is answerable at all. A
+             * rounding or a floor division would have made both 83 or both
+             * 84 and answered one row; this is what pins `idiv`. */
+            { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 33, 83, 33, 83,
+              0, 0, 0, "L1 = 83 at the snapshot but L2 = 84 at the aim" },
+            { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 33, 84, 33, 84,
+              0, 0, 0, "and one lower: c1 = -1, so 0x4547d rejects" },
+            { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 33, 84, 33, 83,
+              0, 1, 0, "the same column with the gates reading DIFFERENT"
+              " rows - the snapshot at L1 = 83, the aim at L2 = 84: both"
+              " pass, so the band is empty only for one point" },
+            { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 33, 84, 33, 84,
+              1, 1, 0, "the same empty column with the 0x45479 waiver of"
+              " the held surface: only the second gate is left, and it"
+              " accepts L2 itself" },
+            { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 99, 50, 99, 50,
+              0, 0, 0, "near the end of a falling span: trunc(-50/-100) = 0"
+              " gives L1 = 50 while trunc(-4950/100) = -49 gives L2 = 51 -"
+              " empty band again" },
+            { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 100, 50, 100, 50,
+              0, 0, 0, "and AT the last record of a span: no bracket at all"
+              " (0x4542e)" },
+        };
+        for (q = 0; q < (int)(sizeof tc / sizeof tc[0]); q++) {
+            lvl_obj o;
+            int best = 0, got;        /* 0 is the value a requester's
+                                       * [obj+0xea] carries before its first
+                                       * accepted ask: PR-351 left that
+                                       * initialiser open and it is not
+                                       * what decides these rows. */
+
+            memset(&o, 0, sizeof o);
+            o.nseat = 2;
+            for (int k = 0; k < 2; k++) {
+                o.seat_x[k] = (short)tc[q].sx[k];
+                o.seat_y[k] = (short)tc[q].sy[k];
+                o.seat_flag[k] = (unsigned char)tc[q].flag[k];
+            }
+            got = seat_ask_core(&o, tc[q].mode, tc[q].aimx, tc[q].aimy,
+                                tc[q].snapx, tc[q].snapy, tc[q].held,
+                                &best);
+            if (got != tc[q].want || (tc[q].want && best != tc[q].want_best))
+            {
+                fprintf(stderr, "surface ask selftest: FAILED %s: the"
+                                " query answered %d with the incumbent %d,"
+                                " want %d with %d\n", tc[q].what, got, best,
+                        tc[q].want, tc[q].want_best);
+                bad = 1;
+            }
+        }
+    }
+
+    /* (1b) THE WINNER, and the one way the engine can climb. Two tables,
+     * the first at the top of ZARIA.01's lower PALMA and the second at the
+     * upper one 95 px higher, both asked at x 890 where both are bracketed
+     * at rest. */
+    {
+        lvl_obj p, a;
+        int best = 0, g1, g2;
+
+        memset(&p, 0, sizeof p);
+        memset(&a, 0, sizeof a);
+        p.nseat = a.nseat = 2;
+        p.seat_x[0] = 838; p.seat_x[1] = 900;
+        p.seat_y[0] = p.seat_y[1] = 475;
+        a.seat_x[0] = 885; a.seat_x[1] = 947;
+        a.seat_y[0] = a.seat_y[1] = 380;
+
+        /* asked while the requester stands at y 475: the seat 95 px ABOVE
+         * him is not answerable, because L1 = 380 - 475 = -95 < 0 and the
+         * 0x45479 waiver covers ONLY the surface at [obj+0xa9]. */
+        if (!seat_ask_core(&p, 2, 890, 475, 890, 475, 0, &best)) {
+            fprintf(stderr, "surface ask selftest: FAILED the seat the"
+                            " requester is standing on must be answerable"
+                            " with the incumbent 0\n");
+            bad = 1;
+        }
+        if (seat_ask_core(&a, 2, 890, 475, 890, 475, 0, &best)) {
+            fprintf(stderr, "surface ask selftest: FAILED a seat 95 px"
+                            " above the requester: 0x4547d must reject it"
+                            " while he does not hold it\n");
+            bad = 1;
+        }
+        /* the waiver: asked about the surface HE HOLDS, the same query
+         * answers and takes the incumbent to -95. That is the only path by
+         * which 0x45400 can put a requester on a higher surface, and it
+         * needs him holding the very table being asked. */
+        g1 = seat_ask_core(&a, 2, 890, 475, 890, 475, 1, &best);
+        if (!g1 || best != -95) {
+            fprintf(stderr, "surface ask selftest: FAILED the 0x45479"
+                            " waiver: holding the upper table must answer it"
+                            " with the incumbent 380 - 475 = -95, got %d/%d"
+                            "\n", g1, best);
+            bad = 1;
+        }
+        /* and the ranking of 0x454a0 in the other order: the candidate is
+         * dropped when its value EXCEEDS the incumbent, so the table whose
+         * top is 95 px higher keeps it - the standing query answers with
+         * the highest surface at or above the aim line. */
+        best = 0;
+        g1 = seat_ask_core(&a, 2, 890, 475, 890, 475, 1, &best);
+        g2 = seat_ask_core(&p, 2, 890, 475, 890, 475, 0, &best);
+        if (!g1 || g2 || best != -95) {
+            fprintf(stderr, "surface ask selftest: FAILED the ranking of"
+                            " 0x454a0: the upper table must hold the"
+                            " incumbent -95 against the lower one, whose"
+                            " c2 = 0 exceeds it (answers %d,%d, incumbent"
+                            " %d)\n", g1, g2, best);
+            bad = 1;
+        }
+    }
+
+    /* (2) THE MEASUREMENT: the four authored tables under their motion. */
+    for (q = 0; q < (int)(sizeof fx / sizeof fx[0]); q++) {
+        ll_mov_t *m = calloc(1, sizeof *m);
+        obj_script sc;
+        lvl_obj o;
+        obj_stats stt;
+        int it, lo = 0, hi = 0, xlo = 0, xhi = 0, o0x, o1x, o0y, flat = 1;
+
+        memset(&sc, 0, sizeof sc);
+        memset(&o, 0, sizeof o);
+        memset(&stt, 0, sizeof stt);
+        if (!m) {
+            fprintf(stderr, "surface ask selftest: out of memory\n");
+            return 1;
+        }
+        if (ll_mov_parse(fx[q].mov, m) <= 0 || m->nst < 1) {
+            fprintf(stderr, "surface ask selftest: FAILED %s: the row list"
+                            " did not parse\n", fx[q].what);
+            free(m);
+            return 1;
+        }
+        snprintf(sc.leaf, sizeof sc.leaf, "%s", fx[q].type);
+        sc.mov = m;
+        o.sc = &sc;
+        o.x = o.bx = fx[q].x;
+        o.y = o.by = fx[q].y;
+        place_seat_table(fx[q].table, fx[q].table + strlen(fx[q].table),
+                         &o, &stt);
+        if (o.nseat != 2) {
+            fprintf(stderr, "surface ask selftest: FAILED %s: the authored"
+                            " table line did not give 2 records (nseat %d)\n",
+                    fx[q].what, o.nseat);
+            free(m);
+            return 1;
+        }
+        o0x = o.seat_x[0]; o1x = o.seat_x[1]; o0y = o.seat_y[0];
+        lo = hi = o.seat_y[0];
+        xlo = o.seat_x[0]; xhi = o.seat_x[1];
+        for (it = 0; it < 400; it++) {
+            obj_advance(&o, LL_ITER_MS);
+            if (o.seat_y[0] != o.seat_y[1])
+                flat = 0;           /* a tilted pair: L1 != L2 in general */
+            if (o.seat_y[0] < lo)
+                lo = o.seat_y[0];
+            if (o.seat_y[0] > hi)
+                hi = o.seat_y[0];
+            if (o.seat_x[0] < xlo)
+                xlo = o.seat_x[0];
+            if (o.seat_x[1] > xhi)
+                xhi = o.seat_x[1];
+            if (o.brk_arm)
+                break;
+        }
+        if (it >= 400 || !o.brk_arm) {
+            fprintf(stderr, "surface ask selftest: FAILED %s: the row list"
+                            " never completed a cycle (%d iterations)\n",
+                    fx[q].what, it);
+            free(m);
+            return 1;
+        }
+        xn[q][0] = xlo; xn[q][1] = xhi;
+        yn[q][0] = lo; yn[q][1] = hi;
+        if (xlo != fx[q].cx0 || xhi != fx[q].cx1 || lo != fx[q].top0 ||
+            hi != fx[q].top1) {
+            fprintf(stderr, "surface ask selftest: FAILED %s: over one full"
+                            " cycle its records cover x %d..%d with the top"
+                            " at y %d..%d, want x %d..%d and y %d..%d\n",
+                    fx[q].what, xlo, xhi, lo, hi, fx[q].cx0, fx[q].cx1,
+                    fx[q].top0, fx[q].top1);
+            bad = 1;
+        }
+        printf("surface ask: %s authored at (%d,%d): its two records stand"
+               " at x %d..%d y %d at rest, and every sampled row pair of"
+               " its motion carries the SAME y in both records (%s), so over"
+               " one full cycle the table covers x %d..%d with L1 = L2 at"
+               " its top, y %d..%d. 0x45400 answers such a table at an x in"
+               " its span for ONE row: the requester's snapshot y must be <="
+               " that top and his aim y >= it, and for a level table those"
+               " two bounds meet at the top row itself\n", fx[q].type,
+               fx[q].x, fx[q].y, o0x, o1x, o0y, flat ? "level" : "NOT level",
+               xlo, xhi, lo, hi);
+        free(m);
+    }
+    for (int p = 0; p < (int)(sizeof fx / sizeof fx[0]); p++) {
+        for (int r = p + 1; r < (int)(sizeof fx / sizeof fx[0]); r++) {
+            int ox = xn[p][0] <= xn[r][1] && xn[r][0] <= xn[p][1];
+            int sep = 0;            /* gap between the two top bands */
+
+            if (yn[p][1] < yn[r][0])
+                sep = yn[r][0] - yn[p][1];
+            else if (yn[r][1] < yn[p][0])
+                sep = yn[p][0] - yn[r][1];
+            printf("surface ask: %s at (%d,%d) -> %s at (%d,%d): over their"
+                   " cycles their x spans %s and their top bands y %d..%d"
+                   " and y %d..%d are %d px apart. 0x45400 answers a table"
+                   " only where its top is AT the requester's own row, and"
+                   " 0x45479 waives that bound for the single surface at"
+                   " [obj+0xa9]; so the standing query is %s a carrier of"
+                   " that step\n", fx[p].type, fx[p].x, fx[p].y,
+                   fx[r].type, fx[r].x, fx[r].y,
+                   ox ? "overlap" : "never overlap", yn[p][0], yn[p][1],
+                   yn[r][0], yn[r][1], sep, (ox && !sep) ? "" : "NOT");
+        }
+    }
+    return bad;
 }
 
 /* read one placement file: every line is classified, nothing is skipped in

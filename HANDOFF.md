@@ -5646,6 +5646,30 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         position, the second test does no spatial filtering for these
         classes, and the decision a ZARIA.01 leg has to reproduce is
         the first test at the snapshot plus the held-surface waiver.
+        PR-352 runs that leg and answers it NO for the standing query:
+        seat_bracket, seat_slope and seat_ask_core now model 0x45380,
+        its flag gate and 0x45400 in the port, and a new leg L15
+        `surface_ask_selftest` drives the four ANIPL2 tables through
+        their own row lists. The accept window of a column is bounded
+        by the two sampler calls: 0x45468 (the bracket's record order,
+        at the position snapshot) needs the requester's row y <= the
+        table's top there and 0x45491 (the pair reversed, at the aimed
+        block) needs his aim y >= it, and `idiv` truncation puts the
+        line at its true value or the whole pixel beside it, so a
+        column answers no row, one row, or two - both cases measured.
+        A level table answers exactly its top row, and all four
+        authored tables are level. Measured over a full cycle of their
+        row lists they cover x 838..900, 885..947, 930..992 and
+        307..382 with tops y 475..482, 380..387, 320..327, 633..664:
+        no two bands meet, they are 53..306 px apart, so 0x45400
+        carries no step of the authored chain. The 0x45479 waiver is
+        the only route to a surface above the requester and covers only
+        the held table itself; 0x454a0 keeps the most negative
+        clearance, so the highest answerable surface wins, and 0x45498
+        is never taken for PR-351's classes. F6's carrier is the
+        land/attach path of OI-128, where PALMA's +0xB4 IS the ask
+        verb, or the lion's launch through KATAPULT's landing verb,
+        and the .plt ground of T6 - not the standing query.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

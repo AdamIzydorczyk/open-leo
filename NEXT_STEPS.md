@@ -48642,3 +48642,136 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   pr351_23ed0.txt, and the chain itself is 0x54221-0x5423a of
   /tmp/opencode/pr350_541f0.txt.
 ```
+
+
+## PR-352 - THE STANDING QUERY ANSWERS ONE ROW OF A COLUMN, NOT A BAND:
+## 0x45380's BRACKET ENDS BEFORE ITS LAST RECORD, THE TWO 0x455a0 CALLS
+## BOUND THE SNAPSHOT ROW AND THE AIM ROW APART, AND NO STEP OF
+## ZARIA.01'S SEAT CHAIN SATISFIES THEM
+```
+KIND: port
+SUBSYSTEM: F6's standing query, OI-124 - the port's first model of the
+  surface ask itself (0x45380's bracket, the flag gate at 0x4540c,
+  0x45400's two clearance tests and the incumbent at [obj+0xea]), and
+  the leg that drives ZARIA.01's four ANIPL2 seat tables through it.
+ADDRESSES: 0x45380, 0x45388, 0x4538c, 0x45393, 0x453a3, 0x453b3,
+  0x453b8, 0x453bd, 0x453c4, 0x4540c, 0x45417, 0x45419, 0x4542c,
+  0x4542e, 0x45462, 0x45468, 0x4546d, 0x45471, 0x45477, 0x45479,
+  0x4547d, 0x4548b, 0x4548d, 0x4548f, 0x45491, 0x45496, 0x45498,
+  0x4549a, 0x454a0, 0x454a2, 0x454a8, 0x454b1, 0x454ba, 0x455a0,
+  0x455be, 0x455c3, 0x451a6, 0x451db, 0x1e570, 0x1e594, 0x1e970,
+  0x1e983, 0x550a0, 0x550aa, 0x96c38, 0x96d1c, 0x8, 0x4, 0xc, 0x89,
+  0x8d, 0xa9, 0xe2, 0xe6, 0xea, 0x6c
+NAMES: seat_bracket, seat_slope, seat_rec_flag, seat_ask_core,
+  surface_ask_selftest, L15, MOV SELFTEST, STANDING QUERY, BRACKET,
+  CLEARANCE, SURFACE TABLE, ZARIA.01, ANIPL2, PALMA, KATAPULT,
+  PALM.MOV, PALML.MOV, KAT.MOV, A_RUN, OI-124, OI-128, F6,
+  pr352_run.log, pr352_build.log
+CODE: yes: ported/ll_level.c only - seat_bracket, seat_slope,
+  seat_rec_flag and seat_ask_core, the new leg L15
+  surface_ask_selftest appended to the --mov-selftest chain, and that
+  chain's description string. No new hook, no return code, no Makefile
+  or tool change. Nothing in the port's own step calls the model yet.
+HOOKS: obj_advance and L14's obj_seat_shift, which L15 uses to move the
+  authored tables through a whole row-list cycle, and place_seat_table
+  of PR-335, which parses the four authored ANIPL2 lines. The legs
+  need no game data.
+MEASURED: (a) THE BRACKET 0x45380 IS NOT A RANGE TEST. It answers 0
+  when the count at [handle+8] is zero (0x45388), when x is below the
+  FIRST record's x (0x45393 `jl` - the only end the function tests),
+  or when the scan runs past the count (0x4538c); the scan starts at
+  index 1 and 0x453b8 is `jg`, so the first record whose x is GREATER
+  than x ends it and that index is the upper member of the pair. The
+  leg measures the consequence: a two-record table authored
+  18,40;80,40 at 820,435 answers x 838..899 and NOTHING at x 900 -
+  the right end of a surface is outside it.
+  (b) THE FLAG GATE READS ONE BYTE OF ONE RECORD. 0x4540c-0x45417
+  takes the byte at [record 0]+0xc (PR-335's separator grammar) and
+  rejects when it exceeds the mode; the leg answers a mode-2 ask on a
+  table whose SECOND record carries 2, because record 0's byte is 0 -
+  the authored `;` belongs to the pair that FOLLOWS it (PR-344) - and
+  no shipped asker passes a mode below that byte (all six pass 2).
+  (c) THE TWO CLEARANCE TESTS BOUND TWO DIFFERENT ROWS. c1 is 0x455a0
+  with the bracket's own order (record i as A, i-1 as B) at the
+  position snapshot [obj+0x89] of PR-349 (0x45462, 0x45468), and
+  0x4547d rejects a negative one; the only exemption is 0x45479, which
+  compares the handle being asked with [obj+0xa9] (0x45471) - the
+  surface the requester already holds, never a new one. c2 is the same
+  call with the pair REVERSED (0x4548d, 0x4548f) at the caller's aimed
+  block (0x45491): 0x45498 `jg` rejects a positive value, and 0x4549a
+  `cmp eax,[edi+0xea]` with 0x454a0 `jg` rejects a value ABOVE the
+  incumbent, so 0x454a2/0x454a8 store the MOST NEGATIVE c2 - among
+  answerable tables the HIGHEST surface wins. The leg measures that in
+  both ask orders.
+  (d) THE ACCEPT WINDOW OF A COLUMN IS L2..L1, AND THAT IS NOT A BAND.
+  Writing L1 for the line value the first form computes and L2 for the
+  second's: 0x4547d needs the requester's row y <= L1 and 0x45498
+  needs his aim y >= L2. Both forms interpolate the same line, but
+  0x455be `sar edx,31` / 0x455c3 `idiv` truncates toward zero, so L1
+  and L2 are the true value or the whole pixel beside it, and the
+  answerable rows of that column - taking aim and snapshot at one
+  point - are exactly L2..L1, which the sign of the slope can make
+  empty, one row, or two. Measured on a 1:2 slope: at x 33 of
+  (0,100)-(100,50) the true line is 83.5, L1 = 83 and L2 = 84, and NO
+  row of that column answers at all; at x 33 of the mirror
+  (0,50)-(100,100) it is 66.5, L1 = 67 and L2 = 66, so y 66 AND y 67
+  both answer, with clearances 0 and -1; at x 32 the interpolation is
+  exact and only y 84 answers. A floor division or a rounding one
+  breaks all three cases, and the leg is the witness. For a LEVEL
+  table, which is what every authored seat table is, L1 = L2 = the
+  top, so the standing query is exact-contact-only by construction.
+  (e) THE FOUR AUTHORED TABLES, UNDER THEIR OWN MOTION. Parsing the
+  ANIPL2 lines and running each object's row list to its cycle end
+  (L14's path): PALMA at 820,435 stands at x 838..900 y 475 and its
+  cycle keeps it at x 838..900 with its top over y 475..482; PALMA at
+  965,335 at x 885..947 y 380, cycle x 885..947, top y 380..387;
+  PALMA at 1010,275 at x 930..992 y 320, top y 320..327; KATAPULT at
+  300,588 at x 307..340 y 633, cycle x 307..382, top y 633..664.
+  Every sampled row pair of all four carries the SAME y in both
+  records, so paragraph (d) applies exactly. A step from one such
+  table to another therefore needs a point inside both brackets with
+  the second table's top at the requester's own row: the pairs' top
+  bands are 88, 148, 151, 53, 246 and 306 px apart and two of the six
+  x spans never overlap, so 0x45400 carries NO step of ZARIA.01's
+  authored chain. Only the 0x45479 waiver reaches a surface above the
+  requester at all, and it covers one table: the one at [obj+0xa9].
+OPENS: what [obj+0xea] holds for a requester before its first accepted
+  ask - 0x454a8 is the only writer of a computed value and 0x550a0,
+  0x550aa and 0x5481b zero it, and the leg assumes that 0; whether
+  0x455a0 is ever asked with B.x == A.x, where `idiv` would fault and
+  no guard exists (PR-348's open item, and no shipped table of the
+  four has it); what the port should DO with an answer - the winner
+  triple [obj+0xe6]/[obj+0xe2]/[obj+0xea] and the class +0xB4 land
+  verb of OI-128, which for PALMA is the seat ask verb itself; and
+  whether any asker passes a mode other than 2, none having been
+  found.
+CLOSES: the measuring half of OI-124. Every input of the standing query
+  is now in port code, ZARIA.01's four tables have been driven through
+  it over their full cycles, and the answer to the question PR-350
+  left is no: the standing query is not the carrier of that crossing,
+  and no choice of requester position makes it one.
+CORRECTS: PR-350's wording that the two sampler calls "measure ONE
+  clearance with the pair reversed". They measure the same line but NOT
+  the same value: their truncations differ by up to one pixel, which is
+  what makes a column answer zero, one or two rows (paragraph (d)), and
+  the two gates apply at different points and therefore bound different
+  rows. PR-350's assignment of the points, PR-349's snapshot verb and
+  PR-344's flag-gate reading stand; PR-336's "keep-the-smaller" rule
+  for [obj+0xea] is confirmed and pinned to its instruction pair.
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok); the same
+  suite with DATA=/tmp/opencode/nope HD=/tmp/opencode/nope, and
+  verify-docs plus verify-index rc=0. L15 runs inside
+  verify-level's `./ll_level --mov-selftest` and prints the numbers of
+  paragraph (e). Red first: the leg was written from the disassembly
+  and its first run failed on the bracket bound (the port stores
+  count+1 pairs in seat_x/seat_y, so the scan has to stop at the
+  count) and on the incumbent direction. Three mutations of the model,
+  each alone: a floor division in seat_slope fails 5 cases, dropping
+  the 0x4547d test fails 5, and reversing 0x454a0's reject direction
+  fails 4. Restored, `./ll_level --mov-selftest` is rc=0. Output:
+  /tmp/opencode/pr352_run.log, build log pr352_build.log.
+GATE-FIXTURE-FREE: rc=0 13 (ok) + 23 named - PR-335's shape (13 and
+  22) plus one further named line, the vendored-SDL2 build-parity
+  note, which appears on this machine because vendor/SDL2-2.32.10 is
+  not staged; counted as printed. No Windows legs (rule 8).
+```
