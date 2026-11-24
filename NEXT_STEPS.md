@@ -53148,3 +53148,100 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
   engine is the one that returns a facing word (215 sites), while the
   load verb - the one that turns authored text into an object - is
   dispatched at four sites and otherwise reached by direct call.
+
+## PR-382 - LOADING IS REQUEST-DRIVEN, NOT FACTORY-DRIVEN: THE 21 CALL
+## SITES OF THE BASE LOAD VERB ARE HANDLERS THAT BUILD A 12-BYTE KEY, COPY
+## OUT A 13-BYTE RECORD AND THEN ASK THE CLASS +0x3c
+
+```
+KIND: read
+SUBSYSTEM: how authored text reaches an object - the callers of the load
+  verbs found in PR-380/PR-381, the request gate 0x53ae0 and the record
+  reader 0x55130 (OI-128, OI-129, the F6 thread; continues PR-381,
+  PR-380, PR-378).
+ADDRESSES: 0x552e0, 0x1eecf, 0x24f2d, 0x267cb, 0x289a3, 0x2c4cd, 0x2ca1d,
+  0x2f150, 0x2f2e0, 0x2f686, 0x2fa90, 0x30680, 0x34ac3, 0x34c06, 0x3a043,
+  0x3a23c, 0x3bb50, 0x3c120, 0x3d473, 0x3df3b, 0x3e4cc, 0x3e55b,
+  0x1f210, 0x1f3e0, 0x27f30, 0x34495, 0x36b50, 0x3b570, 0x2c910, 0x2f8c0,
+  0x2f9e0, 0x381d0, 0x53ae0, 0x53030, 0x55130, 0x550c0, 0x749a0, 0x52b10,
+  0x1ee20, 0x24e90, 0x26780, 0x288e0, 0x2c4a0, 0x2c9f0, 0x2f140, 0x2f2d0,
+  0x2f4a0, 0x2fa80, 0x349d0, 0x3e470, 0xad, 0xb1, 0x106, 0x128, 0x3c,
+  0x44, 0x40, 0xd0, 0x6c, 0x8, 0x394, 0xcef40
+NAMES: request handler, load request, key builder, record reader, request
+  gate, load result, copy-out, flag word, pr382_callers.py,
+  pr382_callers.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 line about who runs the load path, and the
+  HANDOFF section 8 F6 paragraph. Nothing under ported/ is touched, so
+  only the light gate applies.
+HOOKS: PR-381 found the load chain +0x78 -> +0x9c and that the load verb
+  is dispatched at only 4 sites; PR-380 mapped the factory that builds
+  objects; PR-378 found the property scanner and the [obj+0xad] field;
+  PR-375 read the 13-byte signal key at [obj+0x60] and the 0x749a0 key
+  initialiser.
+OPENS: what the object in edx at the request handler really is - the
+  same call shape passes it both as the load verb's argument and as the
+  source of the 13-byte copy; which requests the 19 handler functions
+  implement (0x1ee20, 0x24e90, 0x26780, 0x288e0, 0x2c4a0, 0x2c9f0,
+  0x2f140, 0x2f2d0, 0x2f4a0, 0x2fa80, 0x349d0, 0x3e470 and seven
+  others), since not one of them is called by name - they are reached as
+  verbs or through a table; the flag bits tested by 0x53ae0 (ah bit 0x4
+  of the object's +0x44 answer, 0x10000 of the argument's, and the pair
+  0x40400), and what 0x53030 reads; whether the 13-byte record copied
+  out at 0x2c4d2 is the signal key of PR-375 or a different structure.
+CLOSES: the OI-128 question of who runs the load path: not the factory.
+  All 31 direct call sites of the five load verbs (0x552e0 21, 0x3df00 6
+  counting its own tail call, 0x53c90 4) sit in request-handler
+  functions, and in none of those 26 host functions does a token compare
+  of PR-380 appear before the call. Building an object and reading its
+  authored record are two separate steps, the second one requested.
+CORRECTS: nothing published. One refinement of PR-381: it said the load
+  verb is "reached almost never by dispatch"; that is right for +0x78
+  (4 sites), but the callers found here are direct `call 0x552e0`s from
+  handlers, so the base reader is reached by direct call, and only the
+  per-class continuation at +0x9c is dispatched.
+MEASURED: (a) THE CALL SHAPE (pr382_callers.py). 31 direct call sites of
+  the load verbs: 0x552e0 at 21, 0x3df00 at 6 (0x1f210, 0x1f3e0,
+  0x27f30, 0x34495, 0x36b50, 0x3b570 - the per-class wrappers PR-380
+  found at +0x78 - plus its own tail call), 0x53c90 at 4, and no
+  direct call of 0x50f80 or 0x3f010. The recurring handler, e.g.
+  0x2c4a0: `call 0x749a0` with a 12-byte zeroed buffer, then
+  `call 0x552e0` with eax = the object and edx = the request, then four
+  `movs` copying 13 bytes out of the result, then `call
+  DWORD PTR [obj+8+0x3c]` - the askable test of PR-322, so the handler
+  asks the object only after loading it. 0x24f2d's handler sets bit 0x40
+  in the signal byte at [obj+0x66] (PR-376's link bit) before calling.
+  (b) THE REQUEST GATE 0x53ae0. Called from 5 places, all inside load
+  verbs (0x3d9b9, 0x3e8ad, 0x50fa9, 0x53cb9, 0x55308). It reads two
+  words through 0x53030, then calls the object's [T+0x44] verb and the
+  request's own [[arg+8]+0x44] verb, and requires ah bit 0x4, not
+  0x10000, and the pair 0x40400 in the object's flags before going on -
+  a type/permission test between the request object and the target.
+  (c) THE RECORD READER 0x55130. Called by the askable classes' load
+  verb: it compares a counter [obj+0xad] (the same field PR-378 found
+  written with the literal 100 by the `, %d` pair reader, and set to
+  -1 by the handler at 0x267bc) against [arg+0xad], calls [T+0xd0] with
+  [obj+0xb1] - the placement damage - as the argument, and then builds
+  one of two 12-byte keys with 0x749a0, setting bit 0x01 in one and bit
+  0x80 in the other, choosing by whether that counter is greater.
+  (d) NO FACTORY BRANCH LOADS. Cross-checking the 31 sites against the
+  PR-380 map: in none of the 27 host functions is there a token compare
+  before the call site. The factory allocates, builds and installs the
+  class table and returns; the record is read later, through these
+  handlers.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port builds an object and parses its record in one go. The
+  original separates them: the class-name factory only constructs, and a
+  request handler - which already holds the record text - drives the load
+  verb, copies back a 13-byte result and only then asks the object a
+  question. That is why the same property readers serve every class and
+  why the load verb has a per-class continuation: the request is
+  class-independent, the reading is not.
+
+- WHAT SURPRISED ME. That a handler sets bit 0x40 of the link byte at
+  [obj+0x66] before the load call, so the companion bookkeeping of
+  PR-376 is partly done by the request, not by the class.

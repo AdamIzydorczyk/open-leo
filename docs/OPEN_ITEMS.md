@@ -5836,10 +5836,15 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     dispatch census over the image: +0x70 (facing) 215 sites in 76
     functions, +0x4 146, +0x68 145, +0x6c 91, +0x3c (askable) 74,
     +0xd0 15, +0x9c 5, +0x78 only 4. Still open: who dispatches the
-    property readers (they are installed at +0xd0/+0x18/+0xa8 but those
-    offsets are dispatched only from inside the load verbs, and the same
-    functions also have direct call sites), and what the real load test
-    is when 181 tables pass the +0x9c gate unconditionally;
+    property readers (their offsets are dispatched only from inside the
+    load verbs, and the same functions also have direct call sites),
+    what the real load test is when 181 tables pass the +0x9c gate
+    unconditionally, and which requests the 27 handler functions that
+    call a load verb implement (0x1ee20, 0x24e90, 0x26780, 0x288e0,
+    0x2c4a0, 0x2c9f0, 0x2f140, 0x349d0, 0x3e470, 0x3b570 and the rest)
+    - none of them is called by name, and none contains a token compare,
+    so the record text arrives through a request, never through the
+    factory;
     what 0x3e060's [obj+0x116] flag from
     a signal byte is, and what 0x1f330/0x1f590 test
     and what [obj+0x5c] == 6/9 selects, the six scanner sites whose
