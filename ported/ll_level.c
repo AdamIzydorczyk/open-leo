@@ -10424,7 +10424,17 @@ static int seat_motion_selftest(void)
  * anchor-shifted while it holds no surface and is not standing, or whenever
  * bit 0x02 is set; for PALMA, KATAPULT and SPLYW it is anchor-shifted
  * always. Anything here that ever fills a snapshot point has to carry that
- * offset. */
+ * offset. PR-364 read the COUNTERPART, the class verb +0xb0 - the point
+ * provider: every one of the 124 tables that installs 0x55070 installs
+ * the SAME handler 0x544f0 at +0xb0, and its three tests
+ * (0x54507/0x54516/0x5451f) are the exact negation of this chain's -
+ * the pair it hands its caller is the position with the element's LEAVE
+ * shift exactly when this chain skips. So an object of those classes
+ * keeps BOTH sample points at once, [obj+0x89] here and [obj+0xd6]
+ * there, and the class verb +0x58 (0x54eb0, slot +0x58 of all 155
+ * tables, one call site) moves the live position by their difference.
+ * [view+0x98], which both writers call, is a no-op: 0x23a50 only calls
+ * 0x534e0, and 0x534e0 is one instruction, `ret`. */
 static int seat_bracket(const short *sx, int n, int x)
 {
     int i;

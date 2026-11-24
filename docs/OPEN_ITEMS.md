@@ -5419,7 +5419,9 @@ OI-128: what landing and leaving a surface does - the class verbs
     class +0xB4/+0xB8 verbs (0x238c6, 0x2389c), the +0x54 frame step
     0x53df0 (which first copies the position to [obj+0x89] at
     0x53e06-0x53e0d and shifts the copy), the ask block 0x541f0 (which
-    is PR-350's open item, now answered), the +0xB0 provider 0x544d0,
+    is PR-350's open item, now answered), the +0xB0 provider 0x544f0
+    (PR-364 corrects this line's earlier 0x544d0, which is the empty
+    +0xd4 override documented in two earlier rows of this file),
     one private +0x78 verb 0x3c330, and PR-354's four runners. The
     argument is the object - so [obj+0]/[obj+4], the live position
     PR-308 named - or a copy of it. So landing is: set the standing bit
@@ -5465,6 +5467,46 @@ OI-128: what landing and leaving a surface does - the class verbs
     since measured the data half, and it says the step is real and big
     (~31 px for the lion's standing states), which makes OI-129 the
     blocker for wiring it, not the measurement.
+    PR-364 READS THE POINT PROVIDER THAT OI-128 KEPT HITTING. The
+    class verb +0xb0 has FIVE indirect call sites (0x2b881, 0x2b900,
+    0x3e9ba - PR-308's ask side - plus 0x5507e inside the frame step
+    and 0x4552f), and slot +0xb0 pairs perfectly with slot +0x54:
+    every one of the 124 tables that install the gated frame step
+    0x55070 installs the SAME provider 0x544f0, and the 31 tables
+    that install 0x53df0 each install their own (31 distinct handlers,
+    three of them already read by PR-308: DRABINKA's 0x232e0, LINA's
+    0x4f6f0, and the store+flag stub 0x1e540 in PALMA's table, which
+    ignores the buffer, writes its address to [obj+0xb1] and sets bit
+    0x40 of [obj+0x66]). PR-308 read 0x544f0's body but not which
+    way its tests branch; they do, and they are the exact negation
+    of the +0x54 aim chain's: the provider applies the element's
+    LEAVE method to the copy it hands back exactly when that chain
+    skips - standing, or holding, or both - and skips it exactly when
+    the chain runs (/tmp/opencode/pr364_census.txt section 5 prints
+    the nine rows side by side: 0x54207 `jne` INTO the chain against
+    0x54507 `jne` PAST it; 0x54216 `jne` PAST against 0x54516 `jne`
+    INTO; 0x5421f `jne` PAST against 0x5451f `je` PAST). So every
+    object of those 124 classes keeps two sample points at once:
+    [obj+0x89], position + the step while free (PR-362/363), and
+    [obj+0xd6], position - the step while standing or holding, and
+    their difference is the anchor delta exactly when the object is
+    NOT free. The third method with the identical gate is the class
+    verb +0x58: 0x54eb0 installs at slot +0x58 of every one of the
+    155 tables in that census, has exactly ONE call site
+    (0x3ede2, in the placement path that reads a target object
+    through [ecx+0x3c]), raises token 0x1b = AC_BUTLA through +0x10
+    (PR-183's name), then writes the caller's {x, y} pair to
+    [obj]/[obj+4] and, under that same predicate, adds the
+    difference of the two sample points - the live position moves to
+    the given aim point PLUS the step when the object is not free.
+    That is the third mover of the live position, after PR-354's
+    ground_on and lock2 runners, and the ask query itself has a
+    matching second point-derivation nobody had read: at 0x4552f,
+    inside the body entered at 0x45400, before the point-in-record
+    compare at 0x45553. The +0x98 verb the two frame steps call is
+    now answered too: 0x23a50 in all 155 tables, `lea edx,[eax+0x75]`
+    then a call to 0x534e0, and 0x534e0 is one instruction, `ret`.
+    It is a no-op, everywhere.
 
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -
@@ -5534,16 +5576,28 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     point at the requester's own row and ANSWERS with the incumbent -12
     once bit 0x02 forces the shift, and the x leg alone decides whether
     0x45380 names a pair at all (838,463 answers, 798,463 does not) - all
-    of it without the object's position moving a pixel. Both
-    are gated so they run only when the requester holds NO surface
-    (0x54218 plus the +0xbc predicate). And [obj+0x89] is exactly where
+    of it without the object's position moving a pixel. THE COUNTERPART
+    IS NOW READ (PR-364): the class verb +0xb0, slot of the point
+    provider, pairs perfectly with +0x54 - all 124 tables install the
+    SAME handler 0x544f0 there, and its three tests
+    (0x54507 `jne` PAST, 0x54516 `jne` INTO, 0x5451f `je` PAST) are
+    the exact negation of the chain's: the provider returns the
+    position shifted by the element's LEAVE method exactly when that
+    chain skips. A lion-class object therefore keeps two sample
+    points at once, [obj+0x89] = position + the step while free and
+    [obj+0xd6] = position - the step while standing or holding, and
+    their difference IS the live step; the class verb +0x58 (0x54eb0,
+    slot +0x58 of all 155 tables, one call site at 0x3ede2) is a
+    third mover of the live position, adding that difference to a
+    caller's point and re-running +0x54. And [obj+0x89] is exactly where
     the standing query measures its first clearance - +0x6c is `add
     eax,0x89; ret` (PR-349) and 0x45462 feeds it to 0x455a0 (PR-352's
     c1). So the engine's ask is aimed ~31 px below the lion's position
     while he holds no surface, and the live position is shifted only by
     PR-354's two runners 0x54f40 (the `lock`/`ground_on` ON runner, which
-    sets bit 0x01 immediately after) and 0x55020 (`lock2`), neither of
-    which the port models at all (PLAN 8g). THAT TEST IS WRITTEN (PR-363, leg
+    sets bit 0x01 immediately after), 0x55020 (`lock2`) - neither of
+    which the port models at all (PLAN 8g) - and now by 0x54eb0 too.
+    THAT TEST IS WRITTEN (PR-363, leg
     L17, prefix `seat sample:`): the same ask with c1 at the
     anchor-shifted pair, refused or answered purely by whether the chain
     ran, and the x leg deciding whether 0x45380 names a pair at all - no
@@ -5552,8 +5606,26 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     runs `ground_on` (PR-354's 0x54f40, which applies the shift to the
     LIVE position and sets bit 0x01 immediately after), because the
     engine's ask is aimed one body-offset below the position while the
-    object holds no surface. STILL OPEN
-    FROM PR-362: three of the six leave-shift sites are unread (0x3c3a3,
-    0x5453a, 0x5efdb - 0x5453a looks like a second aim chain), who calls
-    +0x54 per step (only 0x23850 was found), what [view+0x98] and
-    [view+0xb0] do, and who WRITES [obj+0x6d].
+    object holds no surface. THE PR-362 OPEN LIST IS ANSWERED: the
+    "unread leave-shift sites" split - 0x5453a is the provider's chain
+    (now read), and 0x3c3a3 and 0x5efdb are NOT element leaves at all,
+    they are `call [class+0x08]` ask verbs the PR-362 window heuristic
+    confused with the element block's +8 (PR-362's own record named
+    that false-positive risk); +0x54 has EIGHT indirect call sites, not
+    one (PR-364 lists them), and 0x541f0 itself is called per step
+    through 0x45340 and 0x4b62c (the latter is PR-346's candidate
+    collector, which adds the velocity words [obj+0xca]/[obj+0xce] to
+    the aimed point - the ask looks one frame ahead); [view+0x98] is
+    0x23a50 in all 155 tables, a no-op (its call target 0x534e0 is
+    `ret`); [view+0xb0] is the point provider above; and [obj+0x6d]
+    has measured writers now - the `neg DWORD PTR [eax+0x6d]` at
+    0x53683, reached when the state record's +0x12 byte bit 3 is set
+    (0x5367e `test dh,0x8`), on top of the ldir/rdir writes PR-320
+    named (the immediates 0x1 seven times and 0xffffffff four). WHAT
+    IS NEW OPEN: which branch of 0x45400 reaches its second
+    point-derivation at 0x4552f (+0x68, then the requester's own
+    +0xb0, then velocity, then a point-in-record compare at 0x45553),
+    what PALMA's provider stub stores into [obj+0xb1] and feeds to
+    bit 0x40 of [obj+0x66], who calls the +0x58 placement path at
+    0x3ede2's function, and what the 31 private +0xb0 handlers each
+    answer.

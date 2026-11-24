@@ -50491,3 +50491,181 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs in the
   surface directly is one body-offset away from the original's number. That
   is a number a pose-dump can show or refute, and OI-129 now says so with
   the exact quantity in it.
+
+## PR-364 - THE POINT PROVIDER IS THE AIM CHAIN'S NEGATED TWIN: ALL 124
+## GATED TABLES INSTALL 0x544f0 AT +0xb0, EVERY SUCH OBJECT KEEPS TWO
+## SAMPLE POINTS, AND 0x54eb0 (+0x58) MOVES THE LIVE POSITION BY THEIR
+## DIFFERENCE
+```
+KIND: read
+SUBSYSTEM: the class verb +0xb0 point provider and its perfect pairing
+  with the +0x54 frame step (OI-128's and OI-129's provider half), the
+  class verb +0x58 re-anchor method, the second point-derivation inside
+  the standing query's own body, and the [obj+0x6d] writers.
+ADDRESSES: 0x544f0, 0x544f6, 0x544fa, 0x54500, 0x54507, 0x5450e, 0x54514,
+  0x54516, 0x54518, 0x5451f, 0x54521, 0x54526, 0x5452e, 0x54533, 0x5453a,
+  0x5453d, 0x2b881, 0x2b900, 0x3e9ba, 0x45516, 0x4552f, 0x4553c, 0x45548,
+  0x45553, 0x45557, 0x5507e, 0x54eb0, 0x54ebb, 0x54ec2, 0x54ed6, 0x54ed9,
+  0x54ee0, 0x54ee7, 0x54eed, 0x54eef, 0x54ef1, 0x54ef8, 0x54efa, 0x54f0c,
+  0x54f0e, 0x54f10, 0x54f12, 0x54f18, 0x54f1a, 0x54f1e, 0x54f20, 0x54f28,
+  0x3ede2, 0x3eddb, 0x23a50, 0x534e0, 0x53670, 0x53672, 0x5367e, 0x53683,
+  0x53689, 0x536f0, 0x53733, 0x53755, 0x5efc3, 0x5efdb, 0x3c330, 0x3c3a3,
+  0x544d0, 0x541f0, 0x54200, 0x54207, 0x5420e, 0x54214, 0x54216, 0x54218,
+  0x5421f, 0x54221, 0x5423d, 0x45320, 0x45340, 0x45349, 0x4534f, 0x4536f,
+  0x4b62c, 0x23858, 0x4abfe, 0x529f5, 0x52bdd, 0x54f28, 0x1e540, 0x232e0,
+  0x4f6f0, 0x96874, 0x968cc, 0x96960, 0x969b8, 0x96c38, 0xa0c08, 0x42980,
+  0x429d0, 0x32487, 0x33fc6, 0x45a1a, 0x53375, 0x1b, 0x2c, 0x33, 0x40,
+  0x48, 0x50, 0x54, 0x58, 0x66, 0x68, 0x6d, 0x89, 0x8d, 0x98, 0xa9, 0xb0,
+  0xb1, 0xb6, 0xca, 0xce, 0xd6, 0xda
+NAMES: point provider, aim chain, sample point, provider pair, negated
+  gate, re-anchor, placement method, two sample points, seat ask, AC_BUTLA,
+  OI-128, OI-129, F6, PLAN 8g, pr364_provider_census.py, pr364_census.txt,
+  PALMA, DRABINKA, LINA, KATAPULT, SPLYW
+CODE: no: image reading. The tracked diff is prose plus one comment: this
+  record, an OI-128 and OI-129 rewrite, a HANDOFF section 8 paragraph, the
+  0x544d0-to-0x544f0 correction in the OI-128 row, and an addendum to the
+  L15 block comment in ported/ll_level.c naming the provider counterpart.
+  No port behaviour changed and no leg was added.
+HOOKS: PR-308 read 0x544f0's body and the +0xb0 ask protocol but not
+  which way its tests branch - this pass supplies the directions; PR-266
+  read 0x55070's three verb calls; PR-362/363 read the +0x54 pair and the
+  aim chain's gate, whose negation is the finding; PR-354 named the
+  [obj+0xb6] bits and the runners; PR-346 read the candidate collector
+  0x4b600 and its velocity addition, which is why 0x4b62c is NOT new
+  here; PR-320 named the ldir/rdir writes to [obj+0x6d]; PR-183 named
+  token 0x1b = AC_BUTLA. Nothing existing reads [obj+0xd6]/[obj+0xda] or
+  the +0x58 slot; this is their first record.
+OPENS: which branch of the standing query reaches its second
+  point-derivation at 0x4552f (its body first calls a +0x68 verb at
+  0x45516, then the requester's own +0xb0, then adds velocity, then
+  compares the point against record boxes - L15 models none of that, and
+  its legs never exercise it); whether the 0x31 private +0xb0 handlers of
+  the 0x53df0 classes answer the buffer at all beyond the three PR-308
+  read (28 have no first instruction in the index - their bodies are
+  unread); what PALMA's stub 0x1e540 stores into [obj+0xb1] - the same
+  field elsewhere holds timer values like 0xf4240 - and what bit 0x40 of
+  [obj+0x66] gates; who calls the 0x3ede2 placement function and what
+  the object reached through [ecx+0x3c] is; whether token 0x1b has
+  consumers among PR-184's 41 +0x10 implementations; whether 0x3c330
+  reaches the element methods anywhere as PR-357 counted (its 0x3c3a3
+  call is a class +0x08 ask, not one - the real site, if any, is
+  unread); whether the 31 views outside this census install a different
+  +0x58; and PR-362's other unread item, what the block 0xa0c08 slots
+  +0x10/+0x14 verbs do.
+CLOSES: the PR-362 OPENS list, all of it. (1) The "three unread
+  leave-shift sites": 0x5453a is the provider's chain, read here; 0x3c3a3
+  and 0x5efdb are NOT element-block calls at all, they are class +0x08
+  ask verbs (0x3c3a1 mov edx,esp then call [ecx+0x8]; 0x5efdb is the
+  twin of 0x534f2, cmp [obj+0x2c],2 then lea edx,[obj+0x14] then call
+  [class2+0x8]). (2) "callers of +0x54 per step": EIGHT indirect call
+  sites are counted, and the chain 0x541f0 itself is called directly at
+  0x45340 (the ask wrapper 0x45320) and 0x4b62c (PR-346's collector) -
+  per-step re-aim is the collector, per-transition re-aim is 0x53689,
+  0x53733, 0x53755 and 0x54f28. (3) "[view+0x98] and [view+0xb0] do
+  what": +0x98 is a no-op in all 155 tables, +0xb0 is the point provider
+  below. (4) "who writes [obj+0x6d]": measured rows - 0x53683 neg
+  DWORD PTR [eax+0x6d] behind the state-record test 0x5367e test dh,0x8,
+  on top of PR-320's ldir/rdir immediates (0x1 seven times, 0xffffffff
+  four) and six register-copy writes. It also closes PR-363's OPENS
+  about the two verbs; its pose-dump item stays open and gains a
+  sharper target: [obj+0x89] and [obj+0xd6] are the two live sample
+  points, and their difference is the anchor delta exactly when the
+  object is not free.
+CORRECTS: PR-362 twice. Its +8 candidate list ("the candidates 0x2389c,
+  0x3c3a3, 0x5453a, 0x54fc8, 0x5500b, 0x5efdb") is now split: the real
+  element-block sites are 0x2389c, 0x54fc8, 0x5500b and 0x5453a; 0x3c3a3
+  and 0x5efdb are the ask verbs above, exactly the false-positive class
+  its own record warned the window heuristic could produce. And its
+  "callers of +0x54: only 0x23850 was found" counts one site where the
+  index has eight; its reading of the pair itself is unaffected. The
+  OI-128 row's sentence "the +0xB0 provider 0x544d0" (written in
+  PR-357) is corrected in place: the provider is 0x544f0, while 0x544d0
+  is the EMPTY +0xd4 override two earlier OI rows already document. No
+  claim of PR-308, PR-346 or PR-354 is contradicted; PR-346's sentence
+  that 0x4b600 builds the aimed point "exactly as 0x45320 does" is
+  confirmed by reading 0x45320 at its true boundary.
+MEASURED: (a) THE PAIRING CENSUS (/tmp/opencode/pr364_provider_census.py,
+  output pr364_census.txt, re-runnable). Taking a table as a base whose
+  slots +0x48/+0x50 hold code (the pr363_slot_census definition), slot
+  +0x54 = 0x55070 in 124 tables and ALL 124 install the SAME +0xb0
+  handler, 0x544f0; slot +0x54 = 0x53df0 in 31 tables and those 31
+  install 31 DISTINCT +0xb0 handlers - among them PR-308's named ones,
+  DRABINKA's 0x232e0 (`mov eax,ds:0xcee8c; ret`) and LINA's 0x4f6f0,
+  which cross-check the census. +0x98 is 0x23a50 in all 155.
+  (b) THE PROVIDER'S GATE, DIRECTION MEASURED. PR-308 listed 0x544f0's
+  tests without directions; the index rows give them: 0x54507 `jne
+  0x5453d` (bit 0x02 SKIPS the chain - the opposite of 0x54207, which
+  runs it), 0x54516 `jne 0x54521` (a held surface RUNS it - the opposite
+  of 0x54216), 0x5451f `je 0x5453d` (not standing SKIPS it). The chain
+  runs exactly when the aim chain skips, and its tail 0x5453a calls the
+  block's +0x8 - the LEAVE method - where the aim chain's 0x5423a calls
+  +0x4, LAND. Both first copy [obj+0]/[obj+4] unconditionally
+  (0x544f6-0x544fd against 0x541f6-0x541fd). So the two verbs are exact
+  complements: one object, two sample points, [obj+0x89] = position +
+  the step while free, [obj+0xd6] = position - the step while standing
+  or holding (0x5507e passes &[obj+0xd6] at 0x55070's own head, so both
+  are refreshed by the same frame step), and their difference is the
+  step exactly when the object is NOT free.
+  (c) THE THIRD MOVER. 0x54eb0 sits at slot +0x58 of all 155 tables
+  (155/155 dwords equal to it, every one at +0x58 of a table whose
+  +0x50/+0x54 hold code). It calls +0x10 with {0, 0x1b, 0, 0} - token
+  0x1b is PR-183's AC_BUTLA - then the SAME three-test gate as the
+  provider (0x54ed9-0x54ef8, printed side by side with the other two in
+  pr364_census.txt section 5), and inside it pos = caller pair -
+  [obj+0xd6] + [obj+0x89] (0x54f0c-0x54f1a: sub esi,[obj+0xd6], sub
+  ebx,[obj+0xda], add esi,[obj+0x89], add ebx,[obj+0x8d], store to
+  [obj]/[obj+4]) - then it re-runs +0x54 at 0x54f28. Net law: the live
+  position moves to the caller's point PLUS the anchor delta exactly when
+  the object is not free, and the skip path writes the caller's pair
+  unchanged (0x54f1e). Its only call site is 0x3ede2, one [reg+0x58] in
+  the whole image: there eax = the object reached through [ecx+0x3c] and
+  its pair is taken from ebx, preceded by another +0x10 raise.
+  (d) THE SECOND POINT-DERIVATION INSIDE THE QUERY. The standing query's
+  own body (Ghidra's entry for 0x4552f is 0x45400) calls [edx+0x68] at
+  0x45516, pre-seeds {0, 0} and asks the requester's class +0xb0 at
+  0x4552f (edi = [ebx+8]), adds [ebx+0xca]/[ebx+0xce] to the returned
+  pair (0x4553c-0x4554f - the same velocity words PR-346 measured in the
+  collector), and compares it against a record box (0x45553 `mov
+  edx,[ecx]` / 0x45555 `cmp edi,edx` / `jl`). Which branch reaches that
+  code is not traced; the seat legs of L15/L16/L17 do not exercise it.
+  (e) THE +0x98 ANSWER. 0x23a50: push edx, `lea edx,[eax+0x75]`, `call
+  0x534e0`, pop edx, ret - and 0x534e0 is one instruction, `ret`. The
+  verb both +0x54 implementations call is a no-op, in all 155 tables.
+  (f) [obj+0x6d], the rows: writes of immediates 0x1 at 0x324a1, 0x324f5,
+  0x327e0, 0x33fcf, 0x45a1a, 0x50442, 0x5387a and 0xffffffff at 0x32487,
+  0x327d7, 0x32a29, 0x33fc6 (PR-320's ldir/rdir values; 0x24a0b/0x24a18
+  are cmp rows, not writes), six register copies, and the flip at
+  0x53683 `neg DWORD PTR [eax+0x6d]`, taken when the state record's
+  +0x12 byte has bit 3 (0x53672-0x5367e walk [obj+0x5c]/[obj+0x50] and
+  test dh,0x8) - then 0x53689 re-runs +0x54. The 0xffffffff value is
+  exactly the marker 0x53e83 compares against: auto-derive, do not
+  override.
+GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff is the
+  comment addendum in ported/ll_level.c, so what was run anyway: make
+  rc=0 with 0 warnings and make verify-level rc=0 - 10 (ok) lines, with
+  ./ll_level --mov-selftest printing its unchanged legs (the `seat
+  sample:` line present once),
+  the index regenerated with this record in the tree before the runs, and
+  verify-docs P4 counting every record including this one.
+```
+
+- WHY. OI-129's contradiction has a third leg only the provider can
+  answer: the ask is aimed at the body line while free (PR-362/363), but
+  a STANDING lion is exactly who a seat ask must answer - so what does
+  the engine point at then? It points at [obj+0xd6], which is the
+  position MINUS the step: the two verbs cancel each other's offset by
+  construction, and the difference of the two fields is the delta the
+  re-anchor method applies to a position hand-off. That is the whole
+  convention F6 would have to port, in three instructions.
+
+- WHAT SURPRISED ME. I nearly wrote a phantom function. My first pass
+  this session disassembled `dis 0x45300 0x45380` - not an instruction
+  boundary - and got a plausible but FALSE function that called 0x4def0
+  and a "second ask wrapper" that does not exist; the table rows and
+  PR-346's citations disagreed, the skill's discipline says `dis` at the
+  boundary is the authority, and re-dis at 0x45320 reproduced the table
+  exactly (call 0x541f0 at 0x45340, velocity at 0x45349/0x4534f, call
+  0x45400 at 0x4536f). Lesson kept: sweep only from a boundary. The
+  provider finding itself came from pairing two slots nobody had joined -
+  the +0x54 census of PR-363 and the +0xb0 body of PR-308 were each half
+  of a law that only shows up as a difference.

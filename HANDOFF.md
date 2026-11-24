@@ -5754,11 +5754,24 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         ask from the pair they produce: a seat 12 px above the requester
         is refused with the chain closed and answered with the incumbent
         -12 with it open, and the x leg alone decides whether a bracket
-        exists, the object never moving. What
+        exists, the object never moving. PR-364 READ THE PROVIDER HALF:
+        the class verb +0xb0 pairs one-for-one with +0x54 - all 124
+        gated tables install the SAME handler 0x544f0 at +0xb0, and its
+        tests (0x54507/0x54516/0x5451f) are the exact negation of the
+        aim chain's, so each of those objects keeps TWO sample points,
+        [obj+0x89] = position + the step while free and [obj+0xd6] =
+        position - the step while standing or holding; the class verb
+        +0x58 (0x54eb0, slot +0x58 of all 155 tables, ONE call site at
+        0x3ede2, raises AC_BUTLA through +0x10) is a third mover of the
+        live position - it applies the caller's point plus that pair's
+        difference when the object is not free - and [view+0x98] is a
+        no-op in all 155 (0x23a50 only calls 0x534e0, which is `ret`).
+        What
         F6 still lacks: the current-frame element per
         object (the [view+0x48] chain) if the live-position half is to be
-        wired, and the port's unmodelled ground_on, ground_off, lock2 and
-        unlock2 (PLAN 8g).
+        wired, the port's unmodelled ground_on, ground_off, lock2 and
+        unlock2 and the +0x58 placement path (PLAN 8g), and which branch
+        of 0x45400 re-derives its point through +0xb0 at 0x4552f.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the
