@@ -5711,10 +5711,21 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     and y at +4, kept SORTED BY x - 0x45200 translates every record by
     the delta (that is why a plain add is legal) and 0x45380 brackets a
     query x in it, handing the two bracketing records to 0x455a0,
-    PR-352's c1, or returning 0x7fffffff. So a moving class carries its
-    own copy of the surface its riders stand on, and the port - which
-    measures every class against the level's array - gives those 29
-    classes a frozen one. Seven of the 23 +0xb0 companion ids of the
+    PR-352's c1, or returning 0x7fffffff. PR-370 READ ITS BUILDER: the
+    header is a sub-object - 0x26060 zeroes [obj+0xee]/[+0xf2]/[+0xf6]
+    and installs the views 0x98bdc/0x98bd4, an anchor class of the 155
+    family whose +0xc is 0x260a0 = `mov eax,ds:0xcec28; ret` and whose
+    +0xd8/+0xdc are a setter and a getter for the count at [obj+0xf6];
+    it is built EMPTY, and 0x53ff0 (160 call sites) first lays a base
+    part under it - the view pair 0xa23b8/0xa23b0 at +8/+0xc and a
+    request block at [obj+0xd6]. The array is NOT private to whoever
+    holds the header: 0x24aa0, 0x259b0, 0x1ece0, 0x20200 and 0x23360
+    copy the header trio from another object, and three of those five
+    are the sites PR-99 read as the LION's two-view idiom, so a LION
+    object always carries a header aliasing someone else's array. So
+    the port - which measures every class against the level's array -
+    gives those 29 a frozen surface where the engine has a shareable
+    record object. Seven of the 23 +0xb0 companion ids of the
     31-family are named as the +0xc id of a second-family table (ANITAB
     0xa1eb4 names ds:0xceea4 = 0xa1f90). The companion verb is 0x45320
     (installed at +0x104 by 12 of the 29): it calls the aim filler
@@ -5724,8 +5735,14 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     x, y} nodes to a list at [x+0x10] (66 sites) which 0x52b50 drains
     by running each node target's +0x10 verb, and 0x52b80 drains and
     then runs the owner's +0x14 - six call sites. Still open: what a
-    13-byte record is beyond x,y, who fills the header (0x24b10,
-    0x24e86, 0x259d8), whether the lion's own standing query ever
+    13-byte record is beyond x,y, and who FILLS an array - the builder
+    leaves it empty and nothing read here allocates count*13 or writes
+    [obj+0xf2] (the stride-13 multiplies at 0x45012, 0x4505b, 0x4514a
+    and 0x45293 are unread), what the 281 five-dword blocks
+    {code, code, code, a value, 0} at stride 0x14 are (they name the
+    builders, every one sits at 1 mod 4, and 0x25970 hands its block
+    0x98310 to 0x74bc0 and 0x74a4c), whether 0x5c320 returns a pointer
+    inside a larger block, whether the lion's own standing query ever
     consults such a per-object array (0x96874 has neither the list pass
     nor a +0x104 verb), what the [x+0x10] queue drives, which classes
     the 29 are by name, 16 of the 23 +0xb0 companion ids, the six

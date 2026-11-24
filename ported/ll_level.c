@@ -10449,12 +10449,14 @@ static int seat_motion_selftest(void)
  * 0x4fb00 tests [obj+0x5c]. And +0x54 is NOT part of that split
  * (PR-368): over the same 186 tables it holds 0x55070 in 124,
  * 0x53df0 in 31, 0x3ddf0 in 29 and one-off writers twice. A 0x3ddf0
- * class runs 0x55070 and then a second pass over its OWN surface
- * records: the header at [obj+0xee] points at a 13-byte-record array
- * held sorted by x, translated by whatever moves the object (0x45200)
- * and bracketed by 0x45380 into the pair 0x455a0 measures (PR-369).
- * Nothing here models that. The legs below model the 155 family with
- * the 0x55070 writer only. */
+ * class runs 0x55070 and then a second pass over surface records it
+ * does not necessarily own: the header at [obj+0xee] is a sub-object
+ * with a class of its own, born empty (0x26060), and its 13-byte
+ * records are held sorted by x, translated by whatever moves the
+ * holder (0x45200) and bracketed by 0x45380 into the pair 0x455a0
+ * measures - and copied whole into every object built from it
+ * (PR-369, PR-370). Nothing here models that. The legs below model
+ * the 155 family with the 0x55070 writer only. */
 static int seat_bracket(const short *sx, int n, int x)
 {
     int i;

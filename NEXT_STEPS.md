@@ -51431,3 +51431,192 @@ GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff
   is what makes the bracket a binary search in the standing query - so the
   surface data has an invariant the engine depends on, and nothing in the
   port states it.
+
+## PR-370 - THE SURFACE RECORDS ARE A SUB-OBJECT: BUILT EMPTY, RE-CLASSED BY A
+## COPY PATH, PART OF A LARGER OBJECT WITH A BASE PART - AND SHARED BY EVERY
+## OBJECT BUILT FROM ANOTHER
+```
+KIND: read
+SUBSYSTEM: the record-array sub-object - the function that builds a header at
+  [obj+0xee], the class of that header (the anchor table 0x98bdc), the verbs
+  that read and write its count, the paths that copy a header from another
+  object, the base part 0x53ff0/0x54030 build under it, and the five-dword
+  blocks that name those constructors (OI-128, OI-129, the F6 thread;
+  continues PR-369).
+ADDRESSES: 0x26060, 0x26065, 0x26083, 0x2608a, 0x260a0, 0x259b0, 0x259c6,
+  0x259d8, 0x259e4, 0x259f2, 0x25970, 0x25980, 0x25994, 0x25fe0, 0x25ff0,
+  0x2fd30, 0x2dd30, 0x53ff0, 0x53ffe, 0x54004, 0x5400b, 0x54012, 0x5401c,
+  0x54026, 0x54030, 0x532c0, 0x53a30, 0x5c320, 0x5c370, 0x74bc0, 0x74be0,
+  0x74a4c, 0x74a1c, 0x98bdc, 0x98bd4, 0x983a4, 0x9839c, 0x98af8, 0x98af0,
+  0x98310, 0x98311, 0x98315, 0x98319, 0x9831d, 0x98321, 0x96499, 0x9649d,
+  0x24aa0, 0x24ab8, 0x24abb, 0x24ad1, 0x24ada, 0x24ae3, 0x24aeb, 0x24af0,
+  0x24b04, 0x24b10, 0x24b1c, 0x24b23, 0x24b2c, 0x1ece0, 0x1ed08, 0x1ed18,
+  0x20200, 0x20203, 0x2020e, 0x2021c, 0x23360, 0x23374, 0x2337f, 0x2338d,
+  0x233a0, 0x96874, 0x9686c, 0x96950, 0xa23b8, 0xa23b0, 0xa2498, 0xa2490,
+  0x98278, 0x23a10, 0x23a20, 0x238e0, 0x55070, 0x54eb0, 0x54e00, 0x23c60,
+  0x3ddf0, 0x45200, 0x45380, 0xa5, 0xa9, 0xad, 0xd6, 0xd8, 0xdc, 0xee,
+  0xf2, 0xf6, 0xfa, 0x8, 0xc, 0x6c, 0x54, 0x58, 0x104, 0x68, 0x394, 0x21,
+  0xce, 0xca, 0x4, 0x89
+NAMES: record array, sub-object, header, builder, base part, base initialiser,
+  copy path, re-class, share by copy, count getter, count setter, request
+  block, five-dword block, surface records, stride 13, x-sorted, LION views,
+  two views, class table, kind id, pr370_ctors.py, pr370_ctors.txt,
+  pr370_descriptors.py, pr370_descriptors.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is this
+  record, the OI-128 rows PR-369 left open about where an array comes from,
+  the HANDOFF section 8 F6 paragraph, and the L15 comment in
+  ported/ll_level.c that called the records the class's "OWN".
+HOOKS: PR-369 established the header shape {[+0] ?, [+4] array, [+8] count}
+  at [obj+0xee], the 13-byte x-sorted records, the translate 0x45200 and the
+  bracket 0x45380 feeding 0x455a0, and the 29 tables that install the 0x3ddf0
+  writer. PR-106 fixed 0x96874 as the LION's class base and PR-99 read the
+  two-view idiom ([obj+8] and [obj+0xc]) at 0x1ed08, which is section (e)
+  below. PR-237 gave the anchor law and the request-block signature 0x98278,
+  PR-368 the second anchor family and the kind-id-is-behaviour law, PR-338
+  the allocator 0x5c320 and the pool manager at ds:0xcef40. PR-366 read the
+  0x3ed70 record-class latch.
+OPENS: what the five-dword blocks of (f) ARE - I counted them and read the
+  one reference to one of them (0x25970, the third field of the block at
+  0x98311, passing 0x98310 to 0x74bc0, which reads [[obj]-4] and hands the
+  block to 0x74a4c, a walker of records whose fields sit at +0 (a word tag,
+  dispatching on a jump table at 0x74a1c for values 0..0xb), +2 (an offset),
+  +6 (a size) and +0xa (a function)); nothing calls 0x26060 or 0x259b0, so
+  the only way into them is such a block; who FILLS an array - nothing here
+  allocates count*13 bytes or stores into [obj+0xf2], and the stride-13
+  multiplies at 0x45012, 0x4505b, 0x4514a, 0x45293 and the level-side
+  0x348a8 remain unread; whether 0x5c320 returns a pointer inside a larger
+  block, which is what 0x24aa0's 0xfa allocation and 0x54030's `add eax,0xd6`
+  would need to both be true; is 0xa23b8 a base class or the class of a
+  nested part - 160 constructors call 0x53ff0 and 38 call 0x54030, and both
+  install that pair, while the derived builders overwrite the same two slots;
+  whether the LION's own standing query reads the array his object carries -
+  his class 0x96874 has no +0x104 verb, so on this evidence it does not; and
+  0x24aa0's first act, asking [[ds:0xcef40]+0x394] and calling its +0x68
+  verb, was not followed.
+CLOSES: PR-369's open item "who fills the header" is narrowed: the header is
+  not an anonymous field trio of the 29 classes but a built sub-object with a
+  class and a kind id of its own, and the path that builds it leaves it
+  empty. It also closes the question of whether an array is private to one
+  object: it is not.
+CORRECTS: PR-369 (my own) on two counts, and three readings of my own during
+  this pass. (1) "a moving class carries its OWN surface" - it does not:
+  0x24aa0 and 0x259b0 copy [src+0xee], [src+0xf2], [src+0xf6] verbatim and
+  0x1ece0, 0x20200, 0x23360 copy [src+0xee], so objects built from another
+  object share one record array and 0x45200's translate changes it for every
+  sharer. (2) The header is not a peculiarity of those 29 tables: it is
+  built by a function of its own and its class 0x98bdc is an ordinary anchor
+  table of the 155 family. (3) My first reading of 0x24aa0 as "one object,
+  two nested views" was wrong - 0x24af0 and 0x24b1c write the SAME slots
+  [eax+8] and [eax+0xc] in straight-line code, so the second pair wins.
+  (4) The note in my working draft that 0x53ff0 "writes below the pointer it
+  is handed, so the layout is not understood" was me mis-reading an ordinary
+  adjustment: its caller is holding a point 0xd6 above the object base, as
+  (b) shows. (5) A draft sentence claiming the count getter appears in the
+  neighbouring class 0x98af8 is dropped: 0x98af8's +0xc is its id getter
+  0x25fd0, not a read of +0xf6. The PR-369 measurements themselves - the
+  header fields, the stride, the sort, the translate, the bracket - are
+  unchanged, and no size claim is made here either (see (g)).
+MEASURED: (a) THE BUILDER (0x26060): the previous body ends with `ret` at
+  0x26055 and 0x2605e is alignment padding, so 0x26060 is an entry point by
+  the boundary test used throughout (the index's `func` table instead puts it
+  inside a body starting at 0x25c90, and the same for 0x23360 at 0x22a70,
+  which is why the boundary test, not the table, is the authority here).
+  Its body: `call 0x53ff0`; `mov [eax+0xee],0x0`
+  (0x26065); `mov [eax+0xf2],0x0` (0x2606f); `mov [eax+0xf6],0x0` (0x26079);
+  `mov [eax+0x8],0x98bdc` (0x26083); `mov [eax+0xc],0x98bd4` (0x2608a);
+  `ret`. A header therefore STARTS EMPTY in all three fields. No `call`
+  instruction in the image names 0x26060; it is named by a data word at
+  0x98311, the first field of a five-dword block - see (f).
+  (b) THE BASE PART, 0x53ff0, read at 0x53ffa-0x5402b: `mov BYTE PTR
+  [eax-0x21],0x0`; `mov [eax],0x0`; `mov [eax+4],0x0`; `mov [eax+8],0x98278`
+  (the request-block signature of PR-237); `mov [eax-0xce],0xa23b8`; `mov
+  [eax-0xca],0xa23b0`; `sub eax,0xd6`; `ret`. 160 `call` sites name it
+  (0x1f2b0, 0x1f987, ..., 0x26060, ..., 0x617b4). Reading the subtraction
+  back, the pointer a caller hands over is [object+0xd6], so those three
+  words are at [object+0xd6], [object+0xda], [object+0xde] and the pair is
+  at [object+8] and [object+0xc] - the two view slots of PR-99. So every
+  object built through it gets the view pair 0xa23b8/0xa23b0 and a request
+  block at +0xd6, and the derived builder then replaces those two slots:
+  0x26060 stores 0x98bdc/0x98bd4 at +8/+0xc two instructions later. 0xa23b8
+  is itself one of the 186 anchor tables (+0x6c = 0x23a10, +0x54 = 0x55070,
+  +0x58 = 0x54eb0, +0xc = 0x2dd30 = `mov eax,ds:0xcf054; ret`) and 0xa23b0
+  is a secondary view (+0x6c = 0x238e0, +0x54 = 0x23a20). 0x54030 is the
+  same shape with a source object (38 call sites): `mov ebx,edx`, `call
+  0x532c0`, `add eax,0xd6`, write {0, 0, 0x98278} at [eax], [eax+4],
+  [eax+8], write 0xa23b8/0xa23b0 at [eax-0xce]/[eax-0xca] (0x54052-0x5405c)
+  and copy [src+0xa5] -> [object+0xa5], [src+0xa9] -> [object+0xa9],
+  [src+0xad] -> [object+0xad] (0x54066-0x5407e). The sibling initialiser
+  0x53a30 installs 0xa2498/0xa2490 instead (+0x54 = 0x53df0, +0x58 =
+  0x23ba0: the other family of PR-368).
+  (c) THE HEADER'S CLASS IS AN ORDINARY ANCHOR TABLE: 0x98bdc holds 0x23a10
+  at +0x6c, 0x55070 at +0x54 and 0x54eb0 at +0x58 - the 155 family of
+  PR-368 - and 0x260a0 at +0xc, which is `mov eax,ds:0xcec28; ret` at
+  0x260a0: a kind id of the seeded set. Its +0x104 is 0x54e00. Its second
+  view 0x98bd4 is a different table: +0x6c = 0x238e0, +0x54 = 0x23a20. So
+  the record array is a first-class engine object with a kind id.
+  (d) THE COUNT IS A VERB, NOT A FIELD: 0x98bdc installs 0x25ff0 (`mov
+  [eax+0xf6],edx; ret`) at +0xd8 and 0x25fe0 (`mov eax,[eax+0xf6]; ret`) at
+  +0xdc - the count written and read through the class, so a subclass could
+  answer it differently.
+  (e) ARRAYS ARE SHARED BY CONSTRUCTION, AND THE LION'S OBJECT HAS ONE.
+  0x24aa0 (an entry point; the next function in the index starts at 0x24b90):
+  asks [[ds:0xcef40]+0x394] and calls that result's +0x68 verb
+  (0x24aad-0x24abb), allocates 0xfa with the tag 0x98278 (0x24ad1-0x24ada),
+  initialises through 0x54030 with [esi+0xee] as the source
+  (0x24ae3-0x24aeb), writes the views 0x983a4/0x9839c at 0x24af0/0x24af7,
+  copies [src+0xee] -> [new+0xee] (0x24afe/0x24b04), [src+0xf2] ->
+  [new+0xf2] (0x24b0a/0x24b10), [src+0xf6] -> [new+0xf6] (0x24b16/0x24b2c)
+  and re-classes to 0x98bdc/0x98bd4 at 0x24b1c/0x24b23. 0x259b0 is the same
+  copy with no allocation: `call 0x54030`, views 0x983a4/0x9839c at
+  0x259b8/0x259bf, the three copies at 0x259c6-0x259de and 0x259f2, and the
+  re-class at 0x259e4/0x259eb. Three entry points give a new object the
+  LION's views and copy the header pointer: 0x1ece0 (allocates 0xf2, then
+  0x1ed08 stores 0x96874, 0x1ed0f stores 0x9686c, 0x1ed18 stores
+  [src+0xee]); 0x20200 (`call 0x54030` with the source, then 0x2020e,
+  0x20215, 0x2021c); 0x23360 (allocates 0xf2, `call 0x54030`, reads
+  [src+0xee] at 0x23379, then 0x2337f, 0x23386, 0x2338d; the LION's id
+  getter 0x233a0 is the next body after it). Those are the three sites PR-99
+  read as the two-view idiom; what was not known then is that they carry the
+  record-array header too, so a LION-class object always has one and it
+  aliases another object's. 0x23360 is also named by the word at 0x96950 =
+  [0x96874+0xdc], a slot of the LION's own table.
+  (f) FIVE-DWORD BLOCKS, CENSUS (pr370_descriptors.py): the word at 0x98311
+  names 0x26060, 0x98315 names 0x259b0, 0x98319 names 0x25970, 0x9831d
+  holds 0xfa and 0x98321 holds 0. That pattern - {code, code, code, a value
+  in 0x10..0x2000, 0} at stride 0x14 - occurs 281 times, in 52 runs (the
+  longest: 32 records from 0x9b62d, 30 from 0x96421, 24 from 0x99371), and
+  EVERY block address is 1 mod 4 while the class tables are 0 mod 4; 219 of
+  the 281 addresses lie between the first and last class table, so the blocks
+  are interleaved with them. 64 of the 71 distinct fourth fields also appear
+  as the constant of a `mov eax,SIZE` before a `call 0x5c320`, but 280 of
+  the 281 blocks contain no allocation at all inside their own three
+  functions, so that field is NOT proven to be a size and no size claim is
+  made. 224 of the 281 name at least one known class table through a vtable
+  store in one of their three functions, and all 29 of the 0x3ddf0 classes of
+  PR-368 are named that way (0x9957c by the block at 0x99371, 0x9e970 by the
+  block at 0x9e379, and so on) - which says every one of them has a
+  constructor, not what any object costs.
+  (g) LIMITS: [reg+0xf2] and [reg+0xf6] are named by 199 and 63 index rows,
+  but most belong to other classes' fields - compared as two plain values at
+  0x2f47d, 0x30052, 0x32f07 - so the record reading holds only for objects
+  that reach 0x45200, 0x45380, 0x453d2 or the verbs of (d).
+GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff includes a
+  comment fix in ported/ll_level.c, so what was run anyway: make rc=0 with 0
+  warnings and make verify-level rc=0 - 10 (ok) lines, the legs unchanged;
+  the index was regenerated with this record in the tree before the runs.
+```
+
+- WHY. The port keeps one surface table per level and measures every object
+  against it. The engine hands out shareable record objects instead: the
+  header is an object with its own class and kind id, an object built from
+  another points at the same records, and whichever one moves translates
+  them for every sharer. That is how PR-369's 29 classes can move a surface
+  at all - they are not copying terrain, they own a record object the things
+  standing on it also point at.
+
+- WHAT SURPRISED ME. The header is born empty. A function whose whole body
+  is three zeroes and two view stores - so nothing in that path fills an
+  array from the level, and whatever fills one is code no record has read
+  yet. And the LION's own object carries the header: PR-99 read those three
+  constructors and stopped at the view stores, while the very next field,
+  [obj+0xee], is a surface-record header.

@@ -5806,17 +5806,27 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         because +0x6c = 0x23b50 anchors 33 more whose +0x54 and +0x6c
         are a bare `ret`: classes with no position of their own, and
         the ones the 31-family's +0xb0 companion ids name. Those 29
-        0x3ddf0 classes run 0x55070 and then ask again for offsets read
-        off the point lists at [obj+0xee]/[obj+0xfa], translating the
-        list through 0x45200; the port models none of that and its legs
-        stay the 0x55070 half of the 155. PR-369 read what those 29
-        keep: a record array behind the header at [obj+0xee] (`[+4]` is
-        the array, `[+8]` the count, 13-byte records with x at +0 and y
-        at +4) held SORTED BY x, translated by the delta that moves the
+        0x3ddf0 classes run 0x55070 and then ask again with the offsets
+        at [obj+0xfa]/[obj+0xfe] added to the point their own +0x6c
+        returns, store it at [obj+0x106]/[obj+0x10a] and translate a
+        record array through 0x45200; the port models none of that and
+        its legs stay the 0x55070 half of the 155. PR-369 read what
+        they keep: behind the header at [obj+0xee] (`[+4]` is the
+        array, `[+8]` the count, 13-byte records with x at +0 and y at
+        +4) held SORTED BY x, translated by the delta that moves the
         object through 0x45200 and bracketed by 0x45380, whose two
-        bracketing records are handed to 0x455a0 - the port's c1. A
-        moving class carries its own surface; the port measures every
-        class against the level's array and gives those 29 a frozen one.
+        bracketing records are handed to 0x455a0 - the port's c1.
+        PR-370 read the header itself: a sub-object with a class
+        (0x98bdc, an anchor table of the 155 family with a kind id and
+        count get/set verbs at +0xd8/+0xdc), built EMPTY by 0x26060 on
+        top of the base part 0x53ff0 lays down (views 0xa23b8/0xa23b0,
+        a request block at [obj+0xd6]), and copied field-for-field by
+        0x24aa0, 0x259b0, 0x1ece0, 0x20200 and 0x23360 - three of them
+        the sites PR-99 read as the LION's two-view idiom, so a LION
+        object always carries a header aliasing another object's
+        array. The port measures every class against the level's array
+        and gives those 29 a frozen one where the engine has a
+        shareable record object.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the
