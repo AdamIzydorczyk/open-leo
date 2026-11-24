@@ -53245,3 +53245,111 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
 - WHAT SURPRISED ME. That a handler sets bit 0x40 of the link byte at
   [obj+0x66] before the load call, so the companion bookkeeping of
   PR-376 is partly done by the request, not by the class.
+
+## PR-383 - THE COMPANION VERBS ARE ASKED OF THE COMPANION: +0xdc AND
+## +0xe0 DISPATCH 18 AND 13 TIMES, ONCE THROUGH THE OBJECT AT [obj+0x112],
+## AND THE 25 LOAD REQUEST HANDLERS ARE THEMSELVES LOAD VERBS OF 1-6 TABLES
+
+```
+KIND: read
+SUBSYSTEM: who asks the accept/link verb pair of PR-377 and on which
+  object, and where the request handlers of PR-382 are entered from
+  (OI-128, OI-129, the F6 thread; continues PR-382, PR-381, PR-377).
+ADDRESSES: 0x50c70, 0x50c8a, 0x50c92, 0x50ca1, 0x50cb8, 0x3b570, 0x3b8a0,
+  0x3b8b7, 0x3b8ca, 0x3b8ea, 0x24440, 0x24d00, 0x266b0, 0x28d20,
+  0x2e2c0, 0x2fb30,
+  0x30070, 0x366d0, 0x36d90, 0x41370, 0x41a50, 0x507e0, 0x50973, 0x50c70,
+  0x60fe0, 0x73ed0, 0x27660, 0x27980, 0x27f30, 0x283e0, 0x3d750, 0x4c8a0,
+  0x4b500, 0x4bd30, 0x553e0, 0x1ee20, 0x24e90, 0x26780, 0x288e0, 0x2c4a0,
+  0x2c910, 0x2c9f0, 0x2f140, 0x2f2d0, 0x2f4a0, 0x2f8c0, 0x2f9e0, 0x2fa80,
+  0x30670, 0x34495, 0x349d0, 0x36b50, 0x381d0, 0x3a000, 0x3a170, 0x3b570,
+  0x3bb40, 0x3c110, 0x3d440, 0x3e470, 0x112, 0x118, 0xb1, 0x50, 0xdc,
+  0xe0, 0x100, 0x104, 0x78, 0x14, 0x5c
+NAMES: accept verb, link verb, companion ask, type code, candidate list,
+  request verb, double duty verb, pr383_verbs.py, pr383_verbs.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines about who asks the companion verbs, and
+  the HANDOFF section 8 F6 paragraph. Nothing under ported/ is touched,
+  so only the light gate applies.
+HOOKS: PR-377 found the accept/link pair installed in 64 of the 219
+  tables and left open who calls it and who links the 6 owners without
+  it; PR-376 showed the companion pointer at [obj+0x112]; PR-382 found
+  the 27 request-handler functions calling the base load verb and left
+  open how they are entered; PR-381 measured the dispatch census.
+OPENS: what the type codes mean - the dispatcher at 0x3b8a0 requires the
+  field +4 of element [obj+0x5c] of the array at [obj+0x50] to be 2
+  before asking +0xe0, and 0xc before asking +0xdc; the full code table
+  and what element indexes 5 and 6 are; the verb
+  [T+0x118] applied to the accepted companion at 0x50ca1; when the
+  placement damage of the asker is copied into the companion (only when
+  the companion's own [obj+0xb1] is exactly 0x14); and how a load verb
+  is actually invoked, since the +0x78 slot is dispatched at only 4
+  sites (0x4b500, 0x4bd30, 0x553e0) while the same value is installed
+  in 219 tables - the entry mechanism for the load request is still
+  unnamed.
+CLOSES: PR-377's "who links the 6 link-free owners", in part: the accept
+  verb at +0xdc is dispatched at 18 sites and the link verb at +0xe0 at
+  13, and at 0x50c8a it is dispatched through the CLASS TABLE OF THE
+  COMPANING OBJECT ([obj+0x112]+8), not through the asker's - so a class
+  that carries no accept verb can still be linked, because it is its own
+  companion that is asked, and the asker only has to hold the pointer.
+  Also closes PR-382's "how are the request handlers entered": they are
+  class verbs - all 25 of them are installed in 1-6 class tables, and
+  23 of them at the load-verb slot +0x78, so the load request runs as
+  the class's load verb which then calls the base reader.
+CORRECTS: PR-382's paragraph (a) implied the request handlers are
+  separate from the class's load path; they are the load path: 0x2c4a0,
+  0x2c9f0, 0x349d0, 0x3e470, 0x3b570 and the others are installed as
+  verbs and, in 15 cases, exactly at the load-verb slot +0x78. The
+  picture in that record - handler calls load verb - is right, but the
+  handler is itself reached as a verb, not from somewhere else.
+MEASURED: (a) THE COMPANION VERBS ARE ASKED OF THE COMPANION
+  (pr383_verbs.py). 0x50c70: with ebx == 0 it reads edx = [obj+0x112]
+  (PR-376's companion), and if set calls `call DWORD PTR [[edx+8]+0xdc]`
+  - the accept verb of the COMPANION's class. The returned object is
+  then used as `this` for `[asker T+0x118]`, and if the companion's
+  placement damage [obj+0xb1] is exactly 0x14 the asker's [obj+0xb1] is
+  copied into it. So the pair is installed on a class because that class
+  is asked when it is the one being linked.
+  (b) A CODE-SELECTED DISPATCHER. The function at 0x3b8a0 (the coarse
+  `func` table attributes it to 0x3b570, which is why the census named
+  the wrong host) calls 0x40030, then reads edx = [obj+0x5c] and uses it
+  as an INDEX into the array at [obj+0x50]: when the index is 5 it
+  requires that element's field +4 to be 2 and calls [own class
+  T+0xe0]; when the index is 6 it requires the field +4 to be 0xc and
+  calls [T+0xdc]. So [obj+0x5c], the field PR-380 noted being compared
+  with 6 and 9, is a slot index into the object's own candidate array,
+  and the element's +4 word is a type code. Three other hosts (0x36d90,
+  0x30070, 0x50973) call both verbs in the same function; +0x100 and
+  +0x104 - the same pair at another base - are dispatched at 2 and 4
+  sites.
+  (c) THE HANDLERS ARE VERBS. Each of the 25 request-handler functions
+  of PR-382 is installed in 1 to 6 class tables: e.g. 0x2c4a0 at
+  +0x2d8/+0x21c/+0x164/+0x78, 0x349d0 at +0x240/+0x160/+0x78/+0x2e0,
+  0x3b570 at +0x298/+0x188/+0x78; 23 of the 25 hold the load-verb slot
+  +0x78 - all but 0x2f4a0 and 0x34495, the last of which is not a
+  function entry. Three are also installed at +0x104, the second member
+  of the companion pair (0x381d0, 0x3bb40, 0x3e470). Two are also called
+  by name (0x2f4a0 from 0x2f576, 0x3d440 from 0x28682). Their other
+  slots differ per table, so the same handler serves as different verbs
+  of different classes - the same shape PR-380 found for the property
+  readers.
+  (d) THE LOAD VERB IS STILL NOT DISPATCHED. The +0x78 slot is called
+  indirectly at exactly 4 sites, all inside 0x4b500, 0x4bd30 and
+  0x553e0; every other use of a load verb is a direct `call` of the
+  specific function, which is what PR-382 measured.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port has no notion of "this object is willing to be linked to
+  another"; PR-377 found the switch and this record shows which way it
+  points: the question is put to the companion's own class, so being
+  linkable is a property of being the kind of thing that can be linked,
+  not of the object that initiates. That is the shape the port's
+  companion handling has to take.
+
+- WHAT SURPRISED ME. That the request handlers double as load verbs: the
+  engine does not have a separate loader entry point per class, it has
+  one verb slot that the request happens to call.

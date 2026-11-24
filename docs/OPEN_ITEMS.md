@@ -5839,15 +5839,24 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     property readers (their offsets are dispatched only from inside the
     load verbs, and the same functions also have direct call sites),
     what the real load test is when 181 tables pass the +0x9c gate
-    unconditionally, and which requests the 27 handler functions that
-    call a load verb implement (0x1ee20, 0x24e90, 0x26780, 0x288e0,
-    0x2c4a0, 0x2c9f0, 0x2f140, 0x349d0, 0x3e470, 0x3b570 and the rest)
-    - none of them is called by name, and none contains a token compare,
-    so the record text arrives through a request, never through the
-    factory;
+    unconditionally. PR-383 answered the request-entry question: those
+    25 handler functions ARE class verbs - every one is installed in
+    1-6 class tables and 23 hold the load-verb slot +0x78 themselves,
+    so the load request runs through the class's own load verb; the
+    base reader 0x552e0 is reached by direct call and the only dispatch
+    at +0x78 is the 4 sites in 0x4b500, 0x4bd30 and 0x553e0, which
+    leaves the ENTRY of a load request unnamed. PR-383 also settled the
+    direction of the companion verbs: the accept verb at +0xdc is asked
+    of the COMPANION's class (0x50c8a dispatches through
+    [obj+0x112]+8), and 0x3b8a0 uses [obj+0x5c] as an index into the
+    array at [obj+0x50], asking +0xe0 when element 5's +4 word is 2
+    and +0xdc when element 6's is 0xc. Still open there: the type-code
+    table, what indexes 5 and 6 are, and the verb [T+0x118] applied to
+    an accepted companion;
     what 0x3e060's [obj+0x116] flag from
     a signal byte is, and what 0x1f330/0x1f590 test
-    and what [obj+0x5c] == 6/9 selects, the six scanner sites whose
+    and what [obj+0x5c] == 9 selects (6 is a candidate-array index,
+    PR-383), the six scanner sites whose
     format is not pushed in front of the call, the eight askable classes
     with no authored token (their ctor stores are at 0x1ff15, 0x1e0a6,
     0x22ee5, 0x2413d, 0x269c2, 0x2703e, 0x2bfd6, 0x2dfa0, 0x3204d,

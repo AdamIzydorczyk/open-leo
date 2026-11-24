@@ -5892,7 +5892,10 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         askable load verb 0x50f80 asks +0xd0 with [obj+0xb1], the
         placement damage; across the image the +0x70 facing verb is
         dispatched at 215 sites while the load verb is dispatched at 4;
-        and 32 of
+        PR-383 then found who enters those paths - the request handlers
+        are themselves class verbs (23 of the 25 hold +0x78), and the
+        accept verb at +0xdc is asked of the companion's own class,
+        through [obj+0x112]+8; and 32 of
         the 37 replace the base ask hook 0x45230 while the five
         second-family owners keep it. The two slots below each block are
         per-class functions taking [obj+0xc] as this (0x206f0 opens `sub
