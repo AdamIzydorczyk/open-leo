@@ -5610,6 +5610,15 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         {x, y} pointer the requester's class verb +0x6c returns - so
         the crossing is an arithmetic question now, and the missing
         input is that point, not the law.
+        PR-349 supplies it: that verb is `add eax,0x89; ret` (0x23a10)
+        for every lion class, for KAMIEN, PALMA, KATAPULT and SPLYW,
+        so the query samples the position snapshot of PR-159 at
+        [obj+0x89], and the clearance that REJECTS is measured there
+        (0x45462, 0x45468) while the bracket and the incumbent test
+        use the aimed point (0x4548b, 0x45491); STRUMIEN's +0x6c is a
+        bare `ret` (0x23b50) and samples the live position. The law is
+        fully measured; what is left for F6 is whether any ZARIA.01
+        position satisfies it, which is a port leg and not a read.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

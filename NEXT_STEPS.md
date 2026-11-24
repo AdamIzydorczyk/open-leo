@@ -48252,3 +48252,90 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   instruction sequence quoted at paragraph (a), and the pairing at
   paragraph (c) is 0x4543c-0x45468 of /tmp/opencode/pr344_45400.txt.
 ```
+
+## PR-349 - THE SAMPLE POINT THE SURFACE QUERY USES IS THE OBJECT'S OWN
+## POSITION SNAPSHOT AT [obj+0x89]: THE CLASS VERB +0x6c IS `add eax,
+## 0x89; ret` FOR EVERY LION, FOR KAMIEN AND FOR PALMA, KATAPULT AND
+## SPLYW, AND THE ONE CLEARANCE THAT REJECTS IS MEASURED THERE
+```
+KIND: read
+SUBSYSTEM: F6's crossing arithmetic - the input PR-348 said was
+  missing: what the class verb +0x6c returns, and which of the two
+  sampler calls of 0x45400 uses it.
+ADDRESSES: 0x23a10, 0x23a15, 0x23a20, 0x23a50, 0x23a54, 0x23b50,
+  0x23b80, 0x45320, 0x45340, 0x4535f, 0x4536b, 0x45380, 0x45391,
+  0x4539f, 0x45400, 0x4541f, 0x45434, 0x45439, 0x45462, 0x45468,
+  0x4546d, 0x45477, 0x4547d, 0x4548b, 0x45491, 0x45496, 0x4549a,
+  0x454a8, 0x455a0, 0x455b1, 0x455c8, 0x534e0, 0x96960, 0x96a88,
+  0x96c38, 0x96d1c, 0x96ddc, 0x96e94, 0x97a98, 0x9b4d4, 0x89,
+  0x8d, 0x75, 0x6c, 0x2c
+NAMES: sample point, position snapshot, clearance, segment sampler,
+  bracket, aimed point, held surface, PALMA, KATAPULT, SPLYW,
+  STRUMIEN, KAMIEN, TLewZaria, TLewZariaB, TLewKadmar2, OI-072,
+  OI-123, OI-124, PR-159, F6, pr349_23a10.txt
+CODE: no: nothing in ported/ or the Makefile moved.
+HOOKS: the sampler 0x455a0 and the query 0x45320/0x45400 (PR-336,
+  PR-344, PR-348), the position snapshot at [obj+0x89] of PR-159, the
+  seat classes of PR-335/PR-342. No port behaviour moves.
+MEASURED: (a) THE VERB IS AN OFFSET. Reading slot +0x6c of the class
+  views: TLewZaria 0x96960, TLewZariaB 0x97a98 and TLewKadmar2
+  0x9b4d4 - every lion this ladder names - and KAMIEN 0x96a88, PALMA
+  0x96c38, KATAPULT 0x96d1c and SPLYW 0x96ddc all hold 0x23a10,
+  which is two instructions: `add eax,0x89` (0x23a10) and `ret`
+  (0x23a15). The point the surface query samples is therefore
+  obj + 0x89 - the position snapshot of PR-159 - and its x is at
+  [obj+0x89], its y at [obj+0x8d], exactly the {x, y} pair the
+  sampler reads at [ebx] and [ebx+4] (PR-348). STRUMIEN 0x96e94 is
+  the exception: its +0x6c is 0x23b50, a bare `ret`, so it returns
+  the object and the query samples the LIVE position at [obj+0] and
+  [obj+4]. Two neighbours of the same verb show the pattern: 0x23a20
+  is `add eax,0x75; ret` and 0x23a50 passes [obj+0x75] to 0x534e0.
+  (b) WHICH CALL USES IT. 0x45400 keeps its own ebx - the caller's
+  aimed block {x + [obj+0xca], y + [obj+0xce]}, built by 0x45320 at
+  0x4535f-0x4536b - in ebp at 0x4540a. The bracket test at 0x4541f
+  uses that aimed point, and the second sampler call at 0x45491 uses
+  it too, because 0x4548b restores `mov ebx,ebp`. The FIRST sampler
+  call, at 0x45468, is the one whose sign decides the rejection at
+  0x4547d, and it runs with ebx = the +0x6c result (0x45434-0x45439
+  fetch the class verb, 0x45462 `mov ebx,eax`): the rejection
+  "this surface is below me" is measured at the SNAPSHOT, not at the
+  aimed point and not at the live position.
+  (c) WHY THAT MATTERS FOR THE CROSSING. The snapshot of PR-159 is
+  written by the anchor's snapshot pass, not by the object's own
+  motion, so at the moment of the ask the engine compares the seat's
+  slope against where the lion was when the frame's positions were
+  published. With the arithmetic of PR-348 - `ground(x) - point.y`
+  with a division truncated toward zero - the crossing leg now has
+  every input: the record pair from the bracket index, the slope, the
+  snapshot point at [obj+0x89] for the rejecting call, the aimed
+  point for the incumbent test, and the waiver of 0x45479 keyed to
+  [obj+0xa9]. Nothing in the law is unmeasured; what is unmeasured is
+  whether ZARIA.01's tables and positions ever satisfy it.
+OPENS: what writes [obj+0x89] and [obj+0x8d] in a shipped frame and
+  how far they can lag the live position - PR-159 read the snapshot
+  pass but not its ordering against the object step; whether the seat
+  classes' own asks (PALMA's +0x6c is the same 0x23a10) sample their
+  own snapshots, which would make a seat ask about itself from its
+  last published position; what [obj+0x75] is, the block the
+  neighbouring verbs use; and whether STRUMIEN's live-position answer
+  is what lets the wind carry it, since it is the only seat class
+  that differs here.
+CLOSES: PR-348's and PR-344's open item on the +0x6c verb - it
+  returns the sample point, at obj+0x89 for the lions, KAMIEN, PALMA,
+  KATAPULT and SPLYW and at the object itself for STRUMIEN - and with
+  it the last input OI-124 said was missing before the crossing could
+  be computed. The crossing itself, whether any ZARIA.01 position
+  satisfies the law, is still unmeasured: that is the port leg this
+  read was written for.
+CORRECTS: PR-344's paragraph (c), which said the ask "is aimed where
+  the requester is MOVING, not where it stands" as if that were the
+  whole story: the aimed point drives the bracket and the incumbent
+  test, but the clearance that rejects is evaluated at the snapshot
+  point from the +0x6c verb.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: the verb is `dis 0x23a10 6`
+  and the slot reading is the class-view table quoted at paragraph
+  (a), dumped in /tmp/opencode/pr349_23a10.txt; the two call sites
+  are 0x45462/0x45468 and 0x4548b/0x45491 of
+  /tmp/opencode/pr344_45400.txt.
+```

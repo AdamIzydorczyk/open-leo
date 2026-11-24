@@ -4999,6 +4999,16 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     second open item. A ZARIA.01 crossing leg therefore has to
     reproduce that expression and its truncation; what is still
     unmeasured is the point +0x6c returns for the lion and for PALMA.
+    AND IT IS NOW MEASURED (PR-349): that verb is `add eax,0x89; ret`
+    (0x23a10) for every lion class, for KAMIEN and for PALMA,
+    KATAPULT and SPLYW, so the query samples the position snapshot of
+    PR-159 at [obj+0x89]/[obj+0x8d] - and it is that point the
+    REJECTING sampler call uses (0x45462, 0x45468), while the aimed
+    point and the incumbent test use the caller's block (0x4548b,
+    0x45491). STRUMIEN is the one difference: its +0x6c is a bare
+    `ret` (0x23b50) and samples the live position. Every input of the
+    crossing law is now known; the open half is whether any ZARIA.01
+    position and table satisfy it, which is a port leg.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that
