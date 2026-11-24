@@ -5546,8 +5546,18 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         KAMIEN/KILOF_PL - and leg L14 measures all three on ZARIA.01's
         own PALM.MOV/KAT.MOV lists and table lines. That does not carry
         the lion anywhere - the cycle returns the table to its authored
-        place - so F6's crossing still waits on the [obj+0x89]
-        attachment of OI-123.
+        place. PR-343 then read the half OI-123 asked about and voided
+        its premise: an object's messages are a queue at [obj+0x10]
+        drained into its class verb +0x10, the held-surface attach 0x1b
+        is the base handler's seventh value, it is posted at five sites
+        - one of them a verb of TLewKadmar2, the only one with a
+        payload - and the field is [obj+0xa9] at 0x54624, not
+        [obj+0x89]. No seat class dispatches it: PALMA, KATAPULT and
+        SPLYW take 0x53770 at +0x10, STRUMIEN 0x52bb0, and 0x52bb0
+        returns 0x1b unhandled; ZARIA's own lion forwards nothing to
+        the base either. So the attachment is real but is not this
+        level's mechanism, and the named step before F6 is now OI-127,
+        the entry array at [0xcef40+0x74] that the attach carries.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

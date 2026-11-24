@@ -4843,11 +4843,10 @@ OI-122: the three class tables that hold the seat verbs are named
     to explain: the seat family is installed, on the two seat
     objects of ZARIA.01.
 
-OI-123: who posts the message whose opcode word is 0x1b and whose
-  payload word is a surface object - the only other writer of the
-  held-surface slot [obj+0xa9]
-  status: OPEN
-  origin: PR-336 (the seat-ask chain read)
+OI-123: what the 0x1b attach attaches, and why no shipped seat object
+  and no ZARIA lion takes it - the held-surface slot [obj+0xa9]
+  status: PARTIAL
+  origin: PR-336 (the seat-ask chain read), answered in part by PR-343
   notes: [obj+0xa9] is the surface an actor holds. PR-336
     enumerated every writer over the full instruction index: the
     physics tail copies it from the query result [obj+0xe6] at
@@ -4857,32 +4856,59 @@ OI-123: who posts the message whose opcode word is 0x1b and whose
     is a full attach: 0x5460e calls the held surface's +0x4
     (detach) when one is held, stores [arg+8] - the message's
     payload dword IS the surface object - and calls its +0x0
-    (attach) when non-null. 0x54560 is a standard slot: 87 class
-    tables hold it at +0x88; the seat classes 0x96d1c/0x96c38 do
-    NOT - PR-338 reads 0x534c0 at that slot of both, the earlier
-    'KATAPULT's 0x96d1c among them' being the shifted read again -
-    and the seat family's own tables hold 0x534c0 there instead. The
-    dispatch that reaches it is 0x53480, which calls [class+0x88]
-    only when [class+0x84] finds no handler for the message NAME
-    (0x5348d-0x534ab), so the poster is a NAMED message with no
-    name handler. Nobody writes that opcode: the only two memory
-    stores of 0x1b in the image are 0x4a1fd, which writes it to
-    `[ebp+8]` as a payload with `[ebp+4] = 0` before posting a
-    named message (eax = 0xcf1a8, call 0x5b8f0), and 0x54ec8,
-    which builds {0, 0x1b, 0, 0} for the class +0x10 verb - the
-    same slot 0x1e5c0's {0, 1, 0, +-1} seat-move block uses, a
-    third opcode namespace. The `mov edx,0x1b` sites at
-    0x1ea47/0x1ead1 are the signal poster 0x52b10 (27 =
-    AC_BUTLA, then 13 = AC_DUP_CD with ecx 100), another
-    namespace again. WHY IT MATTERS: 0x45400's first test is
-    skipped only when [obj+0xa9] is the very point being asked
-    about, and PR-336 measured that at shipped coordinates that
-    test rejects every position ZARIA.01 can put the lion in -
-    so F6c needs either this attach path running first, or the
-    seat family installed so its own ask answers. WHAT WOULD
-    CLOSE IT: the poster of that message, or proof that the
-    opcode 0x1b here is the +0x10 namespace's, in which case
-    0x54624 is reachable through the seat move path instead.
+    (attach) when non-null.
+    PR-343 READS THE MECHANISM AND VOIDS THIS ROW'S CENTRAL CLAIM.
+    The verb is CLASS SLOT +0x10, and a message is queued, never
+    called: 0x52b10 links a {0, value, argB, argC} node onto the tail
+    of the list at [obj+0x10] (0x52b13-0x52b3f) and the drain 0x52b50
+    hands each node to [[obj class]+0x10] (0x52b67) and frees it;
+    0x52b80 runs that drain and is called from the object walk
+    0x4ba90. 0x54560 is the BASE of the verb, at +0x10 of 81 of the
+    176 ctor-pattern views and at +0x88 of none - this row's '87
+    tables at +0x88' is wrong on both counts. Its value table is 2,
+    3, 4, 6, 8, 0xd and 0x1b, everything else to 0x53770, and the 20
+    direct calls of it are subclass fall-throughs and forward thunks,
+    not posts. The named-message dispatch this row found at
+    [class+0x84]/[class+0x88] is a different, real namespace; it is
+    not what carries 0x1b.
+    NOBODY WRITES THAT OPCODE IS FALSE: five sites post it. 0x1ea52
+    is SPLYW's ask verb (the view 0x96ddc at +0x78) with payload 0;
+    0x1eadc is STRUMIEN's (0x96e94 +0x78), payload 0; 0x36533 is the
+    +0xe0 verb of the lion class 0x9f170, payload 0; 0x45d28 is a
+    method stored only at the data slot 0xa11d0 and posts to the
+    object at [edi]; and 0x2c252 is the +0x90 verb of TLewKadmar2 -
+    the only one carrying a payload, the best-scoring entry of the
+    pair of scans 0x4b6d0/0x4b760 run over [0xcef40+0x74], which is
+    OI-127. The other two
+    `mov edx,0x1b` sites this row named, 0x4a1fd and 0x54ec8, write
+    0x1b as a payload, not a value word, as it said.
+    WHO CAN TAKE IT: PALMA's 0x96c38, KATAPULT's 0x96d1c and SPLYW's
+    0x96ddc hold 0x53770 at +0x10 and STRUMIEN's 0x96e94 holds
+    0x52bb0; 0x53770 answers value 0x10 only with the constant
+    0x8138764 and otherwise calls 0x52bb0, whose table handles 1 (a
+    move), 0xe and 0x21 and returns every other value UNHANDLED. So
+    no seat object ever takes the attach. ZARIA's own lion does not
+    either: TLewZariaB 0x97a98 holds 0x1e130 at +0x10 and that verb
+    forwards nothing. Five lion classes - 0x98f34, 0x9b4d4, 0x9f540,
+    0xa0624, 0xa2218 - hold 0x50d60, whose table covers values
+    9..0x15 and forwards the rest, 0x1b included, to the base.
+    Also corrected: the ask reads the held surface at [obj+0xa9]
+    (0x45471) and waives its negative-clearance rejection per record
+    when the asked surface IS the held one (0x45479 `cmp esi,ebx; je
+    0x45481`); there is no first test at [obj+0x89], and 0x45400's
+    real first test at 0x4540c compares the FIRST RECORD'S FLAG BYTE
+    of PR-335 with the ask's mode dword.
+    WHY IT MATTERS: the attach exists, is reachable, and is written
+    only by a lion-class verb under a state gate - so the held-surface
+    half of the seat chain is real but belongs to KADMAR II, not to
+    ZARIA.01, and PR-336's measured rejection at shipped coordinates
+    still stands as the reason ZARIA's chain does not carry the lion.
+    WHAT WOULD CLOSE IT: what the entries at [0xcef40+0x74] are and
+    what their +0/+4/+0x14 verbs do (OI-127); whether the state gate
+    of 0x2c1cd-0x2c1ef - held surface nonzero, state index 1, the
+    flag bit 0x40 at [obj+0x64] - ever holds in a shipped level; and
+    the flag-byte test at 0x4540c measured over the shipped seat
+    tables, which decides whether their ask answers at all.
 
 OI-124: ZARIA.01's first chasm has no measured carrier
   status: OPEN
@@ -4902,8 +4928,12 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     0x1e630 at +0xfc. The seat chain IS the mechanism the shipped
     game has at that place. What still keeps the crossing un-
     modelled is the rest of PR-336's read, unchanged by this:
-    0x45400's first test is a clearance at the requester's own
-    held anchor [obj+0x89], and at ZARIA.01's coordinates it
+    0x45400 grants its waiver only when the surface being asked
+    about is the one the requester already holds - [obj+0xa9], read
+    at 0x45471, tested per record at 0x45479; this row's "first
+    test ... at the requester's own held anchor [obj+0x89]" was
+    wrong on the field and on the position of the test, PR-343
+    read both - and at ZARIA.01's coordinates it
     rejects the lion at every position the level can put him in;
     the only writer of that attachment apart from the query's own
     copies is 0x54624, the case [arg+4] == 0x1b of the event verb
@@ -4923,14 +4953,18 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     authored heights come from the four placements alone and the
     crossing stays out of reach. The port's walk (2 px a tick) and
     jump (measured vertical) cannot cross either way.
-    WHAT WOULD CLOSE IT: the poster of the 0x1b message that
-    attaches a requester to a surface (OI-123) - with it, the
-    chain of this level's own objects becomes the carrier, a
-    carrier that returns to its authored place every row cycle,
-    and the question is the 28 px against that cycle's excursion
-    (OI-125); without it, the carrier is something else, and the
-    candidates are the .plt ground of the chasm read as a slope or
-    a scripted chain (T6).
+    WHAT WOULD CLOSE IT: PR-336's question - the poster of the 0x1b
+    message that attaches a requester to a surface - is ANSWERED and
+    it is not this level's: five sites post it, the only one with a
+    payload is a verb of TLewKadmar2 (0x9b4d4 +0x90), and no seat
+    class and no ZARIA lion dispatches the value at all (PR-343). So
+    the carrier of this chasm is still unmeasured. What would close
+    it: what the entry array at [0xcef40+0x74] is and whether
+    ZARIA.01 has any of those entries (OI-127); if not, the carrier
+    is something else, and the candidates are the .plt ground of the
+    chasm read as a slope or a scripted chain (T6). The seat chain's
+    own motion is now ported (PR-342) and returns to its authored
+    place every row cycle, so the 28 px is not coming from it.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that
@@ -5039,3 +5073,41 @@ OI-126: the golden-master menu pose-set pin is a wall-clock capture, so
     of the law; or pin frame indices as well as the set, so a truncated
     capture reads as a gap and not as a missing pose. Then re-measure
     this leg over several -j runs of one tree.
+
+OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
+  its code blocks, and the group it mirrors
+  status: OPEN
+  origin: PR-343 (the object message queue read)
+    The one payload-carrying 0x1b post, 0x2c252, hands over what
+    0x4b760 wrote to its out-parameter: not an object pointer but an
+    ENTRY ADDRESS inside the array at [game anchor 0xcef40 + 0x74],
+    scanned for [anchor+0x80] entries at stride 0xc (0x4b78c-0x4b7d5).
+    Each entry's first word is a CODE TABLE, not an object: 0x4b7ad
+    calls `[[entry]] + 0x14` with the id that the requester's own
+    class verb +0x6c returned (0x4b7a3), and an entry counts only if
+    that scores above 0 and below the running best. 0x5460e, the
+    0x1b arm, uses the same table the other way: it calls
+    `[[old entry]] + 4` before replacing (0x5461e) and the code AT
+    `[[entry]]` after (0x54632), both with edx = the object. So an
+    entry is a provider record with +0 attach, +4 detach and +0x14
+    score - and 0x45400's waiver at 0x45479 compares that same slot
+    against a SURFACE OBJECT pointer, which is the conflict to settle.
+    0x4b6d0 is the same scan with the opposite sign: it keeps the most
+    NEGATIVE score from a start of 0x80000001 (0x4b720-0x4b737) where
+    0x4b760 keeps the most positive from 0x7fffffff, and the caller
+    accepts only a score above -5 or below 5 (0x2c209, 0x2c230).
+    0x5da60 shows where the array comes from: it rebuilds the
+    mirrors at [anchor+0x6c..0x78] and [0x7c..0x80] from the anchor's
+    group heads at [0x14]/[0x18]/[0x1c]/[0x20] and their counts at
+    [0x24]/[0x28]/[0x2c] - the same group-array mechanism the object
+    walk 0x4ba90 uses for the heads at [0x58..0x64]. 0x4a621/0x4a63f
+    zero the pair.
+    WHY IT MATTERS: this is the object the lion would be standing on
+    if the attach path ran, and the only F6 candidate that is written
+    by code rather than assumed. Whether ZARIA.01's chasm can use it
+    depends entirely on what that group is.
+    WHAT WOULD CLOSE IT: which of the four group heads the mirror at
+    +0x74 follows and what fills that group - the installer or the
+    level record that creates those entries; the three verbs of the
+    entry code blocks; and whether [obj+0xa9] holds such an entry or
+    a surface object, which 0x45479 and 0x54632 read differently.

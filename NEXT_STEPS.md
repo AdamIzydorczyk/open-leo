@@ -47404,3 +47404,201 @@ GATE-FIXTURE-FREE: rc=0 13 (ok) + 23 named with
   which appears on this machine because vendor/SDL2-2.32.10 is not
   staged; counted as printed.
 ```
+
+## PR-343 - THE OBJECT'S MESSAGES ARE A PER-OBJECT QUEUE DISPATCHED BY ITS
+## CLASS SLOT +0x10, AND THE SIGNAL 0x1b THAT HOLDS A SURFACE IS POSTED,
+## FIVE TIMES: OI-123's "NOBODY WRITES THAT OPCODE" IS VOID AND THE
+## ATTACHMENT FIELD IS [obj+0xa9] AT 0x54624, REACHED ONLY BY FIVE CLASSES
+```
+KIND: read
+SUBSYSTEM: F6's seat chain and OI-123 - the engine's object message
+  mechanism (the queue at [obj+0x10], its poster, its drain, the class
+  +0x10 verb and its base 0x54560), which is what carries the 0x1b
+  attach, plus the class-by-class reachability of that attach.
+ADDRESSES: 0x52b10, 0x52b3f, 0x52b50, 0x52b67, 0x52b80, 0x52bb0,
+  0x52bc6, 0x52bd3, 0x52be4, 0x52bef, 0x52bf9, 0x4ba90, 0x4badf,
+  0x4bae4, 0x4baed, 0x5c320, 0x5c370, 0x54560, 0x54569, 0x54582,
+  0x54585, 0x54590, 0x545a7, 0x545c6, 0x545d2, 0x545de, 0x545f4,
+  0x5460e, 0x54618, 0x5461e, 0x54621, 0x54624, 0x5462a, 0x54632,
+  0x5463a, 0x54649, 0x5465d, 0x54680, 0x53770, 0x537db, 0x53dd0,
+  0x50d20, 0x50d60, 0x50d7b, 0x50d94, 0x50e4f, 0x4b6d0, 0x4b760,
+  0x4b799, 0x4b7a3, 0x4b7ad, 0x4b7c7, 0x4540c, 0x45471, 0x45479,
+  0x4547d, 0x2c1c0, 0x2c1cd, 0x2c1db, 0x2c252, 0x1e9b0, 0x1ea52,
+  0x1ea90, 0x1eadc, 0x36280, 0x36533, 0x45970, 0x45d28, 0x52eb0,
+  0x96a88, 0x96c38, 0x96d1c, 0x96ddc, 0x96e94, 0x97a98, 0x98f34,
+  0x9b4d4, 0x9f170, 0x9f540, 0xa0624, 0xa2218, 0xa11d0, 0xcef40,
+  0xceba4, 0x74, 0x80, 0x10, 0x14, 0x18, 0x28, 0x34, 0x44, 0x54,
+  0x58, 0x5c, 0x60, 0x64, 0x6c, 0x78, 0x90, 0xa9, 0xb6, 0xc2,
+  0xc6, 0xe2, 0xe6, 0xea, 0x126, 0x8138764, 0x1b, 0x21, 0xd, 0xe,
+  0x10, 0x15, 0x9
+NAMES: signal queue, message queue, poster, drain, message verb, ATTACH,
+  DETACH, held surface, TLewZariaB, TLewEna2, TLewKadmar2, TLewJunction,
+  SPLYW, STRUMIEN, PALMA, KATAPULT, KAMIEN, KILOF_PL, AC_BUTLA,
+  OI-072, OI-123, OI-124, OI-125, OI-127, F6, pr343_posters.py,
+  pr343_names.py, PR-303
+CODE: no: nothing in ported/ or the Makefile moved. What moves is the
+  question F6 has to ask next: not who posts the attach, but what the
+  thing it posts is, and which shipped level reaches it.
+HOOKS: none - this reads the image only. It does bear on three things
+  the port already models: o->sig and the AC_* live-set mask (PR-218,
+  PR-262), the standing-surface triple [actor+0xe6]/[+0xe2]/[+0xea]
+  (PR-336) and the seat ask verbs 0x1e570/0x1e970 (PR-336, PR-341).
+  None of them is changed here.
+MEASURED: (a) THE MECHANISM, WHICH THE PORT HAS NO MODEL OF. The verb
+  is class slot +0x10; KAMIEN's view 0x96a88 holds the base 0x54560
+  there. Messages are QUEUED, never called: 0x52b10(eax = the object,
+  edx = the value, ebx and ecx = two payload words) walks the list at
+  [obj+0x10] to its tail (0x52b13-0x52b20), allocates one 0x10-byte
+  node (0x52b22 -> the allocator 0x5c320, eax = 0x10) and writes
+  node[0] = 0, node[4] = the value, node[8] = ebx, node[12] = ecx
+  (0x52b30-0x52b3c), then links it (0x52b3f). The drain 0x52b50 is
+  the only reader: it takes [obj+0x10], calls [[obj class]+0x10] with
+  eax = the object and edx = the node (0x52b67), releases the node
+  (0x52b72 -> 0x5c370) and repeats. 0x52b80 is the step that runs it:
+  drain, then [[class]+0x14], then if [obj+0x28] is not zero,
+  [[class]+0x0] with edx = 2. Its six callers include the object walk
+  0x4ba90, which walks the twelve list heads at [ebp+0x0..0x2c] with
+  the count at [x+0x44] and the link at [x+0x34], and for every entry
+  whose [[class]+0x60] answers nonzero calls 0x52b80 (0x4bae4-0x4baed).
+  Over the 176 class views the ctor pattern names, 0x52b10 is the only
+  writer of those nodes: no other instruction in the image stores
+  through a [reg+0x10] that is an object field.
+  (b) THE BASE HANDLER IS A VALUE TABLE. 0x54569 reads the value at
+  [node+4] and branches: 2 sets [obj+0xc2] and [obj+0xc6] to node[8]
+  and node[12] (0x54590); 3 or's 4 into [obj+0xb6] (0x545c6); 4 or's
+  8 (0x545d2); 6 sets [obj+0x6d] from node[8] when that is nonzero and
+  [obj+0x71] from node[12] (0x545de); 8 zeroes the two words at
+  [obj+0xc2]/[obj+0xc6] (0x545f4); 0xd ADDS node[8] and node[12] to
+  them (0x545a7); 0x1b is the attachment (0x5460e, paragraph c); every
+  other value goes to 0x53770 (0x5463a, 0x54652, 0x54675, 0x5468d).
+  Two words OI-125 asks about as flag bits - 0x20964 writes
+  `or BYTE PTR [obj+0xc2],0x40` - are written here as whole dwords by
+  values 2, 8 and 0xd, so that pair has both an owner-flag meaning and
+  a message-payload meaning.
+  (c) 0x1b IS AN ATTACH AND ITS PAYLOAD IS NOT AN OBJECT POINTER. At
+  0x5460e: if [obj+0xa9] is nonzero, esi = [[obj+0xa9]], eax =
+  [obj+0xa9], edx = the object, and [[obj+0xa9]]+4 is called (0x5461e)
+  - the detach notice. Then [obj+0xa9] := node[8] (0x54621-0x54624),
+  and if that is nonzero, ecx = [[obj+0xa9]] and the code AT ecx is
+  called with edx = the object (0x54632) - the attach notice. So the
+  payload's first word is a table of two code pointers, +0 attach and
+  +4 detach, and the field written is [obj+0xa9]: PR-336's "[obj+0x89]"
+  in OI-124 and OI-072 is the wrong offset, and [obj+0x89] is the
+  position snapshot of PR-159, a different field.
+  (d) THE TWENTY DIRECT CALLS OF 0x54560 ARE NOT POSTERS. Every one is
+  a fall-through from a local handler or a wrapper thunk: 0x24830
+  handles value 0x10 and 0x24843 forwards the rest, 0x24f40 handles
+  0x13, 0x3d8f1 handles 5, 0x3e5b4 handles 0x1c, 0x50e4f is the lion
+  chain of paragraph (f), and 0x2f466, 0x2f5b6, 0x3b6b6, 0x3c226 are
+  the shape `push ebx; push ecx; mov ebx,eax; mov ecx,edx; call
+  0x54560`, a forward that keeps the object and the node in the
+  callee-saved pair. The 0x1b value reaches the base only through a
+  queue, which is what paragraph (a) is for.
+  (e) WHICH CLASSES REACH THE ATTACH. At slot +0x10, 81 of the 176
+  ctor-pattern views hold 0x54560, 16 hold 0x53770, 10 hold 0x52bb0,
+  one holds 0x40ca0, and five hold 0x50d60 - 0x98f34 TLewEna2,
+  0x9b4d4 TLewKadmar2, 0x9f540 TLewJunction, 0xa0624 and 0xa2218, the
+  per-level lion classes PR-303 enumerated. PALMA's 0x96c38,
+  KATAPULT's 0x96d1c and SPLYW's 0x96ddc hold 0x53770 and STRUMIEN's
+  0x96e94 holds 0x52bb0. 0x53770 answers value 0x10 only when
+  node[8] is the constant 0x8138764 (0x537b, 0x53780) and otherwise
+  calls 0x52bb0 (0x537dd). 0x52bb0's own table takes node[4] again:
+  1 moves the object - [[obj]] += node[8], [[obj+4]] += node[12] -
+  and then calls [[obj+8]]+0x54 (0x52bc6-0x52bdd); 0xe writes
+  [obj+0x30] := node[8] (0x52bef); 0x21 writes [obj+0x28] := 1
+  (0x52be4); everything else, 0x1b included, is RETURNED UNHANDLED
+  (0x52bc2). So no seat object and no SPLYW or STRUMIEN takes the
+  attach at all: 0x1b is dropped by their own handlers before any
+  chain. ZARIA's own lion is not reachable either - TLewZariaB 0x97a98
+  holds 0x1e130 at +0x10 and 0x1e130 is not among the twenty chains.
+  (f) THE LION'S HANDLER FORWARDS IT. 0x50d60, the +0x10 verb of the
+  five classes above, first drops value 1 whenever [obj+0x126] is
+  nonzero (0x50d6e-0x50d7f); otherwise `sub edx,9; cmp edx,0xc; ja
+  0x50e4f` and the jump table at 0x50d20 for values 9..0x15. Values
+  0xc, 0xd, 0xe, 0x10, 0x11, 0x12, 0x13, 0x14 all go to 0x50e4f, the
+  chain to 0x54560, and 0x1b is above the table's range, so it takes
+  that chain and reaches 0x5460e.
+  (g) THE POSTER CENSUS, WHICH VOIDS OI-123'S CENTRAL CLAIM. All 66
+  call sites of 0x52b10 are in /tmp/opencode/pr343_posters.py with
+  its output in pr343_posters.out; each reads back the value in edx
+  and the two payload words. By value: 1 x7, 2 x5, 5 x7, 8 x5, 11 x1,
+  12 x1, 13 x4, 15 x5, 16 x1, 17 x1, 18 x2, 20 x1, 21 x4, 25 x11,
+  27 x5, 29 x1, 30 x1, 33 x1, and 2 sites whose value is a register.
+  Five post 0x1b: 0x1ea52 is the ask verb of SPLYW (the view 0x96ddc
+  at +0x78), payload 0; 0x1eadc is the ask verb of STRUMIEN (0x96e94
+  +0x78), payload 0, reached when [[class]+0xc] equals the global
+  ds:0xceba4 and 0x52eb0 answers nonzero; 0x36533 is the +0xe0 verb of
+  the lion class 0x9f170, payload 0, node[12] = [[esi]+0x50] as the
+  state list; 0x45d28 is a method stored only at the data slot
+  0xa11d0, whose view the ctor pattern does not name, and it posts to
+  the object at [edi] rather than to itself, payload 0; and 0x2c252 is
+  the +0x90 verb of TLewKadmar2 - the only one of the five that
+  carries a payload at all. /tmp/opencode/pr343_names.py maps the
+  views back to the factory name branches, and it is that script that
+  answers SPLYW and STRUMIEN.
+  (h) THE ONE ATTACH, AND ITS GATE. 0x2c1c0 is a lion verb. It runs
+  only when the lion already holds something - it reads [obj+0xa9] at
+  0x2c1cd and leaves if it is zero - and only in the lion's state
+  index 1 (the compare on [obj+0x5c] at 0x2c1db), and only with a
+  state-flag bit set at [obj+0x64]: bit 0x20 takes the scanner
+  0x4b6d0, bit 0x40 takes 0x4b760. Those two are the same scan with
+  opposite signs. Both walk the array at [0xcef40+0x74],
+  [0xcef40+0x80] entries at stride 0xc, and for each entry call that
+  ENTRY'S OWN code block at +0x14 (0x4b7ad, 0x4b71d) with the id the
+  requester's class verb +0x6c returned as its argument (0x4b7a3,
+  0x4b713); 0x4b760 keeps only scores above 0 and under the running
+  best, from a start of 0x7fffffff (0x4b7b0-0x4b7c7), and 0x4b6d0
+  keeps only scores below 0 and over the running best, from a start of
+  0x80000001 (0x4b720-0x4b737); both write the ENTRY ADDRESS to the
+  caller's out-parameter. The caller then requires the score to be
+  usable - above -5 after 0x4b6d0 (0x2c209) and below 5 after
+  0x4b760 (0x2c230) - and posts value 1 with zero as node[8] and the
+  score as node[12], which paragraph (e) shows is a MOVE of the
+  object by (0, score), and only then posts 0x1b with the entry as
+  node[8] (0x2c245-0x2c252). This is consistent with the ask side:
+  0x45400 reads the held surface of the requester at 0x45471 (`mov
+  ebx, DWORD PTR [edi+0xa9]`) and at 0x45479 waives its own
+  negative-clearance rejection exactly when the surface being asked
+  about IS the held one (0x4547d `jl 0x454c0` is skipped by
+  `cmp esi,ebx; je 0x45481`).
+OPENS: what those entries are - the code block at [entry] with +0 the
+  attach notice, +4 the detach notice and +0x14 the scorer, and the
+  anchor's table at [0xcef40+0x74] with its count at +0x80: no name
+  branch installs it and nothing in the port reads it, so it is OI-127;
+  the class whose only stored verb 0x45970 sits at the data slot
+  0xa11d0, which the ctor pattern does not name, and who calls it;
+  whether any shipped level other than KADMAR II reaches the attach at
+  all, since 0x2c252 is installed by one class only and ZARIA's own
+  lion 0x97a98 forwards nothing to the base; the state-flag bit of
+  0x2c1ec and the state index 1 that gate it; the first test of
+  0x45400, at 0x4540c, which is NOT a position test - it compares
+  [[surface table]+4]+0xc, that is the FIRST RECORD'S FLAG BYTE of
+  PR-335, against the ask's mode dword, and both shipped seat ask
+  verbs pass 0, so the ZARIA.01 tables whose first separator is ';'
+  (flag 1) fail there before any bracket or clearance is evaluated:
+  that needs its own measurement over the shipped tables; and whether
+  [obj+0x10] queues are per-object lists the .MOV or .DES author at
+  all, since the only writer found is 0x52b10.
+CLOSES: the question OI-123 asks, as written: who posts the message
+  whose value word is 0x1b. Five sites do, all through 0x52b10, and
+  this record names each one with the class that installs the verb
+  running it. It also settles the mechanism half - the queue at
+  [obj+0x10], the drain 0x52b50, the class verb +0x10 - and that
+  0x52b10 is the only writer of those nodes. It does not close OI-123
+  as a whole: the attach still has no reach in ZARIA.01, because no
+  seat class dispatches 0x1b and ZARIA's lion does not forward it, so
+  F6 and OI-124 stay open, and the payload type is OI-127.
+CORRECTS: PR-336 in two of its words, not in its read: OI-123's
+  paragraph that row writes, saying nobody writes that opcode, and
+  OI-124's and OI-072's naming of the held-surface anchor as
+  [obj+0x89]. OI-123's own text already names 0x1ea47 and 0x1ead1 as
+  calls of the poster 0x52b10 with value 27, which contradicts the
+  sentence the same row makes two lines earlier; PR-336's read of the
+  attach arm itself, its field [obj+0xa9] and its two notices, stands.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: /tmp/opencode/pr343_posters.py
+  with its output pr343_posters.out is the 66-site census of (g), and
+  /tmp/opencode/pr343_names.py with pr343_names.out is the
+  name-branch map that names SPLYW and STRUMIEN; the verb bodies are
+  dumped in /tmp/opencode/pr343_54560.txt and pr343_52b10.txt.
+```
