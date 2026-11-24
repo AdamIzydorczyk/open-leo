@@ -50100,3 +50100,210 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - unchanged
   fixture-free numbers are unchanged by this PR and by the staging,
   and the fixture legs they could not measure are measured now, on
   the same tree this change sits on.
+
+## PR-362 - THE ANCHOR SHIFT'S POSITION ARGUMENT IS A PAIR POINTER, AND
+## THE ENGINE SHIFTS THE STANDING QUERY'S OWN SAMPLE POINT: THE CLASS VERB
+## +0x54 WRITES [obj+0x89] AS THE POSITION PLUS THE ELEMENT'S SECOND
+## ANCHOR, AND IT DOES SO EXACTLY WHEN THE OBJECT HOLDS NO SURFACE
+```
+KIND: read
+SUBSYSTEM: the call graph of the .SEQ element anchor pair (the machine
+  half OI-129 needs), the class verbs +0x54 and +0x50, and what the
+  standing query's first sample point really contains.
+ADDRESSES: 0x42980, 0x42984, 0x42987, 0x4298d, 0x4298f, 0x42993, 0x42997,
+  0x4299a, 0x4299c, 0x4299e, 0x429a0, 0x429a2, 0x429a6, 0x429a9, 0x429ab,
+  0x429b2, 0x429b9, 0x429bb, 0x429bd, 0x429d0, 0x429d7, 0x42a20, 0x421f0,
+  0x42230, 0x423c0, 0x442f0, 0x238b0, 0x238b3, 0x238b5, 0x238c3, 0x238c6,
+  0x238c9, 0x238cc, 0x23880, 0x23896, 0x23899, 0x2389c, 0x238ed, 0x23850,
+  0x23855, 0x23858, 0x23a10, 0x23aa0, 0x53df0, 0x53dfa, 0x53e00, 0x53e06,
+  0x53e0d, 0x53e15, 0x53e1d, 0x53e22, 0x53e25, 0x53e27, 0x53e2b, 0x53e40,
+  0x53e44, 0x53e4a, 0x53e4d, 0x53e58, 0x53e63, 0x53e69, 0x53e70, 0x53e80,
+  0x53e83, 0x53e86, 0x53e89, 0x53e92, 0x53e9b, 0x541f0, 0x54218, 0x54226,
+  0x5422e, 0x54233, 0x54236, 0x5423a, 0x54f40, 0x54f78, 0x54fc8, 0x54fe0,
+  0x5500b, 0x55020, 0x55054, 0x55057, 0x55070, 0x55084, 0x5508c, 0x55096,
+  0x3c3a3, 0x5453a, 0x5efdb, 0x41ee5, 0x41f4d, 0x96960, 0x969b0, 0x969b4,
+  0x969cc, 0x96c38, 0x96c8c, 0x96d1c, 0x96d70, 0x9a0d0, 0xa0c08, 0x6c,
+  0x54, 0x50, 0x48, 0x33, 0x4, 0x8, 0x98, 0xb0, 0xb6, 0x89, 0x8d, 0x6d,
+  0x12, 0x14, 0x2e, 0x7fff, 0xfc, 0x3
+NAMES: OI-128, OI-129, F6, anchor shift, land shift, leave shift, position
+  pair, sign selector, facing getter, sample point, position snapshot,
+  class verb +0x54, class verb +0x50, class verb +0x6c, 0x53df0, 0x55070,
+  0x53e40, 0x23a10, pr362_pair_sites.py, pr362_sites.txt, ground_on,
+  lock2, seat_ask_core, c1, ANIMACJE
+CODE: yes: comment only - the L15 block comment in ported/ll_level.c above
+  seat_bracket/seat_ask_core. It said the standing query's first clearance
+  is measured at the class verb +0x6c pair at [obj+0x89] (PR-349) and
+  stopped there; it now names who writes that pair and what value it
+  holds. No executable line, no leg, no Makefile target changed.
+HOOKS: PR-357 read the pair itself (0x42980/0x429d0 and the element's
+  +0x33 field) and PR-359 put it in the port; PR-353 read the class verbs
+  +0xB4/+0xB8 as the dispatchers and opened "what is [obj+0x6d]"; PR-354
+  read the four runners that set and clear [obj+0xb6] bits 0x01/0x02 and
+  named the 0x54f40/0x54f90/0x54fe0/0x55020 calls into slots +4/+8;
+  PR-351 read the [view+0x48] accessor and the [view+0x50] aim pair;
+  PR-349 read +0x6c as `add eax,0x89; ret` and PR-352 measured what
+  0x45400's first clearance (c1) is measured there - this pass reads the
+  writer of the pair it hands over; PR-360 measured what the shipped
+  elements put in the second anchor (~31 px in the lion's ZARIA.01
+  standing states). No port behaviour moves.
+OPENS: three of the six leave-shift sites are unread (0x3c3a3, 0x5453a,
+  0x5efdb - the second looks like a twin of the aim chain 0x5423a); the
+  element block's other slots and their call counts, which this census
+  prints as upper bounds only (see the method note in MEASURED); who calls
+  the +0x54 verb per step (the one caller found is 0x23850, which stores
+  edx and ebx into [eax]/[eax+4] and then calls it, and the two verbs
+  [view+0x98] and [view+0xb0] that 0x53df0/0x55070 call around it); who
+  WRITES [obj+0x6d] (this pass reads how it is READ); whether the port's
+  model should fill a snapshot point at all, and if so with the offset
+  (OI-129's second half, now the nearer one).
+CLOSES: PR-353's OPENS item "what [obj+0x6d] is, the value handed to
+  those methods" in the part that was answerable from the instructions:
+  it is not the position argument, and at the class verbs +0xB4/+0xB8 it
+  is only a sign test; through the [view+0x50] verb 0x53e40 its only use
+  measured is `cmp ecx,0xffffffff` - an authoring sentinel - and the
+  direction otherwise comes from the current state record's +0x12 bit 3.
+  Also closes the part of OI-128 that asked what the anchor pair does to
+  the ask: it moves the sample point, not only the object.
+CORRECTS: PR-353 (b): "ebx is then loaded with [obj+0x6d] (0x238c9) and
+  the verb is `call DWORD PTR [ecx+0x4]`", and its OPENS wording "the
+  value handed to those methods". 0x42980/0x429d0 take their position in
+  edx and use ebx only as `test ebx,ebx / jle`, the branch that chooses
+  whether the x leg is added or subtracted; the value in ebx at those two
+  sites is [obj+0x6d], and at every other site it is the result of the
+  [view+0x50] verb, not [obj+0x6d]. PR-353's instruction list and its
+  reading of the guard on [obj+0xb6] bit 0 are unaffected. PR-349's
+  reading of +0x6c and PR-352's c1 paragraph stand and are extended: c1
+  is measured at [obj+0x89], and this pass adds what that pair contains.
+MEASURED: (a) THE PAIR, TO THE INSTRUCTION (re-read, because the port
+  depends on it). 0x42980: 0x42984 `movsx ecx,[eax]` / 0x42987
+  `cmp ecx,0x7fff` / 0x4298d `je 0x429c1` is the guard on the element's
+  first word; then 0x4298f `movsx esi,[eax+2]` (f2), 0x42993 `movsx
+  edi,[eax+6]` (f6), 0x42997 `lea ecx,[edx+4]`, 0x4299a `sub esi,edi`,
+  0x4299c `sub [ecx],esi` - the y leg writes [edx+4] IN PLACE as
+  y + (f6 - f2). Then 0x4299e `test ebx,ebx` / 0x429a0 `jle 0x429b2`:
+  when ebx is positive 0x429a2/0x429a6/0x429a9 form f0 - f4 and 0x429ab
+  `sub [edx],eax` gives x + (f4 - f0); when it is zero or negative the
+  same f0 - f4 is ADDED at 0x429b9-0x429bf. So edx is a position-pair
+  POINTER and ebx a sign. 0x429d0 is the same with the two legs reversed
+  (0x429ec `add [ecx],esi`).
+  (b) THE CENSUS AND ITS METHOD. /tmp/opencode/pr362_pair_sites.py walks
+  the image index for every `mov reg,DWORD PTR [reg+0x33]` (the only way
+  the block is reached - nothing calls 0x42980 by address) and for each,
+  the calls made through that register within 0x50 bytes. It found 42
+  loads of +0x33 and, through them, calls to slots +0x4 (5 distinct sites:
+  0x238cc, 0x53e2b, 0x5423a, 0x54f78, 0x55054), +0x8 (6: 0x2389c,
+  0x3c3a3, 0x5453a, 0x54fc8, 0x5500b, 0x5efdb), +0x0c (0x42a20), +0x10
+  (0x421f0), +0x14 (0x42230), +0x1c (0x423c0) and +0x28 (0x442f0). The
+  counts beyond +0x8 are UPPER BOUNDS and named as such: the window
+  heuristic also reports 0x238ed, where ecx = [obj+8] (the class view) and
+  not the element block at all. Two writers install the block: 0x41f4d
+  writes 0xa0c08 at +0x33 (PR-357) and 0x41ee5 writes the same value at
+  [eax+0x8] - the block is shared by a second record shape.
+  (c) WHAT EACH ANCHOR SITE PASSES AS THE POSITION. The class verbs
+  +0xB4/+0xB8 (0x238b0/0x23880): 0x238b3 `mov edx,eax` - the OBJECT, its
+  live x/y at [obj+0]/[obj+4]. 0x54f40 (the `lock`/`ground_on` runner of
+  PR-354, which sets bit 0x01 at 0x54f7b): 0x54f74 `mov edx,ecx` - the
+  object. 0x55020 (the `lock2` half, which runs only with bits 0x01 and
+  0x02 set and clears both at 0x55057): 0x55050 `mov edx,ecx` - the
+  object. 0x541f0 (the ask's aim filler): edx is its caller's block. And
+  0x53df0: 0x53dfa `lea esi,[edx+0x89]` then 0x53e27 `mov edx,esi` - the
+  object's OWN SNAPSHOT PAIR at [obj+0x89]/[obj+0x8d]. So the same method
+  moves three different things depending on the caller: the live position,
+  the ask's aim block, and the snapshot the standing query samples.
+  (d) WHO WRITES THE SNAPSHOT, AND WITH WHAT. Class-table slot +0x54 has
+  two implementations in the image. 0x53df0 is installed in exactly 31
+  tables (0x96c38+0x54 = 0x96c8c for PALMA, 0x96d1c+0x54 for KATAPULT,
+  0x96ddc+0x54 for SPLYW and 28 more) and its body is: 0x53e00
+  `call [view+0x98]`; 0x53e06-0x53e0d copy [obj+0] and [obj+4] into
+  [obj+0x89] and [obj+0x8d]; 0x53e15 `call [view+0x48]` for the current
+  element; 0x53e22 `call [view+0x50]` with 0x53e25 `mov ebx,eax` for the
+  sign; 0x53e27 `mov edx,esi`; 0x53e2b `call [edi+0x4]` - the land
+  shift, applied to the snapshot it just copied. The other one, 0x55070,
+  is in 124 dwords of the image - it is the COMMON verb, and the lion's
+  view at 0x96960 is one of its holders (0x96960+0x54 = 0x969b4) - and
+  it reaches the same place by the other road: 0x5507e `call [view+0xb0]`
+  with edx = &[obj+0xd6], then 0x55084 `lea edx,[ebx+0x89]` and 0x5508c
+  `call 0x541f0` - the ask's own aim filler, run over the snapshot as its
+  block - and 0x541f0 ends at 0x5423a `call [edi+0x4]` with edx = that
+  block, after 0x541f6-0x541fd copied the live position into it. So both
+  implementations of +0x54 leave [obj+0x89] anchor-shifted, one by doing
+  it directly and one by running the ask chain over it. Both paths carry
+  the same gate: 0x54218 `test BYTE PTR [ebx+0xb6],0x1` and the +0xbc
+  held-surface predicate at 0x5420e/0x54214 skip the chain entirely. So
+  the rule, stated once: while the requester holds NO surface, [obj+0x89]
+  = position + (f4 - f0, f6 - f2) of the current element; once it holds
+  one, the chain does not run. And the standing query measures its first
+  clearance exactly there - +0x6c is 0x23a10 `add eax,0x89; ret`
+  (PR-349) and 0x45462 passes that to 0x455a0 (PR-348, PR-352 c).
+  Through PR-360's numbers, for the lion's ZARIA.01 standing states that
+  is ~31 px.
+  (e) THE [view+0x50] VERB IS A FACING SIGN, AND [obj+0x6d] IS AN
+  AUTHORING SENTINEL. 0x53e40 (0x96960+0x50 = 0x969b0; the same value at
+  0x979c0, 0xa2268 and the other views) derives a sign by walking
+  [obj+0x5c] into [obj+0x50], taking [that], then its own +0x5c/+0x50
+  chain, and testing the +0x14 dword of the record it lands on: non-zero
+  gives edx = 0xffffffff (0x53e69), zero gives 1 (0x53e70). Then
+  0x53e80 takes the CURRENT STATE record's +0x12 word and masks bit 3
+  (`and ebx,0x8`), 0x53e83 reads [obj+0x6d], and 0x53e89
+  `cmp ecx,0xffffffff`: only when [obj+0x6d] is that sentinel AND the
+  state's bit 3 is set does it return the negated sign (0x53e92-0x53e94),
+  otherwise the sign itself (0x53e9b). So the sign every anchor site
+  except the two class verbs uses comes from the authoring through the
+  state record, and [obj+0x6d]'s measured role is a -1 override marker -
+  exactly the value 0x53e40 compares, which is what PR-353 saw and read
+  as a passed argument.
+GATE: light: verify-index verify-docs rc=0 (ok); the diff is a comment in
+  a compiled file, so it was built and run anyway: make rc=0 with 0
+  warnings, and `make -k verify-level verify-seq` rc=0 with 10 (ok) lines
+  and no SKIP - the L15/L16 selftest legs run inside verify-level - over
+  the staged CD and HD overlay, verify-seq 1656/1656 byte-exact. The
+  fixture-free half is unchanged by construction (PR-355..PR-361's 14 ok
+  + the named SKIPs), so it was not re-run. No new leg and no red-first:
+  the claims are disassembly claims, reproducible from
+  /tmp/opencode/pr362_pair_sites.py
+  (prints the installers of 0xa0c08, the 42 loads of +0x33, the calls
+  reached through each, and the edx/ebx setup in front of every +4/+8
+  call) with its output pr362_sites.txt, and from
+  `python3 tools/re/leodb.py dis 0x42980 0x42a30`,
+  `dis 0x53df0 0x53e35`, `dis 0x53e40 0x53ea1`, `dis 0x55070 0x550a0`,
+  `dis 0x541f0 0x54241`, `sql "… value=0x53df0 …"` and the field verb
+  `python3 tools/jq.py field "[obj+0x89]"`, which is how the existing
+  half of this was found before writing anything. Build logs
+  /tmp/opencode/pr362_build.log and pr362_build2.log, leg log
+  pr362_verify_level.log.
+```
+
+- WHY. PR-359 ended by refusing to wire the pair for two reasons: the
+  engine's argument is the current frame's element, and OI-129 - the port
+  is green without the offset. The second reason is the one that could
+  actually be wrong, and answering it needed to know WHERE the shift is
+  applied. PR-357 had read the method; nobody had read its callers.
+
+- WHAT CHANGED IN MY HEAD. I went looking for a position update and found
+  an aim. The pair's position argument is a pointer, and two of its five
+  call sites pass not the object at all but a copy - the ask's aim block
+  and the snapshot the standing query measures its first clearance at. That
+  reorders the whole landing question: the ~31 px is not primarily a step
+  the object takes, it is where the engine POINTS the standing query, and
+  the object's own position is moved only by the two `ground_on`/`lock2`
+  runners of PR-354. That also explains why the port can be green on the
+  fixture legs: nothing in them asks a seat question while the lion holds
+  no surface, and the port has no snapshot at all.
+
+- THE USEFUL CONSEQUENCE (OI-129, second half, now the nearer one). The
+  port's seat_ask_core takes its two points as arguments, so the model is
+  not wrong - but the engine's first-test point is never "the position":
+  it is the position plus the current element's anchor delta whenever the
+  requester holds no surface, and only the bare position when it does. A
+  leg that drives ZARIA.01's seat tables with a lion who is NOT on a
+  surface therefore has to move the c1 point by (f4 - f0, f6 - f2) - about
+  31 px down - to be the ask the engine asks. That is testable with L15
+  and L16 already in the tree, and it is the next thing to write.
+
+- WHAT I DELIBERATELY DID NOT CLAIM. The slot counts past +0x8 are
+  bounds, and the census's own false positive (0x238ed) is named in the
+  record, because the window heuristic is not a proof; three of the six
+  leave-shift sites are unread, and 0x5453a looks like a second aim
+  chain, which may change paragraph (d)'s "both paths" into "more paths".
+  The writer of [obj+0x6d] is still unknown - this pass only read how it
+  is read.

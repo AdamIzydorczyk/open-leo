@@ -5511,3 +5511,34 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     numbers (constant within a state, pose-tracking across states) say
     body line, and the 20 LITM.SEQ elements that hold 0x7fff in f4/f6
     with f0 of -1 or -4 are the oddity that would explain the rest.
+    PR-362 REORDERED THIS and the nearer half is no longer the video
+    comparison but the ask itself. The pair's position argument is a
+    POINTER (0x4299c writes [edx+4] in place, 0x4299e/0x429a0 use ebx
+    only as a sign test), and of its five call sites two do not pass the
+    object: the class verb +0x54 - 0x53df0 in exactly 31 class tables
+    (PALMA, KATAPULT, SPLYW) copies the live position into
+    [obj+0x89]/[obj+0x8d] and then applies the shift to THAT pair
+    (0x53dfa, 0x53e27, 0x53e2b), and 0x55070, which 124 tables install
+    (the lion's view among them), hands the same pair to the ask's aim
+    filler 0x541f0 as its block (0x55084, 0x5508c), which ends in the
+    same method at 0x5423a. Both
+    are gated so they run only when the requester holds NO surface
+    (0x54218 plus the +0xbc predicate). And [obj+0x89] is exactly where
+    the standing query measures its first clearance - +0x6c is `add
+    eax,0x89; ret` (PR-349) and 0x45462 feeds it to 0x455a0 (PR-352's
+    c1). So the engine's ask is aimed ~31 px below the lion's position
+    while he holds no surface, and the live position is shifted only by
+    PR-354's two runners 0x54f40 (the `lock`/`ground_on` ON runner, which
+    sets bit 0x01 immediately after) and 0x55020 (`lock2`), neither of
+    which the port models at all (PLAN 8g). NEAREST TEST, in the port
+    today: drive L15's seat ask with a requester that holds no surface and
+    a c1 point taken as position + (f4 - f0, f6 - f2) for the current
+    element, i.e. ~31 px down in ZARIA.01, and show the answer changes -
+    L16 already has the pieces. THE VIDEO TEST THEN NEEDS REDATING: a
+    ~31 px step of the live position can only appear at a moment where the
+    level script runs `ground_on`/`lock`, so the pose-dump comparison has
+    to key on such a state in the .MOV, not on any landing. STILL OPEN
+    FROM PR-362: three of the six leave-shift sites are unread (0x3c3a3,
+    0x5453a, 0x5efdb - 0x5453a looks like a second aim chain), who calls
+    +0x54 per step (only 0x23850 was found), what [view+0x98] and
+    [view+0xb0] do, and who WRITES [obj+0x6d].

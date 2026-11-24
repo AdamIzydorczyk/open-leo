@@ -5726,10 +5726,33 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         not model it and its fixture suite is green anyway (69 legs ok
         with the CD and HD overlay staged). OI-129 names the one
         measurement that decides which statement is wrong - a pose-dump
-        comparison across a landing instant. What F6 still lacks after
-        that: the current-frame element per object (the [view+0x48]
-        chain) if the pair does have to be wired, and the port's
-        unmodelled ground_on, ground_off, lock2 and unlock2 (PLAN 8g).
+        comparison across a landing instant. PR-362 then read the pair's
+        CALLERS and the question changed shape: 0x42980/0x429d0 take a
+        position-PAIR pointer (0x4299c writes [edx+4] in place) and five
+        sites call them, of which two do not pass the object at all. The
+        class verb +0x54 - 0x53df0 in exactly 31 class tables (PALMA,
+        KATAPULT, SPLYW) and 0x55070 in 124 more, the lion's view among
+        them - writes [obj+0x89]/[obj+0x8d] as the live position plus
+        the element's anchor delta (0x53e06-0x53e0d copy, then 0x53e27
+        `mov edx,esi` and 0x53e2b calls the shift on the pair), and the
+        lion's path reaches the same place through the ask's own aim
+        filler (0x55084 hands &[obj+0x89] to 0x541f0, which ends at
+        0x5423a). Both run only while the requester holds NO surface
+        (0x54218 plus the +0xbc predicate), and [obj+0x89] is exactly
+        where 0x45400 measures its first clearance (+0x6c is `add
+        eax,0x89; ret`, PR-349, fed to 0x455a0 at 0x45462). So the
+        ~31 px is first of all where the engine POINTS the standing
+        query, and the live position is moved only by PR-354's runners
+        0x54f40 (`lock`/`ground_on`, which sets bit 0x01 right after) and
+        0x55020 (`lock2`) - which is why the port is green: it models
+        neither, and it has no snapshot. That makes the nearer test
+        fixture-free: drive L15's ask with c1 taken at position plus
+        (f4 - f0, f6 - f2), and the pose-dump test has to be re-dated to
+        a moment where the level script actually runs `ground_on`. What
+        F6 still lacks: that L15/L16 leg, the current-frame element per
+        object (the [view+0x48] chain) if the live-position half is to be
+        wired, and the port's unmodelled ground_on, ground_off, lock2 and
+        unlock2 (PLAN 8g).
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

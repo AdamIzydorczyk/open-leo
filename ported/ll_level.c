@@ -10399,7 +10399,23 @@ static int seat_motion_selftest(void)
  * winner triple [obj+0xe6]/[+0xea]/[+0xe2] lives in the caller's structure
  * (PR-344), and the snapshot point 0x45400 samples at 0x45468 is another
  * field of it - the class verb +0x6c is `add eax,0x89; ret` in 186 of 186
- * class views (PR-349, PR-351). */
+ * class views (PR-349, PR-351).
+ * PR-362 read who FILLS that snapshot, and it is not a plain copy: the
+ * class verb +0x54 is 0x55070 in 124 class tables (the lion's view among
+ * them) and 0x53df0 in 31 more (PALMA, KATAPULT, SPLYW). 0x53df0 copies
+ * [obj+0]/[obj+4] into [obj+0x89]/[obj+0x8d] (0x53e06-0x53e0d) and then
+ * runs the element's anchor shift (0x42980) on the PAIR, `lea
+ * esi,[edx+0x89]` … `mov edx,esi` (0x53dfa, 0x53e27); 0x55070 hands the
+ * same pair to the aim filler 0x541f0 as its block (0x55084
+ * `lea edx,[ebx+0x89]`), and 0x541f0's chain ends in the same 0x42980
+ * with edx = that block (0x5423a). Both are gated the same way - 0x54218
+ * `test BYTE PTR [obj+0xb6],0x1` and the +0xbc predicate skip the chain
+ * when the object HOLDS a surface - so the rule is: while the requester
+ * holds no surface, the point the standing query measures is the position
+ * shifted by the current element's second anchor (about 31 px down in the
+ * lion's ZARIA.01 standing states, PR-360); once it holds one, the
+ * snapshot is the plain position. Anything here that ever fills a
+ * snapshot point has to carry that offset. */
 static int seat_bracket(const short *sx, int n, int x)
 {
     int i;
