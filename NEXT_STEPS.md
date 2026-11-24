@@ -51983,3 +51983,147 @@ GATE: light: verify-index verify-docs rc=0 (ok); the tracked diff includes a
   whose table starts 0x24 later, and correcting that turns "13 of 29" into
   "all 29", which makes the two-writer split of PR-368 an ownership law
   rather than a behaviour difference.
+
+## PR-373 - THE CONSTRUCTOR WRITES THREE BASES OF ONE METHOD ARRAY AND
+## OVERWRITES THE CONTAINER'S VERB TABLE WITH THE CLASS'S OWN: 75 SITES,
+## EXACTLY THE 37 POINT-LIST CLASSES, AND THEIR SECOND BASE IS T-0x2c
+## WHILE EVERY OTHER CLASS USES T-8
+
+```
+KIND: read
+SUBSYSTEM: the constructor path that attaches a class's method array to an
+  object - the class table at [obj+0x8], the second dispatch base at
+  [obj+0xc], and the point-list container's verb table at the container
+  field - i.e. who installs the 37 derived blocks PR-372 found (OI-128,
+  OI-129, the F6 thread; continues PR-372 and PR-371 and reaches PR-340's
+  element region and PR-279's loader).
+ADDRESSES: 0x1f2f4, 0x1f302, 0x1f30c, 0x1f313, 0x1f31d, 0x1f634, 0x1f63e,
+  0x1fb8d, 0x1fc22, 0x1fc31, 0x1fc36, 0x1fc3b, 0x1fc45, 0x1fc4b, 0x1fc55,
+  0x1fd26, 0x207f9, 0x209a0, 0x29ccd, 0x29cd7, 0x29cde, 0x29ce8, 0x29f4d,
+  0x29f57, 0x29f5e, 0x2b312, 0x2b31c, 0x35102, 0x35109, 0x35136, 0x3513d,
+  0x35144, 0x37c7b, 0x37c85, 0x37fa7, 0x37fae, 0x38d6d, 0x38d77, 0x44fad,
+  0x44fe0, 0x44fee, 0x4501f, 0x4509c, 0x4e761, 0x4e768, 0x4e76d, 0x4e774,
+  0x4e77a, 0x4e781, 0x531f0, 0x9182d, 0x96c0c, 0x96c14, 0x96c38, 0x96cf8,
+  0x96d1c, 0x977c4, 0x977cc, 0x977f0, 0x98278, 0x99550, 0x99558, 0x9957c,
+  0x996ec, 0x996f4, 0x99718, 0x99914, 0x99938, 0x9a74c, 0x9a754, 0x9a778,
+  0x9dbd0, 0x9dbd8, 0x9dbfc, 0x9e28c, 0x9e630, 0x9e654, 0x9ef14, 0x9ef38,
+  0x9efcc, 0x9eff0, 0x9f790, 0x9f7b4, 0xa0cc0, 0xa1f64, 0xa1f6c, 0xa1f90,
+  0xa2030, 0xa2054, 0x3c, 0x9d, 0xe6, 0x106, 0x10a, 0x44, 0x8, 0xc, 0x24,
+  0x2c, 0xa5, 0xee, 0xf2, 0xf6
+NAMES: constructor, fixup, dispatch base, second base, verb block, derived
+  verb table, overwrite, layout, register-relative field, base dichotomy,
+  element region, pr373_install.py, pr373_install.txt, pr373b_bases.py,
+  pr373b_bases.txt, pr373c_paths.py, pr373c_paths.txt
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines that gave the wrong second-base law and
+  asked who installs the derived blocks, and the HANDOFF section 8 F6
+  paragraph. No file under ported/ is touched, so the build gates were not
+  re-run (the light gate is what a docs-only diff takes).
+HOOKS: PR-372 found the verb block at class-0x24 and the pair of dispatch
+  bases, and left open who installs a derived block. PR-371 found the
+  container builder 0x44fe0 and the base table 0xa0cc0. PR-279 read the
+  loader that feeds the container text. PR-340 read the element region at
+  0x1e500 and the objects it belongs to; this record names those classes
+  (0x96c38, 0x96d1c of the 0x53df0 family). PR-369 noted that the
+  second-family table 0xa1f90 is ANITAB's +0xb0 companion; 0xa1f90 is also
+  one of the 37 owners, constructed at 0x4e76d.
+OPENS: what 0x531f0 does before the `add eax,0xa5` (it is the call that
+  returns the object with eax left at the container field; PR-370's
+  0x53ff0 is the analogous base-part layerer and is not used here); the 5
+  sites that write the three bases with no build call anywhere near them
+  (0x29f4d, 0x2b312, 0x37c7b, 0x37fa7, 0x38d6d) - do those objects keep
+  the array and count left by the base part, or are they filled later; the
+  three bases of the 0x1f302 shape are written at eax = obj+0x106, which
+  is the same field the 0x3ddf0 writer stores its ANSWERS at
+  ([obj+0x106]/[obj+0x10a]) - why a constructor is positioned there; the
+  object at 0x4e761 that stores another class table (0x9e28c) before
+  building its container; whether the derived slots +0x0, +0x4 and +0x10
+  are ever dispatched now that the block is reachable through [obj+0xc]
+  (its +0x8 verb is 0x45250 through that base at slot +0x10); and the 32
+  classes that appear as neither a -8 nor a -0x2c pair - how their objects
+  get a table at all.
+CLOSES: PR-372's open item "whether anyone installs a derived block at
+  all, since the 47 0x44fe0 sites write the base 0xa0cc0" - all 37 do,
+  immediately after the build, and the base table is only what 0x44fe0
+  leaves behind for a moment (0x44fad, 0x44fee, and the copy builders at
+  0x4501f, 0x4509c). It also closes PR-371's "only four constructors
+  store a derived table": the count is 75, one per owner class. And it
+  closes the ownership question from the other side: the 37 classes with a
+  verb block are exactly the 37 classes whose second base is T-0x2c.
+CORRECTS: PR-372 (my own, same day). (1) "the second [dispatch base] is
+  the first minus 8 at 383 of the 397 pair sites ... the shift is 8 in
+  157 cases, 0x2c in 2 and 0x14 in 1" - measured on the destination form
+  `mov [reg+0x8],T` followed by `mov [reg+0xc],U`, which misses every
+  constructor that reaches those fields through a shifted register with a
+  negative displacement. Measured on VALUES it is: T then T-8 at 452 sites
+  over 150 classes, and T then T-0x2c at 75 sites over 37 classes, and the
+  two sets are disjoint. (2) "0x29a51 and 0x29a69 are the only classes
+  seen to place a container table before their own" - there are 75 such
+  sites, one for each of the 37 owners. (3) The exception I recorded as
+  "a third arrangement, shift 0x14 at 0x3f5bd" is not an arrangement of
+  this law, and the "0x98278 stored at [obj+0x8]" forms are request blocks,
+  which appear again here at 0x29f32 and 0x29f40.
+MEASURED: (a) THE CTOR IDIOM. The shape at 0x1f2f4-0x1f31d, in full:
+  `[eax+0x20]=0; [eax+0x24]=0; mov [eax-0xfe],0x977f0;
+  mov [eax-0x18],0x977cc; mov [eax-0xfa],0x977c4; sub eax,0x106` - with
+  eax at obj+0x106, that is the class table at [obj+0x8], the verb block
+  at [obj+0xee] and the second base at [obj+0xc]. The same shape with a
+  build first, at 0x1fc31: `call 0x531f0; add eax,0xa5; call 0x44fe0;
+  mov [eax-0x9d],0x96c38; mov [eax],0x96c14; mov [eax-0x99],0x96c0c;
+  sub eax,0xa5` - build the container with the base table, then write the
+  class table, then write the class's own block OVER the base table, then
+  the second base. And at 0x4e768 (class 0xa1f90, the +0x44 layout):
+  `call 0x44fe0; mov [eax-0x3c],0xa1f90; mov [eax],0xa1f6c;
+  mov [eax-0x38],0xa1f64`.
+  (b) HOW MANY, AND WHICH. 75 sites name a class table and, within 0x80
+  bytes, the block at that class's -0x24 (pr373c_paths.py). They cover
+  exactly 37 classes and 37 blocks - every owner counted by PR-372 - and
+  by family 0x3ddf0 60 sites, second family 9, 0x53df0 4, one class whose
+  +0x54 is 0x2b1a0 2. Every one of the 29 0x3ddf0 classes has such a
+  site. The 8 owners outside that family are 0x96c38 and 0x96d1c (both
+  0x53df0), 0x99938 (+0x54 = 0x2b1a0) and 0x9dbfc, 0x9ef38, 0x9f7b4,
+  0xa1f90, 0xa2054 (second family; the named ones are KTRASA and TUNTRAS,
+  and 0xa1f90 is the table PR-369 recorded as ANITAB's +0xb0 companion).
+  0x96c38 and 0x96d1c are the classes whose methods are the 0x1e5xx
+  element region PR-340 read, and their layout is the +0xa5 one.
+  (c) THE BASE DICHOTOMY, BY VALUE. Pairs of immediate stores within 0x80
+  bytes whose first value is a kind blob (pr373b_bases.py): T then T-8 at
+  452 sites covering 150 classes; T then T-0x2c at 75 sites covering 37
+  classes; the two sets do not overlap, the 37 are exactly the owners of
+  PR-372, and 32 of the 219 appear in neither. So the second dispatch
+  base tells you whether a class owns a point list, and the verb block
+  sits one slot above that base: block = second base + 8.
+  (d) THE FIELD OFFSETS ARE THE LAYOUTS. In the same instruction pair, the
+  block field minus the class field is 0xe6 at 62 sites (obj+0xee), 0x3c
+  at 6 (obj+0x44) and 0x9d at 2 (obj+0xa5); 5 of the 75 are written with
+  an offset that does not parse as a pair - the same three offsets PR-372
+  found from the call sites, now seen from the constructors, and they are
+  what forces the register-relative displacements.
+  (e) THE FIVE SITES WITH NO BUILD. 0x29f4d, 0x2b312, 0x37c7b, 0x37fa7,
+  0x38d6d write the three bases with no 0x44fe0 within -0x400..+0x40.
+  0x29f4d's function also builds a request block next to it
+  (`[eax-0x4]=0x98278`, `[eax+0x8]=0x98278`). 0x37fa7 is the one caller
+  of PR-371's ask-twice builder 0x45070.
+  (f) THE BASE TABLE IS ONLY A STOPGAP. 0xa0cc0 appears at four sites, all
+  inside the builders (0x44fad and 0x44fee in 0x44fe0 itself, 0x4501f in
+  the copier, 0x4509c in the ask-twice builder); no class table names it.
+  In the 70 sites that do build, the class block replaces it within a few
+  instructions.
+GATE: light: verify-index verify-docs rc=0 (ok); no file under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port has no notion of an object answering surface questions for
+  itself, and PR-372 showed which 37 classes do. This is the code that
+  makes it true at run time: the constructor hands the object three
+  pointers into one method array - its own verbs, the container's verbs one
+  slot under the second base, and the container itself inline - and the
+  container's verb table is the class's own, not the shared one. A port
+  that models one dispatch path and one shared surface table is not just
+  missing data; it is missing the mechanism.
+
+- WHAT SURPRISED ME. That the same two fields ([obj+0x8], [obj+0xc]) hold
+  a different relationship depending on whether the class owns a point
+  list, and that I had measured that relationship an hour earlier and read
+  it backwards because I matched instruction forms instead of values.

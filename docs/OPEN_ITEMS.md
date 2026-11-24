@@ -5732,12 +5732,20 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     31 0x53df0, 5 of the 33 second family (KTRASA 0x9dbfc and TUNTRAS
     0x9f7b4 among them) and 1 of a third writer - and NONE of the 124
     0x55070 classes, which is PR-368's two-writer split restated as an
-    ownership law. The other half of PR-372: [obj+0x8] and [obj+0xc] are
-    ONE method array at two bases, the second being the first minus 8 at
-    383 of 470 such sites and over 160 of the 219 arrays (the LION's at
-    0x1ed08: 0x96874 and 0x9686c) - so PR-370's "view pair
-    0xa23b8/0xa23b0" is one array, 0xa23b0 = 0xa23b8-8, and a call at
-    [obj+0xc]+0x10 reaches the container verb 0x45250. The records are
+    ownership law. The other half of PR-372, corrected by PR-373:
+    [obj+0x8] and [obj+0xc] are ONE method array at two bases, and which
+    base is used is the ownership test - a class whose objects store T and
+    then T-8 (452 sites, 150 classes, the LION's at 0x1ed08: 0x96874 and
+    0x9686c) has no point list, and a class that stores T, T-0x24 and
+    T-0x2c (75 sites, exactly the 37 owners, disjoint sets, 32 classes in
+    neither) owns one: the constructor writes the class table at
+    [obj+0x8], the verb block OVER the 0xa0cc0 that 0x44fe0 had just left
+    in the container field, and the second base at T-0x2c = block-8, in
+    that order (0x1fc31 class 0x96c38, 0x35136 KTRASA, 0x1f302 class
+    0x977f0; 5 of the 75 write the three bases with no build call
+    nearby). So PR-370's "view pair 0xa23b8/0xa23b0" is one array read
+    twice, and a call at [obj+0xc]+0x10 reaches the container verb
+    0x45250. The records are
     authored as TEXT: 0x45120 reads "%d" then a " %c" separator - ';'
     storing flag 1, '#' flag 2 - and grows the array by (count+1)*13+4;
     0x45002 copies a container and 0x45070 asks twice and stores the
@@ -5760,13 +5768,20 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     flag byte means where 0x45258 compares it with ecx (`cmp edi,ecx;
     jg`) against PR-344's mode 2, what a derived table's +0x0/+0x4
     verbs add (0x2b2a0 calls 0x3df50, 0x2b295 calls 0x3df90) and whether
-    anyone installs them at all - only the two fixup functions 0x29a51 and
-    0x2a183 store a derived block into the container's vtable word, while
-    the 47 0x44fe0 sites write the base 0xa0cc0, which would make the
-    other 35 blocks unread; which classes use which container offset (the
-    nearest-[obj+0x8]-store attribution is a lead, not a proof, and the
-    factories at 0x1f870 and 0x202d0 build several objects in one
-    function); what 0x98274 is (the
+    they are reachable at all now that the block is installed - the 37
+    owners each install their own block over the 0xa0cc0 that 0x44fe0
+    left, so the question is what the three overridden slots buy; the 5
+    sites that write the three bases with no build call nearby (0x29f4d,
+    0x2b312, 0x37c7b, 0x37fa7, 0x38d6d) and whether those objects keep
+    the array and count the base part left; what 0x531f0 does before
+    `add eax,0xa5` in the same ctor; why the ctor at 0x1f302 is addressed
+    from obj+0x106, the field pair the 0x3ddf0 writer stores its ANSWERS
+    at; the 32 kind tables that pair neither -8 nor -0x2c - how their
+    objects get a table at all; and the 8 owners outside the 0x3ddf0
+    family by name: 0x96c38, 0x96d1c (the 0x53df0 pair whose methods are
+    PR-340's element region), 0x99938 (+0x54 = 0x2b1a0), 0x9ef38,
+    0xa1f90 (ANITAB's +0xb0 companion) and 0xa2054 besides KTRASA and
+    TUNTRAS; also open, what 0x98274 is (the
     request-block signature's neighbour, used at 0x34885 where the
     level array is read), what the 281 five-dword blocks
     {code, code, code, a value, 0} at stride 0x14 are (they name the

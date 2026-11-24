@@ -5824,10 +5824,13 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         +0xee, 7 at +0x44, 4 at +0xa5, one translate at +0x106. A
         class owns a point list iff a table with 0x45250 at +0x8 sits
         at its method array minus 0x24: the container's nine verbs are
-        a PREFIX of the class's own method array, and one fixup writes
-        the three bases of that one array (0x29a51-0x29a70: class
-        array 0x9a778 at [obj+0x8], the verb block 0x9a754 at
-        [obj+0xee], block-minus-one-slot 0x9a74c at [obj+0xc]). 37
+        a PREFIX of the class's own method array, and the constructor
+        writes the three bases of that one array and overwrites the
+        base verb table 0x44fe0 had just left in the container field
+        (75 sites, one per owner: class table at [obj+0x8], the block
+        at the container field, block-minus-one-slot at [obj+0xc];
+        0x1fc31 class 0x96c38, 0x35136 KTRASA, 0x1f302 class
+        0x977f0). 37
         classes own one - all 29 of the 0x3ddf0 family, 2 of the 31
         0x53df0, 5 of the 33 second family (KTRASA, TUNTRAS) - and no
         class of the 124-strong 0x55070 family does, which is the
@@ -5838,10 +5841,13 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         reads "%d" then a " %c" separator, ';' storing flag 1 and '#'
         flag 2. Arrays are shared, not private: 0x24aa0, 0x259b0,
         0x1ece0, 0x20200 and 0x23360 copy the three words. And the
-        second half of PR-372: [obj+0x8] and [obj+0xc] are ONE method
-        array at two bases, the second being the first minus 8 at 383
-        of 470 sites over 160 of the 219 arrays - PR-99's "two views"
-        and PR-370's "view pair" are one array read twice. The port
+        second half of PR-372, corrected by PR-373: [obj+0x8] and
+        [obj+0xc] are ONE method array at two bases, and the base pair
+        is itself the ownership test - T and T-8 at 452 sites over 150
+        classes have no point list, T, T-0x24 and T-0x2c at 75 sites
+        over exactly the 37 owners do, the sets are disjoint and 32
+        tables are in neither - so PR-99's "two views" and PR-370's
+        "view pair" are one array read twice. The port
         measures every class against the level's array and is missing
         the object that answers surface questions for 37 kinds of
         owner.
