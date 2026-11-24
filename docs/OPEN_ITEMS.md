@@ -5824,30 +5824,34 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     named by nothing. Still open there: which classes the 11
     `F`-chain call sites (0x1f583, 0x2783c, 0x34477, 0x378c3, 0x3b506,
     0x3e776 and 5 more) belong to, and the 62 class tables no token
-    names. PR-381 settled how those verbs are reached: the load verb at
-    +0x78 is the entry of a chain - 0x552e0 (78 tables) builds the
+    names. PR-381 read what sits in those verbs and PR-384 named them
+    correctly: the verb at +0x78 is the ASK ANSWER verb of
+    PR-244/PR-249, not a load step. 0x552e0 (78 tables) builds the
     12-byte key, calls 0x53ae0 and tail-calls [T+0x9c], where 181 of
     the 219 tables hold the always-allow stub 0x23a40 (`mov eax,1;ret`)
-    and 5 hold 0x3d980 (`cmp edx,[obj+0xee]` - is the container set?);
-    0x3df00 (23 classes) asks [obj+8+0xd8] first and clears the
-    container with 0x45320, 0x50f80 is the load verb of exactly the 15
-    askable ones and asks [T+0xd0] with [obj+0xb1] when [obj+0x11a]==7,
-    and 0x3f010 serves the road classes on the [obj+0x44] layout. The
-    dispatch census over the image: +0x70 (facing) 215 sites in 76
-    functions, +0x4 146, +0x68 145, +0x6c 91, +0x3c (askable) 74,
-    +0xd0 15, +0x9c 5, +0x78 only 4. Still open: who dispatches the
-    property readers (their offsets are dispatched only from inside the
-    load verbs, and the same functions also have direct call sites),
-    what the real load test is when 181 tables pass the +0x9c gate
-    unconditionally. PR-383 answered the request-entry question: those
-    25 handler functions ARE class verbs - every one is installed in
-    1-6 class tables and 23 hold the load-verb slot +0x78 themselves,
-    so the load request runs through the class's own load verb; the
-    base reader 0x552e0 is reached by direct call and the only dispatch
-    at +0x78 is the 4 sites in 0x4b500, 0x4bd30 and 0x553e0, which
-    leaves the ENTRY of a load request unnamed. PR-383 also settled the
-    direction of the companion verbs: the accept verb at +0xdc is asked
-    of the COMPANION's class (0x50c8a dispatches through
+    and 5 hold 0x3d980 (`cmp edx,[obj+0xee]` - is the point-list
+    container set?); 0x3df00 (23 classes) asks [obj+8+0xd8] first and
+    clears that container with 0x45320, 0x50f80 is the answer verb of
+    exactly the 15 askable ones and asks [T+0xd0] with [obj+0xb1] when
+    [obj+0x11a]==7, and 0x3f010 serves the road classes on the
+    [obj+0x44] layout. The dispatch census over the image: +0x70
+    (facing) 215 sites in 76 functions, +0x4 146, +0x68 145, +0x6c 91,
+    +0x3c (askable) 74, +0xd0 15, +0x9c 5, +0x78 only 4 - and PR-384
+    showed those 4 sites are the three ask walks 0x4b500, 0x4bd30 and
+    0x553e0: the candidate filter at +0x60 is 0x23b80
+    (`mov eax,[obj+0x2c]`) in 178 of the 219 tables, the layer test is
+    [obj+0x24] equality with the requester, an answer is 3 words plus a
+    flag byte merged by 0x49580, and 0x4bd30 (CHECK_LEW) stops at the
+    first non-empty answer while the other walks merge them all. Still
+    open: who dispatches the property readers (their offsets are
+    dispatched only from inside the answer verbs, and the same
+    functions also have direct call sites), and why 0x553e0 asks every
+    member of [[obj+0x40]] with no filter at all. PR-383 showed the 25
+    functions that call the base answer 0x552e0 directly are themselves
+    class verbs and 23 of them hold +0x78 - per-class answer verbs that
+    delegate to the base one; it also settled the direction of the
+    companion verbs: the accept verb at +0xdc is
+    asked of the COMPANION's class (0x50c8a dispatches through
     [obj+0x112]+8), and 0x3b8a0 uses [obj+0x5c] as an index into the
     array at [obj+0x50], asking +0xe0 when element 5's +4 word is 2
     and +0xdc when element 6's is 0xc. Still open there: the type-code

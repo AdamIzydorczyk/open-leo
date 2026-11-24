@@ -5885,17 +5885,23 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         property reads are shared code but installed as class verbs (the
         hit_time/coef/levels reader 0x41180 sits in 53 of the tables at
         +0xd0), so a class decides whether it reads properties at all;
-        PR-381 then traced the verbs that are dispatched: the load verb
-        at +0x78 is an entry that tail-calls the +0x9c gate, where 181
-        of the 219 tables hold the always-allow stub 0x23a40 and 5 hold
-        0x3d980 (`cmp edx,[obj+0xee]`, is the container set?), and the
-        askable load verb 0x50f80 asks +0xd0 with [obj+0xb1], the
-        placement damage; across the image the +0x70 facing verb is
-        dispatched at 215 sites while the load verb is dispatched at 4;
-        PR-383 then found who enters those paths - the request handlers
-        are themselves class verbs (23 of the 25 hold +0x78), and the
-        accept verb at +0xdc is asked of the companion's own class,
-        through [obj+0x112]+8; and 32 of
+        PR-381 read the bodies of those verbs and PR-384 gave them
+        their right name: the verb at +0x78 is the ASK ANSWER entry of
+        PR-244/PR-249, which the port already calls the answer entry;
+        its +0x9c continuation is the per-class filter, where 181 of
+        the 219 tables hold the always-allow stub 0x23a40 and 5 hold
+        0x3d980 (`cmp edx,[obj+0xee]`, is the point-list container
+        set?); the askable answer verb 0x50f80 asks +0xd0 with
+        [obj+0xb1], the placement damage; the four dispatch sites of
+        +0x78 are the ask walks 0x4b500, 0x4bd30 and 0x553e0, whose
+        candidate filter at +0x60 is `mov eax,[obj+0x2c]` in 178
+        tables, whose layer test is [obj+0x24] equality with the
+        requester, and which OR-merge the 12-byte answers with 0x49580
+        except on CHECK_LEW, where 0x4bd30 takes the first non-empty
+        answer; across the image the +0x70 facing verb is dispatched at
+        215 sites; PR-383 also found that the accept verb at +0xdc is
+        asked of the companion's own class, through [obj+0x112]+8; and
+        32 of
         the 37 replace the base ask hook 0x45230 while the five
         second-family owners keep it. The two slots below each block are
         per-class functions taking [obj+0xc] as this (0x206f0 opens `sub

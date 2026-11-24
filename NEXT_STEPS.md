@@ -53353,3 +53353,148 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
 - WHAT SURPRISED ME. That the request handlers double as load verbs: the
   engine does not have a separate loader entry point per class, it has
   one verb slot that the request happens to call.
+
+## PR-384 - THE +0x78 SLOT IS THE ASK ANSWER VERB, NOT A LOAD STEP: THE
+## THREE WALKERS, THE +0x60 FILTER BEING [obj+0x2c] IN 178 TABLES, AND THE
+## LEW CHANNEL STOPPING AT THE FIRST NON-EMPTY ANSWER
+
+```
+KIND: read
+SUBSYSTEM: the ask/answer path of PR-244/PR-249, re-walked from the
+  answer-verb side - the bodies of the three container walks that
+  dispatch [class+0x78], their candidate filter at +0x60, and the merge
+  rules for the answer record (OI-128, OI-129, the F6 thread; continues
+  PR-383, PR-382, PR-381, PR-380, and answers PR-383's "how is a load
+  verb entered").
+ADDRESSES: 0x4b500, 0x4b581, 0x4b59a, 0x4b5a4, 0x4b5be, 0x4b5c5,
+  0x4b5db, 0x4b5e4, 0x4b6ba, 0x4b6c0, 0x4b870, 0x4b87d, 0x4b897,
+  0x4b89d, 0x4bd30, 0x4bd61, 0x4bd81, 0x4bda9, 0x4bdb6, 0x4bdcf,
+  0x553e0, 0x55407, 0x55421, 0x55454, 0x527cb, 0x1ebae, 0x1ebb9,
+  0x3810e, 0x380f6, 0x49580, 0x495b0, 0x749a0, 0x23b80, 0x36170,
+  0x23280, 0x31c00, 0x3b770, 0x23a30, 0x23a40, 0x3d980, 0x552e0,
+  0x55318, 0x55230, 0x53ae0, 0xa94e8, 0xa94ec, 0xcef44, 0xcef40,
+  0x98278, 0x24, 0x2c, 0x34, 0x3c, 0x40, 0x44, 0x58, 0x60, 0x64,
+  0x78, 0x9c, 0xc
+NAMES: ask walk, answer verb, candidate filter, layer word, plane word,
+  answer record, flag byte, first-answer-wins, or-merge, empty-record
+  test, container global, pr384_entry.py, pr384b_walkers.py
+CODE: no: image reading, no port change and no leg. The tracked diff is
+  this record, the OI-128 lines that used the wrong slot name, and the
+  HANDOFF section 8 F6 paragraph. Nothing under ported/ is touched: the
+  port already calls this slot the answer entry and already runs the
+  walk (its own comments cite 0x4b500 -> [obj.vt+0x78] = 0x552e0), so
+  only the light gate applies.
+HOOKS: PR-244 and PR-249 established the ask channels (0x52790's
+  control-word bits, 0x4bd30 for CHECK_LEW, 0x4b890/0x4b870 for
+  CHECK_ANI/CHECK_ZW, "call the candidate's +0x78 with ebx = the
+  requester"); PR-89/PR-90 put the 0x552e0 -> 0x55230 hit chain in the
+  port; PR-380/PR-381/PR-382/PR-383 studied the same slot and named it
+  a load verb; PR-375/PR-376 read the 12-byte key builder 0x749a0 and
+  the OR-combine helper 0x49580.
+OPENS: whether the third container global [ds:0xa94e8] (called at
+  0x4b6ba, in a function whose prologue touches 0x98278 - the block of
+  the unread 0x98274) is a class group or a scene list; what the
+  unfiltered walk 0x553e0 is for, since it asks [class+0x78] of every
+  member of [[obj+0x40]] (count [obj+0x3c]) with no +0x60 and no layer
+  test, and its caller at 0x380f6 clears [obj+0x44] only when
+  [obj+0x5c] is 0x1f or 0x20; the meaning of the answer's flag byte at
+  record+0xc and of the bit 0x40 of record byte 6 that the caller at
+  0x1ebb9 turns into [obj+0x28] = 1; the 41 class tables that install
+  something other than 0x23b80 at +0x60; and what [obj+0x2c] is
+  written by (the plane word, given that 0x23b80 is the default filter).
+CLOSES: PR-383's "how is a load verb entered, since +0x78 is
+  dispatched at only 4 sites": the answer verb is entered by the three
+  ask walks, which is where all four dispatch sites are; PR-382's
+  "what is the object in edx at the request handler": it is a 12-byte
+  buffer that the caller builds with 0x749a0 before the call, and the
+  13 bytes copied out afterwards are the answer record - the same shape
+  the three walks use; and PR-249's unnamed "[class+0x60] candidate
+  filter, plane test": in 178 of the 219 class tables that verb is
+  0x23b80 = `mov eax,[obj+0x2c]; ret`, so the filter reads the
+  object's +0x2c word.
+CORRECTS: PR-380, PR-381, PR-382 and PR-383 called the class-table
+  slot +0x78 the "load verb" and spoke of "loading an object's
+  authored record". That name is wrong and it was a regression: PR-244
+  and PR-249 had already established the slot as the answer verb of an
+  ask, and the port's own comments (ll_level.c 6279-6281, 6555-6561)
+  already call it "the answer entry [obj.vt+0x78] = 0x552e0". What I
+  read as a load step is the answer path: the answer verb's
+  per-class continuation (+0x9c, the 0x3ddf0 family) is where the
+  object's text is parsed, so reading text happens while answering.
+  PR-382's paragraph (d) is right that the token factory never calls
+  the slot - that is because it is a verb, not a construction step.
+  PR-383's paragraph (c) holds but renames: the 25 "request handlers"
+  are answer verbs of 1-6 classes each. PR-244's sentence "all answers
+  OR-merge" is true of the 0x4b500 and 0x553e0 walks only: 0x4bd30,
+  the CHECK_LEW channel, stops at the first candidate whose answer is
+  not all-zero.
+MEASURED: (a) THE SHARED WALK 0x4b500 (pr384_entry.py). Arguments
+  eax = container, edx = out buffer, ecx = element index (scaled by 4),
+  ebx = requester. It initialises a 12-byte buffer with `mov ebx,0xc;
+  call 0x749a0`, then for slot [container+ecx*4]: iterates i <
+  [slot+0x44] over the object array [slot+0x58] and follows each
+  object's chain at [obj+0x34]. Per candidate: `call [cand class
+  +0x60]`, skip if zero; require [cand+0x24] == [requester+0x24]
+  unless a further argument is non-zero; skip the requester itself;
+  `call DWORD PTR [cand class+0x78]` with eax = candidate, edx = a
+  scratch buffer the walk keeps next to its accumulator, ebx still the
+  requester; the answer comes back in eax as a pointer and is ORed into
+  the accumulator with `call 0x49580`. Finally it writes record[0xc]
+  and `repnz movs` the 12 bytes to the out buffer. This confirms
+  PR-249's field map exactly (instance count [class+0x44], array
+  [class+0x58], chain [obj+0x34]) and names two fields it left
+  abstract: the layer word is [obj+0x24] (compared for equality with
+  the requester's) and the plane word is [obj+0x2c].
+  (b) THE LEW WALK 0x4bd30 IS FIRST-ANSWER-WINS. It walks
+  [[requester+0x64]] chained by [obj+0x34], applies the same +0x60
+  filter and the same [obj+0x24] layer equality (skipped when the
+  third argument, the masked 0x8000 layer bit of PR-244, is non-zero),
+  calls [cand class+0x78], copies the 13-byte answer over the local
+  key buffer with four `movs`, and calls 0x495b0, which returns 0 as
+  soon as one of the three answer words is non-zero: the loop
+  continues only while the answer is empty, so the channel takes the
+  first non-empty answer.
+  (c) THE ANSWER RECORD IS 3 WORDS + 1 FLAG BYTE. 0x49580 ORs exactly
+  three dwords of the answer into the accumulator and never touches the
+  flag; every walker stores record[0xc] separately into the caller's
+  buffer (`mov al,[esp+0xc]; mov [edi+0xc],al`), and the caller at
+  0x1ebb3 tests bit 0x40 of byte 6 and writes [obj+0x28] = 1 when it
+  is set. 0x749a0 is called with ebx = 0xc everywhere, which is why the
+  record is 12 bytes plus that flag.
+  (d) THE CANDIDATE FILTER CENSUS. Over the 219 class tables, +0x60
+  holds 0x23b80 (`mov eax,[obj+0x2c]; ret`) in 178 tables, 0x36170
+  (`mov eax,1`) in 5, 0x23280 in 4, 0x31c00 and 0x3b770 in 2 each, and
+  per-class one-offs (0x22d10, 0x26350, 0x26330, 0x26310, 0x260b0,
+  0x24bb0, 0x26000 ...) in the rest. The matching always-allow stub at
+  +0x9c is 0x23a40 (181 tables, PR-381); the class-table slot +0x34 is
+  a stub too (0x23a30 `mov eax,1` in 186, 0x23c30 in 33) and must not
+  be confused with the object's chain field [obj+0x34] the walks use.
+  (e) A THIRD CONTAINER AND AN UNFILTERED WALK. The three call sites
+  of 0x4b500 pass [ds:0xcef44] (0x4b87d, PR-249's CHECK_ZW thunk),
+  [ds:0xa94ec] (0x4b897, CHECK_ANI) and [ds:0xa94e8] (0x4b6ba) - a
+  third global adjacent to the other two, in a function whose start
+  0x4b600 touches the data address 0x98278. Separately, 0x553e0
+  (called at 0x1ebae and 0x3810e) iterates the plain array
+  [[obj+0x40]] with count [obj+0x3c] of the asking object and calls
+  [member class+0x78] with NO filter and NO layer test, OR-merging
+  every answer with 0x49580.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/
+  is touched by this record, so the build and level gates were not run;
+  the index was regenerated with this record in the tree before the
+  run.
+```
+
+- WHY. The port's ask path is built on the vocabulary of PR-244 and
+  PR-249 ("the requester's ask walk 0x4b500", "the answer entry
+  [obj.vt+0x78]"). If my last four records' name for that slot reached
+  the port, the port would gain a second, wrong model of the same
+  mechanism. Two concrete facts are worth keeping from this walk: the
+  layer equality is [obj+0x24] and the candidate filter reads
+  [obj+0x2c]; and the CHECK_LEW channel stops at the first non-empty
+  answer while the other channels merge them all.
+
+- WHAT SURPRISED ME. That I had walked this path before. The port
+  cites 0x4b500 -> [obj.vt+0x78] = 0x552e0 -> 0x55230 in a comment
+  written in PR-90, and I re-derived it four records later under a
+  different name - a reminder to query the index for the slot before
+  naming it.
