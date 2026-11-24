@@ -5477,41 +5477,54 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         that attachment is 0x54624, the case `[arg+4] == 0x1b` of
         the event verb 0x54560 - a standard slot in 87 class
         tables, reached through the name-miss path 0x53480, whose
-        poster is nowhere in the image (OI-123). PR-337 REVERSES
-        WHAT THAT PARAGRAPH CALLED PORTABLE: the surface
-        machinery has TWO verb families and the seat objects are
-        outside both. The shipped installers give the two seat
-        objects 0x96d1c (0x1fb83, 'KATAPULT') and 0x96c38
-        (0x1fc3b, 'PALMA'), and no slot of those six - those two
-        plus 0x96cf8/0x96cf0 and 0x96c14/0x96c0c - holds a
-        reader, a move, an anchor or an ask, while the three
-        tables that hold the 0x1exxx seat verbs (0x95c38, 0x95d1c,
-        0x95ddc) are still named by no dword and no immediate
-        (OI-122). The family that IS installed is 0x3dd60 (read
-        the .des pair lines into an INLINE header at [obj+0xee]:
-        record block at [obj+0xf2], count at [obj+0xf6], records
-        13 bytes with x at +0 and y at +4), 0x3dcb0 (move the
-        WHOLE table by the pair carried by a message whose opcode
-        word is 1, and move the attached element [obj+0x112] with
-        it), 0x3ddf0 (re-anchor through the class +0x6c verb and
-        signal that element) and 0x3df00 (ask: the class +0xd8
-        predicate first, then 0x45320 on [asked+0xee]) - and 61 of
-        the 335 factory name branches carry it, MOVEPLAT, KRA0-2,
-        KWINDA, KGARNEK, LINA and DRABINKA among them. So of the
-        161 objects the shipped .des set gives a surface line, 98
-        belong to types that DO read it and 63 - including every
-        one of ZARIA.01's, one KATAPULT and three PALMA - to types
-        that never read one (OI-124). That is why the seat chain
-        stays closed as a play-code leg: 0x1e5c0's row-cursor step
-        belongs to the unreachable family, so F6d as PR-336 framed
-        it is not a live path. The leg that IS grounded is F6c over
-        the live family - PR-335's grammar filling the header at
-        [obj+0xee], 0x45200's per-record add loop, the
-        message-opcode-1 move of 0x3dcb0 with its element - on the
-        object types that actually carry those verbs, and that is
-        what the next T5 PRs take. And no shipped state of the 22
-        seat-owning objects - 290 states - carries SOLID, so the
-        push-out path cannot stand the lion on a seat either.
+        poster is nowhere in the image (OI-123). PR-338 PUTS BACK
+        what PR-337 took away, and says why it was taken: the class
+        block was being read 0x1000 early. Every address in this image
+        is file offset + 0x10000 - tools/re/leodb.py indexes with
+        `--adjust-vma=0x10000` and its dword/str/hex readers all use
+        va - 0x10000 - while the table reads behind PR-336's OI-122
+        and PR-337's census used 0xf000. The tables they called
+        0x95c38/0x95d1c/0x95ddc are the same bytes the installers name
+        0x96c38/0x96d1c (0x95c38 - 0xf000 = 0x86c38 = 0x96c38 -
+        0x10000): the PALMA and KATAPULT classes themselves. Read
+        where the installer points, 0x96c38 resolves 0x1e510 at +0x18
+        (read the .des pair lines into the object's OWN table at
+        [obj+0xa5] and place every record by [obj]/[obj+4] through
+        0x45200), 0x1e570 at +0x78 (the row-cursor-gated ask),
+        0x1e5c0 at +0xa4 (the per-tick (0,+-1) table move) and
+        0x1e630 at +0xfc; 0x96d1c resolves 0x1e630 at +0x18 and the
+        ask 0x1e970 at +0x78. OI-122 closes as an address error, and
+        the seat chain of this level IS the mechanism the shipped game
+        has at that place. PR-338 also settles what those verbs are:
+        the table is an OBJECT of its own class - 0x44fe0 builds the
+        inline header ([hdr+4] the record block, [hdr+8] the count,
+        records 13 bytes with x at +0 and y at +4) and names 0xa0cc0,
+        whose +0x18 IS the query 0x45320 of PR-336, +0x1c is 0x45400
+        and +0x20 is the parser 0x45120 of PR-335 - and the
+        sub-object class each seat type installs for its own table
+        (0x96c14 for PALMA at [obj+0xa5], 0x96cf8 for KATAPULT) has
+        that verb layout too. 0x45120 has exactly five call sites and
+        0x45320 exactly six askers, and between them they address
+        three inline homes of that header - [obj+0xa5] (0x1e510,
+        0x1e630; asked by 0x1e570 and 0x1e970), [obj+0xee] (0x288d0,
+        0x3dd60; asked by 0x288e0, 0x380d0, 0x3df00) and [obj+0x44]
+        (0x3efe0; asked by 0x3f010, which first requires the asker's
+        state word [obj+0x5c] to be 31 or 32) - plus a fourth shape,
+        the authored rectangle at [obj+0x3c], which 0x28880 moves by
+        the same message-opcode-1 protocol 0x3dcb0 uses on a table.
+        The corrected install census is in the PR-338 record: 65 of the
+        327 factory name branches, 59 tokens, resolve one of the fifteen
+        surface verbs, and 131 of the 160 objects the shipped .des set
+        gives a record line are on those types, ZARIA.01's four
+        (1 KATAPULT, 3 PALMA) among them. So F6's leg is the seat chain
+        after all, and the thing that gates it is what PR-336 named:
+        0x45400's first clearance is taken at the requester's held
+        anchor
+        [obj+0x89] and rejects the lion at every ZARIA.01 position
+        until something writes that attachment (0x54624, OI-123), and
+        no shipped state of the 22 seat-owning objects - 290 states -
+        carries SOLID, so the push-out path cannot stand the lion on a
+        seat either.
         What the ground/contact
         pass writes WHILE a lock holds is unread and named in
         PR-321's OPENS - it matters the moment that leg runs

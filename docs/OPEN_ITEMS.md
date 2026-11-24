@@ -900,6 +900,36 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   is now nameable as port code, and why ZARIA.01's authored
   crossing is written in a data form its own objects never read -
   named as OI-124.
+  PR-338 CORRECTS THAT PARAGRAPH. Its "two families" is wrong in
+  one way and its install census is void. The table itself is an
+  object of its own class: 0x44fe0 builds it into an inline header
+  and names the class 0xa0cc0, whose verbs are +0x8 0x45250,
+  +0xc 0x452d0, +0x14 0x453d0, +0x18 0x45320 (the query of
+  PR-336, not a free function), +0x1c 0x45400 and +0x20 0x45120
+  (the parser of PR-335); 0x45120 has exactly five call sites and
+  0x45320 exactly six askers, and they address THREE inline homes
+  of that header - [obj+0xa5] (0x1e510, 0x1e630; asked by 0x1e570
+  and 0x1e970), [obj+0xee] (0x288d0, 0x3dd60; asked by 0x288e0,
+  0x380d0, 0x3df00) and [obj+0x44] (0x3efe0; asked by 0x3f010,
+  which first requires the asker's [obj+0x5c] to be 31 or 32) -
+  plus a fourth shape, the authored rectangle at [obj+0x3c],
+  moved by 0x28880 with the same message opcode-1 protocol. The
+  "61 branches" figure came from reading the class block 0x1000
+  late (OI-122). Read where the installers point, 65 of the 327
+  factory name branches - 59 tokens - resolve one of the fifteen
+  verbs: the [obj+0xee] family on most of them (0x3dcb0 on 201 of
+  the 298 stored class views, 0x3ddf0 on 192, 0x3df00 on 147,
+  0x3dd60 on 109), the [obj+0xa5] seat family on KAMIEN, KATAPULT,
+  KILOF_PL and PALMA only, the rectangle read/ask pair 0x288d0 /
+  0x288e0 on eleven and nine views, PR-328's rectangle move 0x28880
+  on nine, and the [obj+0x44] ask 0x3f010 on ten. Crossed against
+  the data, 131 of the 160 objects the shipped .des set gives a
+  surface record line are on those types and 29 are not (KATPLAT,
+  KRA2, LINA, DRABINKA, ZAPADNIA, GORYL). What survives the
+  correction unchanged is the part that never depended on it: the
+  header layout, the record stride 0xd, the message protocol, and
+  that ZARIA.01's own seat objects carry the [obj+0xa5] family -
+  which is what this row asked for.
 OI-073: the engine's grounded-y bookkeeping: the instruction that
   turns the shape bottom into the grounded y is unread; the port's
   `pos = line - contact` is an inference
@@ -4726,7 +4756,7 @@ OI-121: the ground query has no SURFACE IDENTITY in this port, so
 OI-122: the three class tables that hold the seat verbs are named
   by no pointer and no immediate in the image, so no shipped
   object is built from them
-  status: OPEN
+  status: CLOSED BY PR-338
   origin: PR-336 (the seat-ask chain read)
   notes: PR-336 read the tables slot by slot. 0x95c38 holds
     +0x18 0x1e510, +0x78 0x1e570, +0xa4 0x1e5c0; 0x95d1c holds
@@ -4743,9 +4773,12 @@ OI-122: the three class tables that hold the seat verbs are named
     0x51770. The shipped seat objects are built from OTHER
     tables: the installer chain 0x1fb32/0x1fc08 names the tokens
     at 0x90738 'KATAPULT' and 0x9074a 'PALMA' and stores
-    [obj+8] = 0x96d1c and 0x96c38, whose +0x78 slots are 0x20230
-    and 0x52570 - no seat ask - while their +0x88 is the standard
-    event verb 0x54560 (one of 87 tables holding it). Right
+    [obj+8] = 0x96d1c and 0x96c38, whose +0x78 slots this row
+    read as 0x20230 and 0x52570 - no seat ask - and whose +0x88
+    it read as the event verb 0x54560. (PR-338: both readings are
+    one page early; at the base the installer uses, those +0x78
+    slots are 0x1e970 and 0x1e570 and both +0x88 slots are
+    0x534c0.) Right
     before 0x95c38, at 0x95c1c-0x95c34, the image lays the
     surface family out in one row: 0x45250, 0x452d0, 0x453d0,
     0x45320, 0x45400, 0x45120. And NOTHING points at any of it:
@@ -4764,19 +4797,42 @@ OI-122: the three class tables that hold the seat verbs are named
     PR-270 models is the other half of that question). Until it
     is found, no shipped object can answer a seat ask, and the
     triple [obj+0xe2]/[obj+0xe6]/[obj+0xea] has no producer.
-    PR-337 CORRECTS WHAT THIS ROW WAS TAKEN TO MEAN. The three
-    tables are still unnamed and this row stays open, but the
-    surface machinery is NOT unreachable: it has a second verb
-    family, 0x3dd60 (read) / 0x3dcb0 (move by a message whose
-    opcode word is 1) / 0x3ddf0 (anchor) / 0x3df00 (ask), and it
-    hangs off an inline header at [obj+0xee] - [obj+0xf2] the
-    record block, [obj+0xf6] the count, records 13 bytes with x
+    PR-337 CORRECTS WHAT THIS ROW WAS TAKEN TO MEAN, AND PR-338
+    REDRAWS THAT CORRECTION. The three tables are the shipped seat
+    objects' own class views (below), and the surface machinery has
+    a second verb family too: 0x3dd60 (read) / 0x3dcb0 (move by a
+    message whose opcode word is 1) / 0x3ddf0 (anchor) / 0x3df00
+    (ask), hanging off an inline header at [obj+0xee] - [obj+0xf2]
+    the record block, [obj+0xf6] the count, records 13 bytes with x
     at +0 and y at +4 - not off the [obj+0xa5]/[obj+0xb1] fields
-    of the 0x1exxx seat verbs. 61 of the 335 factory name
-    branches install classes holding those verbs (the census is in
-    the PR-337 record), so a real shipped object type does read a
-    surface table; and the ANIPL2 lines of 'KATAPULT' and 'PALMA'
-    belong to two of the types that do not, which is OI-124.
+    of the 0x1exxx seat verbs. 65 of the 327 factory name branches
+    install classes that resolve one of the fifteen verbs of that
+    family and the seat and rectangle families, so many shipped
+    object types read a surface table (the corrected census is in
+    the PR-338 record); PR-337's '61 of the 335' came from the
+    shifted read below and is void. 131 of the 160 objects the
+    shipped .des set gives a surface record line belong to those
+    types, and of the 29 that do not, ZARIA.01 has none - both of
+    its surface-line objects, 'KATAPULT' and 'PALMA', are in the
+    first group, which is what OI-124 asks about.
+    PR-338 CLOSES THIS ROW: IT WAS AN ADDRESS ERROR, NOT A GAP.
+    Every address in this image is file offset + 0x10000 -
+    tools/re/leodb.py builds the index with `--adjust-vma=0x10000`
+    and its dword/str/hex readers all use va - 0x10000 - but the
+    table read that produced this row used a 0xf000 base. Its
+    '0x95c38' and the bytes the installer names '0x96c38' are the
+    same bytes: 0x95c38 - 0xf000 = 0x86c38 = 0x96c38 - 0x10000.
+    So the three 'unnamed' tables ARE the shipped seat objects'
+    own class views, and they resolve the seat verbs at exactly
+    the slots this row named: 0x96c38 +0x18 = 0x1e510, +0x78 =
+    0x1e570, +0xa4 = 0x1e5c0, +0xfc = 0x1e630 (the PALMA view,
+    stored at [obj+8] by the 'PALMA' branch at 0x1fc3b) and
+    0x96d1c +0x18 = 0x1e630, +0x78 = 0x1e970 (the KATAPULT view,
+    stored at 0x1fb83). The search found no pointer to 0x95c38
+    because the name is 0x96c38, and that one is stored by the
+    factory branch that builds the level object. Nothing is left
+    to explain: the seat family is installed, on the two seat
+    objects of ZARIA.01.
 
 OI-123: who posts the message whose opcode word is 0x1b and whose
   payload word is a surface object - the only other writer of the
@@ -4793,8 +4849,10 @@ OI-123: who posts the message whose opcode word is 0x1b and whose
     (detach) when one is held, stores [arg+8] - the message's
     payload dword IS the surface object - and calls its +0x0
     (attach) when non-null. 0x54560 is a standard slot: 87 class
-    tables hold it at +0x88, KATAPULT's 0x96d1c among them, and
-    the seat family's own tables hold 0x534c0 there instead. The
+    tables hold it at +0x88; the seat classes 0x96d1c/0x96c38 do
+    NOT - PR-338 reads 0x534c0 at that slot of both, the earlier
+    'KATAPULT's 0x96d1c among them' being the shifted read again -
+    and the seat family's own tables hold 0x534c0 there instead. The
     dispatch that reaches it is 0x53480, which calls [class+0x88]
     only when [class+0x84] finds no handler for the message NAME
     (0x5348d-0x534ab), so the poster is a NAMED message with no
@@ -4817,35 +4875,39 @@ OI-123: who posts the message whose opcode word is 0x1b and whose
     opcode 0x1b here is the +0x10 namespace's, in which case
     0x54624 is reachable through the seat move path instead.
 
-OI-124: ZARIA.01's first chasm has no measured carrier - the
-  level's own seat lines belong to object types whose shipped
-  classes never read a surface table
+OI-124: ZARIA.01's first chasm has no measured carrier
   status: OPEN
   origin: PR-337 (the surface-verb install census)
   notes: HANDOFF section 8 T5's F6 paragraph named the ANIPL2
     seat-line chain as the authored crossing of ZARIA.01's first
     chasm: the KATAPULT pad (307,633)-(340,633) and the three
     PALMA spans, a rising chain ending 28 px short of the exit
-    column at x 1020. PR-337 measured the other half. The
-    'KATAPULT' branch 0x1fb32 and the 'PALMA' branch 0x1fc08 of
-    the factory at 0x1f870 install 0x96d1c/0x96cf0/0x96cf8 and
-    0x96c38/0x96c14/0x96c0c, and no slot of any of those holds
-    the reader 0x3dd60, the move verb 0x3dcb0, the anchor verb
-    0x3ddf0 or the ask verb 0x3df00; the same is true of the
-    other 14 tokens whose seat lines the shipped .des set carries
-    (TMPLAT, TWINDA, EBECZKA, PTAKPLAT, KATPLAT, PIASEK, CAMEL,
-    ZOLW, ZAPADNIA, GEJZER, GORYL, BRANCH, TREE and CEBRZYK).
-    Meanwhile 98 of the 161 surface-line objects in that set DO
-    belong to types that carry the verbs - MOVEPLAT 48, KRA1 21,
-    KRA2 8, LINA 7, KGARNEK 5, DRABINKA 4, KRA0 3, KWINDA 2 - so
-    the machinery is real, just not pointed at this level. The
-    port's own walk (2 px a tick) and jump (measured vertical)
-    cannot cross either, and the seat chain cannot be ported as
-    the carrier because for these two types nothing reads it.
-    WHAT WOULD CLOSE IT: either the mechanism that carries the
-    lion in the shipped game at that place - a moving object type
-    this census did not look for at ZARIA.01, the .plt ground of
-    the chasm read as a slope, or a scripted chain (T6) - or the
-    install path of OI-122's unnamed family, which is the only
-    code in the image that reads those two objects' trailing
-    pairs (0x1e510/0x1e630).
+    column at x 1020. PR-337 claimed the other half - that those
+    two objects' classes hold no surface verb - and PR-338 VOIDED
+    that: it came from reading the class block 0x1000 early (the
+    same error as OI-122). Read where the installer points, the
+    'KATAPULT' view 0x96d1c resolves the table reader 0x1e630 at
+    +0x18 and the ask 0x1e970 at +0x78, and the 'PALMA' view
+    0x96c38 resolves 0x1e510 at +0x18, the gated ask 0x1e570 at
+    +0x78, the per-tick (0,+-1) table move 0x1e5c0 at +0xa4 and
+    0x1e630 at +0xfc. The seat chain IS the mechanism the shipped
+    game has at that place. What still keeps the crossing un-
+    modelled is the rest of PR-336's read, unchanged by this:
+    0x45400's first test is a clearance at the requester's own
+    held anchor [obj+0x89], and at ZARIA.01's coordinates it
+    rejects the lion at every position the level can put him in;
+    the only writer of that attachment apart from the query's own
+    copies is 0x54624, the case [arg+4] == 0x1b of the event verb
+    0x54560, and no poster of that message is in the image
+    (OI-123). And the chain's top still ends 28 px short of the
+    authored exit x 1020, so the per-tick seat motion matters as
+    much as the table: PALMA carries 0x1e5c0 and KATAPULT does
+    not. The port's walk (2 px a tick) and jump (measured
+    vertical) cannot cross either way.
+    WHAT WOULD CLOSE IT: the poster of the 0x1b message that
+    attaches a requester to a surface (OI-123) - with it, the
+    chain of this level's own objects becomes the carrier and the
+    question is the 28 px and the seat's row-clock direction;
+    without it, the carrier is something else, and the candidates
+    are the .plt ground of the chasm read as a slope or a
+    scripted chain (T6).

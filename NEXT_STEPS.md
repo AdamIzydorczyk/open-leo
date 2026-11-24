@@ -46651,3 +46651,229 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   over /tmp/opencode/pr335/des, the script of which is in this
   record's session.
 ```
+
+## PR-338 - THE CLASS BLOCK WAS BEING READ 0x1000 EARLY: THE SEAT VERBS
+## ARE IN THE SHIPPED SEAT OBJECTS' OWN CLASSES, AND THE SURFACE TABLE IS
+## AN OBJECT OF ITS OWN CLASS WITH FIVE READERS AND SIX ASKERS
+```
+KIND: read
+SUBSYSTEM: the surface-table machinery of OI-072/OI-122/OI-123/OI-124 -
+  the address convention this image must be read at, the class the table
+  itself is built from, every reader/asker/mover of that header, the
+  install census PR-337's paragraph (d) should have been, and its data
+  cross. Read-only: no port code moves; what moves is which shipped
+  object types a future F6 leg may be written against at all.
+ADDRESSES: 0x1fb32, 0x1fb42, 0x1fb56, 0x1fb5b, 0x1fb60, 0x1fb65,
+  0x1fb6a, 0x1fb76, 0x1fb83, 0x1fb8d, 0x1fb94, 0x1fc08, 0x1fc2c,
+  0x1fc31, 0x1fc36, 0x1fc3b, 0x1fc45, 0x1fc4b, 0x1fb83, 0x1e510,
+  0x1e51c, 0x1e52a, 0x1e560, 0x1e570, 0x1e585, 0x1e58a, 0x1e58f,
+  0x1e596, 0x1e5c0, 0x1e630, 0x1e640, 0x1e64c, 0x1e651, 0x1e659,
+  0x1e690, 0x1e970, 0x1e985, 0x288d0, 0x288d5, 0x288e0, 0x288f4,
+  0x2890d, 0x28880, 0x28885, 0x28890, 0x28896, 0x28899, 0x2889c,
+  0x288a2, 0x288a8, 0x288af, 0x288b2, 0x380d0, 0x380e9, 0x380f6,
+  0x380fb, 0x38102, 0x3dd72, 0x3efe0, 0x3efe9, 0x3f010, 0x3f019,
+  0x3f01e, 0x3f023, 0x3f028, 0x44f90, 0x44fe0, 0x44fee, 0x45002,
+  0x45012, 0x4501f, 0x45025, 0x45120, 0x4514a, 0x45200, 0x45230,
+  0x45250, 0x452d0, 0x45320, 0x453d0, 0x45400, 0x76a64, 0x76a69,
+  0x76bb7, 0x90738, 0x9074a, 0x95c38, 0x95d1c, 0x95ddc, 0x96c0c,
+  0x96c14, 0x96c38, 0x96c50, 0x96c90, 0x96cb0, 0x96cf0, 0x96cf8,
+  0x96d1c, 0x96d34, 0x96d94, 0x96dc0, 0x98278, 0x9a0cc0, 0x96a88,
+  0x96b88, 0x9755c, 0x99550, 0x99668, 0x99e64, 0x99f64, 0x99ff0,
+  0x9daf8, 0x9da40, 0x9dbfc, 0x9f7b4, 0x9ed18, 0x9edd0, 0x9ee88,
+  0x9e578, 0xa0c64, 0xa0cc0, 0xa1f90, 0xa1fa8, 0x86c38, 0x86d1c,
+  0x1f963, 0x1fad4, 0x1fba6, 0x1fcc3, 0x1fd37, 0x389ab, 0x4e035,
+  0x3c, 0x40,
+  0x44, 0x48, 0x50, 0x5c, 0x89, 0x88, 0xa5, 0xb1, 0xca, 0x18,
+  0x1c, 0x20, 0x78, 0xa4, 0xfc, 0xd8
+NAMES: 0x45120, 0x45200, 0x45320, 0x45400, 0x44fe0, 0x45002, 0x1e510,
+  0x1e630, 0x1e570, 0x1e970, 0x1e5c0, 0x288d0, 0x288e0, 0x380d0,
+  0x3f010, 0x3efe0, 0x28880, 0x3dd60, 0x3dcb0, 0x3df00, 0x3ddf0,
+  0x76a69, 0x54624, KATAPULT, PALMA, KAMIEN, KILOF_PL, MOVEPLAT,
+  KRA1, KRA2, LINA, DRABINKA, CEBRZYK, KATPLAT, SKJUMP, FLAGA,
+  TABLICZKALONA, KKULA, KTRASA, SURFACE TABLE, TABLE CLASS,
+  INLINE HEADER, RECORD BLOCK, COUNT WORD, RECORD STRIDE, CLASS VIEW,
+  ADDRESS CONVENTION, MESSAGE OPCODE 1, ANCHORED RECTANGLE, STATE WORD,
+  OI-072, OI-122, OI-123, OI-124, F6, F6c, F6d
+CODE: no: nothing in ported/ or the Makefile moved. What this changes is
+  which object types a future F6c leg may be written against, and it
+  reopens the seat chain PR-337 closed.
+HOOKS: none. Every claim is machine code (leodb dis), the call index
+  (xref), the immediate index (imm), the string index (str), the aligned
+  dword index (dword), or the build parameters of the index itself
+  (tools/re/leodb.py, the meta table).
+MEASURED: (a) THE CONVENTION THIS IMAGE MUST BE READ AT. tools/re/
+  leodb.py runs objdump with `--adjust-vma=0x10000`; its meta table
+  carries `text 0x10000 0x82b51`; the dword rows are built as
+  (0x10000 + off, ...), the str rows as (0x10000 + m.start(), ...), and
+  its `hex` subcommand reads data[va - 0x10000:]. So VA = file offset +
+  0x10000 for the whole image, code included, and a 0xf000 base is wrong
+  by one page. Inside the image: 0x1fb32 is `mov edx,0x90738` +
+  `call 0x76a69`, and the str row for the text 'KATAPULT' sits at VA
+  0x90738, i.e. at file 0x80738 - the compare immediates are VA in this
+  same convention, so every other immediate the same branch writes is
+  too.
+  (b) WHAT THE WRONG BASE COST. 0x95d1c - 0xf000 = 0x86d1c =
+  0x96d1c - 0x10000: the bytes PR-336 read as the "unnamed" table
+  0x95d1c are the bytes the 'KATAPULT' branch stores at 0x1fb83 as
+  0x96d1c, and the same for 0x95c38/0x96c38 (0x95c38 - 0xf000 =
+  0x86c38 = 0x96c38 - 0x10000). Read at the base the installer uses,
+  those views resolve the seat verbs at exactly the slots PR-336
+  described: 0x96c38 +0x18 = 0x1e510, +0x78 = 0x1e570, +0xa4 =
+  0x1e5c0, +0xfc = 0x1e630; 0x96d1c +0x18 = 0x1e630, +0x78 = 0x1e970,
+  +0xa4 = 0x1e690. The aligned dword index gives each of those verbs
+  exactly one slot: 0x1e510 at 0x96c50, 0x1e570 at 0x96cb0, 0x1e630 at
+  0x96d34, 0x1e970 at 0x96d94. That also says why "which class table
+  holds verb V" has no answer: 0x96d1c = 0x96c38 + 0xe4, so the class
+  block is one contiguous array of code pointers and each type's stored
+  class pointer is a different INDEX into it. The question that does
+  have an answer is "which stored view resolves V, at which slot" -
+  which is the census of paragraph (f).
+  (c) THE TABLE IS AN OBJECT WITH ITS OWN CLASS. The KATAPULT branch
+  allocates 0xc5 bytes (0x1fb42 `mov eax,0xc5`, 0x1fb47 `call
+  0x5c320`), then 0x1fb56 `call 0x531f0`, 0x1fb5b `add eax,0xa5`,
+  0x1fb60 `call 0x44fe0` - and 0x44fe0 is three stores: [hdr+4] = 0,
+  [hdr+8] = 0, [hdr] = 0xa0cc0. So the surface table hangs off an
+  inline header at [obj+0xa5] whose record block is [hdr+4] and whose
+  count is [hdr+8] (PR-335's fields, now with their constructor), and
+  its class is 0xa0cc0. The installer then overrides it with the
+  per-type view: 0x1fb8d stores 0x96cf8 at [eax-0xc] with eax =
+  obj + 0xb1, i.e. [obj+0xa5] (0x1fb6a did `add eax,0xb1`), and the
+  PALMA branch stores 0x96c14 the same way at 0x1fc45. 0xa0cc0's verbs
+  are +0x0 0x45230, +0x4 0x39d00, +0x8 0x45250, +0xc 0x452d0,
+  +0x10 0x44f90, +0x14 0x453d0, +0x18 0x45320, +0x1c 0x45400,
+  +0x20 0x45120; and 0x96c14, 0x96c0c, 0x96cf8, 0x96cf0 carry the same
+  layout with per-type entries at +0x0/+0x4/+0x10 (0x96c14 = +0x8
+  0x45250, +0xc 0x452d0, +0x14 0x453d0, +0x18 0x45320, +0x1c 0x45400,
+  +0x20 0x45120). PR-335's parser and PR-336's query are therefore
+  METHODS OF THE TABLE (its +0x20 and +0x18), not free functions, and
+  the allocation PR-335 read at 0x4514a - (count+1)*0xd + 4 - is
+  repeated inside the class at 0x45012 (`imul eax,edx,0xd`, `add
+  eax,0x4`, ebx = 0xa0c64, then 0x76a64 and 0x76bb7).
+  (d) EXACTLY FIVE READERS AND SIX ASKERS, OVER THREE HOMES. The call
+  index gives 0x45120 five callers: 0x1e51c and 0x1e640 (inside the
+  seat verbs 0x1e510 and 0x1e630, both `lea/add eax,0xa5` - the header
+  at [obj+0xa5]), 0x288d5 (inside the two-instruction verb 0x288d0,
+  `add eax,0xee; call 0x45120; ret`), 0x3dd72 (inside PR-337's 0x3dd60,
+  [obj+0xee]) and 0x3efe9 (inside 0x3efe0, `add eax,0x44` - a THIRD
+  home). 0x45320 has six: 0x1e596 (0x1e570, which first gates on the
+  state record's row cursor [[rec]+4] < 13, 0x1e585), 0x1e985 (0x1e970,
+  no gate), 0x2890d (0x288e0, after the class +0xd8 predicate, on
+  [obj+0xee]), 0x38102 (0x380d0, after +0x3c and a gate that the
+  ASKER's [obj+0x5c] is 31 or 32, 0x380e9-0x380f4, on [obj+0x44]),
+  0x3df2f (PR-337's 0x3df00, on [asked+0xee]) and 0x3f028 (0x3f010,
+  which requires ebx == [obj+0x3c] first, on [obj+0x44]). All six pass
+  ebx = 2 and ecx = 0. 0x45200 has ten: 0x1e52a, 0x1e64c (the two seat
+  readers placing the table at [obj]/[obj+4]), 0x1e5f8, 0x1e6ce,
+  0x1e733, 0x1e798, 0x1e803, 0x1e896 (the seat family's runtime
+  members), and PR-337's 0x3dccd and 0x3deb2.
+  (e) THE FOURTH SHAPE IS NOT A TABLE. 0x28880 opens with the same
+  message gate as 0x3dcb0 - `mov ebx,[edx+4]; cmp ebx,1` (0x28885) -
+  and then reads [obj+0x3c], [obj+0x40], [obj+0x44], [obj+0x48], adds
+  the message's [arg+8] to the first and third and its [arg+0xc] to the
+  second and fourth (0x288a2-0x288b2) and stores them back: that is
+  PR-328's authored rectangle, absolute at [obj+0x3c], moved by the
+  same opcode-1 message protocol. A surface table and a rectangle share
+  a move mechanism and nothing else; 0x3f010's ask gate (paragraph (d))
+  tests `ebx == [obj+0x3c]` on the same field.
+  (f) THE CORRECTED INSTALL CENSUS. Methods matter here: the old
+  census scanned a fixed +0x00..+0x300 window over every table-
+  looking base and used a 0xf000 base, and both mistakes inflate
+  the answer. The corrected script takes the set of class views
+  that shipped factory branches actually store - a factory branch
+  being the code between one `mov edx,<name>` + `call 0x76a69`
+  name compare and the next in the same function - and resolves
+  verbs only inside those. It finds 334 object-name strings and
+  327 compare sites; the branches store 298 distinct class views;
+  65 of the 327 branches, over 59 tokens, resolve at least one of
+  the fifteen verbs. Per verb, how many of the 298 stored views
+  resolve it: 0x3dcb0 201, 0x3ddf0 192, 0x3df00 147, 0x3dd60 109,
+  0x288d0 11, 0x28880 9, 0x288e0 9, 0x3f010 10, 0x1e630 10,
+  0x1e970 8, and 7 each for 0x1e510, 0x1e570 and 0x1e5c0; 0x380d0
+  6. THE [obj+0xa5] SEAT FAMILY IS RARE AND EXPLICIT: only four
+  tokens resolve it - KAMIEN (0x96a88 at +0x1c8/+0x228/+0x254/
+  +0x2ac), KILOF_PL (0x96b88 at +0xc8/+0x128/+0x154/+0x1ac/
+  +0x20c), PALMA (0x96c38 at +0x18/+0x78/+0xa4/+0xfc/+0x15c, the
+  full set including the per-tick move 0x1e5c0) and KATAPULT
+  (0x96d1c at +0x18/+0x78, reader and ungated ask only). The
+  [obj+0x44] home is one-sided: 0x3efe0 is resolved by NO stored
+  view, while 0x3f010's ask is installed by ten (KKULA 0x9daf8
+  +0x17c, KPAJECZ 0x9da40 +0x234, KTRASA 0x9dbfc +0x78, TUNTRAS
+  0x9f7b4 +0x78) - so a [obj+0x44] header is asked but never read
+  from data. The rectangle pair is installed where PR-328 said:
+  0x28880 on nine views (CIUCHCIA 0x99e64 +0x19c, BICZRECT
+  0x99f64 +0x9c, WSPRECT 0x99ff0 +0x10) and 0x288d0/0x288e0 on
+  eleven/nine (PIASEK, SCHODY4, BRECT, LISC), and the gated
+  [obj+0x3c] ask 0x380d0 on six (SKJUMP 0x9ed18 +0x298, FLAGA
+  0x9edd0 +0x1e0, TABLICZKALONA 0x9ee88 +0x128).
+  (g) THE DATA CROSS, DONE AGAIN. Counting object headers
+  `NAME,anim,mov,x,y` whose next data line is a record line, over
+  the 103 dumped .DES members: 160 objects over 23 tokens
+  (MOVEPLAT 48, KRA1 21, CEBRZYK 11, TMPLAT 10, TWINDA 10,
+  KATPLAT 8, KRA2 8, LINA 7, EBECZKA 6, KGARNEK 5, PTAKPLAT 5,
+  DRABINKA 4, KRA0 3, PALMA 3, PIASEK 2, KWINDA 2 and BRANCH,
+  CAMEL, GEJZER, GORYL, KATAPULT, TREE, ZAPADNIA, ZOLW one each).
+  PR-337 printed 161/24 and that script is not in its GATE list,
+  so this is the reproducible figure; the token set is the same
+  but one. Three record forms appear: 139 with a `;` pair
+  separator, 11 with `!` (all CEBRZYK), 10 with a single pair and
+  no separator (LINA, DRABINKA). Crossed with paragraph (f): 131
+  of the 160 belong to a type whose installed class resolves a
+  surface verb and 29 do not - KATPLAT 8, KRA2 8, LINA 7, DRABINKA
+  4, ZAPADNIA 1, GORYL 1 - which is not PR-337's split (it put
+  KRA2, LINA and DRABINKA in the carrying group and KATAPULT,
+  PALMA, CEBRZYK, TMPLAT, TWINDA, EBECZKA, PTAKPLAT and PIASEK in
+  the other). ZARIA.01's four surface-line objects (1 KATAPULT, 3
+  PALMA) are all in the carrying group; no object of that level is
+  on an [obj+0xee] type. 45 types install a verb but no shipped
+  .des member gives them a record line.
+OPENS: four gaps. One, what kind of object carries a surface table at
+  [obj+0x44], and why 0x380d0's ask requires the asker's state word
+  [obj+0x5c] to be 31 or 32 - paragraph (f) says the [obj+0x44] home is
+  one-sided: ten installed askers 0x3f010 and no reader at all, since
+  0x3efe0 is resolved by no stored class view, so nothing in the
+  shipped data can fill the table those ten ask. Two, the two other
+  record forms of paragraph (g): the `!` separator, 11 CEBRZYK objects,
+  and the single pair with no separator, LINA and DRABINKA - 0x45120's
+  record loop is documented for `;` and for the trailing bracket pair,
+  and whether it also accepts `!` and a bare single pair is unread; if
+  it does not, those 21 objects belong to a different reader. Three, the
+  row-clock question of PR-336 is back in scope for PALMA, which carries
+  0x1e5c0 at its +0xa4, while KATAPULT does not: what the 14-row
+  PALM/PALML states do at cursor 7. Four, the message poster of
+  paragraph (e) and of 0x3dcb0 is still unnamed, OI-123.
+CLOSES: OI-122 - the three "unnamed" tables are the shipped seat
+  objects' own class views, named by the very installer branches
+  PR-336 quoted; the row's search found nothing because it looked for
+  0x95c38 and the name is 0x96c38.
+CORRECTS: PR-336's OI-122 premise (above, and the row now reads CLOSED).
+  PR-337's paragraphs (d) and (e) and the 61-token list with them: that
+  census read the class block at 0xf000, so every table identity and
+  slot number it printed named the bytes 0x1000 away from the ones the
+  factory stores; its "KATAPULT and PALMA hold no reader, no move, no
+  anchor and no ask" is the direct opposite of the truth - those two
+  classes hold 0x1e510/0x1e570/0x1e5c0/0x1e630 and 0x1e630/0x1e970 at
+  the slots PR-336 named. Its paragraphs (a)-(c) (the [obj+0xee] verb
+  bodies, the header layout, the ` F = %d, %d \n` clause that no shipped
+  .des member satisfies) stand unchanged: they came from the disassembly
+  index, which has always used the right base. OI-124's premise is void
+  and the row is restated. Also corrected in the rows: OI-122's and
+  OI-123's readings of the seat classes' +0x78 and +0x88 slots (they
+  are 0x1e970/0x1e570 and 0x534c0, not 0x20230/0x52570 and 0x54560),
+  OI-072's and OI-122's "61 of the 335 branches" and the 98/63 data
+  split (paragraphs (f) and (g) above), and PR-337 paragraph (f)'s
+  161-objects-over-24-tokens count - its counting script is not in
+  that record's GATE list and cannot be reproduced; paragraph (g) is
+  the count that can be.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
+  and no mutation run. Reproducible: /tmp/opencode/pr338_census.py is
+  the corrected census (it names the convention in its own docstring and
+  resolves verbs only for the class views the factories store, never by
+  scanning the class block) and /tmp/opencode/pr338_census.out is its
+  output; the .des cross of paragraph (g) is /tmp/opencode/pr338_cross.py
+  and /tmp/opencode/pr338_cross.out; the seat-family bodies are
+  dumped in /tmp/opencode/pr338_1e4a0.txt and
+  /tmp/opencode/pr338_287a0.txt; the
+  /tmp/opencode/pr337_names.py line of PR-337's GATE is superseded by
+  the corrected script, and its 0xf000 base is the error this record
+  measures.
+```
