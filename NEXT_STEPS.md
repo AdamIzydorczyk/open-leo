@@ -47009,3 +47009,112 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
   mnem='call'`, and the verb bodies are dumped in
   /tmp/opencode/pr339_1e5c0.txt and /tmp/opencode/pr339_1e690.txt.
 ```
+
+## PR-340 - THE ELEMENT FIELDS OF THE SEAT VERBS ARE SCALED INTEGER IDS:
+## [obj+0xbd] LIES INSIDE KATAPULT'S ALLOCATION ONLY, ITS GETTERS RETURN A
+## GLOBAL FROM A STATIC COUNTER BLOCK, AND THE REAL MANAGED OBJECT COMES
+## FROM A GAME-SINGLETON SLOT
+```
+KIND: read
+SUBSYSTEM: the element half of the seat verbs, OI-125 - the fields
+  [obj+0xbd] and [obj+0xc1], their getters, setters and clearers, and the
+  static id block they read. Read-only: no port code moves.
+ADDRESSES: 0x1e6d3, 0x1e6e0, 0x1e6ef, 0x1e70f, 0x1e713, 0x1e738, 0x1e79d,
+  0x1e7e0, 0x1e808, 0x1e89b, 0x1e957, 0x1dfd9, 0x1dfde, 0x1dfdd, 0x1e001,
+  0x1e015, 0x1e029, 0x44350, 0xa90ac, 0x22dd0, 0x22de0, 0x22dfa, 0x22df6,
+  0x22e13, 0x22e18, 0x22e22, 0x22e30, 0x52c70, 0x53a30, 0x53a58, 0x53a6b,
+  0x208d0, 0x208e0, 0x208eb, 0x208f0, 0x2090e, 0x2091d, 0x20940, 0x20958,
+  0x20961, 0x20964, 0x96574, 0x96a80, 0x96b80, 0x96c0c, 0x96c14, 0x96cf0,
+  0x96cf8, 0x96d1c, 0xcef40, 0x394, 0xba8, 0xbb0, 0xbb4, 0xbb8, 0xbbc,
+  0xbc0, 0xbc4, 0xbc8, 0xbd, 0xc1, 0xc2, 0x66, 0x64, 0xb5, 0xc5, 0x4,
+  0x18, 0x94
+NAMES: [obj+0xbd], [obj+0xc1], [obj+0xc2], [obj+0x66], ID BLOCK,
+  GAME OBJECT ANCHOR, SINGLETON, KATAPULT, PALMA, KAMIEN, KILOF_PL,
+  0x22e30, 0x22dd0, 0x22de0, 0x22dfa, 0x20964, 0x20940, 0x1dfd9, 0x44350,
+  0x52c70, 0x53a30, 0x96574, OI-123, OI-125, F6
+CODE: no: nothing in ported/ or the Makefile moved. What moves is what an
+  F6 seat leg would have to carry: an id, not a pointer, in [obj+0xbd].
+HOOKS: none. Every claim is machine code (leodb dis), the instruction
+  index (insn), the store-immediate index (loadimm), the global-reference
+  search over the instruction index, or the data bytes at the class views.
+MEASURED: (a) WHERE THE FIELDS LIVE. 0x1e690's body tests
+  [obj+0xbd] before its element call (0x1e6d3, 0x1e738, 0x1e79d) and
+  [obj+0xc1] (0x1e808, 0x1e89b), and writes them at 0x1e7e0 and 0x1e957.
+  KATAPULT is allocated 0xc5 bytes (0x1fb42) and PALMA 0xb5 (0x1fc18), so
+  [obj+0xbd] and [obj+0xc1] are inside KATAPULT's object and past PALMA's
+  end: with the +0xa4 verb itself different for the two types (PR-339),
+  the element half belongs to the catapult alone.
+  (b) THE GETTERS RETURN A GLOBAL. 0x22e30 is `mov eax,ds:0xcebb8; ret`
+  and 0x22dd0 is `mov eax,ds:0xcebc0; ret`. Slot positions, read at the
+  ten seat and seat sub-object views the installers store (the full list
+  is in the GATE file): 0x22e30 sits at +0xc of the KATAPULT class view
+  0x96d1c, +0x30 of 0x96cf8 and +0x38 of 0x96cf0, at +0xf0 of the PALMA
+  class view 0x96c38, +0x114 of 0x96c14 and +0x11c of 0x96c0c, and at
+  +0x2a0/+0x2a8 of the KAMIEN pair 0x96a88/0x96a80 and +0x1a0/+0x1a8 of
+  the KILOF_PL pair 0x96b88/0x96b80. 0x22dd0 sits at +0xcc of 0x96d1c,
+  +0xf0/+0xf8 of 0x96cf8/0x96cf0, +0x1b0/+0x1d4/+0x1dc of the PALMA
+  trio and +0x260/+0x268 of the KILOF_PL pair - seven of the ten, not
+  the KAMIEN pair. The only writers of those two globals are 0x1e001 and
+  0x1e015.
+  (c) THE GLOBALS ARE COUNTER VALUES, NOT POINTERS. 0x1dfd9-0x1e029 is
+  the static-init pattern PR-336 names: eight stores to the consecutive
+  globals 0xceba8, 0xcebb0, 0xcebb4, 0xcebb8, 0xcebbc, 0xcebc0, 0xcebc4
+  and 0xcebc8, each the result of `call 0x44350`, and 0x44350 is four
+  instructions - `mov eax,ds:0xa90ac; lea edx,[eax+1]; mov
+  ds:0xa90ac,edx; ret`. So that block hands out successive small
+  integers, and what a seat object keeps at [obj+0xbd] through the
+  getters is one of those ids: the element a seat manages is selected by
+  id, not by pointer.
+  (d) THE SETTERS AND THE FLAG BYTES. 0x20964 is `mov DWORD PTR
+  [ebx+0xbd],edx` where ebx = [eax-0xa5] is the object (0x20958), eight
+  bytes after `or BYTE PTR [eax-0x3f],0x40` (0x20955) - the flag byte at
+  [obj+0xc2]. Its sibling 0x20940 `mov DWORD PTR [eax+0x18],0; sub
+  eax,0xa5; ret` is stored in eight of the ten views - +0x4 of 0x96cf8,
+  +0xc of 0x96cf0, +0xc4/+0xdc/+0xe8 of the PALMA trio, +0x174/+0x17c of
+  the KILOF_PL pair and +0x268/+0x270 of the KAMIEN pair - but NEITHER
+  0x20964 nor 0x22dfa, 0x22e18 appears in any stored view: they are
+  reached through a view this census does not hold, or by direct call.
+  0x22dfa is the other setter: `or BYTE PTR [edx+0x2],0x40` at 0x22df6
+  with edx = [eax+0x64] (the object's flag word at [obj+0x66]) and then
+  `mov [eax+0xbd],ebx` with ebx = the edx argument. The clearer 0x22de0
+  `mov [eax+0xbd],0` is stored at +0xb4 of 0x96d1c, +0xd8/+0xe0 of
+  0x96cf8/0x96cf0, +0x198/+0x1bc/+0x1c4 of the PALMA trio and +0x248/
+  +0x250 of the KILOF_PL pair. And 0x22e18 does `call 0x52c70` (eax,
+  edx = the object) followed by `mov [edx+0xbd],0` and `mov
+  [edx+0xc1],0` at 0x22e22.
+  (e) THE OBJECT BEING MANAGED IS A GAME SINGLETON. 0x1e6e0 loads the
+  anchor 0xcef40, 0x1e6ef reads [anchor+0x394], 0x1e6fc reads its +0x8
+  and 0x1e713 calls [[that]+0x10] with the block {0, 1, dx, dy} built at
+  [esp+0x10] - so the element the seat moves is a singleton reached
+  through the same game-object anchor 0x45230 reads at 0x4523c (PR-338),
+  and [obj+0xbd] only decides WHETHER that call happens. The sub-object's
+  own +0x10 verb 0x208e0 shows the same shape from the other side: it
+  tests bit 2 of its argument (0x208eb) and for that branch names the
+  class 0x96574 through 0x74bc0/0x74be0, else it calls the table class's
+  0x44f90 after `add eax,0xa5` (0x20909-0x2090e) and then 0x53a30 (which
+  at 0x53a58-0x53a6b installs 0xa2498/0xa2490 at [x+8]/[x+0xc] and calls
+  the +0x94 verb - one +0x94 call site in the image).
+OPENS: OI-125's remaining half, restated with the new facts: what value
+  is handed to the set-element verbs 0x20964 and 0x22dfa, who calls them
+  and who calls the clearer 0x22e18, what 0x52c70 does, what the class
+  0x96574 named at 0x208f0 is, and what [obj+0xc2] bit 7 and [obj+0x66]
+  bit 6 mean. Also open, and now the thing that decides whether a seat
+  moves at all: the state record's +0x4 word that 0x1e690's dispatcher
+  compares (3..7) and that 0x1e570 gates at < 13 - the record's control
+  word is at +0x12 (0x543af reads it and masks 7, PR-147's mode table),
+  so +0x4 is a different field and no PR has named it.
+CLOSES: nothing. It answers OI-125's element-field question in part: the
+  fields are real, only KATAPULT-sized, and hold an id from a static
+  counter block, while the managed object is a singleton.
+CORRECTS: PR-339's OI-125 wording that [obj+0xbd]/[obj+0xc1] carry the
+  element: the fields hold an id from the counter block of paragraph (c)
+  and the element itself is the singleton read of paragraph (e).
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
+  and no mutation run. Reproducible: /tmp/opencode/pr340_body_draft.txt
+  is this record's text and /tmp/opencode/pr340_views.out lists the slot
+  positions of paragraph (b), (d) and (e) across the six seat
+  sub-object views, printed by /tmp/opencode/pr340_views.py over the
+  class views collected by /tmp/opencode/pr338_census.out; the verb
+  bodies are dumped in /tmp/opencode/pr340_208d0.txt,
+  /tmp/opencode/pr340_22dd0.txt and /tmp/opencode/pr340_1dfd9.txt.
+```

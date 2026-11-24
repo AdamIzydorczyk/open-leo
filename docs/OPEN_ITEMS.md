@@ -4947,8 +4947,34 @@ OI-125: the state-change surface jumps of the object class +0xa4 verb -
     catapult takes is open. WHY IT MATTERS: if F6's leg runs, the
     seat's authored motion IS this - a 1 px per-row descent plus
     state-change offsets - and the port parses those tables
-    (OBJ_MAXSEAT since PR-335) and moves none of them. WHAT WOULD
-    CLOSE IT: the writers and readers of [obj+0xbd]/[obj+0xc1] and
-    the meaning of the +0x4 state-type word, then a port leg that
-    applies the shift at the row admit and the state change, which
+    (OBJ_MAXSEAT since PR-335) and moves none of them.
+    PR-340 ANSWERS PART OF IT. [obj+0xbd] and [obj+0xc1] are real
+    fields but only KATAPULT-sized - the object is allocated 0xc5
+    bytes at 0x1fb42 while PALMA gets 0xb5 at 0x1fc18 - and what
+    they hold is an ID, not a pointer: the getters that feed them,
+    0x22e30 (`mov eax,ds:0xcebb8`) stored at +0xc of KATAPULT's own
+    class view 0x96d1c among ten seat views, and 0x22dd0
+    (ds:0xcebc0), read globals written ONLY at 0x1e001/0x1e015,
+    which sit in the static-init block 0x1dfd9-0x1e029: eight
+    stores to 0xceba8..0xcebc8, each `call 0x44350`, and 0x44350
+    is a counter (`mov eax,ds:0xa90ac; lea edx,[eax+1]; mov
+    ds:0xa90ac,edx`). The object actually managed is a singleton:
+    0x1e6e0-0x1e713 loads the game-object anchor 0xcef40, takes
+    [anchor+0x394], its +0x8, and calls that +0x10 verb with the
+    block {0,1,dx,dy} - so [obj+0xbd] only decides WHETHER the call
+    happens. The setter shapes are 0x20964 (`mov [ebx+0xbd],edx`,
+    eight bytes after `or BYTE PTR [obj+0xc2],0x40`) and 0x22dfa
+    (`or BYTE PTR [obj+0x66],0x40` then `mov [eax+0xbd],edx`); the
+    clearer 0x22de0 (`mov [eax+0xbd],0`) IS stored - +0xb4 of
+    0x96d1c, +0xd8/+0xe0 of the KATAPULT table and sub-object
+    views, +0x198/+0x1bc/+0x1c4 of the PALMA trio, +0x248/+0x250
+    of the KILOF_PL pair - and 0x22e18 clears both fields after
+    `call 0x52c70`; neither setter is stored in any of the ten
+    views, so their caller is the open part.
+    WHAT WOULD CLOSE IT: the callers of 0x20964/0x22dfa/0x22e18 and
+    what 0x52c70 does, the meaning of the state record's +0x4 word
+    (its control word is elsewhere - 0x543af reads [rec+0x12] and
+    masks 7), and what [obj+0xc2] bit 7 and [obj+0x66] bit 6 gate.
+    Then a port leg that applies the shift at the row admit and the
+    state change, which
     ZARIA.01's own seat texts can measure.

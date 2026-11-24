@@ -5535,6 +5535,10 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         itself - 1 px down per admitted row for PALMA, five fixed
         jumps per state change for KATAPULT (OI-125) - so a first F6
         seat leg is the table shift at the row admit, not a climb.
+        PR-340 then read the element fields that gate that leg: they
+        are KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an
+        ID from a static counter block (0x1dfd9 -> 0x44350), while
+        the object moved is a singleton at [[0xcef40+0x394]+8].
         What the ground/contact
         pass writes WHILE a lock holds is unread and named in
         PR-321's OPENS - it matters the moment that leg runs
