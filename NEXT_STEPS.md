@@ -48020,3 +48020,129 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   /tmp/opencode/pr346_4b500.txt; the +8 slot of the handle tables is
   read at 0x96c28 and 0x96d0c, which PR-344's record also quotes.
 ```
+
+## PR-347 - THE REGISTRY THAT 0x4b600 AND 0x4b760 WALK IS THE LEVEL'S
+## TOOL LIST: THE FIELD NAMES ARE LITERAL IN THE IMAGE (" tools = %s ",
+## " crown = %s "), THE ANCHOR ZEROES ITS OWN COPY AT CONSTRUCTION, AND
+## THE 0x1b PAYLOAD OF OI-127 IS THEREFORE A TOOL, NOT A SURFACE
+```
+KIND: read
+SUBSYSTEM: OI-127's provider registry - who fills the array at
+  [anchor+0x74] with the count at [anchor+0x80] that 0x4b600, 0x4b6d0
+  and 0x4b760 walk, and what is in it.
+ADDRESSES: 0x44370, 0x44391, 0x44396, 0x44399, 0x44448, 0x44451,
+  0x44457, 0x44474, 0x4447b, 0x444c2, 0x444dc, 0x444e5, 0x444ec,
+  0x444fc, 0x4454e, 0x44552, 0x44562, 0x4457b, 0x44599, 0x445a0,
+  0x445a7, 0x445aa, 0x445ad, 0x445b8, 0x445c0, 0x445cc, 0x445de,
+  0x4a532, 0x4a552, 0x4a5e4, 0x4a5f3, 0x4a606, 0x4a613, 0x4a61a,
+  0x4a621, 0x4a62b, 0x4a63f, 0x4a646, 0x4a64f, 0x4b600, 0x4b64f,
+  0x4b66c, 0x4b68d, 0x4b697, 0x4b6d0, 0x4b6ec, 0x4b6fc, 0x4b760,
+  0x4b799, 0x4b7c7, 0x5da60, 0x5da8f, 0x5daa8, 0x5dab4, 0x5dac7,
+  0x5d3ca, 0x5d410, 0x2c1c0, 0x2c252, 0x917c4, 0x917d2, 0x917df,
+  0x917e3, 0x917f3, 0x9269c, 0x961fc, 0x96200, 0x98278, 0xa0c5c,
+  0xa1350, 0xa98a4, 0xcef40, 0x4a0b0, 0x57a40, 0x57a00, 0x7607b,
+  0x76d20, 0x49950, 0x57d30, 0x49820, 0x70, 0x74, 0x78, 0x7c, 0x80,
+  0x84, 0x6c, 0x64, 0x14, 0x1c, 0x8, 0xc, 0x398, 0x3e6, 0x400,
+  0x2c1c0, 0xa9
+NAMES: provider registry, tool list, belt, inventory, crown, tools,
+  BELKA, anchor, held surface, held tool, surface handle, pick,
+  TLewKadmar2, OI-123, OI-127, OI-128, F6, pr347_5da60.txt,
+  pr347_444c0.txt
+CODE: no: nothing in ported/ or the Makefile moved.
+HOOKS: the belt record the port already reads (ported/ll_level.c
+  8826-8833, the BELKA `tools`/`crown` grammar of PR-67, quoted at
+  NEXT_STEPS 2839), the scans 0x4b6d0/0x4b760 (PR-343), the collector
+  0x4b600 (PR-346), the ground-contact tail (PR-345). No port
+  behaviour moves.
+MEASURED: (a) THE BUILDER, WITH ITS FIELD NAMES. 0x44448-0x44600
+  builds one object of the anchor's field family: it sets its vtable
+  to 0xa0c5c (0x44451 `mov DWORD PTR [esi],0xa0c5c`), sizes it 0x400
+  (0x44474 `mov ecx,0x400` before 0x49820), seeds it from the static
+  template 0x961fc (0x44457, 0x44480), and then reads the record. The
+  field names are literal in the image: " tools = %s " at 0x917d2,
+  " crown = %s " at 0x917e3, the word "off" at 0x917df compared
+  through 0x76d20 (0x444c2-0x444d0) into a flag at [x+0x50]
+  (0x444dc, 0x444e5), and the list item pattern " %[^ ,\r\n\t] , " at
+  0x917c4 fed to 0x57a40 (0x44370, 0x44391). Each of those reads
+  becomes a table: 0x44370 is called twice and its results are stored
+  at [x+0x70] (0x44599) and [x+0x74] (0x445a7), and two more at
+  [x+0x7c] (0x445c0) and [x+0x78] (0x445de). Between them the
+  builder runs the table-line parser 0x4a0b0 - PR-335's seat-record
+  parser - on [x+0x1c] (0x445aa-0x445ad) and on [x+0x10] (0x445c9),
+  and reads a "%i" field at 0x917f3 (0x44552-0x44562). So the array
+  at +0x74 with its count at +0x80 is filled by parsing a record, not
+  by building objects at run time.
+  (b) WHICH RECORD. The port already reads this grammar: the belt
+  record, "optional `key=on|off` lines (tools, crown)" and items as
+  "each an `x,y` line + `[N ]name.seq`" - the comment at
+  ported/ll_level.c 8826-8833 and the ZARIA.01 coordinates at
+  NEXT_STEPS 2839 ("tools=off, crown=on ... ZARIA.01: head (3,158),
+  digits (40,173), box (285,165)"). The fields the engine reads at
+  0x917d2 and 0x917e3 are exactly `tools` and `crown`. The array this
+  row's scans walk is a member of that family, so the entry whose
+  method table 0x4b600 asks at +0x1c and 0x4b7ad at +0x14 is a TOOL
+  of that list, not a piece of terrain - with the caveat of (c): this
+  builder's object carries the vtable 0xa0c5c, the anchor's own
+  instance carries 0xa1350, and whether the anchor's copy of the
+  fields is filled by the same record is not shown here.
+  (c) THE ANCHOR'S OWN COPY STARTS EMPTY. The anchor's constructor
+  stores itself into ds:0xcef40 at 0x4a5f3 and zeroes the whole
+  registry family on the way: [x+0x64] (0x4a613), [x+0x7c] (0x4a61a),
+  [x+0x80] (0x4a621), [x+0x84] (0x4a62b), [x+0x74] (0x4a63f),
+  [x+0x70] (0x4a646), [x+0x78] (0x4a64f); its vtable is 0xa1350
+  (0x4a5e9) and the only non-zero in that block is [x+0x6c] = the
+  template 0x961fc (0x4a552), the same template the builder seeds from
+  in (a). The count the scans read, [anchor+0x80], is therefore zero
+  until a record fills it, and 0x5da60 is the function that clears it
+  back: it clears [x+4+edx*4] for its index argument and, when all
+  four heads [x+4..x+0x10] are zero, clears [x+0x5c..x+0x68]
+  (0x5da83), and when all four heads [x+0x14..x+0x20] are zero,
+  clears [x+0x6c..x+0x78] (0x5daa8), and when all three counts
+  [x+0x24], [x+0x28], [x+0x2c] are zero, clears [x+0x7c] and
+  [x+0x80] (0x5dac7). Its callers are the anchor's own method family
+  at 0x5d2f0, 0x5d410, 0x5d480, 0x5d4f0 and 0x5d560.
+  (d) WHAT THAT MAKES THE 0x1b ATTACH. 0x2c1c0's payload comes from
+  0x4b760's best-scoring entry of that array (PR-343), so what the
+  lion would attach to is an entry of the tool family, not a piece of
+  ground - if the array has entries at all, which (c) leaves open.
+  Read that way the two readers of [obj+0xa9] are not in conflict about
+  type but about purpose: 0x4b600 asks it through its table's +8 slot
+  (0x4b660, 0x4b669) and 0x45479 compares it with a surface handle,
+  which is the surface reading of PR-344; 0x2c1c0 writes it with a
+  tool entry, which is the held-tool reading. Both are the same slot,
+  and nothing in the image makes them the same object.
+OPENS: whether a shipped level's tool entries have a method table at
+  all - a BELKA item as the port parses one is an x,y pair and a .seq
+  name, and a 0xc-stride entry with a code table at +0 is something
+  else, so the tool-entry layout is unread; what the tool's +0x14
+  scorer computes and what the requester's class verb +0x6c supplies
+  as its id; whether [obj+0xa9] ever holds a tool and a surface at
+  once in a shipped level, which decides whether 0x45479's waiver can
+  fire; the [x+0x10]/[x+0x1c] tables 0x4a0b0 fills inside the same
+  builder, which are the seat-shaped tables of PR-335 in a BELKA
+  record; and 0x5da60's index argument, which selects which family of
+  heads is being cleared.
+CLOSES: OI-127's first question as far as the image answers it: the
+  field pair +0x74/+0x80 belongs to a record-parsed family, built at
+  0x44448-0x44600 from the `tools` and `crown` fields of the belt
+  record, and the anchor's own copy of it is zeroed at construction
+  and cleared again by 0x5da60 - there is no run-time registry builder
+  and no terrain registry at all. That turns the 0x1b payload of
+  0x2c252 into a tool-list entry rather than a piece of ground, so it
+  is NOT the carrier of ZARIA.01's chasm and F6's search goes back to
+  T6. Whether the anchor's copy is filled by that same record is the
+  half left open, and with it whether the scans ever see an entry.
+CORRECTS: PR-346's sentence about the anchor's "registry of surfaces"
+  - the arrays at [anchor+0x74] and [anchor+0x78] are the belt
+  record's tool and crown tables, and PR-343's description of the
+  entries as "provider records" for standing surfaces, which they are
+  not; the dispatch shape PR-346 found (+8 the query core, +0x1c the
+  candidate question) still stands, it is a tool answering those
+  slots, not terrain.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: the builder is dumped in
+  /tmp/opencode/pr347_444c0.txt and the clearer in
+  /tmp/opencode/pr347_5da60.txt; the field names are `leodb str
+  0x917c4` and the same region, and the port's own belt grammar is in
+  ported/ll_level.c at the lines the NAMES field quotes.
+```

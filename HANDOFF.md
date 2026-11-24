@@ -5592,6 +5592,17 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         One method table answers attach, detach, query, score and
         "am I under this point"; the entries' own tables, who fills
         that array, and the pick at 0x4b500 are still OI-127.
+        PR-347 answered the filling question and removed this branch of
+        the search: the array at [x+0x74] with its count at [x+0x80]
+        is a field of the belt record's family, built at 0x44448-
+        0x44600 from the literal fields " tools = %s " (0x917d2) and
+        " crown = %s " (0x917e3) that PR-67 read, and the anchor's own
+        constructor zeroes the whole family (0x4a613-0x4a64f) with
+        0x5da60 clearing it again. So the entry 0x4b760 scores for the
+        0x1b attach is a TOOL, not ground: the lion taking a tool, not
+        a chasm carrier. F6's crossing goes back to T6 - the .plt
+        ground of the chasm read as a slope or a scripted chain - and
+        the standing path of PR-345 stays the live mechanism.
         PR-340 had read the element fields those arms gate: they are
         KATAPULT-only (0xc5 bytes vs PALMA's 0xb5) and hold an ID
         from a static counter block (0x1dfd9 -> 0x44350), while the

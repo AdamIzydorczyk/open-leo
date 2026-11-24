@@ -4918,7 +4918,10 @@ OI-123: what the 0x1b attach attaches, and why no shipped seat object
     WHAT WOULD CLOSE IT: what the entries at [0xcef40+0x74] are and
     what their +0/+4/+0x14 verbs do (OI-127); whether the state gate
     of 0x2c1cd-0x2c1ef - held surface nonzero, state index 1, the
-    flag bit 0x40 at [obj+0x64] - ever holds in a shipped level. Two
+    flag bit 0x40 at [obj+0x64] - ever holds in a shipped level. PR-347
+    answers the first clause: that array is the belt record's tool
+    list, not terrain, so this path is the lion taking a tool and it
+    is not the carrier of this chasm. Two
     of the questions this row raised are now answered: the flag-byte
     test at 0x4540c is INERT, all six askers passing the mode 2 while
     0x45120 never writes a flag above 2, so no shipped table is
@@ -5179,6 +5182,21 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     or a table of their own; and whether [obj+0xa9] is per-object or
     per-class, since a seat uses that same offset as its own record
     array while a lion uses it as the surface it is attached to.
+    PR-347 ANSWERS THE FIRST OF THOSE AND CHANGES THE QUESTION. The
+    array at [x+0x74] with its count at [x+0x80] is not a terrain
+    registry: that field pair belongs to a record-parsed family built
+    at 0x44448-0x44600, whose fields are literal in the image - "
+    tools = %s " at 0x917d2 and " crown = %s " at 0x917e3, the word
+    "off" at 0x917df - which is the belt record of PR-67. The anchor's
+    own constructor zeroes the whole family, [x+0x64], [x+0x70],
+    [x+0x74], [x+0x78], [x+0x7c], [x+0x80], [x+0x84] (0x4a613-
+    0x4a64f), and 0x5da60 clears it again when the group heads are
+    empty. So the entry 0x4b760 scores for the 0x1b attach is a TOOL,
+    and this row's "provider record" reading is corrected: the attach
+    of 0x2c252 is the lion taking a tool, not standing on ground. What
+    is left: whether the anchor's copy of those fields is ever filled
+    - the builder shown carries the vtable 0xa0c5c, the anchor's own
+    instance 0xa1350 - and what a tool entry's method table is.
 
 OI-128: what landing and leaving a surface does - the class verbs
   +0xB4 and +0xB8, the '#' ejection counter, and the unread head of
