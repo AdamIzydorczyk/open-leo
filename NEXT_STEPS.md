@@ -53752,3 +53752,123 @@ GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/
 - WHAT SURPRISED ME. That I spent an afternoon on a pair of addresses
   the ledger has cited in 45 and 73 records. The index entry for an
   address is the first thing to read, not the last.
+
+## PR-387 - THE STRIDE-0x14 DATA BLOCKS ARE CLASS CONSTRUCTION
+## DESCRIPTORS: {CTOR, CTOR/DTOR SLOT, THE CLASS'S VTABLE SLOT 0, THE OBJECT
+## SIZE, 0}, AND THEY NAME 200 OF THE 219 CLASS TABLES
+
+```
+KIND: read
+SUBSYSTEM: the class-descriptor arrays - what the "281 five-dword blocks"
+  that OI-128 has carried since PR-356 are, the runtime stub they are built
+  around, and what they say about the 62 class tables no token names
+  (OI-128, the F6 thread; continues PR-386, PR-380, PR-356).
+ADDRESSES: 0x74bac, 0x74980, 0x77bdc, 0x95c40, 0x95c20, 0x74bc0, 0x74be0,
+  0x9637d, 0xa6b7d, 0x96485, 0x964fd, 0x98285, 0x98310, 0x98311, 0x99501,
+  0x9e469, 0xa6429, 0x9b669, 0x25970, 0x259b0, 0x26060, 0x6d840,
+  0x3ff70, 0x27030, 0x39c40, 0x63750, 0x1e0a0, 0x5c320, 0x5c370, 0x96874,
+  0x9e294, 0x97e74, 0x9a54c, 0x9f380, 0x981e8, 0xa0624, 0xa2550, 0x90b95,
+  0xa6425, 0x8, 0x14, 0x90
+NAMES: class construction descriptor, descriptor array, object size field,
+  undefined-constructor-or-destructor stub, pure-virtual stub, vtable slot
+  zero, descriptor-only class, pr387_desc3.py, pr387_desc.py,
+  pr387_unnamed.py
+CODE: no: image reading, no port change and no leg. The tracked diff is this
+  record and the OI-128 line that asked what those blocks are. Nothing under
+  ported/ is touched, so only the light gate applies.
+HOOKS: PR-356 counted "281 five-dword blocks {code, code, code, a value, 0}
+  at stride 0x14, every one at 1 mod 4" and left them unexplained; PR-380
+  read an allocation size out of each token branch (`mov eax,size; call
+  0x5c320`) - those two facts turn out to be the same structure; PR-386
+  called the bytes after the point-list verbs "packed non-pointer data";
+  OI-128 also asks about the 62 class tables no token names.
+OPENS: whether anything in the image reads these arrays (the code references
+  are only `mov edx, record-1; call 0x74bc0; call 0x74be0` inside the
+  classes' own ctors and dtors, and 0x74bc0 discards the argument; 32 data
+  slots do hold record addresses, e.g. 0x90b95, 0x90bb7 and 0x90bc9 hold
+  0xa6425, and no code immediate points at an array start); why 3 records
+  name one class by their ctor and another by their slot-0 field (0x97e74,
+  0x981e8, 0x99668, 0x9a778); what the 63 classes named only by the slot-0
+  field are; whether the third field is specifically a destructor - it is
+  not supported by the bodies: the 45 records whose second field is a real
+  function show none of the deleting-destructor tail (`test cl` then
+  `call 0x5c370`, 776 of which exist in the image); and why the 19 classes
+  with no descriptor have none, among them the LION table 0x96874 and the
+  shared road class 0x9e294 that the road-class line already asks about.
+CLOSES: the OI-128 item "what the 281 five-dword blocks {code, code, code,
+  a value, 0} at stride 0x14 are": they are per-class construction
+  descriptors, and they are the second way a class table gets named - 200 of
+  the 219 are reachable from one, 54 of the 62 token-unnamed ones among them.
+CORRECTS: PR-386, twice, both about the same bytes. It said "0x98284 onward
+  is packed non-pointer data (0x74bac00, 0x255d000, 0xee00, ...)" and called
+  the 0x74bac00 that PR-381's census printed "out-of-bounds data, not a
+  verb". The bytes are a descriptor array that starts at 0x98285, one byte
+  before that read: the dword at 0x98284 is 0x74bac00 only because the whole
+  array is misaligned by one byte, and 0x74bac is a real pointer. Also a
+  method note on this pass: my first script used field offsets one dword off
+  from the record base and reported 376 records; the corrected rule gives
+  243, and the numbers below are from the corrected script.
+MEASURED: (a) THE SHAPE (pr387_desc3.py). Records are 20 bytes at stride
+  0x14 and every one sits at 1 mod 4 - the arrays as a whole are misaligned
+  by one byte, which is why PR-356 saw "blocks at 1 mod 4" and why the
+  index finds 0x74bac only in unaligned dword windows. 243 records have all
+  five fields well-formed with 0x74bac in the second field, in 72 arrays
+  (longest 23 records), spanning 0x9637d-0xa6b7d and interleaved with the
+  class tables; relaxing the rule to the shape alone gives 288 records,
+  which is the 281 PR-356 counted. No class table holds 0x74bac in any of
+  its slots (0 of 219), and none of the 243 records sits at a class-table
+  start, so the arrays are not vtables and are not the tables themselves.
+  (b) THE STUB. 0x74bac is `push edx; mov edx,1; mov eax,0x95c40; call
+  0x77bdc; pop edx; ret` and 0x95c40 is the runtime string "undefined
+  constructor or destructor called!". The pure-virtual stub is a different
+  function: 0x74980 loads 0x95c20 "pure virtual function called!". So the
+  fields around 0x74bac are constructor/destructor slots and the stub marks
+  the ones a class does not define - 243 records carry it in the second
+  field and 39 in the first (a class with no constructor).
+  (c) WHAT THE FIELDS DO. The first field is the class's constructor:
+  walking its code to the first `ret` finds a `mov [reg+8],T` for a known
+  class table, for 137 of the 219 tables. The third field is a member
+  function that equals the first dword of a class table - the class's vtable
+  slot 0 - for 197 of the 219. The two fields name the SAME class for 134
+  of the classes and disagree for 3; together they reach 200 of the 219, and
+  19 have no descriptor at all (11 of them token-named, including the shared
+  road class 0x9e294, and 8 token-unnamed, including LION 0x96874). For 54 of
+  the 62 token-unnamed class tables this is the only handle on them: the
+  descriptor gives the ctor (0x1e0a0, 0x27030, 0x39c40, 0x63750, 0x71860,
+  ...) and the identity. Worked example: the record at 0x99501 holds
+  {0x27030, 0x74bac, 0x27420, 0x12c, 0} - 0x27030 installs the class table
+  0x9a54c at [obj+8] and 0x27420 is 0x9a54c's own first slot.
+  (d) THE FOURTH FIELD IS THE OBJECT SIZE, AND IT AGREES WITH PR-380. For
+  all 144 classes where both routes exist, the descriptor's fourth field
+  equals the byte count PR-380 read in the token branch's `mov eax,size;
+  call 0x5c320`: 144 of 144, no exception. Two independent readings of the
+  compiled image, one from code and one from data, give the same object
+  size - the earlier draft of this pass reported 102 of 103 only because of
+  the off-by-one in (a).
+  (e) THE ARRAY BESIDE THE POINT-LIST CLASS (corrects PR-386). The bytes
+  after the point-list verbs at 0x98280 are the array at 0x98285:
+  {0x74bac, 0x255d0, 0x25540, 0xee, 0} at 0x98285, {0x24110, 0x74bac,
+  0x255f0, 0x14a, 0} at 0x98299, and so on to the record at 0x98311
+  {0x26060, 0x259b0, 0x25970, 0xfa, 0}. That is the block OI-128 mentions:
+  0x25970 is its third field, and its body ends with `mov edx,0x98310; call
+  0x74bc0` - the same call the ctors make at 0x2028b with 0x964c0 and the
+  point class's own verb at 0x23ed0 makes with 0x96858, always the record
+  address minus one. 0x74bc0 puts that argument in ebx and never reads it.
+GATE: light: verify-index verify-docs rc=0 (ok); nothing under ported/ is
+  touched by this record, so the build and level gates were not run; the
+  index was regenerated with this record in the tree before the run.
+```
+
+- WHY. The port has to be told which class each scenario object is and how
+  big its record is; until now that came only from the name-compare factory.
+  The original carries the same information as data, one descriptor per
+  class, and for 54 classes it is the only copy. It also settles a question
+  about the tables themselves: a descriptor's third field is the class's
+  vtable slot 0, and it matches the table start that PR-380 derived from the
+  ctor rule for 197 of 219 tables - so the table boundaries used since then
+  are the real ones.
+
+- WHAT SURPRISED ME. That the odd 1-mod-4 alignment PR-356 noticed was not
+  noise but the signature of a whole misaligned array, and that the value
+  repeated through it, which I had already used as junk twice, is a runtime
+  stub with a printed message that says what the field means.

@@ -5903,11 +5903,15 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     element class of the authored point list and PR-386 showed it is no
     separate block but the tail of the owner's own table (0x98278 =
     0x981e8 + 0x90, 0x97f50 = 0x97e74 + 0xdc), the element being 12
-    bytes {x, y, class} made at 0x23eb0; what the 281 five-dword blocks
-    {code, code, code, a value, 0} at stride 0x14 are (they name the
-    builders, every one sits at 1 mod 4, and 0x25970 hands its block
-    0x98310 to 0x74bc0 and 0x74a4c), whether 0x5c320 returns a pointer
-    inside a larger block, whether the lion's own standing query ever
+    bytes {x, y, class} made at 0x23eb0; and what the 281 five-dword blocks
+    are: PR-387 read them as per-class construction descriptors {ctor, the
+    ctor/dtor slot or the 0x74bac stub that prints "undefined constructor or
+    destructor called!", the class's vtable slot 0, the object size, 0},
+    20-byte records at stride 0x14 with every record at 1 mod 4, naming 200
+    of the 219 class tables (54 of the 62 no-token ones) and giving the same
+    object size as PR-380's token branch in 144 of 144 cases; whether
+    anything reads them stays open, as does whether 0x5c320 returns a
+    pointer inside a larger block, whether the lion's own standing query ever
     consults such a per-object array (0x96874 carries neither the list
     pass nor a container sub-table), what the [x+0x10] queue drives,
     which classes the 37 owners are by name - only KTRASA and TUNTRAS
