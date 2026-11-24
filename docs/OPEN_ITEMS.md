@@ -883,6 +883,23 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   the authored direction of a short state is still unread);
   and every one of the 153 grammar-matching shipped tables is
   x-ascending, so 0x45380's endpoint gate never rejects.
+  PR-337 REDRAWS THIS ROW'S REMAINDER. The engine's surface
+  machinery has TWO verb families: the 0x1exxx seat verbs of
+  OI-122's three unnamed tables, which stay unreachable, and the
+  installed family 0x3dd60 / 0x3dcb0 / 0x3ddf0 / 0x3df00 over an
+  inline header at [obj+0xee] - read at object build, moved by a
+  message whose opcode word is 1, anchored through the class
+  +0x6c verb, and asked through 0x45320 after the class +0xd8
+  predicate answers. 61 shipped factory name branches carry it
+  (the PR-337 record lists them), and 98 of the 161 objects the
+  shipped .des set gives a surface line belong to those types -
+  MOVEPLAT, KRA0, KRA1, KRA2, KWINDA, KGARNEK, LINA, DRABINKA -
+  while ZARIA.01's single KATAPULT and three PALMA belong to the
+  63 that carry none. So this row's "the USE of the records" is
+  no longer one question but two: the live path, whose first leg
+  is now nameable as port code, and why ZARIA.01's authored
+  crossing is written in a data form its own objects never read -
+  named as OI-124.
 OI-073: the engine's grounded-y bookkeeping: the instruction that
   turns the shape bottom into the grounded y is unread; the port's
   `pos = line - contact` is an inference
@@ -4747,6 +4764,19 @@ OI-122: the three class tables that hold the seat verbs are named
     PR-270 models is the other half of that question). Until it
     is found, no shipped object can answer a seat ask, and the
     triple [obj+0xe2]/[obj+0xe6]/[obj+0xea] has no producer.
+    PR-337 CORRECTS WHAT THIS ROW WAS TAKEN TO MEAN. The three
+    tables are still unnamed and this row stays open, but the
+    surface machinery is NOT unreachable: it has a second verb
+    family, 0x3dd60 (read) / 0x3dcb0 (move by a message whose
+    opcode word is 1) / 0x3ddf0 (anchor) / 0x3df00 (ask), and it
+    hangs off an inline header at [obj+0xee] - [obj+0xf2] the
+    record block, [obj+0xf6] the count, records 13 bytes with x
+    at +0 and y at +4 - not off the [obj+0xa5]/[obj+0xb1] fields
+    of the 0x1exxx seat verbs. 61 of the 335 factory name
+    branches install classes holding those verbs (the census is in
+    the PR-337 record), so a real shipped object type does read a
+    surface table; and the ANIPL2 lines of 'KATAPULT' and 'PALMA'
+    belong to two of the types that do not, which is OI-124.
 
 OI-123: who posts the message whose opcode word is 0x1b and whose
   payload word is a surface object - the only other writer of the
@@ -4786,3 +4816,36 @@ OI-123: who posts the message whose opcode word is 0x1b and whose
     CLOSE IT: the poster of that message, or proof that the
     opcode 0x1b here is the +0x10 namespace's, in which case
     0x54624 is reachable through the seat move path instead.
+
+OI-124: ZARIA.01's first chasm has no measured carrier - the
+  level's own seat lines belong to object types whose shipped
+  classes never read a surface table
+  status: OPEN
+  origin: PR-337 (the surface-verb install census)
+  notes: HANDOFF section 8 T5's F6 paragraph named the ANIPL2
+    seat-line chain as the authored crossing of ZARIA.01's first
+    chasm: the KATAPULT pad (307,633)-(340,633) and the three
+    PALMA spans, a rising chain ending 28 px short of the exit
+    column at x 1020. PR-337 measured the other half. The
+    'KATAPULT' branch 0x1fb32 and the 'PALMA' branch 0x1fc08 of
+    the factory at 0x1f870 install 0x96d1c/0x96cf0/0x96cf8 and
+    0x96c38/0x96c14/0x96c0c, and no slot of any of those holds
+    the reader 0x3dd60, the move verb 0x3dcb0, the anchor verb
+    0x3ddf0 or the ask verb 0x3df00; the same is true of the
+    other 14 tokens whose seat lines the shipped .des set carries
+    (TMPLAT, TWINDA, EBECZKA, PTAKPLAT, KATPLAT, PIASEK, CAMEL,
+    ZOLW, ZAPADNIA, GEJZER, GORYL, BRANCH, TREE and CEBRZYK).
+    Meanwhile 98 of the 161 surface-line objects in that set DO
+    belong to types that carry the verbs - MOVEPLAT 48, KRA1 21,
+    KRA2 8, LINA 7, KGARNEK 5, DRABINKA 4, KRA0 3, KWINDA 2 - so
+    the machinery is real, just not pointed at this level. The
+    port's own walk (2 px a tick) and jump (measured vertical)
+    cannot cross either, and the seat chain cannot be ported as
+    the carrier because for these two types nothing reads it.
+    WHAT WOULD CLOSE IT: either the mechanism that carries the
+    lion in the shipped game at that place - a moving object type
+    this census did not look for at ZARIA.01, the .plt ground of
+    the chasm read as a slope, or a scripted chain (T6) - or the
+    install path of OI-122's unnamed family, which is the only
+    code in the image that reads those two objects' trailing
+    pairs (0x1e510/0x1e630).

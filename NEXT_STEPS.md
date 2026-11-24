@@ -46433,3 +46433,221 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
   the SOLID-flag census over the 290 states of the 22 seat-owning
   tokens that have a .mov in that set.
 ```
+
+## PR-337 - THE SURFACE TABLES HAVE TWO VERB FAMILIES AND THE FACTORY
+## CENSUS NAMES THE SHIPPED OBJECT TYPES THAT CARRY THE LIVE ONE: 61 OF
+## THEM DO; NEITHER ZARIA.01 SEAT OBJECT IS ONE OF THEM
+```
+KIND: read
+SUBSYSTEM: the live entry points to the surface-table machinery of
+  OI-072/OI-122 - the reader verb 0x3dd60, the move verb 0x3dcb0, the
+  anchor verb 0x3ddf0 and the ask verb 0x3df00, over the header that
+  0x45120 fills and 0x45200 translates (PR-335's grammar, PR-336's
+  query) - and the per-name factory branches that install the classes
+  holding those verbs. Read-only: the read that decides which shipped
+  objects can carry a surface at all.
+ADDRESSES: 0x3dcb0, 0x3dcbc, 0x3dcc2, 0x3dcc7, 0x3dcca, 0x3dccd,
+  0x3dcd2, 0x3dce1, 0x3dce3, 0x3dce6, 0x3dcfb, 0x3dd02, 0x3dd06,
+  0x3dd20, 0x3dd60, 0x3dd6a, 0x3dd72, 0x3dd7d, 0x3dd80, 0x3dd85,
+  0x3dd88, 0x3dd91, 0x3dda7, 0x3ddb5, 0x3ddbb, 0x3ddc3, 0x3ddc8,
+  0x3ddd8, 0x3ddf0, 0x3de04, 0x3de11, 0x3de1a, 0x3de2c, 0x3de37,
+  0x3de58, 0x3de8d, 0x3de9c, 0x3dea4, 0x3deb2, 0x3deb7, 0x3ded8,
+  0x3df00, 0x3df0d, 0x3df16, 0x3df25, 0x3df2f, 0x3df3b, 0x3e680,
+  0x3e68d, 0x3e770, 0x3e776, 0x3e781, 0x45120, 0x45136, 0x45143,
+  0x4514a, 0x45166, 0x45177, 0x45198, 0x45200, 0x45209, 0x45214,
+  0x45217, 0x4521a, 0x45222, 0x45227, 0x45320, 0x498f0, 0x49920,
+  0x4a0b0, 0x52b10, 0x52eb0, 0x54560, 0x55070, 0x552e0, 0x749a0,
+  0x76a64, 0x76a69, 0x76bb7, 0x906fa, 0x906ff, 0x90738, 0x9074a,
+  0x91446, 0x914a6, 0x9182d, 0x91830, 0x93000, 0x95c38, 0x95d1c,
+  0x95ddc, 0x961fc, 0x96200, 0x96c0c, 0x96c14, 0x96c38, 0x96cf0,
+  0x96cf8, 0x96d1c, 0x97d94, 0x97f50, 0x97f5c, 0x97f64, 0x98278,
+  0x98274, 0x98484, 0x9848c, 0x98af0, 0x98af8, 0x99098, 0x99550,
+  0x99558, 0x9957c, 0x99660, 0x99668, 0x9a074, 0x9a07c, 0x9a12c,
+  0x9a134, 0x9d6d8, 0x9d6e0, 0x9d790, 0x9d798, 0x9d7bc, 0x9da38,
+  0x9da40, 0x9df3c, 0x9df44, 0x9e824, 0x9e82c, 0x9eb6c, 0x9eb74,
+  0x9eb98, 0x9ec84, 0x9ec8c, 0xa1b28, 0x1f870, 0x1fb32, 0x1fc08,
+  0x2917e, 0x2bc4b, 0x34c20, 0x34ead, 0x34f87, 0x383c0, 0x3875f,
+  0x387f5, 0x3888b, 0x4e035, 0x4e222, 0x4e81d, 0x1f8ac, 0x78,
+  0x88, 0xee, 0xf2, 0xf6, 0xfa, 0xfe, 0x106, 0x10a, 0x112, 0x11a,
+  0x11e, 0x122, 0x4, 0x8, 0xc, 0xd, 0x6c, 0xd8, 0x10
+NAMES: 0x3dcb0, 0x3dd60, 0x3ddf0, 0x3df00, 0x45120, 0x45200,
+  0x45320, 0x498f0, 0x49920, 0x4a0b0, 0x52b10, 0x54560, 0x3e770,
+  KATAPULT, PALMA, MOVEPLAT, KRA0, KRA1, KRA2, KWINDA, KGARNEK, LINA,
+  DRABINKA, PLATF, WINDA, CEBRZYK, TMPLAT, TWINDA, EBECZKA, PTAKPLAT,
+  KATPLAT, PIASEK, CAMEL, ZOLW, ZAPADNIA, GEJZER, GORYL, BRANCH,
+  TREE, PERLOPL, SURFACE HEADER, ANCHOR PAIR, ELEMENT, FACTORY
+  BRANCH, ROW CURSOR, F6, F6c, OI-072, OI-122, OI-123, OI-124
+CODE: no: nothing in ported/ or the Makefile moved. What moved is the
+  shape of F6c: the port now knows which shipped object types can
+  carry a surface at all, and that ZARIA.01's two seat objects are
+  not among them.
+HOOKS: none. Every claim is machine code (leodb dis), the immediate
+  index (imm), the call index (xref), a raw four-byte scan of
+  build/leo/leo.img, or PR-335's dump of the 103 shipped .des
+  members under /tmp/opencode/pr335/des.
+MEASURED: (a) THE READER AND THE HEADER IT FILLS. 0x3dd60 starts
+  `lea esi,[eax+0xee]` (0x3dd6a) and calls 0x45120 on that address,
+  so the surface table of these objects hangs off an inline header at
+  [obj+0xee], not off the seat family's point at [obj+0xa5]. The
+  header's layout comes out of 0x45120 itself: 0x45136 scans the
+  format at 0x9182d, `%d`, into [hdr+8] - the COUNT; 0x45143 returns
+  when it is 0; 0x4514a-0x4515a sizes (count+1)*13 + 4 bytes and
+  allocates through 0x76a64 and 0x76bb7; 0x45166 stores the block at
+  [hdr+4]; 0x4a0b0 reads the first pair and the loop 0x45177-0x45198
+  reads one separator with the format at 0x91830, ` %c`, then one
+  pair at [hdr+4] + 0xd*i for i = 1..count. So [hdr+4] is the record
+  block and [hdr+8] the count, records are 13 bytes with x at +0 and
+  y at +4, and there are N+1 of them: PR-335's grammar, now with the
+  fields it writes. 0x3dd60 then reloads [[obj+0xee]+4] (0x3dd7d)
+  and copies rec[0].x and rec[0].y into [obj+0xfa] and [obj+0xfe]
+  (0x3dd91-0x3dda4): the FIRST RECORD becomes the object's own
+  ANCHOR PAIR. Last, 0x3ddad-0x3ddbb push [obj+0x11e], [obj+0x11a],
+  the string at 0x91446 and the cursor to 0x498f0, and 0x3ddc3-0x3ddd8
+  zero [obj+0x11a]/[obj+0x11e] unless exactly 2 items were read. The
+  string at 0x91446 is ` F = %d, %d \n` (its bytes are 20 46 20 3d
+  ... 0a 00); `F =` occurs in NO member of the shipped .des set -
+  zero lines in 103 - and `f =` in none either, so on shipped data
+  that clause ALWAYS takes the zero branch. (The ` f = ` variant has
+  its own reader at 0x3e770, 0x49920 with the format 0x914a6 and
+  0x4a0b0 into [obj+0x122]; it is a different function from the
+  0x3e680 that precedes it, which ends at 0x3e76a and never calls
+  0x3dd60.)
+  (b) THE MOVE VERB IS A MESSAGE, NOT A ROW CURSOR. 0x3dcb0's first
+  test is `cmp DWORD PTR [edx+0x4],0x1` (0x3dcbc) - the message
+  block's opcode word must be 1 - and then `add eax,0xee` with
+  edx = [arg+8] and ebx = [arg+0xc] to 0x45200 (0x3dcc2-0x3dccd).
+  0x45200 is the translation: ebx = [hdr+8] the count (0x45209),
+  eax = [hdr+4] the record block (0x45214), and per record
+  `add DWORD PTR [ebx+eax],esi` and `add DWORD PTR [ebx+eax+0x4],
+  edi` with ebx stepping 0xd (0x45217-0x45227) - the WHOLE surface
+  moves by the message's pair. Then, if [obj+0x112] is non-null -
+  the ELEMENT attached to this surface - it builds {0, 1, [arg+8],
+  [arg+0xc]} on the stack and calls that element's class +0x10
+  (0x3dcd2-0x3dd02), and finally tail-calls the standard event verb
+  0x54560 (0x3dd06). This is the live twin of the seat move step of
+  PR-336: a delta carried by a message, applied to the object's own
+  table and to its element, with no row cursor in sight.
+  (c) THE ASK AND THE ANCHOR READ THE SAME FIELD. 0x3df00 skips when
+  the asked object IS the asker (0x3df0d); otherwise it first calls
+  the asked object's own predicate at class slot +0xd8 with the
+  asker in edx (0x3df16), and only when that answers non-null does
+  it call 0x45320 with eax = [asked+0xee], ebx = 2 and ecx = 0
+  (0x3df20-0x3df2f) - the query entry of PR-275 and PR-336, now with
+  a live caller; the other path goes to 0x552e0 (0x3df3b). Its
+  companion 0x3ddf0 calls 0x55070, lays {rec[0].x, rec[0].y,
+  0x98278} at esp+0x18 out of the same table (0x3de04-0x3de23),
+  calls the object's anchor verb [[obj+8]+0x6c] (0x3de2c), builds
+  the difference between that answer and rec[0] through the 0x98278
+  verb +4 (0x3de58, 0x3de8d), stores it at [obj+0x106]/[obj+0x10a]
+  (0x3de9c-0x3dea1), re-places the whole table by that delta with
+  0x45200 (0x3dea4-0x3deb2), and posts signal 1 to the element
+  [obj+0x112] through the poster 0x52b10 with ebx = [obj+0x106] and
+  ecx = [obj+0x10a] (0x3deb7-0x3ded8).
+  (d) WHICH SHIPPED TYPES CARRY THOSE VERBS. The factories name an
+  object with `mov edx,<name>` plus call 0x76a69 (the compare chain
+  of e.g. 0x1f870, whose branches are delimited by those compares);
+  this census indexes every all-caps name string in the object-name
+  block (334 names, 335 compare sites) and, for each branch up to
+  the next compare in the same function, reads the `mov DWORD PTR
+  [...],0x9xxxx` stores and keeps the classes that hold 0x3dcb0,
+  0x3dd60, 0x3ddf0 or 0x3df00 at any slot of +0x00..+0x300. 61
+  branches qualify; the class pointer goes either to the object's own
+  class fields as a two-view pair (PERLOPL stores 0x98078 at
+  [eax+0x8] and 0x98070 at [eax+0xc]) or to three sub-object fields
+  (PLATF, WINDA, KGARNEK and MOVEPLAT each store 0x9957c, 0x99558
+  and 0x99550 at [eax-0xfe], [eax-0x18] and [eax-0xfa]). The
+  seat-line types and what their own branch stores: 'MOVEPLAT'
+  0x4e035 -> 0x99550/0x99558/0x9957c (move, anchor, ask); 'PLATF'
+  0x2917e and 'WINDA' 0x2bc4b and 'KGARNEK' 0x34f87 -> the same
+  three; 'KRA0' 0x3875f -> 0x9e944/0x9e94c/0x9e970 (all four);
+  'KRA1' 0x387f5 -> 0x9eb6c/0x9eb74/0x9eb98; 'KRA2' 0x3888b ->
+  0x9ec84/0x9ec8c; 'KWINDA' 0x34ead -> 0x9d790/0x9d798/0x9d7bc
+  (all four); 'KBLOK' 0x34f43 -> 0x9df44/0x9df3c; 'LINA' 0x4e81d
+  and 'DRABINKA' 0x1f8ac -> 0x97f50; 'GRABOBJL1' 0x385ff ->
+  0x9e824/0x9e82c; 'PIASEK' is NOT one of them - the branch that
+  stores 0x9a074/0x9a07c is
+  'KOLUMNA' at 0x29729, and 'KATPLAT' 0x4e222 stores none (the
+  classes at 0x4e3e2/0x4e3ec belong to 'ZWIERZ', those at
+  0x4e684/0x4e68e to 'SURPRISE'). The 61, read off that run:
+  A_SQUAT, BAL_RAN, BICZRECT, BRECT, CIUCHCIA, DRABINKA, FLAGA,
+  FOKA, GLAZ, GPTAK_RA, GRABOBJL1, GRABOBJL2, KALAMARN, KBLOK,
+  KBLOKZ, KDRABINA, KDYBY, KGARNEK, KKULA, KLINA, KMASKA,
+  KMIOTLA, KOLUMNA, KONIK, KPAJECZ, KRA0, KRA1, KRA2, KRAB,
+  KRABY, KROPLA, KROPLAS, KTRASA, KWINDA, LINA, LISC, MOVEPLAT,
+  OLEJ, OSMIORNI, PERLOPL, PILAGEN, PILARYB, PLATF, POCISK2,
+  RBLOK, ROZGW, SCHODY3, SCHODY4, SEP_RAN, SKALA, SKALA_A,
+  SKJUMP, SURPRISE, TAB_KOLO, TAB_KOT, TABLICZKALONA, WINDA,
+  WODOSPAD2, WSPRECT, WULKAN, ZWIERZ.
+  (e) AND NEITHER ZARIA.01 SEAT OBJECT IS ONE OF THEM. The
+  'KATAPULT' branch at 0x1fb32 and the 'PALMA' branch at 0x1fc08 of
+  the factory at 0x1f870 store 0x96d1c/0x96cf8/0x96cf0 at
+  [eax-0xa9]/[eax-0xc]/[eax-0xa5] (0x1fb83, 0x1fb8d, 0x1fb94) and
+  0x96c38/0x96c14/0x96c0c at [eax-0x9d]/[eax]/[eax-0x99] (0x1fc3b,
+  0x1fc45, 0x1fc4b), the same six again at 0x20996-0x207ff;
+  scanning those six over +0x00..+0x300 finds no reader, no move,
+  no anchor and no ask - the only entry they share with the
+  surface census is 0x3e680, which gates on [obj+0x5c] == 1, calls
+  [[x+8]+0x3c] and 0x52eb0, reads a string at [obj+0xfe] through
+  0x76bcc and multiplies at 0x3e6e6: no surface access. So the
+  ANIPL2 lines this port parses for ZARIA.01 - the one KATAPULT pad
+  and the three PALMA spans of PR-335 - belong to two object types
+  whose shipped classes never read a surface table.
+  (f) THE CROSS-CHECK AGAINST THE SHIPPED DATA. Counting, in the
+  103-member .des dump, the object header lines `NAME,anim,mov,x,y`
+  that are followed by a counted pair line: 161 objects over 24
+  tokens - MOVEPLAT 48, KRA1 21, CEBRZYK 11, TMPLAT 10, TWINDA 10,
+  KATPLAT 8, KRA2 8, LINA 7, EBECZKA 6, KGARNEK 5, PTAKPLAT 5,
+  DRABINKA 4, KRA0 3, PALMA 3, PIASEK 2, KWINDA 2, and CAMEL, ZOLW,
+  ZAPADNIA, GEJZER, GORYL, KATAPULT, BRANCH, TREE one each. All 24
+  have a factory compare site (named above), so each can be matched
+  against paragraph (d): 98 of the 161 belong to types that DO carry
+  the verbs (MOVEPLAT, KRA1, KRA2, LINA, KGARNEK, DRABINKA, KRA0,
+  KWINDA) and 63 to types that carry none (CEBRZYK, TMPLAT, TWINDA,
+  KATPLAT, EBECZKA, PTAKPLAT, PALMA, PIASEK and the eight single
+  ones). ZARIA.01 is entirely in the second group.
+OPENS: five gaps. One, a new row OI-124: what carries the lion
+  across ZARIA.01's first chasm now that the seat-line objects of that
+  level are measured to hold no surface verb - the port's walk
+  (2 px a tick) and jump
+  (measured vertical) cannot, and the surface machinery does not
+  reach those two objects. Two: which message posts opcode 1 to the
+  verbs of paragraph (b), and what [obj+0x112] is - the element
+  moved by the same delta and signalled with 1 by 0x3ddf0. Three: why
+  the ` F = %d, %d \n` clause exists when no shipped .des member
+  contains those characters: another data set, or the engine's own
+  writer. Four, NOT MEASURED HERE: whether the 0x287a0/0x288e0/
+  0x3efe0/0x380d0 family and the 0x1exxx seat family of PR-336 are
+  installed in any shipped branch - the census of paragraph (d) was
+  run with only the four 0x3dxx verbs in its verb set, so it says
+  nothing about those. Five: the three tables 0x95c38/0x95d1c/0x95ddc
+  are still named by nothing (OI-122).
+CLOSES: nothing. It answers OI-122's first question for the surface
+  machinery as a whole - the entry points exist, and the census names
+  the 61 shipped object types that carry them - and OI-122 stays open
+  for the three unnamed 0x95xxx tables.
+CORRECTS: PR-336's OI-122 framing that the surface machinery is
+  unreachable because its tables are unnamed: the machinery has TWO
+  verb families, and the one that is installed is 0x3dd60 / 0x3dcb0 /
+  0x3ddf0 / 0x3df00 at the header [obj+0xee], installed by shipped
+  factory branches (paragraph (d)); the 0x1exxx family at
+  [obj+0xa5]/[obj+0xb1] is the one no branch names. It also corrects
+  HANDOFF section 8 T5's F6 paragraph: the ANIPL2 lines it calls
+  "the authored crossing" of ZARIA.01's first chasm are data for two
+  object types whose shipped classes never read them (paragraphs
+  (e), (f)), so that paragraph's premise is now a gap, not a plan -
+  named as OI-124.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red
+  leg and no mutation run. Reproducible: /tmp/opencode/pr337_names.py
+  is the name-branch census of paragraphs (d)-(f) and
+  /tmp/opencode/pr337_names.out is its output - the four 0x3dxx verbs
+  are the verb set that run used, and the script has since been given
+  two more (0x1e4a0, 0x1e560) for the follow-up that gap four is
+  waiting on; the verb bodies of (a)-(c) are
+  dumped in /tmp/opencode/pr337_dcb.txt, /tmp/opencode/pr337_ddf.txt,
+  /tmp/opencode/pr337_df0.txt, /tmp/opencode/pr337_45120.txt and
+  /tmp/opencode/pr337_45200.txt; /tmp/opencode/pr337_rdrs.txt lists
+  the 11 call sites of 0x3dd60 and the class slots holding their
+  functions; and the data counts of (f) are the header-line count
+  over /tmp/opencode/pr335/des, the script of which is in this
+  record's session.
+```

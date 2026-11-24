@@ -5477,22 +5477,41 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         that attachment is 0x54624, the case `[arg+4] == 0x1b` of
         the event verb 0x54560 - a standard slot in 87 class
         tables, reached through the name-miss path 0x53480, whose
-        poster is nowhere in the image (OI-123). Worse, the
-        classes the shipped installers give the two seat objects
-        (0x1fb32 -> 0x96d1c for 'KATAPULT', 0x1fc08 -> 0x96c38
-        for 'PALMA') hold NO seat verb: their +0x78 entries are
-        0x20230 and 0x52570, while the three tables that do hold
-        the seat verbs (0x95c38, 0x95d1c, 0x95ddc) are named by
-        no dword and no immediate anywhere (OI-122). And no
-        shipped state of the 22 seat-owning objects - 290 states
-        - carries SOLID, so the push-out path cannot stand the
-        lion on a seat either. F6c's end leg is therefore those
-        two named gaps. What IS portable now is F6d, the seat's
-        own move step: 0x1e5c0 shifts the whole table (0,+1)
-        while the state's ROW CURSOR [[rec]+4] is under 7 and
-        (0,-1) from row 7 on - the same cursor 0x1e570 gates its
-        ask on at 13 - and then moves the element itself through
-        the +0x10 verb of [obj+0xb1] with the block {0,1,0,+-1}.
+        poster is nowhere in the image (OI-123). PR-337 REVERSES
+        WHAT THAT PARAGRAPH CALLED PORTABLE: the surface
+        machinery has TWO verb families and the seat objects are
+        outside both. The shipped installers give the two seat
+        objects 0x96d1c (0x1fb83, 'KATAPULT') and 0x96c38
+        (0x1fc3b, 'PALMA'), and no slot of those six - those two
+        plus 0x96cf8/0x96cf0 and 0x96c14/0x96c0c - holds a
+        reader, a move, an anchor or an ask, while the three
+        tables that hold the 0x1exxx seat verbs (0x95c38, 0x95d1c,
+        0x95ddc) are still named by no dword and no immediate
+        (OI-122). The family that IS installed is 0x3dd60 (read
+        the .des pair lines into an INLINE header at [obj+0xee]:
+        record block at [obj+0xf2], count at [obj+0xf6], records
+        13 bytes with x at +0 and y at +4), 0x3dcb0 (move the
+        WHOLE table by the pair carried by a message whose opcode
+        word is 1, and move the attached element [obj+0x112] with
+        it), 0x3ddf0 (re-anchor through the class +0x6c verb and
+        signal that element) and 0x3df00 (ask: the class +0xd8
+        predicate first, then 0x45320 on [asked+0xee]) - and 61 of
+        the 335 factory name branches carry it, MOVEPLAT, KRA0-2,
+        KWINDA, KGARNEK, LINA and DRABINKA among them. So of the
+        161 objects the shipped .des set gives a surface line, 98
+        belong to types that DO read it and 63 - including every
+        one of ZARIA.01's, one KATAPULT and three PALMA - to types
+        that never read one (OI-124). That is why the seat chain
+        stays closed as a play-code leg: 0x1e5c0's row-cursor step
+        belongs to the unreachable family, so F6d as PR-336 framed
+        it is not a live path. The leg that IS grounded is F6c over
+        the live family - PR-335's grammar filling the header at
+        [obj+0xee], 0x45200's per-record add loop, the
+        message-opcode-1 move of 0x3dcb0 with its element - on the
+        object types that actually carry those verbs, and that is
+        what the next T5 PRs take. And no shipped state of the 22
+        seat-owning objects - 290 states - carries SOLID, so the
+        push-out path cannot stand the lion on a seat either.
         What the ground/contact
         pass writes WHILE a lock holds is unread and named in
         PR-321's OPENS - it matters the moment that leg runs
