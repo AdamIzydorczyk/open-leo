@@ -5276,15 +5276,26 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     is left: whether the anchor's copy of those fields is ever filled
     - the builder shown carries the vtable 0xa0c5c, the anchor's own
     instance 0xa1350 - and what a tool entry's method table is.
+    PR-353 and PR-354 RULE OUT ONE CANDIDATE for that last part and
+    answer nothing of it: the 0xa0f28 + 0x18*k block of six-dword verb
+    tables is the level script's own clause-node table, installed at
+    [node+4] by the .MOV builder, not a provider or tool entry. The
+    shapes do look alike - verbs at +0, +4 and +0x14 with the triple
+    0x45800/0x45870/0x458e0 shared - and 0x457e0, which walks one
+    level and calls [[x]+4], is the +4 verb of the base node table
+    0xa1000; whether tool entries use tables from the same verb block
+    is not measured. The row stays open.
 
 OI-128: what landing and leaving a surface does - the class verbs
   +0xB4 and +0xB8, the '#' ejection counter, and the unread head of
   the ground-contact verb
   status: PARTIALLY CLOSED (PR-353 read the pair: for the 155 views that
     ask the standing query it is a call into the current script object,
-    and the seat classes' own pair only clears a field. Still open: the
-    script object's +0x33 table, [obj+0x6d], the [obj+0xb6] bit, the
-    0x58c timer posters, the block 0x546de-0x54700, and the '#' census)
+    and the seat classes' own pair only clears a field; PR-354 named the
+    tables that drive it - the level script's own clause nodes - and the
+    flag byte every gate reads. Still open: the script object's +0x33
+    table and its land/leave methods, [obj+0x6d]'s -1/+1 source, the
+    0x58c timer posters, and the block 0x546de-0x54700)
   origin: PR-345 (the class verb +0xAC read)
     The ground-contact verb 0x546a0 ends by telling the object about
     its surface: when the standing query's answer differs from the
@@ -5353,3 +5364,31 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x458e0 of that record family do and whether the family is the
     provider table OI-127 asks for; the 0x58c counter; and the block
     0x546de-0x54700.
+    PR-354 ANSWERS MOST OF THAT LIST AND NAMES WHAT DRIVES IT. Those
+    records are the CLAUSE NODES of the level script: a node is twelve
+    bytes, [node+4] is the per-command table and [node+8] the scanned
+    argument (the `end_level` arm is the proof - allocate 0xc at 0x46bd5,
+    ctor 0x45770, `mov [node+4],0xa1048` at 0x46beb, `sscanf "%d"` into
+    [node+8] at 0x46bf9), and the builder arms name 24 of the tables by
+    word (`/tmp/opencode/pr354_words.txt`): `rev` 0xa0f28, `ground_on`
+    and `ground_off` 0xa10d8 PLUS 0xa10a8, `lock`/`unlock` 0xa10d8,
+    `lock2`/`unlock2` 0xa10d8 PLUS 0xa10c0, `MOVE` 0xa1078 plus 0xa1060,
+    and so on. The verb at [node+4] is one shape - resolve, `cmp
+    DWORD PTR [node+8],0`, run the ON effect or the OFF effect - and the
+    effects are 0x54f40/0x54f90, the class pair +0xB4/+0xB8, and the
+    class pair +0xC0/+0xC4 = 0x54fe0/0x55020 in the same 155 views. All
+    four of those run the SAME script methods: slot +4 (land) or +8
+    (leave) of the script object's +0x33 table, through the PR-351
+    accessor and aim pair - and they maintain [obj+0xB6]: 0x54f40 sets
+    bit 0x01 (0x54f7b), 0x54f90 clears it (0x54fcb), 0x54fe0 sets
+    0x01|0x02 after calling leave, 0x55020 calls land only when both are
+    set and clears both (0x55057). `atc_on`/`atc_off` write bit 0x20 of
+    that byte from [node+8] bit 0 (0x45c45), which is the bit the verb
+    0x23860 answers at class slot +0x40 in 116 of the 189 class tables.
+    So `ground_on`/`ground_off` are a scripted command, not a per-tick
+    engine query, and the port's counted-but-unmodelled `ground_on`,
+    `ground_off`, `lock2` and `unlock2` all act on the byte the landing
+    chain reads. WHAT IS LEFT: the script object's +0x33 table itself
+    and the land/leave methods stored in it, [obj+0x6d]'s -1/+1 (the
+    field `ldir`/`rdir` write, PR-320), the 0x58c counter, and the
+    block 0x546de-0x54700.

@@ -48938,3 +48938,208 @@ GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
   and pr353_palma_leave.txt, pr353_kat_land.txt, pr353_disp.txt
   (0x45cb0 and its neighbours).
 ```
+
+## PR-354 - THE 0xa0f28 TABLES ARE THE CLAUSE NODES THE LEVEL-SCRIPT
+## BUILDER BUILDS, ONE PER COMMAND WORD; `ground_on` AND `ground_off`
+## BUILD TWO NODES AND THE SECOND ONE IS THE LAND/LEAVE DISPATCHER; THE
+## ON/OFF EFFECTS ARE FOUR RUNNERS OF THE SCRIPT'S LAND AND LEAVE
+## METHODS AROUND ONE FLAGS BYTE [obj+0xB6]
+```
+KIND: read
+SUBSYSTEM: F6's landing half and the rest of OI-128 - the directive
+  tables of the level script, the ground_on/ground_off/lock/lock2/
+  unlock/unlock2/atc_on/atc_off commands, and the flag byte the landing
+  gates read.
+ADDRESSES: 0x45770, 0x4578a, 0x457b6, 0x457e0, 0x45800, 0x45870,
+  0x458e0, 0x45970, 0x459b0, 0x459d0, 0x459f0, 0x45a10, 0x45a30,
+  0x45a50, 0x45a70, 0x45a90, 0x45ab0, 0x45ae0, 0x45b00, 0x45b20,
+  0x45b50, 0x45b90, 0x45bb0, 0x45bd0, 0x45c00, 0x45c20, 0x45c2d,
+  0x45c3c, 0x45c45, 0x45c50, 0x45c63, 0x45c6d, 0x45c80, 0x45c96,
+  0x45ca4, 0x45cb0, 0x45cbb, 0x45cc6, 0x45cd4, 0x45ce0, 0x45cfd,
+  0x45d10, 0x45d28, 0x45d3a, 0x45df0, 0x45e7d, 0x45ea1, 0x45ec1,
+  0x45ee5, 0x45f05, 0x45f29, 0x45f49, 0x45f6d, 0x45f8d, 0x45fbd,
+  0x46011, 0x462aa, 0x4634b, 0x4636e, 0x46398, 0x463be, 0x4640b,
+  0x46435, 0x4645b, 0x46480, 0x4648c, 0x464b2, 0x464d9, 0x464ff,
+  0x46526, 0x46530, 0x46553, 0x46578, 0x46584, 0x465aa, 0x465d1,
+  0x465db, 0x46623, 0x4666b, 0x466b3, 0x46701, 0x46764, 0x467ca,
+  0x4683a, 0x4687b, 0x468a7, 0x46906, 0x46973, 0x46a17, 0x46a42,
+  0x46a7a, 0x46aa5, 0x46ab0, 0x46ac1, 0x46bc0, 0x46beb, 0x46bf9,
+  0x46c1c, 0x474ab, 0x4750b, 0x4756b, 0x4791c, 0x4794c, 0x4797c,
+  0x49920, 0x52660, 0x5266c, 0x54f40, 0x54f7b, 0x54f90, 0x54fcb,
+  0x54fe0, 0x5500e, 0x55020, 0x55057, 0x5c320, 0x76a69, 0x91844,
+  0x918f2, 0x918f9, 0x91901, 0x91906, 0x9190c, 0x91913, 0x9191b,
+  0x91925, 0x91930, 0x91936, 0x9193b, 0x9194d, 0x91955, 0x9195d,
+  0x91966, 0x9196f, 0x91971, 0x91974, 0x91977, 0x91979, 0x91980,
+  0x9198e, 0x91998, 0x9199d, 0xa0f28, 0xa0f40, 0xa0f58, 0xa0f70,
+  0xa0f88, 0xa0fa0, 0xa0fb8, 0xa0fd0, 0xa0fe8, 0xa1000, 0xa1030,
+  0xa1048, 0xa1060, 0xa1078, 0xa1090, 0xa10a8, 0xa10b0, 0xa10c0,
+  0xa10ac, 0xa10c4, 0xa10d8, 0xa10f0, 0xa1108, 0xa1120, 0xa1138,
+  0xa1150, 0xa1168, 0xa1180, 0xa1198, 0xa11b0, 0xa11e8, 0x96c38,
+  0x96d1c, 0x96ddc, 0x97cbc, 0x97cdc, 0x23850, 0x23860, 0x23870,
+  0x23885, 0x238b5, 0x23aa0, 0x23e00, 0x23ea0, 0x20940, 0x20950,
+  0x209c0, 0x22dc0, 0x23340, 0xb4, 0xb6, 0xb8, 0xbc, 0xc0, 0xc4,
+  0x33, 0x48, 0x50, 0x6d, 0xa9, 0x8, 0x4, 0x40, 0x70,
+  0x459fa, 0x45c33, 0x45c36, 0x45c39, 0x45c42, 0x52d30, 0x54f4a,
+  0x54f9a, 0x54fc8, 0x54ff5, 0x55002, 0x5500b, 0x55054, 0x550c0,
+  0x550cf, 0x55262
+NAMES: clause node, directive table, builder arm, ground_on, ground_off,
+  lock, lock2, unlock, unlock2, atc_on, atc_off, ldir, rdir, flags byte,
+  script land method, script leave method, suspend flag, pr354_words.py,
+  pr354_words.txt, pr354_assoc.py, pr354_assoc.txt, pr354_commands.py,
+  pr354_views.py, ll_mov_parse, ll_mov_fr.lockcmd, ll_mov_fr.dircmd,
+  PALMA, KATAPULT, SPLYW, OI-127, OI-128, F6
+CODE: no: nothing in ported/ or the Makefile moved. What changes is what
+  the port's counted-but-unmodelled words mean: ground_on, ground_off,
+  lock2 and unlock2 all act on the flag byte the landing gates read.
+HOOKS: PR-353's +0xB4/+0xB8 pair and the script object's +0x33 table,
+  which these verbs reach the same way; PR-351's current-script accessor
+  [view+0x48] and aim predicate [view+0x50], which all four runners call;
+  PR-345's 0x546a0, whose tail sets bit 0x10 and bit 0x20 of
+  [obj+0xB6] - the same byte, other bits; PR-320's read of 0x45c50 and
+  0x54f40/0x54f90 for `lock`/`unlock`, and PR-321's keeping of them in
+  ll_mov_fr.lockcmd/dircmd; PR-222's directive vocabulary and the
+  0x18-byte per-directive tables; PR-343's 0x1b attach, whose poster
+  0x45d10 is the `MOVE` node's verb.
+MEASURED: (a) A CLAUSE NODE IS TWELVE BYTES AND ITS THIRD WORD IS THE
+  SCANNED ARGUMENT. The `end_level` arm is the clearest: 0x46bc0 matches
+  the token against the word 0x9198e with 0x76a69, 0x46bd5 allocates
+  0xc bytes through 0x5c320, 0x46be0 runs the base node ctor 0x45770 -
+  which stamps the base table 0xa1000 at [node+4] at 0x4578a and
+  0x457b6 - and the arm then overwrites that slot: 0x46beb stores the
+  directive table 0xa1048 at [node+4], and 0x46bf9 scans the text with
+  the format "%d" (0x91998) straight INTO [node+8]. Every other
+  arm has that shape, so [node+8] is the directive's own argument, not a
+  table slot. /tmp/opencode/pr354_commands.py and pr354_assoc.py list
+  the 124 install sites and the nearest word each one follows.
+  (b) EVERY COMMAND WORD BUILDS ITS OWN TABLE. Pairing each
+  `mov edx,<word>`/`call 0x76a69` arm with the table it installs (the
+  script /tmp/opencode/pr354_words.py prints this and writes
+  pr354_words.txt: 41 arms, 24 distinct tables). Two more tables are
+  found at a second install 10 to 12 bytes after the first - the
+  `ground_on`/`ground_off` arms at 0x46578/0x465d1 install 0xa10d8 and
+  then 0xa10a8, the `lock2`/`unlock2` arms at 0x46480/0x46526 install
+  0xa10d8 and then 0xa10c0 - and one more, 0xa1180, is reached only from
+  a ' %i' format load at 0x462aa, so it is not named. The map: `rev`
+  0xa0f28, `chdir`
+  0xa0f40, `ldir` 0xa0f58, `rdir` 0xa0f70, `zero`/`zero_t` 0xa0f88,
+  `zero_v` 0xa0fa0, `smp_unloop` 0xa0fb8, `smp_stop` 0xa0fd0, `smpauto`
+  0xa0fe8, `atc_on`/`atc_off` 0xa10f0, `lock`/`unlock` 0xa10d8,
+  `ground_on`/`ground_off` 0xa10d8 AND 0xa10a8, `lock2`/`unlock2`
+  0xa10d8 AND 0xa10c0, `goto`/`gotorel`/`goto_rel` 0xa1030, `pos`
+  0xa11b0, `I`/`F`/`IC`/`FC` 0xa1090, `M`/`MOVE` 0xa1078 with the
+  `MOVE` arm also building 0xa1060, `smp`/`vol` 0xa1168, `smp2` 0xa1150,
+  `smp3` 0xa1138, `smpauto2` 0xa1120, `smpprior` 0xa1108, `smp_loop`
+  and `vol_music` 0xa1198, `end_level` 0xa1048. The tables are the ones
+  PR-353 found at 0xa0f28 + 0x18*k; a second builder in 0x474xx-0x479xx
+  installs the same three of them (0x474ab 0xa10d8, 0x4750b 0xa10c0,
+  0x4756b and 0x4791c 0xa10a8, 0x4794c 0xa10c0, 0x4797c 0xa10d8) and
+  the nearest token loads there are the error tail 0x9199d, so that pass
+  does not name its word by this method.
+  (c) THE VERB AT [node+4] IS "ARGUMENT ZERO OR NOT". 0x45c50, 0x45c80
+  and 0x45cb0 are the same eleven instructions: ecx = the node, ebx =
+  the object asked about, `call 0x457e0` to resolve, then 0x45cbb (and
+  0x45c5b, 0x45c8b) `cmp DWORD PTR [ecx+8],0` - the node's argument -
+  non-zero runs the ON effect, zero the OFF effect. 0x45c20 confirms the
+  field is an argument: it reads [node+8], `and ebx,0x1`, `shl ebx,0x5`
+  and ORs that bit into [obj+0xB6] at 0x45c45 after clearing it at
+  0x45c36/0x45c3c - that is `atc_on`/`atc_off` writing one bit.
+  The three effect pairs read: 0x45c50 calls 0x54f40 (0x45c63) and
+  0x54f90 (0x45c6d); 0x45cb0 calls the requester's +0xB4 and +0xB8
+  (PR-353); 0x45c80 calls [view+0xC0] at 0x45c96 and [view+0xC4] at
+  0x45ca4. Those two slots hold 0x54fe0 and 0x55020 in the SAME 155
+  views that carry the script-dispatch land/leave pair - the census
+  /tmp/opencode/pr354_views.py prints +0xC0 and +0xC4 over the 186
+  views: 0x54fe0 and 0x55020 x155 each, then per-class values
+  (PALMA 0x20950/0x20940, KATAPULT 0x209c0/0x23ea0, SPLYW and the
+  ladder 0x23e00 with 0x22dc0 and 0x23340).
+  (d) THE FOUR RUNNERS, AND WHAT EACH BIT OF [obj+0xB6] IS. 0x54f40,
+  0x54f90, 0x54fe0 and 0x55020 are one body with different tests:
+  0x54f40 and 0x54f90 ask [view+0xBC] first (0x54f4a, 0x54f9a) and skip
+  when it answers nonzero, and all four then test bits of [obj+0xB6];
+  when the test allows it they run the current script object's +0x33
+  slot +4 (the land
+  method, the call at 0x54f78 in 0x54f40 and 0x55054 in 0x55020) or
+  slot +8 (the leave method, 0x54fc8 in 0x54f90 and 0x5500b in
+  0x54fe0), each time through PR-351's
+  [view+0x48] accessor and [view+0x50] aim pair, and then they write
+  the byte: 0x54f40 sets bit 0x01 at 0x54f7b, 0x54f90 clears it at
+  0x54fcb, 0x54fe0 sets 0x03 at 0x5500e after calling the LEAVE method,
+  and 0x55020 calls the LAND method only when bits 0x01 and 0x02 are
+  both set and then clears both with `and 0xfc` at 0x55057. So bit 0x01
+  is the script's own "I am standing" state, maintained by the runner
+  the `lock`/`ground_on` verbs call, and bit 0x02 is the extra flag the
+  `2` variants add: `lock2`/`unlock2` build the 0xa10c0 node, whose verb
+  runs 0x54fe0 to put the object out of the standing state and 0x55020
+  to put it back. Bit 0x20 is the one `atc_on`/`atc_off` write and the
+  one the 0x52660 thunk clears (`and [eax+0xb6],0xdf` at 0x5266c, after
+  running 0x54f90 on the object at [obj]) - that thunk sits at state-
+  table slots +0xf8 to +0x1e8 of 16 views (0x97bc0, 0x98cc4, 0x9916c,
+  0x9a778, 0x9b4d4, 0x9f298 among them, found by pr354_views.py).
+  (e) THE GATE THE RUNNERS ASK, AND THE BIT THE SCRIPT WRITES. 0x54f40
+  and 0x54f90 ask [view+0xBC] first and skip the script method when it
+  answers nonzero; for the views that carry the script-dispatch pair that
+  slot is 0x23870, `cmp [obj+0xa9],0; setne` - PR-351's held-surface
+  answer, the same field the standing query keeps. The bit predicate of
+  this byte is a DIFFERENT slot: 0x23860, `mov eax,[obj+0xb6]; shl
+  eax,0x1a; shr eax,0x1f` - bit 0x20 - and the mtable census in
+  /tmp/opencode/pr354_views.py finds it at slot +0x40 of 116 of the 189
+  class tables, always with 0x23850 at +0x04 and 0x23870 at +0xBC. That
+  slot is asked at 0x550cf and 0x55262, in verbs of their own (0x550c0
+  combines it with [view+0x70] and two calls of 0x52d30 and answers a
+  signed comparison), so bit 0x20 - the bit `atc_on`/`atc_off` write and
+  the bit 0x546a0's tail sets (PR-345) and the 0x52660 thunk clears -
+  gates those, not the land and leave runners.
+  (f) WHAT THE LANDING ARGUMENT IS. The land/leave pair passes
+  [obj+0x6d] to the script methods (PR-353). The verbs that write that
+  field are ldir's 0x459f0 - `mov DWORD PTR [eax+0x6d],0xffffffff` at
+  0x459fa - and rdir's 0x45a10, which is PR-320's read and PR-321's
+  modelled pair; so the script's land and leave methods are called with
+  the object's facing direction, which the level script sets with
+  `ldir`/`rdir`.
+OPENS: what the script object's +0x33 table is and who fills it, now
+  named as the object holding the land and leave methods of every level;
+  what the script's land and leave methods do - no shipped class runs
+  engine code there (PR-353), so the answer is in the level's own script
+  data; who allocates the +0x33 script object and how [obj+0x6d]'s -1
+  and +1 reach it; which of the 24 directive tables the second builder in
+  0x474xx-0x479xx installs and for which word; what the six verbs the
+  tables share, 0x457e0, 0x45800, 0x45870, 0x458e0, do (0x457e0 walks
+  [x] and calls [[x]+4] - the base node's own table 0xa1000 and 0xa1030
+  carry it at slot +4); what the 0x52660 thunk's state tables are; and
+  bit 0x04 of [obj+0xB6], which no site read this pass.
+CLOSES: PR-353's two open questions about the pair it read - who sets
+  [obj+0xB6] bit 0 (0x54f40 at 0x54f7b, cleared by 0x54f90 at 0x54fcb)
+  and what [obj+0x6d] is (the direction `ldir`/`rdir` write) - and its
+  question about what the table family is: it is the level script's own
+  clause-node tables, installed at [node+4] by the .MOV builder, not the
+  entry array at [0xcef40+0x74] OI-127 asks about - whether the code
+  tables those entries name come from the same verb block stays open.
+  It also answers the part of OI-128 that asked what the unread part of
+  the landing chain is: `ground_on`/`ground_off` build a second node
+  whose whole job is to tell the object it is on or off a surface, and
+  `lock2`/`unlock2` build one whose verb runs 0x54fe0 - call the
+  script's leave method and mark bits 0x01 and 0x02 - and 0x55020 - call
+  the land method when both are marked and clear them. OI-128 stays open
+  for the +0x33 table and the 0x58c counter.
+CORRECTS: PR-353, the same day: "the record COUNT of PR-335's grammar"
+  for the `cmp DWORD PTR [ecx+8],0` at 0x45cbb. The object in ecx is a
+  twelve-byte clause node and [node+8] is the argument the builder
+  scanned into it (0x46bf9 scans "%d" there; 0x45c20 uses bit 0 of it as
+  a boolean). The reading of what 0x45cb0 does stands. PR-222's "the
+  `ground_on`-family table 0xa10b0": 0xa10b0 is not a table head - it
+  holds the shared verb 0x45800; the head the ground_on and ground_off
+  arms install is 0xa10a8 (0x46584, 0x465db). PR-222's point, that
+  0xa11c0 is a slot and not a table, is unaffected.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
+  and no mutation run. Reproducible: /tmp/opencode/pr354_words.py (the
+  word-to-table map, written to pr354_words.txt), pr354_assoc.py and
+  pr354_assoc.txt (every install site with the words it follows),
+  pr354_commands.py (the same grouped by enclosing builder routine), and
+  pr354_views.py prints the +0xC0/+0xC4 census over the 186
+  current-script views, the views holding the 0x52660 thunk, and where
+  0x23850, 0x23860 and 0x23870 sit in the 189 class tables the
+  constructor pattern names (116 of them carry that trio at +0x04,
+  +0x40 and +0xBC). Disassembly of the runners is in the transcript of
+  this pass at 0x54f40, 0x54f90, 0x54fe0, 0x55020,
+  0x45c20, 0x45c50, 0x45c80 and the `end_level` arm at 0x46bc0.
+```
