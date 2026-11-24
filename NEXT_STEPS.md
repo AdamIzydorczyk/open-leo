@@ -49339,3 +49339,197 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - same as the
   the layer (it was undocumented before): a make-target line in the
   verify legend and a "Searching the ledger" subsection that states it
   is a tool, not a document, so it is not part of the P5 closed set.
+
+## PR-357 - THE LAND AND LEAVE METHODS ARE NOT SCRIPT CODE: THE +0x33
+## WORD IS THE LAST FIELD OF THE .SEQ ELEMENT RECORD, ITS TABLE IS THE
+## ONE BLOCK PR-255 NAMED (0xa0c08), AND THE +4/+8 PAIR IS A SINGLE
+## INVERSE TRANSFORM - MOVE THE POSITION BY THE ELEMENT'S SECOND ANCHOR
+## MINUS ITS FIRST, X MIRRORED BY THE FACING, AND UNDO IT ON LEAVING
+```
+KIND: read
+SUBSYSTEM: F6's landing half and the rest of OI-128 - the [x+0x33]
+  method block, the .SEQ element record that carries it, and the two
+  methods the whole standing chain calls.
+ADDRESSES: 0x41d40, 0x41da0, 0x41e00, 0x41ef0, 0x41ef3, 0x41ef8,
+  0x41f01, 0x41f4d, 0x41f60, 0x41f8b, 0x41fa3, 0x41fb9, 0x41fd0,
+  0x41fec, 0x42002, 0x42015, 0x42030, 0x42044, 0x42058, 0x4207e,
+  0x42083, 0x420b0, 0x421f0, 0x42210, 0x42230, 0x422f0, 0x423c0,
+  0x42480, 0x42800, 0x42930, 0x42980, 0x429c1, 0x429d0, 0x42a20,
+  0x43e70, 0x43f59, 0x43f69, 0x229c0, 0x23850, 0x23880, 0x23896,
+  0x2389c, 0x238b0, 0x238c6, 0x238cc, 0x23aa0, 0x3c330, 0x3c38a,
+  0x442f0, 0x534e0, 0x5350b, 0x53df0, 0x53e06, 0x53e15, 0x53e1d,
+  0x53e2b, 0x541f0, 0x5422e, 0x544d0, 0x5452e, 0x54f40, 0x54f6a,
+  0x54f78, 0x54f90, 0x54fba, 0x54fc8, 0x54fe0, 0x54ffd, 0x5500b,
+  0x55020, 0x55046, 0x55054, 0x5c320, 0x98274, 0xa0c08, 0xa0c0c,
+  0xa0c10, 0xa0c14, 0xa0c34, 0x97cdc, 0x96908, 0xa0524, 0x7fff,
+  0x33, 0x37, 0x48, 0x50, 0x54, 0x6d, 0x89, 0x94, 0xb4, 0xb8, 0xc,
+  0x8, 0x4, 0x2e, 0x14, 0x15, 0x17, 0x19, 0x2f
+NAMES: land method, leave method, element record, SEQ element, first
+  anchor, second anchor, anchor delta, position pair, live position,
+  frame step, pr357_33chain.py, pr357_slots.py, OI-128, OI-124, F6,
+  ll_seq_elem, ll_seq_anchor_origin, seat_ask_core, tools/jq.py
+CODE: no: nothing in ported/ or the Makefile moved. What changes is the
+  meaning of PR-353's and PR-354's dispatch: there is no script method
+  at the end of that chain, and the port's own .SEQ reader already
+  parses the four words the pair uses.
+HOOKS: PR-255, which named 0xa0c08 ("the frame records' shared method
+  block") and ported its slot +0 verb as live_box - this pass reads the
+  two verbs next to it; PR-353's +0xB4/+0xB8 pair and PR-354's four
+  runners, which all end at these two methods; PR-351's [view+0x48]
+  accessor 0x23aa0, followed to the end this time; PR-350's ask block
+  0x541f0 and its "unmodelled transform", now named; PR-308's +0xB0
+  provider 0x544d0 and its "the caller's buffer gets [obj+0x00] and
+  [obj+0x04] - the live position"; PR-316's +0x54 frame-step verb and
+  the [obj+0x89] pair; PR-321's modelled ldir/rdir, which is the sign
+  the pair reads; and the port's own .SEQ grammar in ported/ll_seq.h,
+  which already lists FUN_00043e70, FUN_00041ef0, FUN_00041f60, the
+  f0/f2/f4/f6 words and the 0x7fff sentinel.
+MEASURED: (a) THE +0x33 WORD HAS ONE WRITER AND ONE VALUE. Over the
+  whole instruction index the only place that stores a dword at +0x33 is
+  0x41f4d, `mov DWORD PTR [ebx+0x33],0xa0c08` (the /tmp/opencode/
+  pr357_33chain.py query is `select ... from insn where ops like
+  '%+0x33]'`, 42 sites read it, none writes it except this one). It is
+  the last field of a 0x37-byte record - 0x33 + 4 = 0x37 - allocated at
+  0x43f59 `mov eax,0x37; call 0x5c320` inside 0x43e70, and 0x43f69
+  calls 0x41ef0 on it with the stream reader in edx. That is the .SEQ
+  element record, exactly as ported/ll_seq.h describes it ("the game
+  loads a whole .SEQ record payload ... FUN_00043e70 + FUN_0005c6b0,
+  then parses `count` elements (FUN_00041ef0 -> FUN_00041f60 ...)"),
+  so the table is 0xa0c08, the block PR-255 named, and its eleven
+  entries run 0xa0c08 = 0x42930 (the live box), 0x42980, 0x429d0,
+  0x42a20, 0x421f0, 0x42230, 0x422f0, 0x423c0, 0x42480, 0x42210,
+  0x442f0, with 0 at 0xa0c34.
+  (b) THE ANCHOR WORDS ARE READ STRAIGHT OUT OF THE .SEQ BLOB. The
+  element initializer 0x41ef0 stamps the sentinels - `mov WORD PTR
+  [eax],0x7fff` at 0x41ef3, the same at +0x4 (0x41ef8) and +0x8
+  (0x41f01) - zeroes from +0x15 up, zeroes [x+0x2f] at 0x41f44,
+  installs the table at 0x41f4d, and calls the reader 0x41f60. That
+  reader takes w0 into a stack temp (0x41f7c, which is the word its own
+  later tests mask with 0x4, 0x3, 0x8, 0x2, 0x1), reads the shape-frame
+  words through 0x41d40 at [x+0x15], then `mov edx,ecx` at 0x41f96 and
+  the stream verb `call [edi+0x1c]` at 0x41f9d read 2 bytes into [x+0]
+  = f0; the same call with edx = ecx+0x2 (0x41fa3), +0x4 (0x41fb9) and
+  +0x6 (0x41fd0) fills f2, f4 and f6, and under w0&4 it continues at
+  +0x8 (0x41fec) and +0xa (0x42002). Then 0x42015: with w0&3 it reads
+  the shape margins through 0x41da0 and calls 0x420b0, ELSE it derives
+  the box from the anchors right there - [x+0xc] = -(f0 or 0) at
+  0x42030-0x42040, [x+0xe] = -(f2 or 0) at 0x42044-0x4205c,
+  [x+0x10] = (b19*0x50 + b15) at 0x42058-0x42072, [x+0x12] = b17 at
+  0x42076, and [x+0x14] = w0&8 at 0x4207e-0x42083. So the DRAW anchor
+  the port already applies (ll_seq_anchor_origin, "x -= f0, y -= f2,
+  BOTH skipped when f0 holds the 0x7fff ctor sentinel") and the box
+  fields come from the same four words as the landing shift.
+  (c) THE PAIR, INSTRUCTION BY INSTRUCTION. 0x42980 (slot +4, the LAND
+  method) is: `movsx ecx,WORD PTR [eax]` / `cmp ecx,0x7fff` /
+  `je 0x429c1` - an element whose f0 is the sentinel moves nothing -
+  then esi = f2 - f6 and `sub DWORD PTR [edx+4],esi`, then by the sign
+  of ebx (0x429a0 `test ebx,ebx` / `jle`): eax = f0 - f4 applied as
+  `sub DWORD PTR [edx],eax` when ebx > 0 and as `add` of the same
+  value when ebx <= 0. 0x429d0 (slot +8, the LEAVE method) is the same
+  eight instructions with add and sub exchanged: `add DWORD PTR
+  [ecx+4],esi` at 0x429ec, `add DWORD PTR [edx],eax` at 0x429fb for a
+  positive facing, `sub ebp,eax` at 0x42a0d for the other. eax = the
+  element, edx = the position
+  pair, ebx = the facing sign. Read together: landing translates the
+  position by (f4 - f0, f6 - f2) - the vector from the element's first
+  anchor to its second - with the X leg negated when the facing is not
+  positive, and leaving translates it back. Nothing else is touched: no
+  flag, no counter, no velocity.
+  (d) WHO RUNS THE TWO METHODS - A TEN-SITE LIST, NOT A SCRIPT. The
+  /tmp/opencode/pr357_33chain.py census walks every `mov <reg>,[base
+  +0x33]` to the first call through that register: 42 sites read the
+  word; five reach slot +4 - 0x238c6 in 0x238b0 (the class +0xB4 verb
+  of PR-353's 155 views), 0x53e2b in 0x53df0 (the +0x54 frame-step verb
+  PR-316 named, at [0x97cdc+0x54] among others), 0x5422e in 0x541f0
+  (PR-350's ask block), 0x54f6a in 0x54f40 and 0x55046 in 0x55020
+  (PR-354's `ground_on`/`lock` and `unlock2` runners) - and five reach
+  slot +8 - 0x2389c in 0x23880 (the class +0xB8 verb), 0x3c38a in
+  0x3c330 (a private verb, at +0x78 of one table 0xa0524 only), 0x5452e
+  in 0x544d0 (PR-308's +0xB0 point provider), 0x54fc8 in 0x54f90 and
+  0x54ffd in 0x54fe0 (the OFF and `lock2` runners). The other slots of
+  the same block: +0xc is a second reader like 0x41f60 but calling
+  0x42800 for the shape frame (3 sites), +0x10 has 12 sites (ten of
+  them 0x446d2-0x448a7 inside one function), +0x14 has 9 (0x5ece7,
+  0x5f08b, 0x60a10 and others), +0x1c and +0x28 one each, and slot +0
+  is read at 0x5350b, which is PR-255's live-box builder 0x534e0. The
+  pair is never reached from the level-script builder: it is engine
+  code.
+  (e) THE ARGUMENT IS EITHER THE LIVE POSITION OR A COPY OF IT. 0x238b0
+  passes `mov edx,eax` (the object) at 0x238b3, and 0x54f40/0x54f90/
+  0x54fe0/0x55020 pass the object too - so for the class verbs and the
+  script commands the shift lands on [obj+0x00]/[obj+0x04], which
+  PR-308 established is the live position (0x544f6-0x54500 copies
+  exactly that pair into the caller's buffer). 0x53df0 first copies the
+  pair: `mov eax,[edx]` / `mov [esi],eax` and the same at +4, with esi
+  = `lea esi,[edx+0x89]` (0x53dfa-0x53e0d), then asks [view+0x48] and
+  calls slot +4 with edx = &[obj+0x89] - the [obj+0x89] pair PR-316
+  saw as the v-channel copy. 0x541f0 and 0x3c330 pass a block on their
+  own frame, and 0x3c38d sets ebx = 1 there, i.e. an always-right-facing
+  query. So the same method both moves the object and offsets a
+  position a test is about to use.
+  (f) THE SIGN ARGUMENT, CONFIRMED AS THE AUTHORED FACING. 0x238b0 and
+  0x23880 load it as `mov ebx,DWORD PTR [edx+0x6d]` (0x238c9, 0x23899)
+  - the word `rdir` sets to 1 and `ldir` to -1, PR-316 and PR-320 -
+  while 0x54f40, 0x54f90, 0x54fe0, 0x55020, 0x541f0, 0x544d0 and
+  0x53df0 ask the class +0x50 verb instead (0x53e40 in the lion's
+  table, PR-255's mirror-bit answer, -1 when [element+0x14] is set and
+  [obj+0x6d] == -1). Both forms are used only as `test ebx,ebx`, so the
+  pair cares only about the sign, exactly like the box verb 0x42930's
+  `test ecx,ecx`. The /tmp/opencode/pr357_slots.py census confirms the
+  table-side framing: 0x238b0 and 0x23880 sit at +0xB4/+0xB8 of 116 of
+  the 189 constructor-proven class tables, 0x53db0 at +0x94 of 140 and
+  0x53e40 at +0x50 of 140.
+OPENS: whether any SHIPPED element carries a second anchor at all - the
+  measurement is the same one ll_seq_anchor_origin already needs: over
+  every .SEQ payload, how many elements have f0 != 0x7fff and
+  (f4,f6) != (f0,f2), and which kinds (the seat and animal elements are
+  the candidates). tools/seq_parse.py and tools/verify_seq.py do it, but
+  this box has no LL.iso staged, so that half is DEFERRED with the other
+  fixture-backed legs; until then the honest statement is that the
+  mechanism exists and whether ZARIA.01 uses it is unmeasured. Next:
+  whether the port's ask model needs the delta - PR-350's block and
+  0x541f0's pair get it before the seat test, and ll_level.c's
+  seat_ask_core takes aimx/aimy as given; what the element method block's
+  slot +0x10 (12 sites) and +0x14 (9 sites) verbs do; whether anything
+  patches f0 after load; and the items PR-354 left - the 0x58c counter,
+  the block 0x546de-0x54700, and bit 0x04 of [obj+0xB6].
+CLOSES: PR-350's OPENS - "what the controller chain (+0x48, +0x50 and
+  the [obj+0x33] script method) writes into block[2] and with what": it
+  is [block+0] and [block+4], written by 0x42980 with the element's
+  anchor delta, sign-keyed. It closes the item PR-353 and PR-354 named
+  as the last unnamed artifact of the landing chain: the table is 0xa0c08
+  and the methods are 0x42980 and 0x429d0. It answers the half of F6
+  that asked what landing DOES to the lion: for an element that declares
+  anchors it steps the position by the anchor difference and undoes it on
+  leaving; for an element whose f0 is the 0x7fff sentinel it moves
+  nothing at all, and only [obj+0xB6] bit 0 changes (PR-354).
+CORRECTS: PR-353 and PR-354, both from the same week: they call the
+  holder of +0x33 "the current script object" and say the land and leave
+  methods live in "the level's own script" and that "no shipped class
+  runs engine code there". Both are wrong: [view+0x48] hands back the
+  current frame's .SEQ element record, and 0x42980/0x429d0 are ordinary
+  engine methods of that record's block. The description of the CALL is
+  right - PR-353's `mov ecx,[eax+0x33]`, slot +4 for land and +8 for
+  leave, with [obj+0x6d] as the sign, and PR-354's four runners are what
+  these sites do - so only the noun changes. PR-316's "the class +0x4
+  verb of the holder read at [[+0x48 result]+0x33]" stands and its
+  "unmodelled transform" is now modelled. PR-255's "the frame records'
+  shared method block" is right and is where this read started; it
+  stopped one step short of the element: 0x23aa0 does not return the
+  frame record, it returns `[[rec+8]+8]'s array indexed by [rec+0xc]`
+  through 0x229c0 and dereferences it (0x23ab6-0x23ac4) - the element.
+GATE: light: verify-index verify-docs rc=0 (ok); no code, so no red leg
+  and no mutation run, and no fixture is read, so no leg moves - and
+  verify-docs now also rebuilds PR-355's journal-db layer, which it
+  printed (ok). Reproducible:
+  /tmp/opencode/pr357_33chain.py (every `+[0x33]` read with the slot it
+  calls: 5 land sites, 5 leave sites, 42 reads) and
+  /tmp/opencode/pr357_slots.py (the mtable-slot census for 0x238b0,
+  0x23880, 0x53db0, 0x3c330, 0x53e40). The bodies are quoted at their
+  exact sites - 0x42980, 0x429d0, 0x41ef0, 0x41f60, 0x42015, 0x43f59,
+  0x238b0, 0x53df0 - and the dis came from `leodb.py dis`, not from the
+  linear-sweep rows, which mis-listed 0x41ef0 and attributed 0x53e1d to
+  FUN_00053db0 instead of 0x53df0. The ledger lookups for this pass used
+  tools/jq.py (PR-355's layer): `jq.py free "+0x33"` is what surfaced
+  PR-255's 0xa0c08 and PR-308's live-position sentence in one call.
+```

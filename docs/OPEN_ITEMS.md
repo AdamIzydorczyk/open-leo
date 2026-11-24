@@ -5294,13 +5294,14 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
 OI-128: what landing and leaving a surface does - the class verbs
   +0xB4 and +0xB8, the '#' ejection counter, and the unread head of
   the ground-contact verb
-  status: PARTIALLY CLOSED (PR-353 read the pair: for the 155 views that
-    ask the standing query it is a call into the current script object,
-    and the seat classes' own pair only clears a field; PR-354 named the
-    tables that drive it - the level script's own clause nodes - and the
-    flag byte every gate reads. Still open: the script object's +0x33
-    table and its land/leave methods, [obj+0x6d]'s -1/+1 source, the
-    0x58c timer posters, and the block 0x546de-0x54700)
+  status: PARTIALLY CLOSED (PR-353 read the pair, PR-354 named the
+    clause-node tables and the flag byte, and PR-357 read the methods
+    themselves: the +0x33 word is the last field of the .SEQ element
+    record, its table is 0xa0c08, and slot +4/+8 are one inverse pair
+    that shifts the position by the element's second anchor minus its
+    first and undoes it on leaving. Still open: whether any shipped
+    element carries such a second anchor (needs the .SEQ fixture), the
+    0x58c timer posters, the block 0x546de-0x54700, and the '#' census)
   origin: PR-345 (the class verb +0xAC read)
     The ground-contact verb 0x546a0 ends by telling the object about
     its surface: when the standing query's answer differs from the
@@ -5397,3 +5398,32 @@ OI-128: what landing and leaving a surface does - the class verbs
     and the land/leave methods stored in it, [obj+0x6d]'s -1/+1 (the
     field `ldir`/`rdir` write, PR-320), the 0x58c counter, and the
     block 0x546de-0x54700.
+    PR-357 READS THAT +0x33 TABLE, AND IT IS NOT SCRIPT CODE. The word
+    has exactly ONE writer in the image - 0x41f4d `mov DWORD PTR
+    [ebx+0x33],0xa0c08` - and it is the last field of a 0x37-byte
+    record allocated at 0x43f59 inside the .SEQ loader 0x43e70: the
+    element record of the port's own ll_seq.h grammar. The record's
+    initializer 0x41ef0 stamps 0x7fff at +0, +4 and +8 and installs the
+    block; its reader 0x41f60 then reads w0, the shape-frame words, and
+    f0, f2, f4, f6 straight out of the blob (0x41f9d, 0x41fa3, 0x41fb9,
+    0x41fd0). Slot +4, 0x42980, is the land method and slot +8, 0x429d0,
+    the leave method, and they are one inverse pair: if f0 is the 0x7fff
+    sentinel nothing moves; otherwise the pair adds or subtracts
+    (f4 - f0, f6 - f2) from the position pair - the vector from the
+    element's FIRST anchor to its SECOND, the X leg negated when the
+    facing is not positive. Ten sites reach them, all engine code: the
+    class +0xB4/+0xB8 verbs (0x238c6, 0x2389c), the +0x54 frame step
+    0x53df0 (which first copies the position to [obj+0x89] at
+    0x53e06-0x53e0d and shifts the copy), the ask block 0x541f0 (which
+    is PR-350's open item, now answered), the +0xB0 provider 0x544d0,
+    one private +0x78 verb 0x3c330, and PR-354's four runners. The
+    argument is the object - so [obj+0]/[obj+4], the live position
+    PR-308 named - or a copy of it. So landing is: set the standing bit
+    (PR-354) and, when the current element declares a second anchor,
+    step the position onto it; leaving steps back. WHAT IS LEFT HERE is
+    no longer the mechanism but the data: how many shipped elements have
+    f0 != 0x7fff and (f4,f6) != (f0,f2) - measurable with
+    tools/seq_parse.py once an .SEQ fixture is staged, DEFERRED here -
+    whether the port's seat_ask_core has to apply the delta before the
+    seat test, what the block's slot +0x10 (12 sites) and +0x14 (9)
+    verbs do, and the timer items above.
