@@ -7294,6 +7294,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     level cleanup - it also frees [X+0x3b4], destroys the hit
     record [X+0x38c] via [[obj]+0x4] edx=2, and zeroes the run
     flag.]
+    [PR-485 MEASURES THE TYPE-TAG TABLE. Counting the edx
+    immediates at every call of the delete helpers 0x74bc0 (736
+    sites), 0x74be0 (824) and 0x5c370 (776): 391 distinct tags
+    at a constant 0x14 stride, 0x96390..0xa6b68 - the whole
+    class-table band, one descriptor per deletible type (PR-474
+    saw only ~25). Entry shape: [+0] scalar destructor (the
+    element tag 0xa0b94 -> 0x43cf0), [+4] the SAME word
+    0x74bac00 in every entry, [+8] a second (array-form)
+    destructor (0xa0b94 -> 0x441b0), then a size-like word and
+    0. The delete law: 0x74bc0 reads the tag from [obj-4] and
+    calls 0x76c00, which runs the hook 0x7b791 then
+    0x74b7c -> 0x74a4c(obj, descriptor). PR-485 corrects
+    PR-474's range, confirms PR-477's 0x967cc (an earlier
+    entry), and shows 0xa0c08/0xa0c34 are NOT tags - they are
+    the draw-verb blocks of PR-475; the tag entries in that
+    sub-block start at 0xa0b94.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

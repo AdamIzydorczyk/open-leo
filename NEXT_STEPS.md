@@ -64638,3 +64638,91 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   uses. Fixing the "level ctor" as a cleanup also removes a
   long-standing upside-down reading of the level lifecycle.
 
+
+## PR-485 - THE DELETE-DESCRIPTOR TABLE: 391 TYPE TAGS AT
+## 0x14-BYTE SPACING FROM 0x96390 TO 0xa6b68, EACH
+## {scalar-dtor, 0x74bac00, array-dtor, size-word, flags}
+
+```
+KIND: read
+SUBSYSTEM: every immediate passed in edx to the delete helpers
+  0x74bc0 (736 sites), 0x74be0 (824 sites) and 0x5c370 (776
+  sites): 391 distinct tag addresses spread at a constant
+  0x14-byte spacing over 0x96390-0xa6b68 - the whole class-
+  table band, not the 0xa0b00-0xa0d00 window of PR-474; the
+  contents of the tag entries (two destructor pointers, one
+  universal word 0x74bac00 at +4, a fourth word like 0x16/
+  0x122/0x37 and a zero at +0xc); and the delete path itself:
+  0x74bc0 = `ecx=obj-4; edx=[ecx]; call 0x76c00`, and 0x76c00
+  = `0x7b791(); 0x74b7c(obj, tag); unlink [obj]`
+ADDRESSES: 0x74bc0, 0x74be0, 0x76c00, 0x74b7c, 0x74a4c,
+  0x7b791, 0x74bac00, 0x5c370, 0x961c4, 0x96390, 0x96420,
+  0x98284, 0x99370, 0x9a904, 0x9b62c, 0x9cf14, 0x9d5ac,
+  0x9e328, 0x9f498, 0x9fc34, 0xa0744, 0xa0b94, 0xa0ba8,
+  0xa0bbc, 0xa0c08, 0xa0bd0, 0xa0c34, 0xa0d0c, 0xa0f14,
+  0xa1220, 0xa1358, 0xa2198, 0xa2e74, 0xa4cdc, 0xa6b68,
+  0x14, 0x4, 0x8, 0xc, 0x3700, 0x1600, 0x12200, 0x441b000,
+  0x391, 0x736, 0x824, 0x776
+NAMES: delete descriptor, type tag, scalar destructor, array
+  destructor, delete trampoline, tag table, pr485_tags.txt,
+  pr485_render.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE MEANING OF THE DESCRIPTOR'S +8 AND +0xc WORDS -
+    their values (0x1600, 0x12200, 0x3700, 0x441b000) look like
+    a size/count pair, and PR-475's array strides (0x2b, 8,
+    0x1b) do not appear verbatim in the three element tags, so
+    the array-delete form is not simply [tag+8]; WHO WRITES the
+    header word [obj-4] (no call to the allocator 0x5c320 takes
+    a tag immediate, so the store belongs to the constructor
+    thunks, unlocated); the 0x7b791 call inside the delete - a
+    CRT-style hook, unread; and why 0x5c370 (the plain free)
+    takes the same tag at 776 sites - presumably to account the
+    block back to its size class, unproven.
+CLOSES: PR-477's OPENS "the 0x967cc tag used by the array dtor
+  0x22830 - the tag space is wider than PR-474 mapped": by how
+  much is now measured - 391 tags at a uniform 0x14 stride from
+  0x96390 to 0xa6b68, covering every cluster of the class-name
+  band (0x96, 0x98-0x9f, 0xa0-0xa6), one per deletible C++
+  type; 0x967cc is simply an earlier entry in the same table.
+  It also settles PR-474's tag-block question one level down:
+  the descriptors are DESTRUCTOR records, not view tables -
+  +0 holds the scalar destructor (0xa0b94 -> 0x43cf0, the
+  element dtor of PR-475), +4 is the identical word 0x74bac00
+  in every entry, and +8 holds a second destructor for the
+  array form (0xa0b94 -> 0x441b0). The delete law is explicit:
+  0x74bc0 reads the type tag from [obj-4] and hands it to
+  0x76c00, which calls the hook 0x7b791, then 0x74b7c ->
+  0x74a4c with (object, descriptor) - the C++ scalar deleting
+  destructor - and unlinks. And 0xa0c08 is NOT a tag: the tag
+  entries begin at 0xa0b94 in that sub-block, while 0xa0c08 is
+  the draw-verb block PR-475 mapped, reached only from
+  0x41ee5/0x41f4d; the two structures merely share the range,
+  which is why PR-474's window looked wider than it is.
+CORRECTS: PR-474's "allocator type tags from 0xa0b00-0xa0d00
+  (736/824 call sites)": the sites are right but the range is
+  not - those call sites name tags across 0x96390-0xa6b68;
+  nothing outside 0x96-0xa6 appears, but the window of PR-474
+  held only about 25 of the 391 tags.
+MEASURED: (a) THE CENSUS: for every call to 0x74bc0 / 0x74be0
+  / 0x5c370, the edx immediate, grouped; the full table is in
+  the evidence file; the minimum tag is 0x96390, the maximum
+  0xa6b68, the stride 0x14. (b) THE ENTRY SHAPE, verbatim:
+  0x96390 = {0x74bac00, 0x74bac00, 0x1c74000, 0x1600, 0};
+  0xa0b94 = {0x43cf000, 0x74bac00, 0x441b000, 0x3700, 0}.
+  (c) THE FREE PATH, verbatim at 0x74bcb: `lea ecx,[eax-4];
+  mov esi,[ecx]; mov edx,esi; call 0x76c00; ... mov eax,ecx`.
+  (d) NOT A TAG: 0xa0c08 and 0xa0c34 are load immediates at
+  0x41ee5/0x41f4d and 0x449d8 only (view/verb blocks). (e)
+  THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The journal had a "tag block" of a couple of dozen
+  addresses. It is actually the engine's complete destructor
+  table - one entry per type, at a fixed stride - and the free
+  helper names the type of every object it releases. That is
+  the strongest available count of the original's type system:
+  391 deletible types.
+
