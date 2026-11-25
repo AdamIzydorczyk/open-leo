@@ -60085,3 +60085,107 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   event semantics (type 1 = the MOVE pair this line started from),
   and those two bodies are the closest engine-side description of
   the step the port still has to match.
+
+## PR-435 - THE SCENE-CLASS METHOD TABLE CENSUS: 110 TABLES AT
+## [obj+0x08] WITH A FIXED SLOT MAP - position SETTER, box TEST,
+## event DISPATCHER, tick - AND THE DEFAULT BODIES
+
+```
+KIND: read
+SUBSYSTEM: the method tables installed at [obj+0x08] by the scene
+  class constructors (the object side of PR-434's step entry): the
+  table census, the per-slot frequencies and shared defaults, the
+  event dispatcher 0x54560 that switches on the event type, the
+  default tick 0x550a0 and its shared core 0x536f0, and the
+  position setter 0x23850 that gives the pos verb its meaning
+ADDRESSES: 0x96874, 0x98278, 0x9f298, 0x9f380, 0x73e55, 0x72799,
+  0x54560, 0x54590, 0x550a0, 0x536f0, 0x53770, 0x52bb0, 0x3d8f0,
+  0x400b0, 0x23c70, 0x23850, 0x23ea0, 0x23e00, 0x23c60, 0x24f60,
+  0x309e0, 0x45a30, 0x49580, 0x523f0, 0x54569, 0x00, 0x04, 0x08,
+  0x0c, 0x10, 0x14, 0x18, 0x54, 0x8c, 0xc2, 0xc6, 0xe6, 0xea,
+  0x06, 0x0d, 0x1b
+NAMES: scene class table, method slot map, event dispatcher,
+  default tick, box containment test, position setter,
+  pr435_tables.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE OTHER ARMS OF 0x54560 - only the pair-copying arm at
+    0x54590 (node words to [obj+0xc2] and [obj+0xc6]) was read;
+    which types map to which arm; WHAT THE SHARED CORE 0x536f0
+    FINISHES - it virtual-calls table +0x8c, hands the result and
+    [obj+0x60] to 0x49580, indexes the row array into
+    0x523f0, the PR-410 flag-test region; WHAT THE +0xe6/+0xea
+    counters zeroed by 0x550a0 count; WHAT THE +0x18 COLUMN IS
+    (0x23c60 in 46 tables); WHICH CLASS OWNS WHICH TABLE - the
+    census maps table to installing constructor, and only two are
+    named today via PR-425 (0x73e50 YETI installs 0x9f298, 0x72780
+    PINGWIN installs 0x9f380); and the two +0x04 variants 0x23850
+    versus 0x23ea0 x30 - one is the position setter, the other is
+    unread.
+CLOSES: PR-434's OPENS items WHAT VIRTUAL CALLS +0x10 AND +0x14 DO
+  and part of the event-type question: +0x10 is the per-class
+  event handler - 49 of 110 tables use the shared dispatcher
+  0x54560, which reads [node+0x4] and branches on the type
+  constants (cmp chains at 0x5456c-0x54585 over 6, 0xd, 0x1b...);
+  +0x14 is the per-frame tick - 61 tables share 0x550a0, which
+  zeroes [obj+0xe6]/[obj+0xea] and jumps to the common core
+  0x536f0. Also closes the PR-432 pos entry: 0x45a30 virtual-calls
+  table +0x04, which is the shared setter 0x23850 - it stores the
+  two arguments as [obj+0x00] and [obj+0x04] and calls virtual
+  +0x54, so scene-object position lives at +0x00/+0x04 and pos
+  SETS it.
+CORRECTS: PR-434's "per-class virtual at table +0x10" is
+  confirmed and made precise: it is not per-class at all for half
+  the classes - the engine shares one dispatcher; and PR-433's
+  "pos virtual-calls the actor record +0x04 with parsed pair" was
+  vague about the effect: the slot is a shared setter, not a class
+  method, and the coordinates are the object's first two words.
+MEASURED: (a) THE CENSUS. 111 distinct values are written to
+  [reg+0x08] by code; 110 are class tables in the data range
+  0x96874-0x9f854 (0x961fc is PR-423's runtime lookup, excluded);
+  the installing constructors span 0x1e0a0-0x73e50 including the
+  PR-425 factory regions 0x24f60/0x309e0. Cross-check: 0x73e55
+  installs 0x9f298 (PR-425's YETI ctor), 0x72799 installs 0x9f380
+  (PR-425's PINGWIN class) - the census and the name factories
+  agree. (pr435_tables)
+  (b) THE SLOT MAP (frequency over the 110): +0x00 all distinct -
+  the PR-421 construct/delete thunk; +0x04 0x23850 x78 or 0x23ea0
+  x30; +0x08 0x23e00 x104 - a shared box test: returns 1 exactly
+  when [obj+0x00] is between [arg+0x00] and [arg+0x08] and
+  [obj+0x04] between [arg+0x04] and [arg+0x0c]; +0x0c mostly
+  distinct; +0x10 event dispatcher, default 0x54560; +0x14 tick,
+  default 0x550a0; +0x18 0x23c60 x46. (pr435_tables)
+  (c) THE DEFAULTS. 0x54560: eax = object, edx = event node;
+  branch tree on [node+0x04]; one read arm copies [node+0x08] and
+  [node+0x0c] to [obj+0xc2]/[obj+0xc6]. 0x550a0: zero
+  [obj+0xe6], [obj+0xea], call 0x536f0: virtual [table+0x8c] with
+  a stack scratch buffer, hand result and [obj+0x60] to 0x49580,
+  index [[obj+0x50]+[obj+0x5c]*4] and call 0x523f0 (PR-410's
+  region), 0x49580 again. 0x23850: [obj+0x00]=edx, [obj+0x04]=ebx,
+  virtual +0x54.
+  (pr435_tables)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr435_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr435_tables.txt: every [reg+0x08] table write with
+  its installing function, the 110 table slot dumps as dwords from
+  build/leo/leo.img, the per-slot frequency table, and the
+  decodings of 0x54560, 0x550a0, 0x536f0, 0x23e00 and 0x23850 from
+  their entry addresses.
+```
+
+- WHY. This is the object-system half of the physics port's target
+  picture: every authored scene class carries one table with a
+  known slot map, positions are the object's first two words with
+  one setter, "inside a box" is one shared predicate at +0x08, and
+  the frame contract from PR-434 runs through two defaults the
+  engine itself shares (0x54560 dispatcher, 0x550a0 tick). The
+  slot-map census also turns the unnamed 110 tables into a work
+  list: each maps to an installing constructor which maps to an
+  authored name via the PR-424/425 factories, so class-by-class
+  naming is now mechanical. The tick core 0x536f0 reaching into
+  the row array and 0x523f0 is the strongest lead yet for wiring
+  row conditions to motion in the port.

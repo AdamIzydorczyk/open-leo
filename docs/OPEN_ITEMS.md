@@ -6368,6 +6368,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     enqueuers cluster in game logic 0x1e9xx/0x2exxx/0x3exxx plus
     the verbs. Base table+0x10/+0x14 bodies are the direct next
     input for the physics port.]
+    [PR-435 MAPS THE SCENE-CLASS TABLES. 110 class tables at
+    [obj+0x08] (data 0x96874-0x9f854), each installed by its class
+    ctor - census agrees with PR-425 names (0x73e55 installs
+    0x9f298 YETI, 0x72799 installs 0x9f380 PINGWIN). Fixed slot
+    map: +0x00 ctor/dtor thunk (all distinct); +0x04 shared
+    position setter 0x23850 x78 (pos verb = set [obj+0x00]/[+0x04]
+    + virtual +0x54) or 0x23ea0 x30; +0x08 box-containment
+    predicate 0x23e00 x104; +0x10 event handler, default 0x54560
+    x49 - branch tree on [node+0x04] type (0x54590 arm copies the
+    pair to [obj+0xc2]/[obj+0xc6]); +0x14 tick, default 0x550a0
+    x61 - zeroes [obj+0xe6]/[+0xea] then shared core 0x536f0
+    (virtual table+0x8c, 0x49580 with [obj+0x60], row array into
+    0x523f0); +0x18 0x23c60 x46. Positions are the object's first
+    two words. Closes PR-434's virtual +0x10/+0x14 items and the
+    PR-432 pos meaning; class-naming each table via its ctor is
+    now mechanical work.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
