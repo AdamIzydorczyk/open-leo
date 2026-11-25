@@ -64988,3 +64988,90 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   singleton, broadcast to all objects, and fan-out to sibling
   children.
 
+
+## PR-489 - THE LEVEL SETTINGS LOADER 0x4c8a0: A TEXT
+## SNAPSHOT AT [X+0x3b4] WHEN THE "none" SECTION IS MISSING,
+## AND THE EXACT tools/crown POLARITY LAW IN THE BELT CTOR
+
+```
+KIND: read
+SUBSYSTEM: the body of 0x4c8a0 (one caller, 0x4a65f inside the
+  level session routine 0x4a4c0) between 0x4d4e9 and 0x4d646:
+  it probes the parsed level record for a section named "none"
+  (0x57c60 with 0x91f04); when that name is absent it builds
+  the record at [X+0x3b4] - 0xa bytes {flag word [r+2]=1, and
+  [r+6] = a copy made by 0x7521f of 0xfa00 bytes of the level
+  text at [X+0x88]} - exactly the shape the level cleanup
+  frees with fields +0x2/+0x6 (PR-484); it then calls 0x4a910
+  with the separator literal backslash (0x91f09) in ebx, and
+  gates the belt-object build (PR-487) on membership probes -
+  0x57c60 for "none" (0x91f0b) in the index at [ebp-0x46] and
+  0x57dd0 for key ids 0x42/0x62 in the record at [X+0x30] -
+  and only allocates the 0x8c-byte belt and calls 0x443b0 if
+  "none" is ABSENT there and (0x42 is present or 0x62 is not)
+ADDRESSES: 0x4c8a0, 0x4a65f, 0x4d4ec, 0x4d520, 0x4d535,
+  0x4d53a, 0x4d53d, 0x4d543, 0x4d54d, 0x4d558, 0x4d55e,
+  0x4d563, 0x4d568, 0x4d581, 0x4d58c, 0x4d594, 0x4d59e,
+  0x4d5d6, 0x4d5e3, 0x4d5eb, 0x4d5f2, 0x4d603, 0x4d60d,
+  0x4d612, 0x4d638, 0x4d646, 0x49e40, 0x49db0, 0x4a910,
+  0x7521f, 0x57a70, 0x57a00, 0x57c60, 0x57dd0, 0x57d30,
+  0x49950, 0x44558, 0x44562, 0x44579, 0x4451f, 0x44539,
+  0x44542, 0x444c2, 0x444dc, 0x444e5, 0x3b4, 0x88, 0x30,
+  0x50, 0x54, 0x70, 0x91f04, 0x91f09, 0x91f0b, 0x917f0,
+  0x917f3, 0x917e3, 0x917d2, 0x917df, 0x42, 0x62, 0x8c,
+  0xfa00, 0x64
+NAMES: level settings loader, settings section, text snapshot,
+  separator literal, membership probe, key id, digit-count
+  key, pr489_loader.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT IDS 0x42 AND 0x62 ARE - 0x57dd0 takes a numeric
+    key id and the sorted .des key enumeration of OPEN_ITEMS
+    is the only candidate id table, but no record maps
+    0x42/0x62 to a name; WHY THE TEXT SNAPSHOT IS SKIPPED
+    when a "none" section exists - what a "none" section means
+    in a level file (unverified against the shipped ETAPY
+    files); WHICH KEY FEEDS THE "%i"
+    VALUE - 0x49950 parses the integer from a line whose key
+    string is not loaded in that window; and the polarity
+    REASON the crown flag is 1 only for the literal "off".
+CLOSES: PR-487's OPENS "the other string read at 0x44558 -
+  its text is unfetched" (it is "%i" at 0x917f3: a digit
+  count; the ctor parses it through 0x49950, computes
+  0x64/(n-1) at 0x44579 and stores the item-frame spacing at
+  +0x70) and its +0x50/+0x54 wording becomes exact and
+  symmetric: +0x50 = (value != "off") - a missing or empty
+  value and any value but "off" give 1 (0x444b5/0x444e5),
+  only "off" gives 0 (0x444dc); +0x54 = (value == "off") -
+  only the literal "off" gives 1 (0x44539), any other value
+  or a missing key gives 0 (0x44542). The opposite polarity
+  reads consistently with +0x54 meaning "crown DISABLED".
+  PR-484's OPENS "[X+0x3b4]'s small-record free - an
+  authored blob, unexamined" also closes: it is the level-text
+  snapshot record built here when the record lacks a "none"
+  section, and the cleanup's 0x75302 free is its delete.
+CORRECTS: nothing.
+MEASURED: (a) THE SNAPSHOT, verbatim 0x4d53a-0x4d581: `cmp
+  eax,0xffffffff; jne 0x4d5d6` (skip when "none" present);
+  `mov eax,0xa; call 0x5c320; mov eax,0xfa00; lea edx,[esi+
+  0x88]; call 0x7521f; mov [ebx+6],eax; mov [ebx+2],1; ...;
+  mov [esi+0x3b4],eax`. (b) THE GATE: 0x57c60("none",
+  [ebp-0x46]) then two 0x57dd0 probes with ids 0x42/0x62 on
+  the record at [X+0x30]; build at 0x4d60d only when "none"
+  is absent and (0x42 present or 0x62 absent). (c) THE BYTES
+  at 0x91f04-0x91f0b: `none\0 \ \0 none\0 none\0` - the 0x91f09
+  immediate is the one-byte string backslash, 0x91f0b is
+  again "none"; at 0x917df: `off\0`, 0x917f0 `on\0`, 0x917f3
+  `%i\0`. (d) THE FLAG PATHS verbatim: 0x444a4-0x444e5 and
+  0x444fc-0x44542, both comparing through 0x76d20. (e) THE
+  PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port just counts the `tools=`/`crown=` lines. The
+  original's loader shows what they gate - a belt object with
+  an item-frame digit count - and the defaults the port must
+  assume when a level omits them: tools on, crown enabled
+  (the flag records the disable).
+

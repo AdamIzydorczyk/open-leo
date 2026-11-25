@@ -7359,6 +7359,23 @@ OI-128: what landing and leaving a surface does - the class verbs
     from 0x2c4a0; 0x21 also stores ds:0xcec70=1), 0x39 (to
     earlier siblings). The sender methods sit in tables
     0x9aeac/0x9b39c/0x9a068/0xa1d2c.]
+    [PR-489 MAPS THE LEVEL SETTINGS LOADER 0x4c8a0 (its only
+    caller 0x4a65f sits inside 0x4a4c0). It probes the parsed
+    level record for a section named "none" (0x57c60,
+    0x91f04); when absent it builds [X+0x3b4] = 0xa-byte
+    record {flag +2=1, +6 = 0x7521f copy of 0xfa00 bytes of
+    the level text at [X+0x88]} - closing PR-484's "[X+0x3b4]
+    blob" open; it calls 0x4a910 with the backslash separator
+    0x91f09; and it gates the belt-object build (PR-487) on
+    probes for "none" in [ebp-0x46] and key ids 0x42/0x62 in
+    the [X+0x30] record - build only when "none" absent and
+    (0x42 present or 0x62 absent). The belt ctor law is now
+    exact: flag +0x50 = (tools value != "off") - missing key
+    means ON; flag +0x54 = (crown value == "off") - so the
+    flag means crown-DISABLED and shipped crown=on lines
+    enable it; the 0x44558 string PR-487 left unread is
+    "%i" (0x917f3), the item-frame digit count -> [belt+0x70]
+    = 100/(n-1).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
