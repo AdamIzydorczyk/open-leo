@@ -56227,3 +56227,152 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   other verb of the pair. And it hands the next row a concrete way back
   from a class row to the authored directive it models: the two to nine
   builder sites that install it.
+
+## PR-401 - A VISIT HAS EXACTLY THREE STARTING SITES IN THE WHOLE IMAGE,
+## AND ALL THREE SELECT THE ROW BY INDEX: `[x+0x18]` ON THE RECORD CLASS
+## AT [ctx+0x44], AND `[reg*4+0xcf518]` TWICE - NONE OF THE 146
+## `call [reg+4]` SITES TAKES ITS TABLE FROM `[x+4]`
+
+```
+KIND: read
+SUBSYSTEM: how a node-class visit (PR-400) is entered - the row-advance
+  handler 0x520c0 and its one call site 0x52338 in the row step, the two
+  sites that index the global slot 0xcf518, the 31st node table 0xa2638
+  (the row-node class of PR-140), and the 0x98278-indirect call PR-101
+  left open as item (4)
+ADDRESSES: 0x520c0, 0x520c7, 0x520cf, 0x520d2, 0x520d5, 0x520d7, 0x520da,
+  0x520dd, 0x520df, 0x520e1, 0x520e4, 0x520e6, 0x520eb, 0x520ed, 0x520ef,
+  0x520f2, 0x520f6, 0x52331, 0x52336, 0x52338, 0x74a85, 0x74a8a, 0x74a8d,
+  0x74a94, 0x74a96, 0x74a98, 0x74b3a, 0x74b55, 0x74b58, 0x74b5f, 0x74b61,
+  0x74b63, 0x74a1c, 0x74bfe, 0x74c08, 0x74bc0, 0x74be0, 0x74bec, 0x74bf9,
+  0x23ed0, 0x23ed3, 0x23eeb, 0x5c370, 0x76c00, 0x96858, 0x98274, 0x98278,
+  0xa9ab0, 0xa9ab8, 0xa9abc, 0xcf518, 0xa2638, 0x457e0, 0x45800, 0x45870,
+  0x51620, 0x97c9c, 0x98e7c, 0x99338, 0x9a85c, 0x9a894, 0x9a8cc, 0x9b5f4,
+  0x9cedc, 0x9d53c, 0x9e254, 0x9f460, 0x9fbfc, 0xa25d4, 0xa260c, 0xa2e9c,
+  0xa2ed4, 0x04, 0x08, 0x0c, 0x18, 0x2c, 0x33, 0x2e, 0x44, 0x68
+NAMES: visit start, row-node class, row advance, base subobject table,
+  delete verb, free-with-flags, indexed row, chain of loads,
+  pr401_who_starts.py, pr401_who_starts.txt, pr401_rows.py,
+  pr401_rows.txt, pr401_chain.py, pr401_chain.txt, pr401_sites.py,
+  pr401_sites.txt, pr401_indexed.py, pr401_indexed.txt,
+  pr401_row_visit.txt, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes, and no port comment
+  asserts anything about these call sites. PR-400's OPENS line, OI-111
+  and OI-128 gain the answer in this commit.
+HOOKS: none - no leg and no fixture moves; the port's row pass (PR-333)
+  is not changed by a read of the original.
+OPENS: WHAT 0xcf518 INDEXES OVER - the image initialises it exactly once,
+  with the static block at 0xa9ab8, yet three sites read it as
+  `[reg*4+0xcf518]` with reg from elsewhere (0x74a8d, 0x74b58, 0x77cb5),
+  and nothing writes the other slots, so either the index is always 0 or
+  a runtime writer was missed by the immediate scan; WHO RUNS 0x74bfe -
+  no rel32 edge, and the 12-way jump table at 0x74a1c belongs to a
+  function whose entry this row did not find (the db `func` list jumps
+  0x74a4c to 0x74b7c); WHICH OF THE THREE SITES THE AUTHORED CLAUSE
+  TAKES - 0x520e1 visits whatever is at [rec+0x2e]+[rec+4]*4, and the
+  row-node class 0xa2638 has the BARE walk at +0x04, so a row-node visit
+  walks its own clause chain and stops; that chain's clauses are then
+  acted on only through their own +0x04 verbs, and no site that visits a
+  clause list was found; the 24 record classes that do NOT hold 0x520c0
+  at +0x18; and what [rec+0x2e] holds for a record whose class has no
+  row-advance verb.
+CLOSES: PR-400's OPENS item "WHO STARTS A VISIT", and the matching
+  sentence of OI-128: three sites start visits, all three by index. It
+  also closes PR-101's open item (4), "the 0x98278-indirect call inside
+  0x520c0": the target is the base subobject table at 0x98274 (its +0x4
+  slot is 0x98278), and the verb 0x23ed0 is a base-class DELETE, not a
+  visit - see MEASURED (d). And it answers PR-400's open question about
+  the 31st table at 0xa2638: it is the row-node class, and its +0x04 is
+  the bare walk 0x457e0.
+CORRECTS: PR-400's OPENS sentence "some code must call `[[x+4]+4]` on a
+  chain head". No such call exists. Of the 146 `call [reg+0x4]` sites in
+  the image, not one takes its base from a `[x+4]` load within reach
+  (the 7 the earlier scan reported had already been shown to come from a
+  stack slot or another field), and the three that DO start a visit get
+  their row from an array element: `mov ebx,[edi+0x4]` after
+  `mov edi,[eax+edx*4]` at 0x520d7, and `mov ecx,[eax*4+0xcf518]` at
+  0x74a8d and 0x74b58. A node's class row is therefore never followed
+  from a node variable held in a register: the row is chosen by POSITION
+  and its row is then read from it.
+MEASURED: (a) SITE 1, THE ROW-ADVANCE. 0x520c0 - PR-100's row-change
+  handler, `f(eax=rec, edx=..., ebx=...)` - sits at +0x18 of exactly 16
+  class tables (0x97c9c, 0x98e7c, 0x99338, 0x9a85c, 0x9a894, 0x9a8cc,
+  0x9b5f4, 0x9cedc, 0x9d53c, 0x9e254, 0x9f460, 0x9fbfc, 0xa25d4, 0xa260c,
+  0xa2e9c, 0xa2ed4) and has no direct call anywhere in the image. Its
+  head, read from its own entry: `add eax,0x2e; mov edx,[esi+0x4];
+  mov eax,[eax]; mov edi,[eax+edx*4]; mov ebx,[edi+0x4]; mov edx,esi;
+  mov eax,edi; call [ebx+0x4]` at 0x520cf-0x520e1. So the visited object
+  is `[[rec+0x2e] + [rec+4]*4]` - the node at the record's CURRENT ROW
+  INDEX - and its second argument is the record itself, which is what
+  PR-400's "[[arg]]" resolves to. (pr401_row_visit.txt)
+  (b) WHO REACHES SITE 1. One call site, 0x52338, inside the row step
+  PR-100 read: `mov esi,[ebp+0x44]; mov eax,ebp; call [esi+0x18]`
+  (0x52331-0x52338), with the remainder at edx computed from
+  `[ebp+0x68]` and [ebx+0x10] against [[owner]+0xa1] (0x52320-0x52334).
+  [ebp+0x44] is the record-array field PR-77 read on the context. No
+  rel32 edge reaches 0x52338 either, so the whole path into a node visit
+  is `[ctx+0x44] +0x18`.
+  (c) SITES 2 AND 3, THE 0xcf518 INDEX. `mov ecx,[eax*4+0xcf518];
+  mov edx,ebx; mov eax,edi; call [ecx+0x4]` at 0x74a8d-0x74a98 and the
+  same shape `mov esi,[esi*4+0xcf518]; mov edx,ebx; mov eax,edi;
+  call [esi+0x4]` at 0x74b58-0x74b63, inside the routine that owns the
+  12-entry jump table at 0x74a1c (entries 0x74a8a, 0x74a85, 0x74aed x3,
+  0x74a85, 0x74aab, 0x74ac0, 0x74ac7, 0x74ad4, 0x74ae4, 0x74b32) and
+  that is reached through a jump on a WORD read at [edx+0x4] (0x74b3a:
+  `mov esi,[edx+4]; mov ax,[esi]; cmp ax,0xb; ja 0x74a85; jmp
+  [ax*4+0x74a1c]`). 0xcf518 is a BSS slot: the whole range
+  0xcf500-0xcf560 is zero in the image, and the only write to it is
+  `mov DWORD PTR ds:0xcf518,0xa9ab8` at 0x74bfe (a 2-insn function
+  ending at 0x74c08, no direct caller). 0xa9ab8 is a static block whose
+  first words are 0xc8, 1, then 0x74be8 - it is NOT one of the 0xa0f28
+  rows, so this array holds a different family of rows. The other reader
+  of the same array is 0x77cb5/0x77ce7, which calls the row's +0x8 and
+  +0x0c rather than its +0x04.
+  (d) THE 0x98278 CALL IS A DELETE, NOT A VISIT. Four instructions after
+  the visit, 0x520c0 does `mov ebx,[esi]; mov ecx,0x98278; mov eax,esp;
+  mov edx,[ebx]; mov ebx,[ebx+4]; mov [esp+0x8],ecx; call [ecx+0x4]`
+  (0x520e4-0x520f6). 0x98278 is the +0x4 slot of the block at 0x98274 -
+  the same block PR-135 found written into 256 objects and PR-313 into
+  206 class tables at +0x0c, so it is the shared base part. The verb,
+  decoded from its own entry: `push ebx; mov ebx,eax; test dl,0x4; je
+  +; mov edx,0x96858; call 0x74bc0; call 0x74be0; mov eax,ebx; pop ebx;
+  ret`, and the else-branch is `test dl,0x2; call 0x5c370`. 0x74bc0 is
+  `push edx; mov edx,1; mov eax,0x95c40; call 0x77bdc; pop edx; ret` in
+  one form and `lea ecx,[eax-4]; mov esi,[ecx]; ...; call 0x76c00;
+  mov eax,ecx; ret` - freeing the block at [eax-4] - in the other. So
+  [ecx+0x4] here disposes with flags taken from the caller's dl, and the
+  answer to PR-101's item (4) is that the row-advance frees something
+  after visiting it.
+  (e) THE ROW-NODE CLASS IS ONE OF THE VISITED TABLES. [t+0x04] =
+  0x457e0 (the bare walk, no action) occurs in exactly 7 tables: the six
+  rows 0xa1000, 0xa1018, 0xa1030, 0xa1090, 0xa11c8, 0xa11e0 and
+  0xa2638 - PR-140's row-node class, whose +0x08 is the chain delegate
+  0x45800 and +0x0c the operand getter 0x45870 (OI-111). So the node at
+  the current row index is visited with the bare walk: a row-node visit
+  runs the +0x04 verbs of every clause hanging off it and does nothing
+  itself.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr401_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). Every
+  function quoted here was decoded from its own entry address with
+  `python3 tools/re/leodb.py dis`; the scans are the scripts named in
+  NAMES with their output kept beside them, and the byte tables were
+  read from build/leo/leo.img.
+```
+
+- WHY. PR-400 closed with a shape and no way into it, and the obvious
+  guess - that some code holds a node in a register and calls through its
+  +0x04 - is false in this image. The engine never keeps a node in a
+  register across a boundary: it keeps a POSITION. Both entry points are
+  index operations, one against a record's own row array and two against
+  a global slot that the image fills with exactly one static row. That
+  answers the question this line of work has been circling since PR-399 -
+  how authored clause nodes reach the object's land/lock verbs - without
+  needing a clause-walker: the row-advance visits the row, the row's own
+  verb is the bare walk, and the walk reaches each clause's verb. It also
+  retires a nine-year-old loose end, PR-101's item (4): the mysterious
+  0x98278-indirect call inside the row-advance is a base delete, so the
+  row-advance frees what it visited.

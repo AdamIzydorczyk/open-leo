@@ -4138,6 +4138,24 @@ OI-111: which row-step path the port's row clock models -
     descriptor's +0x10 verb; and the modes 2 and 3 (`*`, `|`), which
     no shipped row uses (PR-218's count) and this port still does not
     implement.
+    PR-401 READS THE ROW ADVANCE'S VISIT. The row step's other half -
+    the `[class+0x18]` call at 0x52338, with the class read from
+    [ctx+0x44] - enters 0x520c0, which PR-100 called the row-change
+    handler and which sits at +0x18 of exactly 16 record-class tables
+    (0x97c9c and 15 others) with no direct call anywhere. It is a VISIT
+    in PR-400's sense: it takes the node at `[[rec+0x2e]+[rec+4]*4]` -
+    the CURRENT ROW of the record's own node list - and calls that node's
+    +0x04 verb with the record as the second argument (0x520cf-0x520e1).
+    The row descriptor 0xa2638 this row already names has the bare chain
+    walk 0x457e0 at +0x04, so a row-node visit runs the +0x04 verbs of
+    the clause nodes hanging off the row and does nothing itself. Four
+    instructions later the same function calls `[0x98278+4]` = 0x23ed0,
+    PR-101's open item (4): read from its own entry it is a base-class
+    DELETE with flags - `test dl,0x4` to the free pair 0x74bc0/0x76c00,
+    `test dl,0x2` to 0x5c370 - so the row-advance disposes of what it
+    visited. The three sites that start a visit anywhere in the image are
+    that one plus 0x74a98 and 0x74b63 indexing the global slot 0xcf518;
+    what that slot indexes over stays open.
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port
@@ -5844,10 +5862,13 @@ OI-128: what landing and leaving a surface does - the class verbs
     therefore never set alone but CAN stand alone, because 0x54fcb clears
     bit 0x01 and leaves it. What stays open here (PR-400 read the 25
     +0x04 verbs and the six thunks, so the middle items below are closed;
-    see PR-400): WHO STARTS A VISIT - no code in the image calls any of
-    the 24 per-type verbs by address, so some code must call
-    `[[x+4]+4]` on a chain head and the 146 `call [reg+4]` sites do not
-    contain it; WHICH NODE TYPE EACH ROW IS - each row is installed at
+    see PR-400, and PR-401 ANSWERS the first of them: three sites start
+    a visit and all three select the row BY INDEX - the row-advance
+    0x520c0 visits `[[rec+0x2e]+[rec+4]*4]` at 0x520e1, reached only
+    through `call [ctx+0x44]+0x18` at 0x52338, and 0x74a98 and 0x74b63
+    index a global slot 0xcf518 that the image fills once, with the
+    static row at 0xa9ab8. No `call [reg+4]` in the image takes its base
+    from a `[x+4]` load. WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;
     why the point provider runs the element's LEAVE verb; and a setter
