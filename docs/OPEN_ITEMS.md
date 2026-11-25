@@ -6853,6 +6853,23 @@ OI-128: what landing and leaving a surface does - the class verbs
     ll_play.h:434-440. Open: the 41 constant-false classes,
     the 0x3d980/0x23e00 +0x9c variants, and a bit-by-bit table
     for [obj+0xb6].]
+    [PR-462 CLOSES PR-182 ITEM (2), THE [obj+0xb6] BIT LAW:
+    the complete masked-writer set is 0x545c6/0x545d2 (bits
+    2/3, the msg 3/4 arms, PR-183), 0x54f7b (bit 0) and
+    0x5500e (bits 0+1) INSIDE THE ATTACH VERBS 0x54f40/
+    0x54f90 - whose bodies are a full attach sequence: test
+    bit 0, resolve the pair through +0x48/+0x50, take the
+    partner's +0x33 table, call its +0x8 verb, set the bits -
+    cleared by the siblings 0x54fcb/0x55057, plus 0x45c20 (bit
+    5, ATC_ON, PR-135), 0x5266c (clears bit 5, PR-399's
+    teardown) and the reset 0x54e92. Correction to PR-182:
+    that reset is `and ah,0xc0` at 0x54ea2 - it KEEPS bits 6-7
+    and clears 0-5, opposite polarity to the transcript. Bits
+    6/7 have NO masked test anywhere and are only reachable
+    through whole-byte copies and the bit-by-bit serializer at
+    0x54090-0x54105 (copies bits 0..5 into a record at [eax-
+    0x20]) - what reads that record, and bit 1's meaning
+    distinct from bit 0, stay open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

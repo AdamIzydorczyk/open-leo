@@ -62638,3 +62638,80 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   future read from inventing a predicate where the engine put a
   class hook.
 
+
+## PR-462 - THE [obj+0xb6] BIT LAW, COMPLETED: BITS 0 AND 2 ARE
+## SET BY THE ATTACH-ESTABLISHED PATH 0x54f90 AND CLEARED BY ITS
+## DETACH SIBLING; THE RESET KEEPS ONLY BITS 6-7, WHICH NOTHING
+## IN THE IMAGE TESTS
+
+```
+KIND: read
+SUBSYSTEM: the flag byte [obj+0xb6]: every masked writer in the
+  image (0x45c20 bit 5, 0x545c6/0x545d2 bits 2/3 wait-not,
+  0x54f7b/0x54fcb bit 0, 0x5500e/0x55057 bits 0+1, 0x54e92
+  the reset's mask 0xc0, 0x5266c bit 5 clear) and the bit-by-
+  bit readers, with the enclosing methods 0x54f40/0x54f90 -
+  the attach verbs of PR-399
+ADDRESSES: 0xb6, 0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+  0x1e0b4, 0x23860, 0x23885, 0x238b5, 0x45c2d, 0x45c3c,
+  0x45c45, 0x5266c, 0x54090, 0x545c6, 0x545d2, 0x54e92,
+  0x54ea2, 0x54ea5, 0x54f40, 0x54f7b, 0x54f90, 0x54fcb,
+  0x5500b, 0x5500e, 0x55022, 0x55054, 0x55057, 0x48, 0x50,
+  0x33, 0x4, 0x8, 0xbc
+NAMES: flag byte census, attach established, detach verb,
+  high-bit survivors, state serialization copy, pr462_b6bits.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: BITS 6 AND 7 (0x40/0x80) - no masked test of them
+    anywhere, yet 0x54e92 deliberately preserves them through
+    the reset; they are only reachable through the whole-byte
+    copies (0x1e0b4, 0x45c2d, 0x54e92) and the bit-by-bit
+    serializer at 0x54090-0x54105, which copies bits 0..5 into
+    a record at [eax-0x20] - what consumes that record's bits
+    (the state-copy helper PR-182 noted) is unread; the
+    0x55022 entry's caller (its shape is the detach guard:
+    both bits set, then the pair's -0x4 verb); and bit 1's
+    meaning distinct from bit 0 (they are set together at
+    0x5500e and cleared together at 0x55057).
+CLOSES: PR-182 item (2), "which code SETS bits 2/4/8 ... bit
+  2's setter still open": the whole masked-writer set is
+  0x545c6 (`or 0x4`) and 0x545d2 (`or 0x8`) in the message 3/
+  4 arms (PR-183's reading re-confirmed), 0x54f7b (`or 0x1`)
+  and 0x5500e (`or 0x3`, bits 0+1) inside the attach verbs
+  0x54f40/0x54f90 - the methods PR-399 found with exactly one
+  call edge each - cleared by 0x54fcb (`and 0xfe`) and 0x55057
+  (`and 0xfc`) in their sibling paths, 0x45c20 (bit 5, the
+  ATC_ON latch, PR-135/PR-461) and 0x5266c (`and 0xdf`, the
+  teardown of PR-399), and the reset 0x54e92 `and ah,0xc0`,
+  which wipes bits 0-5 and keeps only the two untested high
+  bits. The 0x54f90 story is a complete attach sequence: test
+  bit 0, resolve the pair through +0x48/+0x50, take the
+  partner's +0x33 class table, call its +0x8 verb, then set
+  bits 0+1.
+CORRECTS: PR-182's parenthesis "0x54e00 clears 0xc0": the mask
+  at the end of that reset body is `and ah,0xc0` at 0x54ea2 -
+  it KEEPS bits 6-7 and clears bits 0-5 (0x3f), the opposite
+  polarity of how it was transcribed. The location was right.
+MEASURED: (a) THE QUERY. sql over ops like '%+0xb6]%' with
+  mnem in (or,and,xor) or whole-byte movs: 13 sites, all
+  listed above; no writer of 0x40/0x80 exists. (b) THE
+  READERS. Tests of 0x1/0x2 cluster in the physics band
+  (0x54200, 0x54500, 0x54c14, 0x54ed9, 0x55027/0x55030), 0x10
+  in two places only (0x54964 the PR-143 K_JUMP gate, 0x54bd6
+  the PR-442 applier tail), 0x20 through the +0x40 virtual
+  (PR-461). (c) THE SERIALIZER. 0x54090-0x54105 copies bits
+  0..5 one at a time into a record byte at [eax-0x20] with
+  matching and/or masks. (d) THE PORT. Unchanged: the port's
+  attachment legs (PR-122/PR-399) model the pair verbs; no
+  fixture turns on the flag bits themselves.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. A closed ledger for a byte the journal has quoted forty
+  times: six of its eight bits now have named setters,
+  clearers and readers, one pair (bits 6-7) is proven to be
+  deliberately preserved and never tested, and the attach
+  verbs' bodies show the bits are the engine's own record of
+  "this pair is attached".
+
