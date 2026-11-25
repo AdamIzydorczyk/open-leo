@@ -6319,6 +6319,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     slot - one indexed selection from object field +0x2e; and the
     first slot called is +0x04. Closes PR-430's command-list
     storage item.]
+    [PR-432 READS THE VERB EFFECTS. Record slot +0x04 IS the
+    execute message: base 0x457e0 chains it through [cmd+0x00] like
+    the forwarders; each per-verb handler 0x45750-0x45ce0
+    calls 0x457e0 first, then applies its effect to the actor at
+    [owner+0x00] - so a script runs chain-tail-first = file order
+    (0x51660 prepends). Effects are tiny: rev negs [actor+0x99];
+    ldir/rdir store -1/+1 at [actor+0x6d]; atc_on/off rewrite bit
+    0x20 of [actor+0xb6] from [cmd+0x8]&1; zero calls 0x52070,
+    zero_v/MOVE call 0x52b10, chdir 0x53670, smp 0x52c80 with the
+    parsed pair, smpauto 0x52cc0, vol via 0x1cc10 on global
+    0xcf068, pos virtual-calls the actor record +0x04, end_level
+    stores [cmd+0x8] at ds:[0xcef40]+0x4. Shared-record families
+    differ ONLY by a parse-time flag in [cmd+0x8]: lock writes
+    edx=1 (0x46430/0x4643c), unlock zeroes edx (0x464d2/0x464e0),
+    and executor 0x45c50 picks 0x54f40 or 0x54f90 by it - engine
+    design confirmed as (opcode record, flag, parsed pair).
+    CORRECTS PR-429: verbs DO carry behaviour, at +0x04; only
+    +0x08/+0x0c/+0x10 are universal forwarders. Closes PR-431's
+    +0x04 item.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

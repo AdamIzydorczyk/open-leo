@@ -59777,3 +59777,115 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   one per-verb handler (0x459b0 rev, 0x45a50 zero) to find where
   verb behaviour actually lives - and then 0x520c0's callers, which
   will say what selects script index [rec+0x4] per state.
+
+## PR-432 - THE +0x04 SLOT IS THE EXECUTE MESSAGE: EVERY VERB HANDLER
+## FIRST CHAINS, THEN APPLIES A SMALL EFFECT TO THE ACTOR, AND THE
+## lock-vs-unlock KIND OF DIFFERENCE IS A PARSE-TIME FLAG AT [cmd+8]
+
+```
+KIND: read
+SUBSYSTEM: the per-verb entries at record slot +0x04 of the command
+  records (PR-428/PR-431): the base forwarder 0x457e0, the 20
+  per-verb effect handlers 0x45750-0x45ce0 and the actor fields
+  and methods they write, and the parameter words the 0x45df0
+  branches bake into command objects at compile time
+ADDRESSES: 0x457e0, 0x45750, 0x459b0, 0x459d0, 0x459f0, 0x45a10,
+  0x45a30, 0x45a50, 0x45a70, 0x45a90, 0x45ab0, 0x45ae0, 0x45b00,
+  0x45b20, 0x45b50, 0x45b90, 0x45bb0, 0x45bd0, 0x45c20, 0x45c50,
+  0x45c80, 0x45ce0, 0x52070, 0x52b10, 0x52c80, 0x52cc0, 0x53670,
+  0x54f40, 0x54f90, 0x1cc10, 0x520e1, 0x4640b, 0x46430, 0x4643c,
+  0x464b2, 0x464d2, 0x464e0, 0xa10d8, 0xa10f0, 0x00, 0x04, 0x08,
+  0x16, 0x6d, 0x99, 0xb6, 0xc0, 0xcf068, 0xcef40
+NAMES: execute message, verb effect handler, actor member, chain
+  then apply, parse-time flag, direction field, pr432_effects.txt,
+  pr432_param.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE ACTOR FIELDS AND METHODS MEAN - [actor+0x6d] set to
+    -1 and +1 by ldir/rdir, [actor+0x99] negated by rev, byte
+    [actor+0xb6] bit 0x20 by atc_on/off, and the methods 0x52070
+    zero, 0x52b10 zero_v and MOVE, 0x52c80 smp, 0x52cc0 smpauto,
+    0x53670 chdir, 0x54f40/0x54f90 lock/unlock, virtual +0xc0 at
+    0x45c96, sound global 0xcf068 via 0x1cc10 - all read only as
+    call sites; WHICH RECORD BELONGS TO ground_on/ground_off - the
+    nearest-installed pairing puts all six lock/ground verbs at
+    0xa10d8 while a second heuristic puts two branches at 0xa10c0
+    and 0xa10a8 with executor 0x45c80; WHY end_level writes
+    [cmd+0x8] into ds:[0xcef40]+0x4 BEFORE chaining (0x4575b);
+    whether the +0x08/+0x0c forwarder messages are the transition
+    CONDITION pass and +0x04 the action pass - the driver does
+    +0x04 at 0x520e1 first, then +0x08 and +0x0c, order and
+    intent unproven; and what [owner+0x16] is, passed with sample
+    numbers to 0x52c80 and 0x52cc0.
+CLOSES: PR-431's OPENS item WHICH PER-VERB ENTRY IS RECORD SLOT
+  +0x04 AND WHAT THE PER-VERB ONES DO; and PR-428's question how
+  verbs sharing one record (lock/unlock/ground family) can differ:
+  they do not differ in code at all - the parser bakes a constant
+  into the command object: lock's branch stores edx = 1 at
+  0x46430-0x4643c, unlock's branch zeroes edx with `xor edx,eax`
+  at 0x464d2 and stores it at 0x464e0; the executor 0x45c50 tests
+  [cmd+0x8] and picks 0x54f40 or 0x54f90.
+CORRECTS: PR-429's "the records carry no verb behaviour - verbs
+  fix argument shape only": they carry it at slot +0x04, which is
+  where the per-verb handlers 0x45750-0x45ce0 live (the column
+  PR-428 named argument handler); only +0x08/+0x0c/+0x10 are
+  universal forwarders. And PR-431's driver summary "call
+  record+0x04 with the owner object as edx" is now the execution
+  entry: 0x457e0's body chains the +0x04 message through
+  [cmd+0x00] like the others, so executing a script = walking the
+  chain and applying each verb's effect on return, chain tail
+  first - which, because 0x51660 prepends, is file order.
+MEASURED: (a) THE EXECUTE CONTRACT. Base 0x457e0 = {if [cmd+0x00]
+  non-null: tail-call its record +0x04 with edx unchanged} - a
+  forwarder. Every per-verb handler begins `mov ebx,edx` (owner)
+  then `call 0x457e0` (chain), then applies its effect to the
+  actor at [owner+0x00] (several also read [owner+0x16]).
+  (pr432_effects)
+  (b) THE EFFECT TABLE. rev 0x459b0 negs [actor+0x99]; zero 0x45a50
+  calls 0x52070(actor); zero_v 0x45a72 calls 0x52b10(actor, edx=8,
+  zeroes); chdir 0x459d0 calls 0x53670; ldir 0x459f0 stores
+  [actor+0x6d] = -1, rdir 0x45a10 stores +1; pos 0x45a30
+  virtual-calls the actor record +0x04 with parsed [cmd+0x8]/
+  [cmd+0xc]; vol/smp_loop 0x45a90 calls 0x1cc10(global 0xcf068,
+  [cmd+0x8]); smp 0x45ab0 calls 0x52c80 with ([cmd+0xc],
+  [owner+0x16], [cmd+0x8]); smpauto 0x45ae0 calls 0x52cc0(actor
+  member, [owner+0x16]); atc_on/off 0x45c20 rewrites bit 0x20 of
+  byte [actor+0xb6] from [cmd+0x8] & 1; lock family 0x45c50 calls
+  0x54f40 or 0x54f90 by the [cmd+0x8] flag; 0x45c80 virtual-calls
+  the actor table +0xc0 by the same flag; MOVE 0x45ce0 calls
+  0x52b10 with edx=1 and the parsed pair; end_level 0x45750 stores
+  [cmd+0x8] at ds:[0xcef40]+0x4; goto and the frame markers have
+  +0x04 = 0x457e0 (no +0x04 effect; their code is the custom
+  +0x10 slots of PR-429). (pr432_effects)
+  (c) COMPILE-TIME PARAMETERS. Eight 0x45df0 branches write a word
+  edx into [cmd+0x8] after installing the record: 0x4639f, 0x463ec
+  (atc pair), 0x4643c, 0x46493, 0x464e0, 0x4652d, 0x4658b,
+  0x465d8 (lock/ground family) - with 1 written as `mov edx,0x1`
+  and 0 as `xor edx,eax`, so the on/off meaning lives in the data.
+  (pr432_param)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr432_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr432_effects.txt and /tmp/opencode/pr432_param.txt:
+  the verb-to-handler table from pr428_verbtable.txt, the handler
+  decodings taken from their own entry addresses, and the scan of
+  the 0x45df0 branches for [cmd+0x8] parameter writes including the
+  lock=1 at 0x46430-0x4643c and unlock=0 at 0x464d2-0x464e0 pair.
+```
+
+- WHY. The command pattern now has its missing verb: three slots
+  forward, one executes, one clones - and execution is "chain
+  first, then act", so a script runs in authored order with each
+  effect landing on the owner's actor member in a handful of
+  instructions per verb. That is directly portable: the port's
+  state machine needs an actor with fields at these offsets (the
+  direction word at +0x6d and the atc flag byte at +0xb6 are
+  concrete new targets for the physics-side work), and verbs like
+  ldir/rdir/rev are already fully understood. The paired-constant
+  finding also settles the engine's design question from PR-428:
+  near-identical commands are one code path plus a data flag, and
+  a faithful port should model commands as (opcode record, flag,
+  parsed pair), not as text-specific routines.
