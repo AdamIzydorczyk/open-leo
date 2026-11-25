@@ -64357,3 +64357,95 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   [obj+0x2c] gate is why whole classes of authored objects never
   move.
 
+
+## PR-482 - THE TICK-GATE FIELD IS A HERO-OVERLAP FLAG: VERB
+## +0x8 IS A BOUNDING-BOX TEST AND ONLY TWO POCISK2 METHODS
+## RECOMPUTE [obj+0x2c] FROM THE LION'S OWN BOX
+
+```
+KIND: read
+SUBSYSTEM: the field [obj+0x2c] that PR-481's tick gate returns:
+  its getter 0x23b80 (installed at slot +0x60 in all 158
+  detected tables), the generic recompute method 0x23b70 (57
+  table bases, no direct caller), the rectangle-overlap verb at
+  class-table slot +0x8 (default 0x23e00 in 153 of 158 tables,
+  child-array variants 0x556d0/0x237f0), the two POCISK2-family
+  recompute methods 0x28e80 (slot +0x65c) and 0x28ec0 (slot
+  +0x11c) that test the LION singleton, and the third writer
+  0x29050 which tests the singleton's mode word
+ADDRESSES: 0x2c, 0x23b70, 0x23b80, 0x23e00, 0x237f0, 0x556d0,
+  0x28e80, 0x28ec2, 0x28e96, 0x28ea3, 0x28eab, 0x28ecb,
+  0x28ed6, 0x28edd, 0x28ee5, 0x29050, 0x29052, 0x2905b,
+  0x320, 0x49d, 0x6a0, 0x5c, 0x17, 0x8, 0x0, 0x4, 0x8, 0xc,
+  0x9a07c, 0x9a134, 0x9a198, 0x9a6d8, 0x96874, 0x1eb9a,
+  0x23176, 0x233fa, 0x238f9, 0x26658, 0x372de, 0x38148,
+  0x536e7, 0x64, 0x394, 0x158, 0x153, 0x57, 0x378, 0x11c,
+  0x65c
+NAMES: gate field law, overlap verb, bounding box, hero
+  overlap flag, recompute method, POCISK2 methods, pr482
+  evidence files (pr482_f2c.txt, pr482_f2c2.txt)
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: HOW THE OTHER WINDOW-BLIND CLASSES KEEP [obj+0x2c] AT
+    ZERO - the generic recompute 0x23b70 is installed by 57
+    table bases but at different slot numbers per class, so the
+    per-class caller of that slot is needed to say when the
+    flag is refreshed; the LEVEL WORD ITSELF - the two bounds
+    0x320 and 0x49d against the same upper bound 0x6a0 are two
+    authored ranges, unexplained; the layout of the LION's box
+    at [[mgr+0x394]+0..0xc] (x0,y0,x1,y1 by the verb's shape,
+    but which field is which is unproven); and the element- and
+    array-family writers (0x1eb9a, 0x23176, 0x26658, 0x372de,
+    0x38148, 0x536e7) which share the offset but not the class.
+CLOSES: PR-481's OPENS "what else writes [obj+0x2c]": in the
+  game-object namespace the only writers are the generic
+  recompute 0x23b70 - `call [[obj]+0x8]; mov [obj+0x2c],eax` -
+  and the two POCISK2-family methods, which compute the flag
+  from ONE source: whether the object's bounding box (its own
+  +0x0/+0x4/+0x8/+0xc, the same four words every +0x8 verb
+  reads) overlaps the LION singleton's own box, AND the level
+  word [[mgr+0x394]] is inside a range: 0x28ec0 tests 0x49d <
+  word < 0x6a0, its sibling 0x28e80 tests 0x320 < word < 0x6a0.
+  The verb +0x8 itself is now named: its default 0x23e00, in
+  153 of 158 tables, is `x0 >= r0 && x1 <= r2 && y0 >= r1 &&
+  y1 <= r3` - a rectangle containment test against edx's four
+  words; the three tables that install 0x556d0 (the child-list
+  families 0x9719c, 0x9a07c, 0x97a98, 0x9e82c) ask the
+  question of every child instead. That also settles the
+  window-blind mechanism end to end: the class never computes
+  the flag (no POCISK2-style recompute, no other writer), the
+  field stays zero, the +0x60 getter returns zero, and by
+  PR-481 the object never receives its queue drain, update verb
+  or pump. And it closes PR-466's open question about the
+  singleton field: 0x29050 stores `[[mgr+0x394]+0x5c] == 0x17`
+  into [obj+0x2c] - the same 0x17 test as 0x241cd and 0x28df5,
+  so that field is the mode word mirrored on the singleton.
+CORRECTS: PR-466's "0x28ef6 = class verb +0x8 non-zero AND ...
+  0x2905b = [[mgr+0x394]+0x5c] == 0x17, which is what PR-167's
+  predicate 0x23b80 reads": the terms are a bounding-box
+  overlap against the LION object and a level-number range
+  (0x49d..0x6a0), and 0x2905b belongs to a third writer 0x29050
+  that is not installed in any table.
+MEASURED: (a) THE GETTER: 0x23b80 `mov eax,[eax+0x2c]; ret`
+  installed at slot +0x60 in 158/158 detected tables (167
+  physical words). (b) THE RECOMPUTE: 0x23b70 in 28 words / 57
+  distinct bases, zero direct call sites - verb-only. (c) THE
+  POCISK2 PAIR, verbatim at 0x28e96: `mov ecx,[mgr+0x394];
+  mov ecx,[ecx]; call [[obj]+0x8]; test eax,eax; jne set;
+  cmp ecx,0x49d; jle clear; cmp ecx,0x6a0; jge clear; set` -
+  note the box pointer is the singleton's FIRST field. Their
+  only table homes: 0x9a198 (+0x11c) and 0x9a6d8 (+0x65c),
+  both inside the POCISK2 family 0x9a07c. (d) THE CENSUS of
+  the +0x8 slot: 0x23e00 in 153, 0x556d0 in 3, 0x237f0 in 1,
+  0x44f10 in 1. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. "Window-blind" had become a label for a set of classes;
+  it is now a mechanism. The engine asks one question - does
+  this object's authored bounding box contain the hero, during
+  certain levels - and stores the answer where the tick gate
+  reads it. That is directly portable and it explains why some
+  objects never move without any per-class special case.
+

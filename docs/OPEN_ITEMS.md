@@ -7241,6 +7241,23 @@ OI-128: what landing and leaving a surface does - the class verbs
     arrays at 0x55380 (which IS class-table slot +0xa0 of the
     child-list families) and 0x555a0. Link law: 0x52c10 inserts
     at the [obj+0x34]/+0x38 block, 0x52c40 unlinks.]
+    [PR-482 NAMES THE TICK-GATE FIELD. The +0x60 getter's field
+    [obj+0x2c] is a HERO-OVERLAP flag: the generic recompute
+    0x23b70 (`call [[obj]+0x8]; mov [obj+0x2c],eax`, in 57
+    table bases, no direct caller) asks the +0x8 verb, whose
+    default 0x23e00 (153/158 tables) is a rectangle containment
+    test of the object's own box (+0..+0xc) against edx's four
+    words; the child-list families install 0x556d0 which asks
+    per child. The only game-object recomputers that supply a
+    target are the POCISK2 pair 0x28ec0 (slot +0x11c) and
+    0x28e80 (slot +0x65c): box overlap of [[mgr+0x394]+0..c]
+    (the LION's own box) AND the level word in (0x49d,0x6a0)
+    or (0x320,0x6a0). Window-blind classes simply never compute
+    it, so the field stays 0 and PR-481's gate closes. Third
+    writer 0x29050 stores [[mgr+0x394]+0x5c] == 0x17 into it -
+    closing PR-466's mode-word question (it IS the mode word
+    mirrored on the singleton). PR-482 corrects PR-466's
+    phrasing of those two terms.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
