@@ -7143,6 +7143,28 @@ OI-128: what landing and leaving a surface does - the class verbs
     other caller of 0x4af10 is 0x609c0 (`mov eax,ds:0xcef40;
     call 0x4af10; ret`), and the interpreter's head can call
     0x1cfd0 = a 0x4ee8-dword `rep stosd` clear of ds:0xcef2c.]
+    [PR-477 CLOSES THE FACTORY-MAP QUESTION: a per-arm walk of
+    all 379 comparison sites yields 226 (authored name, class
+    table) pairs and 90 tables, and NOT ONE of the 14 descriptor
+    tags 0xa0b2c..0xa0cf8 appears - those are allocation tags
+    only, not authored types. Two of PR-466's unnamed child-list
+    owners resolve: 0x9a134 = POCISK2, 0x97d94 = SURPRISE; the
+    third hit 0x98078 carries A_* action words and creature
+    names together, so it is a state-row table - which is also
+    the answer to PR-470's shared-table question for that case.
+    Still unnamed: 0x9a220, 0x9d220, 0x9d2ac, 0x9f0e4, 0xa2498,
+    0xa2550, 0x97bc0 (their arms store no class table at [x+8]).
+    The other finding: the engine hand-rolls ONE array shape
+    twice. Header = [a+0x0] buffer, [a+0x4] owner, [a+0x8] used,
+    [a+0xc] capacity, [a+0x10] method table (initialiser
+    0x228d0, copy-ctor 0x22872, dtor 0x22830 which deletes with
+    a NEW tag 0x967cc - the tag space is wider than PR-474's
+    block); realloc helpers 0x22780 (callers 0x43ffa/0x440c8)
+    and 0x22910 (0x43e43/0x43f85), buffers via 0x76a64(cap*4),
+    old buffer freed with 0x74be0. Tables 0x97654 and 0x976a4.
+    PR-477 corrects PR-475's "growth helper": 0x22780 is the
+    realloc; the push_back is written out at the call site
+    (0x43ff1-0x44013).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

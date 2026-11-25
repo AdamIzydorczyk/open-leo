@@ -63925,3 +63925,90 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   strong, and a single descriptor slot does the work for every
   effect type.
 
+
+## PR-477 - THE FACTORIES BUILD ARRAYS BY HAND: TWO GROWTH
+## HELPERS, TWO ARRAY METHOD TABLES 0x97654/0x976a4, AND THE
+## ARRAY HEADER IS [0]=COUNT, +4=OWNER, +8=CAPACITY, +0x10=TABLE
+
+```
+KIND: read
+SUBSYSTEM: the array machinery of the factory families: the
+  growth/realloc helpers 0x22780 and 0x22910 (near-duplicates),
+  the array initialiser 0x228d0 (used once, by the element
+  vector ctor 0x21880), the array dtor 0x22830 and copy-ctor
+  0x22872 which install the method table 0x976a4; the second
+  table 0x97654 (installed by the same two element-ctor sites);
+  the push_back in the element factory 0x43ffa/0x440c8; and the
+  per-arm name walk over all 379 comparison sites
+ADDRESSES: 0x22780, 0x227e0, 0x22830, 0x22872, 0x228d0,
+  0x22910, 0x22964, 0x97654, 0x976a4, 0x967cc, 0x21830,
+  0x21880, 0x43e43, 0x43f85, 0x43fde, 0x43ffa, 0x440c8,
+  0x76a64, 0x74be0, 0x74bc0, 0x5c370, 0x76a69, 0x9a134,
+  0x97d94, 0x98078, 0x9a220, 0x9d220, 0x9d2ac, 0x9f0e4,
+  0xa2498, 0xa2550, 0x97bc0, 0x0, 0x4, 0x8, 0xc, 0x10, 0x2b
+NAMES: array growth helper, array method table, array header,
+  push_back, element vector, per-arm name walk,
+  pr478_arrays.txt, pr478_arms.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE +4 OWNER FIELD IS - it is copied verbatim by the
+    copy-ctor 0x22872 and initialised from edx (0xa in the
+    element-vector case), so it names the owner or the element
+    kind, unproven; THE SIX STILL-UNNAMED CLASS TABLES 0x9a220,
+    0x9d220, 0x9d2ac, 0x9f0e4, 0xa2498, 0xa2550 and the owner
+    0x97bc0 - their arms do not store a class table at [x+8] at
+    all, so they are built by a different mechanism; the second
+    array table's other verbs (0x97654 +0x10..+0x1c:
+    0x218c0/0x218a0/0x219e0, and 0x976a4's eight entries); and
+    the 0x967cc tag used by the array dtor 0x22830 - it is out
+    of the 0xa0b00-0xa0d00 tag block, so the tag space is wider
+    than PR-474 mapped.
+CLOSES: PR-474's OPENS "the other descriptor bases of the
+  family - which element type each tags": none of the 14 tags
+  is ever stored by a class-name arm (the per-arm walk resolves
+  226 (name, table) pairs and 90 tables, and not one tag
+  appears), so the tags are allocation/deletion tags only - the
+  types they name are not part of the authored class vocabulary.
+  It closes PR-475's push_back detail: the growth is the helper
+  0x22780 - `cap=[a+0xc]+edx; [a+0xc]=cap; buf=0x76a64(cap*4);
+  copy [a+0x0] dwords; free old; [a+0x0]=new` - and its twin
+  0x22910 is reached only from 0x43e43/0x43f85, i.e. the engine
+  hand-rolls one array shape twice, once per factory family
+  (0x218xx and 0x228xx). And it adds two of PR-466's 20
+  child-list owners to the name map: 0x9a134 = POCISK2 (a rope
+  pull) and 0x97d94 = SURPRISE; the third hit, 0x98078, carries
+  A_* action-word and creature names at once and is therefore a
+  state-row table, not a class - which is also the answer to
+  PR-470's "several names share one table" question for that
+  case.
+CORRECTS: PR-475's "the growth helper 0x22780": 0x22780 is not
+  a push_back - it is the realloc, and the push is written out
+  at the call site (0x43ff1-0x44013: compare [a+0x8] with
+  [a+0xc], call the realloc only when full, then store the
+  pointer at [a+0x0]+count*4 and increment [a+0x8]).
+MEASURED: (a) THE HEADER, from four independent sites: the
+  initialiser 0x228d0 stores 0 at [a+0x8], edx at [a+0x4], the
+  capacity at [a+0xc] and the table at [a+0x10], then allocates
+  the buffer with 0x76a64(cap*4); the copy-ctor 0x22872 copies
+  +4/+8/+0xc and re-allocates the same size; the dtor 0x22830
+  restores [a+0x10]=0x976a4 then deletes the buffer. So: [a+0x0]
+  buffer, [a+0x4] owner, [a+0x8] used, [a+0xc] capacity,
+  [a+0x10] method table. (b) THE CALL CENSUS: 0x22780 exactly 2
+  callers (0x43ffa, 0x440c8), 0x22910 exactly 2 (0x43e43,
+  0x43f85), 0x228d0 exactly 1 (0x21885) - these are private to
+  the element/record factories, not a library. (c) THE TABLES:
+  0x97654 = {0x21830, 0x21800, 0x218c0, 0x218a0, 0x219e0, ...}
+  installed at 0x21857/0x2188d; 0x976a4 = {0x22830, 0x23d10,
+  0x229d0, 0x23d20, 0x22b10, 0x22ab0, 0x22b90, 0x22b80}. (d)
+  THE NAME WALK: 226 (name, table) pairs over all 15 clusters;
+  the unresolved list is in OPENS. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The journal had treated child arrays and element vectors
+  as separate structures. They are the same hand-rolled array,
+  header and all, built in two places by two near-identical
+  reallocs. Naming that shape - and proving the element tags are
+  not authored names - removes two families of guesswork at once.
+
