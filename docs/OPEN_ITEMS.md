@@ -6922,6 +6922,28 @@ OI-128: what landing and leaving a surface does - the class verbs
     single-word config writers (0x1e0dc/0x2dfe9/0x3b1f2/
     0x50162), and whether any shipped data produces modes
     10/11.]
+    [PR-466 CLOSES PR-458'S [obj+0x3c]/[obj+0x40] QUESTION:
+    those are a child COUNT and an array of CHILD POINTERS, and
+    the walkers live in the parent's own class table - 20
+    detected tables hold the state-step pump walker 0x55380
+    (pumps every child through 0x52b80), 19 also hold the
+    authoring method 0x555a0 exactly +0x20 after that entry
+    (custom scanf ' %[^,] , ' into [obj+0x3c], allocate
+    4*count, then virtual +0x84 = the child constructor
+    0x55530, which creates through 0x4dcc0 and initializes the
+    child with the parent's two position words), and 17 hold
+    the verb walker 0x553b0 EXACTLY +0x60 after it (0x978dc and
+    0x981e8: pump +0x14, verb +0x74, author +0x7c, ctor +0x84).
+    So the two "unguarded" +0x74 sites are this family's own
+    recursion. It also answers who sets the predicate
+    [obj+0x2c]: the object-namespace writers 0x28eb6/0x28ef6/
+    0x2905b compute a BOOLEAN (class verb +0x8 non-zero AND
+    0x49d < [[mgr+0x394]] < 0x6a0; or [[mgr+0x394]+0x5c] ==
+    0x17). Correction to PR-106: it is NOT written by the draw
+    pass. Open: the child's +0x10 init args, the singleton
+    field +0x5c compared with 0x17, and which classes the 20
+    are (12 are window-blind per PR-463, 3 physics-only per
+    PR-457).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

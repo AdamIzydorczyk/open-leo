@@ -62936,3 +62936,102 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   kind the journal keeps hitting - an arithmetic shorthand that
   silently fails at a byte boundary.
 
+
+## PR-466 - PARENTS OWN A CHILD ARRAY AT [obj+0x3c]/[obj+0x40]:
+## NINETEEN CLASSES PUT THE WALKERS IN THEIR TABLES (STATE-STEP
+## PUMP, +0x74 VERB, AUTHORING), AND THE [obj+0x2c] GATE IS A
+## BOOLEAN WRITTEN BY METHODS, NOT A DRAW-PASS FLAG
+
+```
+KIND: read
+SUBSYSTEM: the child-array fields [obj+0x3c] (count) and
+  [obj+0x40] (array of child pointers); the three family
+  methods 0x55380 (pump every child), 0x553b0 (call the +0x74
+  verb of every child) and 0x555a0/0x55530 (read the count from
+  the authored row, allocate, construct the children); the
+  backward walker 0x29062; and the writers of the membership
+  flag [obj+0x2c] 0x28eb6/0x28ef6/0x2905b
+ADDRESSES: 0x3c, 0x40, 0x2c, 0x55380, 0x553b0, 0x55360,
+  0x555a0, 0x55530, 0x55605, 0x55636, 0x55656, 0x29040,
+  0x2905b, 0x29062, 0x28eb6, 0x28ef6, 0x28d20, 0x4dcc0,
+  0x52b80, 0x524e0, 0x5c320, 0x49920, 0x57a00, 0x922d6,
+  0x394, 0x5c, 0x6a0, 0x49d, 0x17, 0x74, 0x84, 0x14, 0x10,
+  0x9719c, 0x97254, 0x9755c, 0x978dc, 0x97a98, 0x97bc0,
+  0x97cdc, 0x97d94, 0x97e74, 0x98078, 0x9815c, 0x981e8,
+  0x9a07c, 0x9a134, 0x9a220, 0x9e82c, 0x9e8bc, 0x9ed18,
+  0x9edd0, 0x9ee88
+NAMES: child array, pump walker, verb walker, child
+  constructor, child list authoring, backward walker, gate
+  writers, pr466_childarray.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE CHILD RECORD'S INITIALISATION ARGS ARE -
+    0x55530 calls the child's +0x10 with (0, [parent+0],
+    [parent+4]), i.e. the parent's two position words: which
+    verb is +0x10 for a freshly created child, and what the
+    leading 0 selects; the singleton field [mgr+0x394]+0x5c
+    compared with 0x17 at 0x2904f (the same 0x17 appears at
+    0x241cd and 0x28df5, where 0xb is the sibling case - the
+    PR-465 bound 0xb says a mode, so is this field the mode
+    word mirrored on the singleton?); which classes the
+    nineteen are as game objects (12 of them are in PR-463's
+    window-blind set, 3 in PR-457's physics-only tier, the rest
+    take the raw input applier); and the deeper slots of the
+    16 tables whose family entries sit past +0x15d.
+CLOSES: PR-458's OPENS "the [obj+0x3c]/[obj+0x40] arrays":
+  [obj+0x3c] is a child COUNT and [obj+0x40] the array of child
+  pointers, and the walkers belong to the parent's own class
+  table - 20 detected tables hold the state-step pump walker
+  0x55380, 19 of them also hold the authoring method 0x555a0
+  (always exactly +0x20 after the pump entry) and 17 hold the
+  verb walker 0x553b0 EXACTLY +0x60 after the pump entry (0x978dc
+  and 0x981e8 hold pump=+0x14 / verb=+0x74 / author=+0x7c /
+  ctor=+0x84; 3 tables hold the pump+author pair only). The
+  authoring method 0x555a0 reads the count with the custom
+  scanf format ' %[^,] , ' (0x922d6) into [obj+0x3c], allocates
+  4*count dwords (0x76a64), stores the array at [obj+0x40], then
+  calls virtual +0x84 per slot - the child constructor 0x55530
+  creates the object through PR-460's creator 0x4dcc0, writes it
+  into the slot, and calls the child's +0x10 with (0, parent's
+  two position words). So the two unguarded +0x74 sites are the
+  family's own recursion, not stray callers. It also closes
+  PR-182 item (4)'s remaining "who sets [obj+0x2c]": in the
+  object namespace the writers 0x28eb6/0x28ef6/0x2905b all
+  compute a BOOLEAN (0x28ef6 = class verb +0x8 non-zero AND
+  0x49d < [[mgr+0x394]] < 0x6a0; 0x2905b = [[mgr+0x394]+0x5c]
+  == 0x17), which is what PR-167's predicate 0x23b80 reads.
+CORRECTS: PR-106's "(the [obj+0x2c] flag, written by the draw
+  pass)": no draw-pass site writes it; the object-namespace
+  writers are the three small methods above, which test a class
+  verb and the singleton's level/state word. PR-458's "no
+  predicate" for 0x553b0/0x29062 stays true only for the +0x60
+  membership test - both walkers DO bound the loop by the count,
+  and 0x29062 has no class-table entry at all (re-confirmed over
+  all 158 detected tables), so it stays reachable only through a
+  direct call that the image does not show.
+MEASURED: (a) THE SLOT DIFFS. Scanning all 158 detected tables:
+  20 hold 0x55380, 17 hold 0x553b0, every shared table's entries
+  differ by exactly 96 = 0x60 bytes, and 19 hold 0x555a0 exactly
+  +0x20 after the pump entry. (b) THE AUTHOR BODY. 0x55605
+  lea [esi+0x3c] pushed as the scanf destination with the format
+  at 0x55609 = the string at 0x922d6; 0x55636 stores the fresh
+  allocation at [esi+0x40]; 0x55656 loops virtual +0x84 once per
+  slot. (c) THE GATE WRITERS. Object-namespace stores to
+  [obj+0x2c]: 0x28eb6, 0x28ef6, 0x2905b (all `sete`/0-1 form);
+  the whole [obj+0x2c] store census is 68 rows and spans several
+  namespaces - the same caveat as +0xb6 and +0x24. (d) THE PORT.
+  Unchanged: the port models one authored object per placement;
+  no fixture exercises a parent-driven child list.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The journal has twice been puzzled by calls of a verb
+  with no visible guard, and by a membership flag with no
+  visible writer. Both are the same subsystem: a parent class
+  that owns an array of children, authored as a count and a
+  comma list, and driven by family methods bolted into its own
+  table at fixed offsets. Recording the +0x20/+0x60 offsets of
+  that family makes the pattern findable in one slot scan next
+  time instead of a dozen disassemblies.
+
