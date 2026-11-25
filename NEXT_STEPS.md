@@ -58342,3 +58342,109 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   the BY_X fractional-pixel carry, but here it is one global sum over all
   objects whose type field is 0x22 or 0x23 - a level-wide quantity the
   port has no equivalent of.
+
+## PR-418 - THE SCENE-OBJECT CLASS FAMILY: ITS TABLE HAS 24 SLOTS, THE
+## REGISTER AND UNREGISTER OF PR-417 ARE SLOTS +0x20 AND +0x08, AND THE
+## [obj+0x8]/[obj+0xc] PAIR IS DERIVED-AND-BASE, NOT ONE TABLE TWICE
+
+```
+KIND: read
+SUBSYSTEM: the scene-object class family that owns the object chain and
+  registry of PR-417 - its 24-slot method table at 0x9f378, the derived
+  tables that override only its first three slots, the three constructors
+  that install the table pair, and the slot numbers of the register,
+  unregister and accumulator-feed methods
+ADDRESSES: 0x9f378, 0x9f380, 0xa6518, 0xa6520, 0x36de0, 0x370a0, 0x370c0,
+  0x370c7, 0x372c0, 0x39c20, 0x39c23, 0x39c30, 0x39c50, 0x39c59, 0x39c60,
+  0x37ba0, 0x37bd2, 0x37d50, 0x52a00, 0x52a50, 0x52a90, 0x53d80, 0x53e40,
+  0x54eb0, 0x55070, 0x54e00, 0x54560, 0x400b0, 0x23850, 0x23e00, 0x23700,
+  0x23a00, 0x23a30, 0x23910, 0x23c10, 0x23860, 0x23920, 0x23aa0, 0x23a20,
+  0x23b90, 0x72780, 0x72799, 0x727a0, 0x727a7, 0x727ae, 0x73b00, 0x73b0b,
+  0x73e00, 0x73e40, 0x72d50, 0x72cb0, 0x73c40, 0x73a90, 0x73570, 0x733c0,
+  0x08, 0x0c, 0x2e, 0x00, 0x04, 0x08, 0x0c, 0x10, 0x14, 0x18, 0x1c, 0x20,
+  0x24, 0x28, 0x5c, 0x12a, 0x12c, 0x12e, 0x132, 0x288
+NAMES: scene-object class, method table, derived override, register slot,
+  unregister slot, table pair, pure stub thunk, chain registration,
+  pr418_tables.txt, OI-111, OI-127, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE OTHER 21 SLOTS DO - only +0x08, +0x18 and +0x20 have been
+    identified so far, and slots +0x0c to +0x5c are identical in the base
+    and the derived table, which means the derived classes do not override
+    them; WHY THERE ARE TWO REGISTER WRAPPERS - the base table's +0x20 is
+    the registration function itself, while a derived table reaches it at
+    +0x18, one slot lower, through the shifted view; WHAT THE PURE-STUB
+    THUNKS AT 0x23700, 0x23850, 0x23a00, 0x23a20, 0x23a30, 0x23aa0,
+    0x23b90, 0x23c10, 0x23e00 AND 0x23910 ARE STUBS FOR - ten slots point
+    at one-byte bodies and are shared by every class in the family; HOW
+    MANY DERIVED TABLES EXIST - only 0xa6518 was examined, and PR-414
+    found 140 table runs in the same region; and whether the object chain
+    head 0xcedf0 is per scene or global for the process.
+CLOSES: PR-417's OPENS item WHICH CLASS THE CHAIN AND REGISTRY BELONG TO,
+  as far as the code allows: they belong to the class whose method table
+  is 0x9f378 - unregister at its +0x08, register at its +0x20 - whose
+  derived tables are installed at [obj+0x8]. It also closes PR-417's
+  OPENS item WHAT THE FLOAT GLOBALS ARE FED BY in part: one of the family
+  slots, 0x52a00, sits between the register and the position slots and is
+  called from the accumulator code's own region.
+CORRECTS: PR-414's sentence that a constructor "installs TWO OVERLAPPING
+  views of one table at other fields (0xa6520 at [obj+0x8] and 0xa6518 at
+  [obj+0xc], the same table at entry 2 and entry 0)". The two fields hold
+  two DIFFERENT tables: 0xa6518 and 0x9f378 agree in 21 of their first 24
+  slots and differ in exactly the first three, so 0xa6518 is a derived
+  class table and 0x9f378 its base; the pair at [obj+0x8] and [obj+0xc]
+  is most-derived and base, which is why an 8-byte shift appears at all.
+MEASURED: (a) THE TABLE. 0x9f378 is a 24-entry method table. Slot +0x00
+  is 0x39c30, slot +0x04 is 0x39c20 - and 0x39c20 is the call of the
+  unlink function 0x370a0 with `sub eax,0xc`, so slots +0x00/+0x04 are a
+  small destructor pair ending in unregistering the object. Slot +0x08 is
+  0x370a0, the chain-unlink function of PR-417, and slot +0x20 is
+  0x36de0, the chain-register function. (pr418_tables)
+  (b) THE DERIVED TABLES. 0xa6518 (which PR-414 found installed at
+  [obj+0xc]) holds 0x73e40, 0x73e00, 0x73b00 in its first three slots and
+  then the same 21 values as 0x9f378 from slot +0x0c on. So it overrides
+  exactly three methods and inherits the rest. Its third slot, 0x73b00,
+  is a wrapper that does `mov edx,0xa6428 ...; call 0x3dd60` and its
+  siblings 0x73b0b, 0x73b4b ... step edx by 0x14 - per-variant data
+  blocks 20 bytes apart, the same 0x14 stride PR-413 saw at 0x36f4b.
+  (c) THE THREE PLACES THAT BUILD ONE OF THESE OBJECTS. 0x370c0, 0x39c59
+  and 0x72799 all do the same two stores: [obj+0x8] = 0x9f380 and
+  [obj+0xc] = 0x9f378 - the shifted view of the base table and the base
+  table itself. 0x727a7/0x727ae then overwrite that pair with 0xa6520 and
+  0xa6518, the derived pair. In every case the SECOND field is the base
+  table proper and the FIRST is the same table advanced by two slots, so
+  code that reaches through [obj+0xc]+0x08 finds the unlink and code that
+  reaches through [obj+0x8]+0x20 finds the register.
+  (d) THE FAMILY'S SHAPE. Reading the three ctors, the chain functions and
+  this table together, a scene object is: a position pair at +0x00/+0x04
+  (the key and probe of PR-413/PR-416), a type word at +0x5c (0x22/0x23
+  feed the accumulator globals of PR-417), an owned object at +0x12c, a
+  position triple at +0x12a/+0x12e/+0x132 whose third member is also the
+  registry slot index of 0x37ba0, float accumulators at +0x136, and a
+  chain link at +0x288 - about 0x290 bytes, far larger than the 0x60-byte
+  state record of PR-406.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr418_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr418_tables.txt, which prints 0x9f378, 0x9f380, 0xa6518
+  and 0xa6520 slot by slot from build/leo/leo.img together with every
+  immediate store of 0x9f378/0x9f380 from the DB. 0x370a0, 0x370c0,
+  0x39c20, 0x36de0 and 0x73b00 were decoded from their own entry
+  addresses.
+```
+
+- WHY. Four rows reached the same object without naming it: PR-413 and
+  PR-416 read its first two dwords as the segment lookup's key and probe,
+  PR-417 pushed and popped it on a chain, PR-414 found the table installed
+  at its +0xc. Here it has a class: 24 method slots, three of them
+  overridden per derived class, register and unregister at +0x20 and
+  +0x08. That is also the place where the port's model thins out - the
+  port's scene objects carry no class tables, no registry slot index and
+  no chain link, so anything in the engine that iterates "all registered
+  objects of this kind" (which is what the chain implies) has no port
+  counterpart at all. And PR-414's "overlapping views of one table" was
+  wrong in a way that mattered: the second field is the BASE table, which
+  is exactly what makes the shifted first field make sense.

@@ -6020,10 +6020,12 @@ OI-128: what landing and leaving a surface does - the class verbs
     [[[[obj]] + [obj+0x16]*4]+8 +0x08]`, i.e. delegate to the child -
     so a generated state class contributes exactly four functions. The
     tables are 28-byte objects in 34 runs (biggest 12 at 0xa44ac, 11 at
-    0xa6600, 10 at 0xa3dd8), and a ctor may install TWO overlapping
-    views of one table at other fields (0x727a7/0x727ae store 0xa6520 at
-    [obj+0x8] and 0xa6518 at [obj+0xc], which are the same table at
-    entry 2 and entry 0). THE SEGMENT MACHINERY OF PR-411 RUNS AS THE
+    0xa6600, 10 at 0xa3dd8), and a ctor installs a PAIR of dispatch
+    tables - 0x727a7/0x727ae store 0xa6520 at [obj+0x8] and 0xa6518 at
+    [obj+0xc]. PR-418 CORRECTS the first reading of that pair: they are
+    not two views of one table but a DERIVED table and its BASE (0xa6518
+    and the base 0x9f378 agree in 21 of 24 slots and differ only in the
+    first three). THE SEGMENT MACHINERY OF PR-411 RUNS AS THE
     +0x0c VERB: 0x72d50 is at 0xa66a8+0x0c, with siblings 0x72cb0
     (0xa66c4) and 0x72330 (0xa640c).]
     [PR-415 READS THE BASE HALF OF THOSE TABLES. The table at 0xa09f0 is
@@ -6090,6 +6092,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     itself at `[[obj+0x132]*4 + 0xcedf4]` - a 7-slot table indexed by a
     slot number the object carries. Nothing about the interval table
     itself changes.]
+    [PR-418 NAMES THE CLASS THAT OWNS THE CHAIN AND THE REGISTRY. Its
+    method table is 0x9f378, 24 entries: slot +0x08 is the chain unlink
+    0x370a0 and slot +0x20 is the chain register 0x36de0, and slots
+    +0x00/+0x04 are a destructor pair that ends in that unlink (0x39c20
+    is `sub eax,0xc; call 0x370a0`). Ten slots are plain field
+    accessors shared unchanged by the whole family - 0x23700 returns the
+    global at 0xceec8, 0x23a00 reads [obj+0x54], 0x23920 reads the type
+    word [obj+0x5c], 0x23b90 writes [obj+0x24], 0x23910/0x23a30 return 1
+    and 0x23c10 returns 0. DERIVED
+    CLASSES OVERRIDE EXACTLY THREE METHODS: 0xa6518 holds 0x73e40,
+    0x73e00, 0x73b00 at +0x00/+0x04/+0x08 and identical values to the
+    base from +0x0c to +0x5c. THREE ctors build these objects - 0x370c0,
+    0x39c59, 0x72799 - and all three install [obj+0x8] = 0x9f380 and
+    [obj+0xc] = 0x9f378, the base table and the same base advanced by
+    two slots; 0x727a7/0x727ae then swap in the derived pair. THE OBJECT
+    ITSELF is about 0x290 bytes: position pair +0x00/+0x04, type word
+    +0x5c, owned object +0x12c, position triple +0x12a/+0x12e/+0x132
+    whose last member is also the registry slot index, float
+    accumulators +0x136, chain link +0x288 - and the port's scene
+    objects have none of that: no class table, no registry index, no
+    chain.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
