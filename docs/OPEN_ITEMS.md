@@ -7696,6 +7696,20 @@ OI-128: what landing and leaving a surface does - the class verbs
     msg-0x1b register -> A_LOOKUP probe -> camera draw.
     Settings section names + the stride-0x14 list's object
     family: open.]
+    [PR-510 DECODES THE NON-GATE SCANS: 0x57dd0 is a
+    general byte-presence scanner over ANY string object.
+    0x4b2ca (in plan-stage fn 0x4b1d0) probes '|' (0x7c)
+    in the plan chain = the STAGE SEPARATOR; 0x44020 probes
+    '.' (0x2e) and on hit parses ' A id = %d ' then
+    appends a 0x1e seq element to the frame pool (SEQ
+    SUFFIX marker); 0x59f80 extracts the tail after ':' =
+    path-EXTENSION detector (used by 0x5a3b0 on settings
+    strings). ISO re-scan: 10/11 shipped plan strings
+    contain '|', 0 contain '.' or ':' - stages are the only
+    extra syntax shipped. Port plan parser: split on '|',
+    optional '.' seq suffix, ':' means a path. Exact stage-
+    loop bounds in 0x4b1d0 and whether any level file uses
+    the '.' form: open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

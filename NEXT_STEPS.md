@@ -66699,3 +66699,68 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   spawning code, only the name->factory path PR-104 already
   models, plus a liveness check when behaviors query them.
 
+
+## PR-510 - THE NON-GATE 0x57dd0 PROBES DECODED: 0x7c IS
+## THE PLAN STAGE SEPARATOR, 0x2e A SEQ-SUFFIX MARKER,
+## 0x3a A PATH-EXTENSION DETECTOR - ON ANY STRING OBJECT
+
+```
+KIND: read
+SUBSYSTEM: PR-494's OPENS "the non-plan-0x57dd0 probes
+  0x2e/0x3a/0x7c". 0x57dd0 is a GENERIC byte-presence
+  scanner over any string object (eax=string, edx=byte) -
+  the four non-gate call sites use it on ordinary strings:
+  (1) 0x4b2ca in the plan-stage function 0x4b1d0 (next to
+  the plan-'A' counter 0x4b140): `mov ecx,[esp]; add
+  ecx,0x30` - it probes the PLAN CHAIN for 0x7c = '|', the
+  character the shipped plan strings use as STAGE
+  SEPARATOR ('T|TALA|ATAB'): the pipe count bounds the
+  stage loop. (2) 0x44020 (a pool-appender like 0x443b0 -
+  it copies a string, and on finding 0x2e = '.' parses '
+  A id = %d ' (0x91694) then builds a 0x1e-byte element
+  (ctor 0x43e70, PR-255 element shape) and appends it to
+  the frame-record pool): '.' in a plan/name string marks a
+  SEQUENCE-ID SUFFIX. (3) 0x59f80 probes 0x3a = ':' and
+  extracts the tail after it; called from 0x5a3b0 after a
+  settings string read (0x57990) - a PATH.EXTENSION
+  DETECTOR. DATA CHECK against the 67 shipped `plany=`
+  strings (11 distinct, PR-494): 10 of 11 CONTAIN '|',
+  NONE contains '.' or ':' - consistent with the gate
+  needing B/b, stages delimited by pipes, and no shipped
+  level using seq-suffix or colon paths. 0x44020 has zero
+  direct callers (table-installed).
+ADDRESSES: 0x57dd0, 0x4b1d0, 0x4b2ca, 0x30, 0x44020,
+  0x44074, 0x91694, 0x43e70, 0x59f80, 0x59f89, 0x5a3b0,
+  0x5a462, 0x44120, docs/OPEN_ITEMS.md
+NAMES: stage separator pipe, seq-suffix marker, extension
+  detector, generic byte scanner, shipped-plan data check,
+  pr510_probes.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: HOW 0x4b1d0 USES the pipe-probe result exactly
+    (stage-count loop bounds vs the [esp+0x44] table);
+    whether ANY level file outside LL.iso uses the '.'
+    seq-suffix (the port's level loader could); and the
+    three unshipped plan strings' stages - unchanged from
+    PR-501's OPENS.
+CLOSES: PR-494's OPENS "non-plan 0x57dd0 probes 0x2e/
+  0x3a/0x7c": separator/seq-marker/extension uses of a
+  general string scanner; also refines PR-495's "raw byte-
+  presence scan" - the scanner is general, the belt gate
+  just happens to point it at the plan chain.
+CORRECTS: none.
+MEASURED: (a) 4 probe sites with 14-instruction contexts
+  (pr510_probes.txt). (b) ISO RE-SCAN of plany= strings:
+  pipe 10/11, dot 0/11, colon 0/11. (c) 0x44020's element-
+  append body verbatim (0x44099-0x440e3). (d) THE PORT.
+  Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port's plan parser gains the real alphabet rule:
+  '|' splits stages, '.' may suffix a sequence id, and
+  ':'-bearing names are file paths - none of which the
+  shipped content except stages exercises, so the port must
+  parse them but need not special-case them.
+
