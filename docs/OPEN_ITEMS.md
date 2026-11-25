@@ -6169,6 +6169,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     its highest used field at +0x288 and correcting PR-418's "about
     0x290". 0x9f250, the dword PR-419 saw holding 0x36280, is another
     such descriptor, not a table.]
+    [PR-423 PROVES THE DESCRIPTOR SIZES FROM THE CODE SIDE. Grepping
+    operands (the imm table misses these) for `mov eax,IMM` within two
+    instructions of `call 0x5c320`/`0x3ff70` gives 613 sites, 83
+    literal sizes, top values identical to the descriptor histogram;
+    57 of the 58 distinct descriptor sizes / 256 appear verbatim, and
+    the 0x1bad descriptor 0x9cf50 matches the single new at 0x333e4 -
+    the constructor of the largest class, which chains the shared base
+    0x531f0 (67 callers, a 0xa5-byte common prefix, smallest derived
+    object 0xd9 at 0x1f8c0) and installs the table views 0x9d168/
+    0x9d160 whose first slots are a serial getter (0x337b0 = object
+    +0x14, serials from the counter 0xa90ac via 0x44350), the mode-
+    bit delete thunk, and the construct thunk - the PR-421 shape. The
+    root base ctor 0x52860 (57 callers) zero-inits a 0x3c-byte header
+    and installs 0x98278/0x98274 - which are ONE block 4 bytes apart,
+    as are 0x9d168/0x9d160 and PR-418's 0x9f380/0x9f378 (+8): every
+    "table pair" is one method table read at two offsets. 0x21e30
+    indexes the descriptor base 0x961c4 at run time (index*8+4, then
+    0x76a64/0x76bb7), so class entries are consulted at run time, not
+    only compiled in.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

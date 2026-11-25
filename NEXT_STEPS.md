@@ -58869,3 +58869,126 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   record is refutable from one dword. It also gives every later row a
   cheap way to identify an unknown object - find its descriptor and read
   its size and constructor triple.
+
+## PR-423 - THE CLASS DESCRIPTOR SIZES ARE REAL: 57 OF 58 APPEAR AS
+## LITERAL `operator new` SIZES, AND THE CLASS DESCRIPTOR TABLE IS READ
+## AT RUN TIME - PLUS THE 7085-BYTE CLASS AND THE ENGINE'S ROOT BASE
+## CLASS
+
+```
+KIND: read
+SUBSYSTEM: the class machinery of PR-421/PR-422 checked from the other
+  side - the literal allocation sizes at every operator-new site, the
+  cross-check against the descriptor size slot, the largest class and
+  its constructor, the root base-class constructor shared by 57
+  constructors, and the per-class serial counter
+ADDRESSES: 0x5c320, 0x3ff70, 0x961c4, 0x9cf50, 0x333e4, 0x33730,
+  0x33770, 0x337b0, 0x337c0, 0x339c0, 0x31f30, 0x44350, 0xa90ac,
+  0xcecc0, 0xcecd4, 0x531f0, 0x532c0, 0x52860, 0x528e0, 0x98274,
+  0x98278, 0x9d160, 0x9d168, 0x9f378, 0x9f380, 0xa6518, 0xa2490,
+  0xa2498, 0x21e30, 0x97674, 0x749a0, 0x76a64, 0x76bb7, 0x1f8c0,
+  0x3856a, 0x0c, 0x14, 0x3c, 0x54, 0x60, 0x75, 0x94, 0xa5, 0xd9,
+  0x1bad, 0x28c, 0x60
+NAMES: literal new size, allocation census, root base class, shared
+  base initialiser, per-class serial, identity counter, runtime
+  descriptor table, shifted table view, pr423_alloc.txt, OI-111,
+  OI-127, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH CLASS THE 0x1bad = 7085 BYTE OBJECT IS - it is the
+    largest in the image and the head of a 67-constructor family, but
+    no field beyond +0xa5 is initialised by any constructor and no
+    string or authored key identifies it; WHAT THE DERIVED CONSTRUCTORS
+    OF THAT FAMILY PUT BETWEEN +0xa5 AND THEIR SIZES (0xd9 and up);
+    WHICH SIZE IS THE 58TH DESCRIPTOR VALUE that matches no literal
+    new size; whether the serial at object+0x14 from the counter at
+    0xa90ac is what PR-416's registry index at [obj+0x132] parallels
+    for scene objects; and what 0x76a64 and 0x76bb7 do with the
+    descriptor-table index computed at 0x21e60.
+CLOSES: PR-422's OPENS item WHY THE SIZE IS STORED TIMES 256 and
+  WHETHER THE SIZES ARE USED AT ALL: the value divided by 256 is the
+  exact size passed to operator new by that class's own constructors
+  (57 of 58 descriptor sizes appear verbatim as literals at 613 new
+  sites), and PR-421's OPENS item whether the descriptor table matters
+  at run time: 0x21e30 computes entry = index*8+4 from the descriptor
+  base 0x961c4 and calls 0x76a64 and 0x76bb7 on it, so class entries
+  are looked up at run time, not only compiled in.
+CORRECTS: PR-422's sentence that the last descriptor dword and the
+  low bytes are unused noise: the ×256 form is how the size happens
+  to read at a 4-byte-aligned slot, and the size is load-bearing -
+  every constructor of the class allocates exactly that many bytes.
+  It also corrects a reading made in this row's first draft: the BSS
+  cell 0xcecd4, named by the method 0x337b0 at table slot +0x00 of
+  the largest class, is NOT a singleton object pointer - 0x31f30
+  fills 0xcecc0-0xcecd8 by calling 0x44350 seven times, and 0x44350
+  is a post-increment of the counter at 0xa90ac, so 0xcecd4 is the
+  last serial issued to that class and 0x337b0 returns an object's
+  serial number, not a global object.
+MEASURED: (a) THE ALLOCATION CENSUS. Grepping instruction operands
+  (the imm table does not record these) for `mov eax,IMM` followed
+  within two instructions by a call of 0x5c320 or 0x3ff70 gives 613
+  sites and 83 distinct literal sizes. The top sizes are 50 x135,
+  24 x51, 238 x34, 12 x34, 242 x25, 8 x25, 96 x24 - the same
+  distribution as PR-422's descriptor histogram. 0x28c appears at
+  0x3856a and 0x60 at 24 sites; the descriptor for 0x1bad matches
+  the single new at 0x333e4. (pr423_alloc)
+  (b) THE LARGEST CLASS. 0x333e4: `mov eax,0x1bad; call 0x5c320;
+  call 0x531f0; [eax+0x8] = 0x9d168; [eax+0xc] = 0x9d160`. Its
+  method-table block 0x9d160 reads `[0x337b0, 0x33770, 0x33730,
+  0x23ea0, 0x23e00, 0x339c0, ...]`: slot +0x00 returns object+0x14
+  (the serial), +0x04 is the `sub eax,0xc` delete-mode thunk of the
+  PR-421 pattern naming descriptor 0x9cf50, +0x08 is the
+  construct/delete thunk. 0x337c0 is a second constructor of the same
+  class reached only through that descriptor.
+  (c) THE SHARED BASE. 0x531f0 has 67 callers - a base initialiser
+  used by 67 constructors of that family (the smallest derived object
+  is 0xd9, allocated at 0x1f8c0, which continues its own fields at
+  object+0xa5, so 0x531f0 defines a 0xa5-byte common prefix: the
+  root chain, a subobject header at +0x3c built by 0x21e30, fields
+  +0x50..+0x5c with +0x54 = a copy of [0xcf0e4], an array loop at
+  +0x60 with 0xc passed through the 0x749a0 helper, an unaligned
+  block at +0x75, and table pointers at +0x94 = 0xa2498 and +0x98 =
+  0xa2490). 0x532c0 is its variant, chaining the root 0x528e0.
+  (d) THE ROOT BASE CLASS. 0x52860 has 57 callers and 0x528e0 two:
+  both zero a 0x3c-byte header and install the root method-table
+  views 0x98278 (and 0x98274 as the +0xc view) with +0x2c = 1. This
+  is the engine's root base class.
+  (e) THE TABLE "PAIRS" ARE ONE BLOCK. 0x98274 = 0x98278-4 and
+  0x9d160 = 0x9d168-4, verified at byte level; the same holds for
+  PR-418's 0x9f380 = the 0x9f378 block shifted 8 bytes (its first
+  entry 0x370a0 is 0x9f378's third dword). A constructor stores two
+  slightly shifted views of one method table, which is how a single
+  method table can serve two dispatch bases.
+  (f) RUNTIME DESCRIPTOR USE. 0x21e30 (called from 0x531f0 and
+  0x532c0) builds the +0x3c subobject: +0x08 = 0, +0x10 = the table
+  0x97674, +0x0c = a count argument, +0x04 = a flag; and for a
+  non-zero count it computes index*8+4 from 0x961c4 - the first
+  class descriptor of PR-422's range - and calls 0x76a64 then
+  0x76bb7 on it.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr423_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr423_alloc.txt: the operator-new census taken from
+  instruction operands, the descriptor-vs-size match counts, the
+  largest-class list with descriptor slots, and the raw bytes of the
+  method tables. 0x333e4, 0x531f0, 0x52860, 0x528e0, 0x21e30,
+  0x31f30, 0x44350, 0x337b0, 0x33770 and 0x337c0 were decoded from
+  their own entry addresses.
+```
+
+- WHY. PR-422 inferred the descriptor layout from the data alone;
+  this row proves it from the code side: the sizes are the actual
+  heap sizes, so a future row can identify any allocation site by
+  matching its literal against the 503 descriptors, and vice versa.
+  The two structural finds matter more than the census. First, the
+  "two method tables" every constructor of every family installs are
+  one table read at two offsets - so slot-number arguments like
+  PR-418's "+0x08 = chain unlink" belong to the +0xc view, and any
+  port model of dispatch must fix that base convention once. Second,
+  the shared base initialiser 0x531f0 and the root constructor
+  0x52860 give the engine's real class depth: root 0x3c bytes, a
+  0xa5-byte family prefix, then per-class bytes - the scene object
+  0x28c and the state record 0x60 sit inside that scheme, and the
