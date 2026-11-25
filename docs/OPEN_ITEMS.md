@@ -6480,6 +6480,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     sign bits 0x20/0x40". Open stays: the NON-KEY intents (the
     contact chain's word, PR-149's kind-4 arm at 0x54b16),
     [obj+0xba], and the [obj+0xa5] contact bits as key inputs.]
+    [PR-442 CLOSES THE BUILDER'S BIT MAPS AND NAMES THE INTENT PAIR.
+    0x54910 (virtual +0x8c, no direct xref): 0xa5 bit 0x01 -> byte-4
+    0x80 = 39 K_FIRE, bit 0x10 -> byte-5 0x01 = 40 K_ALT, bit 0x20
+    -> byte-6 0x20 = 53 K_JUMP; [obj+0xba] != 0 gates `add al,0x23`
+    = index 35 K_BKWD ([obj+0xb6] bit 0x10 set) or 36 K_FWD. The
+    sole writer of the intent pair is the applier 0x549f0 (0xba =
+    input[0], be = input[4]); its tail 0x54b90 writes [obj+0x71]
+    (+1 for up-intent, -1 for down) and computes bit 0x10 as
+    ([obj+0xba]*[obj+0x6d] < 0), then calls 0x53670 when set. The
+    control object [obj+0xd2] can AUTO-feed the words: mode 1/4
+    target-tracking +-10 with dead bands, and mode 2 OR-merges a
+    whole vector from [input+0x10] into [obj+0x60] via 0x49580.
+    For the input class [obj+0xa5] is the input struct's third
+    dword (0x54be9), a button word - correcting PR-438's "port
+    table" wording and PR-441's "contact chain" wording for
+    0x54b16. Open: the [obj+0xd2] class, 0x53670, mode-2 vector
+    senders, the other 0xa5 writers (0x2b6a0/0x2b840), and the
+    0x504e0 region's slot (it builds no 12-byte set).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

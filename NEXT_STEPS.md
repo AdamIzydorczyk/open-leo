@@ -60803,3 +60803,115 @@ GATE-FIXTURE-FREE: rc=0 15 (ok) + 22 named
   the ledger (PR-224's row closes) and the reading (PR-438's WHY
   is corrected) - and no authored leg moved, which is the check
   that the corrected half is the one the original ran.
+
+## PR-442 - THE WHOLE INPUT PIPELINE: THE APPLIER 0x549f0 FEEDS THE
+## x-INTENT, y-INTENT AND BUTTON WORDS; THE BUILDER 0x54910 TURNS THEM
+## INTO THE FLAG VECTOR - EVERY BIT MAP IS NOW CLOSED
+
+```
+KIND: read
+SUBSYSTEM: the engine's input pipeline - the applier 0x549f0 (the
+  ONLY writer of [obj+0xba]/[obj+0xbe], called only from 0x50369),
+  its control-object modes 1/2/4, and the default flag builder
+  0x54910 (virtual +0x8c, PR-438) with the exact bit maps of
+  [obj+0xa5], [obj+0xba], [obj+0xbe] and the facing bit
+  [obj+0xb6] bit 4 - the last open terms of PR-224's builder note
+ADDRESSES: 0x54910, 0x5492a, 0x54931, 0x5493f, 0x5494d, 0x5495b,
+  0x54964, 0x5499d, 0x549ab, 0x549b9, 0x549f0, 0x54a1b, 0x54aa2,
+  0x54b16, 0x54b65, 0x54b84, 0x54b8b, 0x54b90, 0x54bb2, 0x54bd6,
+  0x54be9, 0x551f0, 0x53670, 0x50340, 0x50357, 0x50369, 0x49580,
+  0x749a0, 0x0c, 0x60, 0x6d, 0x6f, 0x71, 0xa5, 0xb6, 0xba, 0xbe,
+  0xd2, 0x106, 0x11a, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x35
+NAMES: x-intent word, button word, facing-consistency bit, y-turn
+  register, mode-1 track feed, mode-2 flag injection, mode-4
+  approach feed, control release, pr442_flags.txt, OI-016
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: the control object at [obj+0xd2] - what class it is and who
+    attaches one; the mode-1 feed's operands ([input+0x8] target,
+    [input+0xc] wanted direction vs [obj+0x6d], virtual +0x68's
+    dword pair = the object's own position?); WHO writes a mode-2
+    vector at [input+0x10]; the call at 0x54be1, target 0x53670,
+    made exactly when the x-intent opposes [obj+0x6d] (facing
+    turn?); the other [obj+0xa5] writers 0x2b6a0/0x2b840/0x54e24
+    - a second (scene?) feed of the same word, and the [obj+0xa6]
+    bits + [obj+0xee] selector in the 0x504e0 region, whose slot
+    (PR-438 listed 0x504e0 as a +0x8c variant, but this body
+    builds no 12-byte set) needs the slot census re-checked; and
+    whether a mode-1/4 AUTO feed raising K_FWD/K_UP-style flags
+    has an authored consumer the port's auto-walk (PR-216/217)
+    should reproduce as flags rather than as bare motion.
+CLOSES: PR-224's builder note in full: "[obj+0xa5] bits 0/4/5"
+  are tested at 0x54931/0x5493f/0x5494d and set byte-4 bit 0x80 =
+  index 39 = K_FIRE, byte-5 bit 0 = 40 = K_ALT, byte-6 bit 5 =
+  53 = K_JUMP (0x5493a/0x54948/0x54956); "[obj+0xb6] bit 4 to
+  K_FWD else K_BKWD" is the arithmetic at 0x54964-0x5499a - with
+  [obj+0xba] != 0, `test [obj+0xb6],0x10 / sete al / add al,0x23`
+  computes index 35 (bit set) or 36 (clear), i.e. K_BKWD/K_FWD
+  (the enum block LL_SIG_K_BKWD=35..K_JUMP=53 IS this byte map,
+  bit = index). PR-438's OPEN "[obj+0xba]": the x-intent word,
+  the pair-mate of [obj+0xbe] - both written ONLY by 0x549f0
+  (0x549f9/0x54a08) from the input struct's first two dwords.
+  PR-436/438/440's OPEN "+0x71": the applier's tail 0x54b90-
+  0x54ba5 writes it as the y-intent TURN register (up-intent ->
+  +1, down-intent -> -1), the companion the type-0xd event also
+  pairs with [obj+0x6d]. And the law of [obj+0xb6] bit 4:
+  0x54bb2-0x54bd4 computes bit 0x10 = ([obj+0xba] * [obj+0x6d]
+  < 0) - the intent-against-facing bit - which the builder then
+  reads, and 0x54be1 calls 0x53670 when it is set.
+CORRECTS: PR-441's OPENS wording "the contact chain's word
+  (PR-149's kind-4 arm at 0x54b16)": 0x54b16 is NOT a contact
+  chain - it is the mode-4 APPROACH feed, the same target-track
+  leg PR-108/PR-148 ported for the BY_TY climb, and it writes
+  [obj+0xbe] = +10/-10/0 toward [input+0x1d] with a +-8 dead
+  band; the true source of [obj+0xa5] for the input class is
+  0x54be9 - `mov eax,[ecx+0x8]; mov [ebx+0xa5],eax`, the third
+  dword of the input struct, a BUTTON word, not the scene-contact
+  table PR-438's WHY suggested ("PR-338's port table" applies to
+  the scene objects' own +0xa5, a different feed named still
+  open). PR-441's shipped code is unchanged and stays right: the
+  only writer of [obj+0xbe] in the engine is the applier, whose
+  key-fed value the port already holds in p->vert_intent.
+MEASURED: (a) THE BUILDER. 0x54910: memset(esp,0,12) via 0x749a0
+  with [esp+0xc]=0 set at 0x54926; the three 0xa5 tests; the
+  0xba/0xb6 index-35/36 arithmetic; the 0xbe sign arms 0x5499d/
+  0x549ab; then 0x549b9-0x549d8 copies 12 bytes to [edx] PLUS a
+  zero byte at [edx+0xc] - so the vector field is 13 bytes and
+  the 13th is always 0. No direct xref to 0x54910 exists: it is
+  reached only as virtual +0x8c (its tables run 0x96900..). (b)
+  THE APPLIER. 0x549f0: [obj+0xba]=arg[0], [obj+0xbe]=arg[4],
+  then iff [obj+0xd2] (a control object): mode 1 (0x54a1b) sets
+  0xba = +10/-10/0 comparing [input+0x8] with the +0x68 position
+  pair +- (wanted dir [input+0xc] == [obj+0x6d] ? 5 : 15); mode
+  4 (0x54aa2) does BOTH axes, x against [input+0x8] and y
+  against [input+0x1d], dead band 8 (0x54b16 = the y +10 arm);
+  mode 2 (0x54b65) OR-merges a full vector at [input+0x10]
+  straight into [obj+0x60] through 0x49580 - a third writer of
+  the flag vector, external to the object; idle modes call
+  0x551f0, which unwraps [obj+0xd2] and re-arms player control
+  ([obj+0x106]=1) when virtual +0x3c says so. The tail (runs
+  even with NO control object) writes +0x71 from the y-intent
+  and bit 0x10 from the x-intent x [obj+0x6d]. (c) THE FEED.
+  0x50340 (the only caller chain): the 3-dword struct is zeroed
+  when [obj+0x106]==0, its x is NEGATED when [obj+0x11a]==5
+  (0x50357-0x50365, a mirrored-control state), then applied. (d)
+  THE PORT. live_bits_with is already this law end to end: its
+  facing-relative K_FWD/K_BKWD from the keys IS the 0xba/0x6d/
+  bit-4 chain (the port's keys are the same signal the feed
+  carries), its K_UP/K_DOWN lines are PR-441's, and the engine's
+  "raised signals" channel is p->sig - the three-channel model
+  the port ships. No port change: the reading CONFIRMS it.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The flag vector the whole row-condition system matches
+  against now has exactly three named sources - kept signals,
+  the button word, and the intent pair with its facing arithmetic
+  - and the port's live_bits_with is byte-map-identical to the
+  second and third for the input class. The ZARIA climb legs keep
+  carrying the proof: the same vector feeds the mode-2 injection
+  and the control-object machinery behind the ladder's A_WSP
+  chain, which is where the remaining OPENS (the control object
+  itself, mode-2 vectors) actually bite.
+
