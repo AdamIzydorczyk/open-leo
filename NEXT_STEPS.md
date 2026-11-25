@@ -65359,3 +65359,91 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   restores the true counts and pins the last unattributed
   class tables.
 
+
+## PR-493 - THE ZARIA "NO-STORE" ARMS DO STORE: COMPUTED-FORM
+## CLASS TABLES THE 158-TABLE DETECTOR CANNOT SEE, AND THREE
+## TRUE BASE-ONLY CLASSES
+
+```
+KIND: read
+SUBSYSTEM: closes PR-492's OPENS on the ZARIA cluster's arms
+  that appeared to build no class. Eight of them (KAMIEN
+  KILOF_PL PALMA KATAPULT TREE BRANCH JBRANCH JROPE) DO
+  install their own primary+pair tables - through the
+  computed-offset form PR-490 saw in the GUARD/TMPLAT arms:
+  the arm calls its base ctor (0x53ff0/0x531f0/0x52860, or
+  the whole ctor 0x1f2b0/0x1f5f0 for JBRANCH/JROPE), then
+  shifts eax with paired add/sub through 0x44fe0 and stores
+  at [eax-0xfe]/[eax-0xfa] etc. - always net obj+0x8 and
+  obj+0x0c (anchor arithmetic verified per arm, see the
+  verbatim windows). 0x44fe0 is a 4-insn record-header
+  initializer: [p]=0xa0cc0, [p+4]=0, [p+8]=0, eax
+  unchanged. Because no literal [obj+0x8] store exists,
+  none of these classes is in mtable's 158-row ctor census
+  - the detector's blind spot PR-106 already sized (162 vs
+  158). POKAZ PIANA PLANT are the opposite: allocate + one
+  base-ctor call and nothing else; the base chain
+  0x3d8c0>0x53ff0>0x531f0>0x52860 (PR-106) lands them on
+  the base-object class as plain data-carriers.
+ADDRESSES: 0x1fadb, 0x96a88, 0x96a80, 0x1fbad, 0x96b88,
+  0x96b80, 0x1fc0f, 0x96c38, 0x96c0c, 0x96c14, 0x1fb39,
+  0x96d1c, 0x96cf0, 0x96cf8, 0x1fd3e, 0x97470, 0x97444,
+  0x9744c, 0x1fdd4, 0x97360, 0x97334, 0x9733c, 0x1fe6a,
+  0x1f2b0, 0x977f0, 0x977c4, 0x977cc, 0x1fe90, 0x1f5f0,
+  0x976e0, 0x976b4, 0x976bc, 0x1f9a4, 0x1fa1f, 0x1fc9e,
+  0x44fe0, 0xa0cc0, 0x531f0, 0x52860, 0x98274, 0x98278,
+  0x1f870, docs/OPEN_ITEMS.md
+NAMES: computed-form store, anchor pairs, record header,
+  base-only instance, data-carrier, array header table,
+  pr493_zaria.txt, pr493_miss.py
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: OTHER CLUSTERS HOLD THE SAME BLIND SPOT: pr493_miss.py
+    lists 313 non-mtable immediates stored by named arms
+    (TRASA a1f90, TRASA2 a2028/a2054, TABLICA a20ec,
+    BERLO 9686c, KOTWICA, ROZGW, ZWIERZ, NIESP, ZONE...) -
+    the true class-table census above 158 still needs a
+    primary/pair/sub-table classification; WHAT 0xa0cc0 (the
+    record-header class) and the 0x98274/0x98278 list-
+    template pair mean as classes; and whether POKAZ/PIANA/
+    PLANT instances behave at all (pure base-object verbs +
+    their .des parameters?).
+CLOSES: PR-492's OPENS "the 11 ZARIA arms with no table
+  store anywhere in the window": only THREE (POKAZ PIANA
+  PLANT) are true no-store base-only builds; the other eight
+  store primary+pair tables via computed-form anchors -
+  named: KAMIEN 0x96a88/0x96a80 (size 0x10a), KILOF_PL
+  0x96b88/0x96b80 (0x50, base 0x52860), PALMA 0x96c38/
+  0x96c0c + array header 0x96c14 (0xb5), KATAPULT 0x96d1c/
+  0x96cf0 + header 0x96cf8 (0xc5), BRANCH 0x97470/0x97444 +
+  header 0x9744c (0x122), TREE 0x97360/0x97334 + header
+  0x9733c (0x122), JBRANCH 0x977f0/0x977c4 + header
+  0x977cc (0x12e), JROPE 0x976e0/0x976b4 + header 0x976bc
+  (0x126). The standing pool entry "POKAZ/PIANA/PALMA/
+  PLANT/JBRANCH/JROPE arms" closes: prop classes with sizes
+  and tables, except POKAZ/PIANA/PLANT (base-only).
+CORRECTS: PR-492's OPENS wording "11 ... arms with NO TABLE
+  STORE ANYWHERE IN THE WINDOW": eight of the eleven do
+  store, in [eax-0xfe]-style computed form; the earlier
+  arm-scan filters (mtable membership + literal [eax+8])
+  hid them. The 158-row mtable ledger of PR-492 is the
+  DETECTOR's set, not the engine's true class count.
+MEASURED: (a) VERBATIM windows for all 11 arms + both
+  J-ctors + 0x44fe0 in pr493_zaria.txt. (b) ANCHOR PROOF:
+  PALMA add eax,0xa5 -> [eax-0x9d]=0x96c38 (0xa5-0x9d=8);
+  TREE add 0xee,44fe0,add 0xfa,sub 0xfa,add 0x106 ->
+  [eax-0xfe]=obj+0x8 - every window's add/sub pairs net to
+  the obj anchor and a final sub returns obj. (c) CENSUS
+  GAP: all 24 ZARIA computed tables return mtable=False.
+  (d) 0x531f0 stores no 0x9xxxx-class itself except the
+  list templates 0x98274/0x98278; its chain to 0x52860
+  carries the base (PR-106:6549). (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port's class roster and any "what class is this"
+  answer must know that the engine's own table census misses
+  computed-form classes - and that three authored names
+  intentionally have no class beyond the base.
+

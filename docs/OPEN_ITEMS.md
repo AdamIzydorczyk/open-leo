@@ -7433,6 +7433,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     template-copy build. PR-492 corrects PR-490 (eight
     fallbacks -> eleven) and PR-491 (nine clusters/161 sites/
     152 names -> 13/213/201; 65 named tables -> 141).]
+    [PR-493 SHOWS THE ZARIA "NO-STORE" ARMS DO STORE: 8 of
+    the 11 (KAMIEN KILOF_PL PALMA KATAPULT TREE BRANCH
+    JBRANCH JROPE) install primary+pair tables through
+    computed-form anchors (add/sub pairs around the 0x44fe0
+    record-header init, which writes [p]=0xa0cc0): KAMIEN
+    0x96a88/0x96a80 (0x10a), KILOF_PL 0x96b88/0x96b80
+    (0x50, base 0x52860), PALMA 0x96c38/0x96c0c + header
+    0x96c14 (0xb5), KATAPULT 0x96d1c/0x96cf0 + header
+    0x96cf8 (0xc5), BRANCH 0x97470/0x97444 + header
+    0x9744c (0x122), TREE 0x97360/0x97334 + header
+    0x9733c (0x122), JBRANCH 0x977f0/0x977c4 + header
+    0x977cc (0x12e, ctor 0x1f2b0), JROPE 0x976e0/0x976b4 +
+    header 0x976bc (0x126, ctor 0x1f5f0) - NONE of them in
+    mtable's 158: computed-form classes are the detector
+    blind spot behind PR-106's 162-vs-158. POKAZ/PIANA/
+    PLANT are true base-only builds (alloc + base-ctor
+    chain only, PR-106's 0x3d8c0>0x53ff0>0x531f0>0x52860).
+    pr493_miss.py lists 313 further non-mtable immediates
+    from other clusters (TRASA a1f90...) - census above 158
+    still open. Corrects PR-492's "no table store" claim.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
