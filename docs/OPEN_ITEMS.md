@@ -3100,6 +3100,46 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     outside it. The port's model lives in ported/ll_play.c
     (ll_blkreg_parse, ll_block_hit, ll_block_walk), pinned in the
     data-free --play-selftest leg.
+    PR-396 READS THE CEILING QUERY THIS ROW SENT NEXT, AND FOR THIS
+    CLIMB THE ANSWER IS NEGATIVE. 0x4b7f0 walks [world+0x78] for
+    [world+0x84] records at stride 0x14 and asks each through
+    `[[entry+0x10]+4]` = 0x45500, where [entry+0x10] is the record's OWN
+    method table 0xa218c, written by its constructor 0x4fbd0 (the class
+    record 0xa14d8 keeps its fields at C+1/C+5/C+9/C+0xd, and 0x76ab0 is
+    what runs that constructor over the array). 0x45500 is given the
+    BODY, not a box: it takes the body box through the class slot +0x68
+    (0x23900 = `add eax,0xd6`, the stored presented point of PR-305 and
+    PR-306) and keeps only its near y, and takes two numbers from slot
+    +0xb0 (0x544f0, the LIVE position, PR-308) and
+    ADDS [obj+0xca] and [obj+0xce] to them (0x4553c-0x4554f) - the
+    anchor where the body would be once the pending move is applied. A
+    record answers when that anchor's x lies in [entry+0, entry+0 +
+    entry+0xc] inclusive at both ends (0x45555, 0x45562), the body's top
+    is at or below the record's y (0x4556c `cmp [esi+4], [entry+4] /
+    jl`), and the anchor is STRICTLY above it (0x45576 `sub` / 0x4557a
+    `test, jle`); 0x45582-0x45584 then add entry.y - anchor_y to
+    [obj+0xce], which lands the anchor on the line. A ceiling therefore
+    pulls a body DOWN to a line it is sticking above - no flush refusal
+    like 0x45683's, and no upward move - and the walk stops at the first
+    answer (0x4b82d). The record's three words are x, y and LENGTH ALONG
+    x at +0, +4, +0xc: a ceiling is a horizontal line. For this climb it
+    is settled, not merely absent: ZARIA.01
+    and ZARIA.02 each ship a NONE.DES member in their own level slot
+    whose whole content is the token `0`, so 0x4b808 skips their walk and
+    the level AUTHORS no ceiling. The shipped picture, in full, is 13
+    registries and every one of them exists - all 52 `.DES` members of
+    LEVELDES (13 level descriptors in the ENG, GER, POL and POL.ORG
+    language slots) carry one `sufity=` line, and the provider it names
+    is a member of the level's own container slot: kadmar.suf
+    `0,0,3000`, kara.suf `0,0,1600`/`125,290,10`/`1535,40,10`,
+    ran.suf `20,100,28800`, ENA.03's SUFITY.DES `0,20,6720`, SADES.06's
+    six rows, TUNGA2.12's four, and seven levels' NONE.DES holding `0`
+    (census: /tmp/opencode/pr396_suf_des.txt). PR-396's first reading of
+    this - that ten of the thirteen names point at a file nobody ships -
+    was wrong, and the record corrects it.
+    The port's model of the query lives in
+    ported/ll_play.c (ll_sufreg_parse, ll_ceiling_hit, ll_ceiling_walk),
+    pinned in the same data-free leg.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -5422,6 +5462,34 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     0x4b430 asks directly, 0x4b7f0 through [[entry+0x10]+0x4]), and
     0x5da60 only copies group heads into the mirrors when they are
     null. Tool entries are still unnamed; the row stays open.
+    PR-396 ANSWERS THE [world+0x78] HALF OF THAT PARAGRAPH, AND THE
+    TABLE QUESTION WITH IT. Those 0x14 records come from the `sufity=`
+    file through 0x4da90, and their method table is the record's own:
+    the class record at 0xa14d8 keeps its fields one byte in - C+1 the
+    constructor 0x4fbd0, C+5 the destructor, C+9 an unread verb, C+0xd
+    the element size 0x14 - and 0x76ab0 runs that constructor over the
+    whole array (`call [class+1]` per element, `add ecx,[class+0xd]`
+    between them), so [entry+0x10] = 0xa218c: +0 the row parser 0x454d0
+    (the same scanner `.BLK` uses - "%d,%d , " at 0x91d0f through
+    0x4a0b0 into entry+0 and entry+4, then "%d" at 0x91836 into
+    entry+0xc, then the probe " , " at 0x91839) and +4 the query
+    0x45500. The `.BLK` pair is the mirror image and PR-395's shape
+    survives intact: class 0xa14c0, constructor 0x4fb70, its table
+    0xa2178 at entry+0 (NOT +0x10) and the same shared view 0x98278 at
+    entry+0xc. That also corrects what PR-395 said about the zeroes:
+    [their text: "the block comes from calloc (0x4dbb9)"] - 0x76a64 is
+    the plain malloc chain (0x5c320 -> 0x7521f -> 0x78ce0), 0x76b24
+    writes the count at [mem] and returns mem+4 as the array, and every
+    field that is zero is zero because the record's constructor writes
+    it zero. What stays open here: the attachment tail of the +0xb0 verb
+    (0x54500-0x5453a, class slots +0xbc, +0x48, +0x50 and the table at
+    [that+0x33]); and the two views themselves - PR-293 names "the
+    shared table 0x98278" and PR-305 names "the view 0x98274", but those
+    are the same bytes four apart, and the run reads 0x23e30, 0x23ed0,
+    0x23ea0, 0x23e00 and then 0x74bac one byte PAST a dword boundary
+    (0x98285), the packed-field shape of the class records at 0xa14c0
+    and 0xa14d8 rather than a method table's. Tool entries are still
+    unnamed; the row stays open.
 
 OI-128: what landing and leaving a surface does - the class verbs
   +0xB4 and +0xB8, the '#' ejection counter, and the unread head of

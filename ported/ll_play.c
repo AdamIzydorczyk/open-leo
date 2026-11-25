@@ -194,10 +194,14 @@ int ll_plt_first_below(const ll_plt *o, int x, int from_y, ll_xy *hit)
  * moves its `eax` to rec+4 and its `ecx` to rec+0x10 and calls
  * 0x4a0b0, which scans the format "%d,%d" (0x91d0f) out of the row
  * into rec+0x4 and rec+0x8; then 0x455e0 scans "%d" (0x9183d) into
- * rec+0x10 and probes for a "," (0x91840). rec+0x0 and rec+0xc are
- * never written - the block comes from calloc (0x4dbb9) - and 0x45620
- * never reads them. So a record is a VERTICAL WALL: its face x at
- * rec+0x4, its top y at rec+0x8, and how far down it goes at
+ * rec+0x10 and probes for a "," (0x91840). rec+0x0 and rec+0xc never
+ * come from the file - they are the method table 0xa2178 and the shared
+ * class table 0x98278, written by the record's constructor 0x4fb70 (the
+ * first field of the class record 0xa14c0, which keeps its fields at
+ * C+1/C+5/C+9/C+0xd), and that constructor is also what zeroes
+ * rec+0x4, rec+0x8 and rec+0x10 before the scan writes them; 0x45620
+ * never reads +0x0 or +0xc. So a record is a VERTICAL WALL: its face x
+ * at rec+0x4, its top y at rec+0x8, and how far down it goes at
  * rec+0x10. That is what the authored files are: ZAR.BLK's six rows
  * are the walls x=0 and x=2240 over the whole 700 px height - the two
  * world edges - and four short ones at 1299/341+118, 1462/244+28,
@@ -209,17 +213,19 @@ int ll_plt_first_below(const ll_plt *o, int x, int from_y, ll_xy *hit)
  * 0x4dbcf-0x4dbe4 runs the record scan EXACTLY count times. So the
  * count is authoritative in both directions - extra rows are never
  * read, and a file that runs out of numbers leaves the rest of the
- * records at their allocated zero. */
+ * records at the zero their constructor gave them. */
 #define LL_BLK_MAX 64          /* records one file may own; the measured
                                 * maximum across the shipped set is 49 */
 
-/* The next number in the engine's token stream: 1 and *out set, or 0 at
- * the end. What separates is exactly what the loader's own scans accept:
- * the format "%d,%d" (0x91d0f) carries its separator argument " , "
- * (0x91d15, through 0x498f0 at 0x4a0c4) and 0x455e0 probes a bare ","
- * (0x91840) after every triple - and the authored rows use commas, CR,
- * LF and spaces. The port treats all of them as separators anywhere. */
-static int blk_next(const char **pp, int *out)
+/* The next number in the engine's token stream, shared by both registry
+ * loaders: 1 and *out set, or 0 at the end. What separates is exactly
+ * what the loaders' own scans accept - 0x4a0b0's "%d,%d" (0x91d0f)
+ * carries its separator argument " , " (0x91d15, through 0x498f0 at
+ * 0x4a0c4), and after the third number 0x455e0 (the `.BLK` row) probes
+ * a bare "," (0x91840) while 0x454d0 (the `.SUF` row) probes " , "
+ * (0x91839) - and the authored rows use commas, CR, LF and spaces. The
+ * port treats all of them as separators anywhere. */
+static int reg_next(const char **pp, int *out)
 {
     const char *p = *pp;
     char *end = NULL;
@@ -243,7 +249,7 @@ int ll_blkreg_parse(const char *text, ll_blkreg *out)
 
     out->r = NULL;
     out->n = 0;
-    if (!blk_next(&p, &count))
+    if (!reg_next(&p, &count))
         return 1;                   /* no header: not a blokady file */
     if (count < 0 || count > LL_BLK_MAX)
         return 1;                   /* the port will not hold it */
@@ -251,9 +257,9 @@ int ll_blkreg_parse(const char *text, ll_blkreg *out)
     if (count && !v)
         return 1;
     for (i = 0; i < count; i++) {
-        int f[3] = { 0, 0, 0 };     /* calloc, exactly as the engine's */
+        int f[3] = { 0, 0, 0 };     /* the zero the record ctor writes */
         for (k = 0; k < 3; k++)
-            if (!blk_next(&p, &f[k]))
+            if (!reg_next(&p, &f[k]))
                 break;
         v[i].x = f[0];
         v[i].y = f[1];
@@ -333,6 +339,129 @@ int ll_block_walk(const ll_blkreg *reg, int bx0, int bx1, int by0, int by1,
          * raises AC_BLOK once. */
         if (ll_block_hit(&reg->r[i], bx0, bx1, by0, by1, &v)) {
             *dx = v;
+            *idx = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* ------------------------------------------------------------------ .suf
+ * The `sufity=` ceiling registry: 0x4da90 fills [world+0x78] (count
+ * [world+0x84], stride 0x14) and 0x4b7f0 walks it through the test
+ * 0x45500 (PR-396; PR-394's OPENS row named the registry, PR-391 read
+ * the `sufity=` key arm at 0x4cfc7 and the chain 0x4d484-0x4d4a0 that
+ * calls this loader).
+ *
+ * The record class is the one at 0xa14d8, and it explains the question
+ * PR-395 left open about where a record's method table comes from. This
+ * binary's class records keep their fields one byte in: [C+1] is the
+ * constructor, [C+5] the destructor, [C+0xd] the record size - 0x14
+ * here - which is what 0x76ab0 reads when it constructs an array
+ * (`call [class+1]` per element, `add ecx,[class+0xd]` between them).
+ * For the ceiling record that constructor is 0x4fbd0: it writes 0 at
+ * rec+0x0, rec+0x4 and rec+0xc, the shared class table 0x98278 at
+ * rec+0x8 and
+ * the method table 0xa218c at rec+0x10. So [[rec+0x10]] is 0xa218c[0]
+ * = 0x454d0, the row parser, and the walk's [[rec+0x10]+4] is
+ * 0xa218c[4] = 0x45500, the test - the tables the loader and the query
+ * call are the record's own, seeded by its constructor, not a table the
+ * file can reach.
+ *
+ * 0x454d0 parses the row: 0x4a0b0 scans "%d,%d , " (0x91d0f, the pair
+ * plus its separator argument at 0x91d15) into rec+0x0 and rec+0x4,
+ * then "%d" (0x91836) into rec+0xc, then it probes " , " (0x91839).
+ * rec+0x8 and rec+0x10 are never touched from the file, and a ceiling
+ * record is a HORIZONTAL LINE: from x along +x for lx px, at y. That is
+ * what the shipped files are - KADMAR.07/KADMAR.SUF is one row,
+ * `0,0,3000`, the whole map's top; RAN.01/RAN.SUF is `20,100,28800`;
+ * KARA.07/KARA.SUF is three: `0,0,1600`, `125,290,10`, `1535,40,10`.
+ *
+ * The token stream is the same one `.BLK` reads (the shared scanner
+ * above), so the grammar and the header-count rule carry over
+ * unchanged: one read, the count first, then EXACTLY count triples. */
+int ll_sufreg_parse(const char *text, ll_sufreg *out)
+{
+    const char *p = text;
+    int count = 0, i, k;
+    ll_suf_rec *v;
+
+    out->r = NULL;
+    out->n = 0;
+    if (!reg_next(&p, &count))
+        return 1;                   /* no header: not a sufity file */
+    if (count < 0 || count > LL_SUF_MAX)
+        return 1;                   /* the port will not hold it */
+    v = count ? calloc((size_t)count, sizeof *v) : NULL;
+    if (count && !v)
+        return 1;                   /* the port will not hold it */
+    for (i = 0; i < count; i++) {
+        int f[3] = { 0, 0, 0 };     /* the zero the record ctor writes */
+        for (k = 0; k < 3; k++)
+            if (!reg_next(&p, &f[k]))
+                break;
+        v[i].x = f[0];
+        v[i].y = f[1];
+        v[i].lx = f[2];
+    }
+    out->r = v;
+    out->n = count;
+    return 0;
+}
+
+void ll_sufreg_free(ll_sufreg *o)
+{
+    free(o->r);
+    o->r = NULL;
+    o->n = 0;
+}
+
+int ll_ceiling_hit(const ll_suf_rec *rec, int ax, int ay, int top, int *dy)
+{
+    int d;
+
+    *dy = 0;
+    /* 0x45553-0x45564: `cmp [rec+0], ax / jl` and `cmp [rec+0] +
+     * [rec+0xc], ax / jl` - the anchor's x must lie on the line, from
+     * its start to its start plus its length, both ends inclusive. */
+    if (ax < rec->x || rec->x + rec->lx < ax)
+        return 0;
+    /* 0x45566-0x4556e: `cmp [esi+4], [rec+4] / jl` where esi is the
+     * body box from the body's own getter slot +0x68 and [esi+4] is
+     * its near y. The line must not be ABOVE the body's top: this is
+     * not a ceiling for a body that is wholly under it. */
+    if (top < rec->y)
+        return 0;
+    /* 0x45570-0x4557a: d = rec.y - the anchor's absolute y, refused
+     * when it is <= 0 - a body whose anchor is already at or below the
+     * line is left where it is, and the engine never writes [obj+0xce]
+     * at all. */
+    d = rec->y - ay;
+    if (d <= 0)
+        return 0;
+    *dy = d;                        /* 0x45582-0x45584 ADDs this, signed,
+                                     * to [obj+0xce], which lands the
+                                     * anchor exactly on the line. */
+    return 1;
+}
+
+int ll_ceiling_walk(const ll_sufreg *reg, int ax, int ay, int top,
+                    int *dy, int *idx)
+{
+    int i, v;
+
+    *dy = 0;
+    *idx = -1;
+    for (i = 0; i < reg->n; i++) {
+        /* 0x4b806-0x4b818: the count is [world+0x84], re-read at
+         * 0x4b80d, the stride is 0x14, and 0x4b82d `test eax,eax / je
+         * 0x4b80c` moves to the NEXT record only while the answer is
+         * no - the first record that answers leaves the walk and the
+         * rest are never asked. Its tail clears the result block
+         * (0x4b83b-0x4b83f) and 0x4b844 raises `or BYTE
+         * [result+3],0x2`. */
+        if (ll_ceiling_hit(&reg->r[i], ax, ay, top, &v)) {
+            *dy = v;
             *idx = i;
             return 1;
         }
@@ -3017,6 +3146,201 @@ int ll_play_selftest(void)
         ll_blkreg_free(&g);
     }
 
+    /* .suf grammar and the ceiling query, PR-396. The bytes are the
+     * shipped ceiling registries exactly as the HD ETAPY container
+     * carries them - KADMAR.07/KADMAR.SUF is 15 bytes, KARA.07/
+     * KARA.SUF is 37, and SADES.06's SUFITY.DES sub-member is 76
+     * (/tmp/opencode/pr396_suf_des.txt; six non-empty registries ship
+     * in all, beside seven whose only token is `0`) - and the body is
+     * written as the THREE numbers
+     * 0x45500 actually reads: the anchor point it builds from the
+     * body's own getter slot +0xb0 plus the pending delta
+     * ([obj+0xca], [obj+0xce]) and the body box's near y from slot
+     * +0x68, which the engine compares with NO delta added. Both getters
+     * are the ones PR-305..PR-308 read: slot +0x68 is 0x23900
+     * (`add eax,0xd6`), the point object at [obj+0xd6]/[obj+0xda] whose
+     * fields PR-306 and PR-307 show are refreshed by the class's +0x1c
+     * verb and not every step, and slot +0xb0 is 0x544f0, which copies
+     * the LIVE [obj+0]/[obj+4] and then an attachment path for a body
+     * flagged at [obj+0xb6]. Live and stored are different positions, so
+     * these pins state the arithmetic of 0x45500, not a lion pose. */
+    {
+        static const char ST_SUF_KADMAR[] = "1\r\n0,0,3000\r\n\r\n";
+        static const char ST_SUF_KARA[] =
+            "3\r\n0,0,1600\r\n125,290,10\r\n1535,40,10\r\n";
+        /* The other three shipped registries are not `.SUF` files at
+         * all: they are the SUFITY.DES member of the level's own slot
+         * (the sub-member shape PR-392 named for platformy=), and the
+         * ten `none.des` names resolve to that slot's NONE.DES, whose
+         * whole content is the token `0`. Bytes verbatim from
+         * /tmp/opencode/pr396_suf_des.txt. */
+        static const char ST_DES_SADES[] =
+            "6\r\n0,185,1000\r\n47,997,241\r\n495,1384,178\r\n41,1817,53\r\n"
+            "55,2621,272\r\n0,0,1000\r\n";
+        static const char ST_DES_TUNGA2[] =
+            "4\r\n0,613,358\r\n0,740,358\r\n0,-40,2600\r\n0,235,233\r\n";
+        ll_sufreg su;
+        int d, idx;
+        CHECK(ll_sufreg_parse(ST_SUF_KADMAR, &su) == 0 && su.n == 1);
+        CHECK(su.r[0].x == 0 && su.r[0].y == 0 && su.r[0].lx == 3000);
+        /* KADMAR's one row is the whole map's top: a line at y 0 from
+         * x 0 to x 3000 (0,0 and 3000 - the same number the level's
+         * own width runs to). */
+        ll_sufreg_free(&su);
+        CHECK(ll_sufreg_parse(ST_SUF_KARA, &su) == 0 && su.n == 3);
+        CHECK(su.r[0].x == 0 && su.r[0].y == 0 && su.r[0].lx == 1600);
+        CHECK(su.r[1].x == 125 && su.r[1].y == 290 && su.r[1].lx == 10);
+        CHECK(su.r[2].x == 1535 && su.r[2].y == 40 && su.r[2].lx == 10);
+        ll_sufreg_free(&su);
+
+        /* A CEILING IS A LINE, NOT A BAND. 0x45555 and 0x45562 keep
+         * the record unless ax < rec.x or rec.x + rec.lx < ax, so both
+         * ends are INCLUSIVE: the anchor at x 0 and at x 3000 is asked
+         * (and pulled to y 0 by dy = 0 - ay), one px past either end
+         * is not. */
+        CHECK(ll_sufreg_parse(ST_SUF_KADMAR, &su) == 0);
+        CHECK(ll_ceiling_hit(&su.r[0], 0, -5, 0, &d) && d == 5);
+        CHECK(ll_ceiling_hit(&su.r[0], 3000, -5, 0, &d) && d == 5);
+        CHECK(!ll_ceiling_hit(&su.r[0], -1, -5, 0, &d) && d == 0);
+        CHECK(!ll_ceiling_hit(&su.r[0], 3001, -5, 0, &d) && d == 0);
+        /* THE THIRD TEST IS ON THE BODY'S TOP, and it is a one-way
+         * test: 0x4556c leaves when [esi+4] < rec.y, so a body whose
+         * top is ABOVE the line is not asked at all - the line is not
+         * above it. At top == rec.y it is. */
+        CHECK(!ll_ceiling_hit(&su.r[0], 100, -5, -1, &d) && d == 0);
+        CHECK(ll_ceiling_hit(&su.r[0], 100, -5, 0, &d) && d == 5);
+        /* AND THE FOURTH IS STRICT: rec.y - ay must be >= 1
+         * (0x45576 `sub`, 0x45578 `test / jle`). An anchor already on
+         * the line, or below it, is left exactly where it is and
+         * [obj+0xce] is never written - which is why these read d == 0.
+         * There is no distance-of-1 exemption here as there is for a
+         * blockade: the engine never refuses a move of 1. */
+        CHECK(!ll_ceiling_hit(&su.r[0], 100, 0, 0, &d) && d == 0);
+        CHECK(ll_ceiling_hit(&su.r[0], 100, -1, 0, &d) && d == 1);
+        CHECK(!ll_ceiling_hit(&su.r[0], 100, 5, 5, &d) && d == 0);
+        /* RAN.SUF's one row, 20,100,28800: the line runs from x 20 to
+         * x 28820 at y 100. */
+        ll_sufreg_free(&su);
+        CHECK(ll_sufreg_parse("1\r\n20,100,28800\r\n", &su) == 0 && su.n == 1);
+        CHECK(ll_ceiling_hit(&su.r[0], 20, 99, 100, &d) && d == 1);
+        CHECK(ll_ceiling_hit(&su.r[0], 28820, 99, 100, &d) && d == 1);
+        CHECK(!ll_ceiling_hit(&su.r[0], 19, 99, 100, &d) && d == 0);
+        CHECK(!ll_ceiling_hit(&su.r[0], 28821, 99, 100, &d) && d == 0);
+        CHECK(!ll_ceiling_hit(&su.r[0], 100, 100, 100, &d) && d == 0);
+        ll_sufreg_free(&su);
+
+        /* THE SIX-ROW REGISTRY, SADES.06. Its header is 6, the largest
+         * authored count in the shipped set, and its rows cross the
+         * whole height of the level - y 0, 185, 997, 1384, 1817, 2621 -
+         * so this is the file that shows a ceiling is a set of lines at
+         * DIFFERENT heights, not one map-top. Asked as the engine walks
+         * it, the first row whose line the body straddles answers: at
+         * ax 500, ay 1300, top 1400 that is row 2 (495..673 at y 1384)
+         * and dy is 1384 - 1300 = 84, which lands the anchor on the
+         * line. A body entirely below every line it spans (ay 1400,
+         * top 1400) answers nothing, because rec.y - ay is negative. */
+        CHECK(ll_sufreg_parse(ST_DES_SADES, &su) == 0 && su.n == 6);
+        CHECK(su.r[2].x == 495 && su.r[2].y == 1384 && su.r[2].lx == 178);
+        CHECK(su.r[5].y == 0 && su.r[5].lx == 1000);
+        CHECK(ll_ceiling_walk(&su, 500, 1300, 1400, &d, &idx) && idx == 2 &&
+              d == 84);
+        CHECK(!ll_ceiling_walk(&su, 500, 1400, 1400, &d, &idx) && idx == -1);
+        /* AND THE FIRST ANSWER WINS EVEN WHEN A LATER ROW IS CLOSER:
+         * rows 0 and 5 both cover x 100 (0,185,1000 and 0,0,1000) and
+         * row 5's line at y 0 is nearer a body at ay -300, but the walk
+         * takes row 0, the earlier one in the file. */
+        CHECK(ll_ceiling_walk(&su, 100, -300, 200, &d, &idx) && idx == 0 &&
+              d == 485);
+        ll_sufreg_free(&su);
+        /* TUNGA2.12 AUTHORS A CEILING ABOVE THE WORLD: y -40. The y
+         * gate is the ordinary one, so it answers for a body whose top
+         * is at or below -40 and dy = -40 - ay lands it there. */
+        CHECK(ll_sufreg_parse(ST_DES_TUNGA2, &su) == 0 && su.n == 4);
+        CHECK(su.r[2].x == 0 && su.r[2].y == -40 && su.r[2].lx == 2600);
+        CHECK(ll_ceiling_hit(&su.r[2], 0, -140, -40, &d) && d == 100);
+        CHECK(!ll_ceiling_hit(&su.r[2], 0, -40, -40, &d));
+        ll_sufreg_free(&su);
+        /* NONE.DES, the ten levels' answer to the same key: a count of
+         * 0, no allocation, and the walk's count test skips everything -
+         * ZARIA.01 among them, which is why the OI-078 climb has no
+         * ceiling to hit. */
+        CHECK(ll_sufreg_parse("0\r\n", &su) == 0 && su.n == 0 && su.r == NULL);
+        CHECK(!ll_ceiling_walk(&su, 100, 100, 200, &d, &idx) && idx == -1);
+
+        /* KARA.SUF, THREE LINES, AND THE WALK STOPS AT THE FIRST
+         * ANSWER: 0x4b82d `test eax,eax / je 0x4b80c` moves on only
+         * while the answer is no, so a body that BOTH the wide y 0 line
+         * and the y 290 line reach is answered by the one that comes
+         * FIRST IN FILE ORDER - the second would have moved the body
+         * 295 px and is never asked. */
+        CHECK(ll_sufreg_parse(ST_SUF_KARA, &su) == 0);
+        CHECK(ll_ceiling_walk(&su, 130, -5, 300, &d, &idx) && idx == 0 &&
+              d == 5);
+        /* The y 0 line refuses a body whose anchor is already below it
+         * (0 - 100 <= 0), so the second row, x 125..135 at y 290, is
+         * the one that answers: dy = 290 - 100 = 190. */
+        CHECK(ll_ceiling_walk(&su, 130, 100, 300, &d, &idx) && idx == 1 &&
+              d == 190);
+        /* and the third row, x 1535..1545 at y 40. */
+        CHECK(ll_ceiling_walk(&su, 1540, 30, 45, &d, &idx) && idx == 2 &&
+              d == 10);
+        /* Nothing reaches: the anchor is outside every line's x. */
+        CHECK(!ll_ceiling_walk(&su, 2000, 500, 600, &d, &idx) && idx == -1 &&
+              d == 0);
+        ll_sufreg_free(&su);
+
+        /* A ceiling with a length of 0 is ONE POINT, x == rec.x, and
+         * one px either side is nothing. No shipped row is zero-length;
+         * this is the law. */
+        {
+            const ll_suf_rec pt = { 7, 50, 0 };
+            CHECK(ll_ceiling_hit(&pt, 7, 49, 50, &d) && d == 1);
+            CHECK(!ll_ceiling_hit(&pt, 6, 49, 50, &d) && d == 0);
+            CHECK(!ll_ceiling_hit(&pt, 8, 49, 50, &d) && d == 0);
+        }
+        /* A NEGATIVE length answers nowhere. The two x tests are
+         * ORDERED - ax >= rec.x and rec.x + rec.lx >= ax - unlike the
+         * blockade's y tests, which look at both ends symmetrically, so
+         * the upside-down range that PR-395 pinned for `.BLK` is empty
+         * here. No shipped row is negative; this is the law. */
+        {
+            const ll_suf_rec inv = { 100, 50, -40 };
+            CHECK(!ll_ceiling_hit(&inv, 80, 49, 60, &d) && d == 0);
+            CHECK(!ll_ceiling_hit(&inv, 100, 49, 60, &d) && d == 0);
+            CHECK(!ll_ceiling_hit(&inv, 60, 49, 60, &d) && d == 0);
+        }
+
+        /* THE GRAMMAR IS THE ONE `.BLK` USES, because the loader is
+         * the same shape: one 0x400-byte read and a token cursor
+         * (0x4dabb), the header count first (0x4dac0), then the record
+         * scan EXACTLY count times (0x4db12-0x4db2e). A count of 0
+         * allocates nothing and leaves [world+0x78] at 0 (0x4dadf). */
+        CHECK(ll_sufreg_parse("2\r\n0,0,10\r\n", &su) == 0 && su.n == 2 &&
+              su.r[1].x == 0 && su.r[1].y == 0 && su.r[1].lx == 0);
+        ll_sufreg_free(&su);
+        CHECK(ll_sufreg_parse("1\r\n0,0,3000\r\n5,5,5\r\n", &su) == 0 &&
+              su.n == 1 && su.r[0].lx == 3000);
+        ll_sufreg_free(&su);
+        CHECK(ll_sufreg_parse("1 0 , 0 , 3000 ", &su) == 0 && su.n == 1 &&
+              su.r[0].x == 0 && su.r[0].y == 0 && su.r[0].lx == 3000);
+        ll_sufreg_free(&su);
+        CHECK(ll_sufreg_parse("1\r\n1,2,3,4\r\n", &su) == 0 && su.n == 1 &&
+              su.r[0].x == 1 && su.r[0].y == 2 && su.r[0].lx == 3);
+        ll_sufreg_free(&su);
+        CHECK(ll_sufreg_parse("0\r\n", &su) == 0 && su.n == 0);
+        ll_sufreg_free(&su);
+        CHECK(ll_sufreg_parse("nope\r\n0,0,3000\r\n", &su) == 1 && su.n == 0);
+        CHECK(ll_sufreg_parse("9\r\n", &su) == 1 && su.n == 0);
+        ll_sufreg_free(&su);
+        /* LL_SUF_MAX is the PORT's cap, and the boundary is pinned so
+         * the cap cannot drift: the shipped set never goes past 3, but
+         * a file at the cap parses and one past it is refused. */
+        CHECK(ll_sufreg_parse("8\r\n0,0,1\r\n0,0,2\r\n0,0,3\r\n0,0,4\r\n"
+                              "0,0,5\r\n0,0,6\r\n0,0,7\r\n0,0,8\r\n",
+                              &su) == 0 && su.n == 8 && su.r[7].lx == 8);
+        ll_sufreg_free(&su);
+    }
+
     /* .MOV extended grammar: physics numbers, flags, transitions, per-state
      * seq, M4-C clamp (frames say 6 ms -> 100) */
     CHECK(ll_mov_parse(ST_MOV, &m) == 3);
@@ -5318,7 +5642,24 @@ int ll_play_selftest(void)
                " requester's own edge plus one, never a face of the"
                " record - and refuses a body already flush at 0 or 1 px"
                " without writing [obj+0xca]; the walk over the registry"
-               " stops at the FIRST record that answers (ok)\n");
+               " stops at the FIRST record that answers,"
+               " PR-396: the .suf record is x, y and LENGTH ALONG x at"
+               " rec+0/+4/+0xc (the same scanner, and the record's own"
+               " constructor is what seeds its method table - this binary"
+               " keeps a class record's fields at C+1/C+5/C+9/C+0xd),"
+               " and the ceiling query 0x45500 is given the BODY, not a"
+               " box: it wants the anchor's x on the line (both ends"
+               " included), the body's own top at or below the line, and"
+               " the anchor strictly above it, then moves the anchor down"
+               " to the line through [obj+0xce] and never refuses a move"
+               " of 1; its walk stops at the first answer too and raises"
+               " a DIFFERENT flag bit, `or BYTE [result+3],0x2`, and it"
+               " runs in the same physics step AFTER the blockades; and"
+               " the registry it walks is named by the level's own"
+               " `sufity=` line and lives in that level's container slot"
+               " - three .SUF files, three SUFITY.DES sub-descriptors"
+               " (SADES.06's carries six rows) and seven NONE.DES whose"
+               " only token is `0` (ok)\n");
 
     /* PR-199: the `end_level <n>` row tail, end to end INSIDE the
      * player. The engine side is PR-198's read (the parse arm

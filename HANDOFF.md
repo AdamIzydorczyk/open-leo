@@ -724,6 +724,12 @@ Pitfalls seen:
   old code was wrong to trust that call, and the fix covers it whatever
   the true magnitude. If the leg ever fails again, the diag line in that
   job's log is the first thing to read.
+- A THIRD flaky shape, and it is the harness, not the port: at
+  `-j$(nproc)` (32 here) the fixture-mode `verify-golden` leg failed once
+  during PR-396 - it stopped after map_0092 and returned 1 - while the
+  same leg passed when run alone, and passed in the same pair at `-j4`.
+  The cause is not established. Run the gate pair at `-j4`, or rerun that
+  one target, before believing a red.
 - peak `ll_level` RSS is ~1.1 GB (RAN.01); run one level at a time.
 
 ## 4. Architecture map

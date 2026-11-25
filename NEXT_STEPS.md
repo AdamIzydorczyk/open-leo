@@ -55169,3 +55169,306 @@ MEASURED: (a) THE RECORD IS PARSED, NOT COPIED. 0x455e0 (eax = the
   still every file carries exactly 1+3*count integers. The ZAR.BLK
   "puzzle" PR-394 recorded was never in the engine at all, only in one
   wrong read of its formats.
+
+## PR-396 - THE CEILING REGISTRY IS A HORIZONTAL LINE: x, y AND LENGTH AT
+## +0/+4/+0xc; ITS METHOD TABLE COMES FROM ITS OWN CONSTRUCTOR, AND THE
+## QUERY PULLS THE BODY DOWN TO THE LINE IT STICKS ABOVE
+
+```
+KIND: port
+SUBSYSTEM: F6's ceiling registry - the .SUF grammar (the loader 0x4da90
+  and its record parser 0x454d0), the test 0x45500 that 0x4b7f0 walks, the
+  record-constructor mechanism that seeds both this and the .BLK registry
+  (0xa14d8/0x4fbd0 and 0xa14c0/0x4fb70), and the port's model of all of
+  it in the data-free `./ll_level --play-selftest` leg (verify-play)
+ADDRESSES: 0x4cfc7, 0x4d484, 0x4d492, 0x4d49b, 0x4d4a0, 0x4da90, 0x4da97,
+  0x4dabb, 0x4dac0, 0x4dacc, 0x4dad1, 0x4dad6, 0x4dadf, 0x4dae3, 0x4daf5,
+  0x4daf8, 0x4dafd, 0x4db02, 0x4db0f, 0x4db12, 0x4db18, 0x4db1d, 0x4db23,
+  0x4db2b, 0x4db2e, 0x4db50, 0x4db9f, 0x4dbb9, 0x4dc00, 0x91f21, 0x91f24,
+  0x91f27, 0x961fc, 0xa14d8, 0xa14c0, 0x4fbd0, 0x4fb70, 0x74bac, 0x4fba0,
+  0xa218c, 0xa2178, 0x98278, 0x98274, 0x76a64, 0x76bb7, 0x76b24, 0x76b26,
+  0x76b35, 0x76b6f, 0x76b74, 0x76b83, 0x76b96, 0x76ab0, 0x76ac9, 0x76ad9,
+  0x76ae3, 0x5c320, 0x7521f, 0x78ce0, 0x454d0, 0x454d2, 0x454d6, 0x454d9,
+  0x454de, 0x454e5, 0x454ed, 0x454f3, 0x4a0b0, 0x4a0b1, 0x4a0bc, 0x4a0c4,
+  0x91d0f, 0x91d15, 0x91836, 0x91839, 0x9183d, 0x91840, 0x4b7f0, 0x4b7fe,
+  0x4b806, 0x4b808, 0x4b80d, 0x4b813, 0x4b818, 0x4b81c, 0x4b81e, 0x4b823,
+  0x4b826, 0x4b828, 0x4b82d, 0x4b83b, 0x4b83f, 0x4b844, 0x4b84a, 0x45500,
+  0x45508, 0x4550c, 0x45511, 0x45516, 0x4552f, 0x4553c, 0x45542, 0x45548,
+  0x4554a, 0x4554f, 0x45553, 0x45555, 0x45557, 0x45559, 0x4555f, 0x45562,
+  0x45564, 0x45566, 0x45569, 0x4556c, 0x4556e, 0x45570, 0x45574, 0x45576,
+  0x45578, 0x4557a, 0x4557c, 0x45582, 0x45584, 0x4558a, 0x45591, 0x45620,
+  0x45683, 0x45688, 0x534e0, 0x534e9, 0x4b430, 0x4b441, 0x4b45b, 0x4b462,
+  0x4b46d, 0x4b479, 0x4b48a, 0x4b4aa, 0x4b4ec, 0x546f0, 0x54732, 0x54746,
+  0x5474b, 0x54754, 0x96874, 0x23900, 0x23c60, 0x544f0, 0x544f6, 0x544fd,
+  0x54500, 0x5453a, 0xb6, 0xac, 0xd6, 0xda, 0xbc, 0x48, 0x50, 0x78, 0x84,
+  0x70, 0x7c, 0x14, 0x10, 0xc, 0x8, 0x4, 0xca, 0xce, 0x68, 0xb0
+NAMES: ll_suf_rec, ll_sufreg, ll_sufreg_parse, ll_sufreg_free, reg_next,
+  blk_next, ll_ceiling_hit, ll_ceiling_walk, LL_SUF_MAX, play selftest,
+  sufity, .SUF, KADMAR.SUF, KARA.SUF, RAN.SUF, none.des, sufity.des, class
+  record, constructor, method table, vtable, array-of-records, ceiling,
+  horizontal line, anchor, body top, pull down, first answer wins,
+  AC_UP_DUP, result block, OI-078, OI-127, class view, attachment flag,
+  SUFITY.DES, NONE.DES, LEVELDES, SADES.06, TUNGA2.12, ENA.03,
+  pr396_sufscan.c, pr396_suf_hd.txt, pr396_suf_des.txt, pr396_playst.c,
+  pr396_mutate.py
+CODE: yes: ported/ll_play.h and ported/ll_play.c only. New: ll_suf_rec /
+  ll_sufreg / LL_SUF_MAX with ll_sufreg_parse and ll_sufreg_free (the
+  loader's grammar - one read, the header count first, then exactly count
+  triples over one token stream, missing numbers left at the constructed
+  zero); ll_ceiling_hit, the 0x45500 law in full; ll_ceiling_walk, the
+  0x4b806-0x4b818 walk, first answer wins. blk_next became reg_next: one
+  scanner function for both registries, because both loaders run the same
+  0x4a0b0 pair-scan and the same trailing bare "%d" over one cursor. Two
+  PR-395 comments corrected in place (the "calloc" wording, in the .blk
+  block comment and in its header). 53 CHECK pins in a new
+  ll_play_selftest section, taken from the bytes of five of the six
+  non-empty shipped registries (KADMAR.SUF, KARA.SUF, RAN.SUF,
+  SADES.06's and TUNGA2.12's SUFITY.DES), from a NONE.DES `0`, and from
+  the interval algebra of the query and the port-cap boundary; and the
+  --play-selftest description string extended to the new law and to where
+  the registry lives. No hook, no Makefile or tool change.
+HOOKS: none new - verify-play runs `timeout 30 ./ll_level
+  --play-selftest`, a data-free leg that runs in both fixture modes.
+OPENS: the model still has no runtime caller, as PR-395's does: the port's
+  physics step never asks ll_ceiling_walk, and wiring it needs a port body
+  that carries a [obj+0xca]/[obj+0xce]-style pending delta, and a choice
+  of WHICH position to hand it - the query's `top` comes from the stored
+  presented point at [obj+0xda] (PR-306, PR-307) and its `ax`,`ay` from
+  the live position plus the delta (PR-308), so a caller that passes one
+  position for both is not running 0x45500; the attachment tail of the
+  +0xb0 verb, 0x54500-0x5453a, through class slots +0xbc, +0x48 and
+  +0x50 and the table at [that+0x33], which PR-396 did not follow; what
+  the two views are, precisely - PR-293 names "the shared table 0x98278"
+  and PR-305 names "the view 0x98274", and measured here those are the
+  SAME BYTES four apart: the run 0x98274-0x98288 reads 0x23e30, 0x23ed0,
+  0x23ea0, 0x23e00 and then 0x74bac ONE BYTE PAST a dword boundary
+  (0x98285), the packed-field shape of the class records at 0xa14c0 and
+  0xa14d8 rather than a method table's, so which base a caller means and
+  what the element-size word of this class is stays open; the class
+  record's C+9 verb (0x4fba0 here, 0x4ee20 for `.BLK`) - the
+  neighbouring table 0xa14f4 leads to 0x4ea30/0x4ea70, which read as
+  clone-pairs, which is why PR-396 did not follow them; and the
+  tool-entry half of OI-127.
+CLOSES: PR-395's OPENS item "the [world+0x78] ceiling registry's record
+  shape (0x4b7f0 asks through [[entry+0x10]+0x4], a different builder,
+  unread)"; PR-391's probe open (b) and (c) - the loader behind 0x4d49b IS
+  0x4da90 and its header format is the "%d" at 0x91f21, as 0x4dc00's is
+  0x91f27; the [world+0x78] half of the PR-394 paragraph in OI-127; and
+  the "which key owns which loader" ground once more, `sufity` at 0x4cfc7
+  through 0x4d484-0x4d4a0.
+CORRECTS: PR-395 - the mechanism, not the shape. "rec+0x0 and rec+0xc are
+  never written - the block comes from calloc (0x4dbb9)", repeated in this
+  row's MEASURED (a) as "a zeroed allocation": nothing zeroes those
+  registries. 0x76a64 is the engine's plain allocator (it reaches the
+  malloc chain 0x5c320 -> 0x7521f -> 0x78ce0), and 0x76bb7 -> 0x76b24 is
+  what builds an array: 0x76b35 writes the COUNT at [mem], 0x76b74 chooses
+  the generic path (the class's first byte is not 4) and 0x76b96 calls
+  0x76ab0, which runs the class's CONSTRUCTOR over count elements at the
+  class's own element size; 0x76b24 then returns mem+4, and that is the
+  pointer the registry stores. For `.BLK` that constructor is 0x4fb70 -
+  the field at C+1 of the class record 0xa14c0 - and it writes the method
+  table 0xa2178 at rec+0x0 and the view 0x98278 at rec+0xc while zeroing
+  +0x4, +0x8 and +0x10; for `.SUF` it is 0x4fbd0 of the class 0xa14d8,
+  which zeroes +0, +4 and +0xc and stores the view at +8 and the table
+  0xa218c at +0x10. So PR-395's "rec+0 and rec+0xc are never read by
+  0x45620" and its whole record/query law stand; what was wrong is that
+  the two words are NOT zero and the array is not calloc'd. PR-394's and
+  PR-313's account is untouched.
+GATE: make 0 warnings; verify-all fixtures rc=0 111 (ok);
+GATE-FIXTURE-FREE: rc=0 15 (ok) + 21 named
+  Counts are the house verdict pattern of HANDOFF section 2 on
+  /tmp/opencode/pr396_gate_fix.log and pr396_verify_nofixtures.log - the
+  pair run against THIS tree, so its verify-all carries the docs legs
+  too. The 111 verdicts and the 21 named SKIPs plus the generic
+  `verify: SKIP` are PR-395's set unchanged: this leg adds no new leg,
+  only a description line in the --play-selftest banner. Build log
+  pr396_build6.log, 0 warnings; the standalone --play-selftest run of
+  the committed binary is pr396_playst6.log, rc=0. The code tree of that
+  pair is the one committed here; the record and the ledger rows were
+  finished afterwards, and `make verify-docs verify-index` on the
+  finished text is rc=0 (pr396_docs.log), with docs/RE_INDEX.md
+  regenerated from it by tools/re_index.py. One harness note is worth
+  keeping: the
+  first fixture-mode run, made at `-j$(nproc)` = -j32, failed
+  `verify-golden` with rc=2 while still counting 111 verdicts; the same
+  leg passed run alone (pr396_golden_re.log) and in the -j4 pair above,
+  so a -j$(nproc) red on that target is not evidence. The test evidence
+  for the change itself is the --play-selftest run (pr396_playst4.log)
+  and the 16 mutant runs of pr396_mutate.py, quoted in MEASURED (f) and
+  in pr396_mut1.log, and the data census pr396_suf_des.txt produced by
+  pr396_sufscan.c over the shipped containers.
+MEASURED: (a) THE CLASS RECORD, AND WHERE A RECORD'S TABLE COMES FROM.
+  PR-395 left the question open - the .SUF loader 0x4da90 calls
+  `[[rec+0x10]]` for a record whose +0x10 nothing in the loader writes.
+  It is the record's CONSTRUCTOR. This binary keeps a class record's
+  fields one byte in: at 0xa14d8 the bytes read as C+1 = 0x4fbd0 (the
+  constructor), C+5 = 0x74bac (the destructor), C+9 = 0x4fba0, C+0xd =
+  0x14 (the ELEMENT SIZE), and 0x76ab0 is the routine that uses them -
+  0x76ac9/0x76ad3 read [class+1] and [class+0xd], 0x76ad9 calls the
+  constructor on each element and 0x76ae3 steps by that size. 0x4fb70
+  (.BLK) and 0x4fbd0 (.SUF) are those two constructors, and they are
+  where every constant in a record comes from: 0x4fbd0 writes 0 at +0, +4
+  and +0xc, the shared view 0x98278 at +8 and the method table 0xa218c at
+  +0x10; 0x4fb70 writes 0 at +4, +8 and +0x10, the view at +0xc and the
+  table 0xa2178 at +0x0. The allocation itself is not a zeroing one:
+  0x4db9f-0x4daf5 computes count*0x14+4, 0x4dafd calls 0x76a64 (a malloc
+  wrapper: it jumps to 0x5c320, then 0x7521f, then 0x78ce0) and 0x4db02
+  calls 0x76bb7, which pushes 1 as the count-to-construct and calls
+  0x76b24; 0x76b35 stores the file's count at [mem], 0x76b74/0x76b83
+  take the generic constructor path and 0x76b96 runs 0x76ab0 over the
+  array, and 0x76b24 RETURNS mem+4 - the address of record 0 - which
+  0x4db0f stores at [world+0x78] and 0x4dbc6 at [world+0x70]. 
+  (b) THE ROW IS PARSED BY THE SAME SCANNER AS A WALL. 0x4db12-0x4db2e
+  loop: `mov eax,[esi+0x78]; add eax,ecx` with ecx stepping 0x14,
+  `mov edi,[eax+0x10]`, `mov edx,esp` (the same cursor the header was
+  scanned from) and `call [edi]` - once per record, count times. [[rec+
+  0x10]] is 0xa218c[0] = 0x454d0: 0x454d6/0x454d9 hand the record to
+  0x4a0b0, which at 0x4a0bc scans "%d,%d" (0x91d0f) into entry+0 and
+  entry+4 and at 0x4a0c4 probes its separator argument " , " (0x91d15)
+  through 0x498f0; 0x454de-0x454e5 then scan "%d" (0x91836) into
+  entry+0xc and 0x454ed-0x454f3 probe " , " (0x91839) and drop the
+  answer. A record is therefore a HORIZONTAL LINE from entry+0 along +x
+  for entry+0xc px at y = entry+4 - the .SUF pair of the .BLK wall, with
+  the same three words in a different order and the same formats. The
+  header count is the "%d" at 0x91f21 (as .BLK's is 0x91f24 and .PLT's
+  0x4dc00 uses 0x91f27), the read is the same 0x400-byte single pass
+  0x4dabb with the same scanset 0x961fc, a count of 0 allocates nothing
+  (0x4dadf), and the loop runs count times whatever the file holds. 
+  (c) THE QUERY IS GIVEN THE BODY, NOT A BOX. 0x4b7f0 (eax = the world,
+  ebx = the body, edx = the result block) walks [world+0x78] for
+  [world+0x84] records at stride 0x14 and calls `[[entry+0x10]+4]` =
+  0xa218c[4] = 0x45500. 0x45500 (eax = the record, edx = the body):
+  0x45516 calls the BODY's class slot +0x68 - the same getter 0x534e0
+  wraps for 0x4b430, whose box fields the blockade walk then shifts by
+  [obj+0xca] and [obj+0xce] (0x4b46d-0x4b48a) - and keeps only [esi+4],
+  the box's near y; 0x4552f calls slot +0xb0 with the argument block
+  {0, 0, the view 0x98278} and 0x4553c-0x4554f ADD [obj+0xca] and
+  [obj+0xce] to what it wrote, giving the anchor the body would have
+  after the pending move. Those two slots are ALREADY NAMED - this row
+  adds the count, and says what the three numbers therefore are. 0x23900
+  is `add eax,0xd6` / `ret`, which PR-305 read and called "the
+  presented point"; counted here, 176 distinct class views are stored at
+  [obj+8] (502 constructor sites), 118 of them answer +0x68 with
+  0x23900 and 118 answer +0xb0 with 0x544f0, and 42 more answer +0x68
+  with 0x23C60 - `ret`, identity, so for those classes the box IS the
+  object and its near y is the position field. 0x4552f is one of the
+  three ask-side callers PR-308 found (0x2b881, 0x2b900, 0x4552f), all
+  three pre-seeding the buffer as {0, 0, 0x98278}, and 0x544f0 opens by
+  copying [obj+0] and [obj+4] - the LIVE position - into it; its tail,
+  0x54500-0x5453a, is an attachment path for a body flagged attached at
+  [obj+0xb6] (class slots +0xbc, +0x48, +0x50 and the table at
+  [that+0x33]), which PR-396 did not follow. So the three values
+  0x45500 compares have DIFFERENT PROVIDERS: `ax`,`ay` are the live
+  position plus the pending delta, while `top` is [obj+0xda] - the
+  STORED presented point, which PR-306 and PR-307 showed is written
+  only by the class's +0x1c verb 0x54e00 on a layer notify/select. That
+  is what the asymmetry noted below really is: not a quirk of this
+  query but live-versus-stored. It is also why the port keeps all three
+  as parameters - it states 0x45500's arithmetic and takes no position
+  on which of the two a caller should pass. Then, in order:
+  `cmp entry+0, ax / jl` (0x45555)
+  and `cmp entry+0 + entry+0xc, ax / jl` (0x45562) - the anchor's x must
+  lie on the line, BOTH ends inclusive; `cmp [esi+4], entry+4 / jl`
+  (0x4556c) - the body's top must be at or below the line, so a line
+  that is not above the body is not a ceiling; and `sub` + `test / jle`
+  (0x45576/0x4557a) - entry.y - anchor_y must be >= 1, so a body whose
+  anchor is already on or under the line is left alone. On an answer
+  0x45582-0x45584 do `[obj+0xce] += entry.y - anchor_y`, which lands the
+  anchor exactly ON the line; on a miss nothing is written. There is no
+  distance-of-1 exemption as 0x45683 has for a wall: a ceiling moves a
+  body by 1 px as happily as by 300. Note the engine's own asymmetry,
+  kept in the port: the top comes from the getter with NO delta added,
+  the anchor WITH it. 
+  (d) THE WALK, AND WHERE IT RUNS. 0x4b806-0x4b818: a count <= 0 skips
+  everything (0x4b808), the count is RE-READ from [world+0x84] at every
+  step (0x4b80d), and 0x4b82d `test eax,eax / je 0x4b80c` moves to the
+  next record only while the answer is no - the first record that answers
+  leaves the walk. Its tail clears the caller's result block the same way
+  the blockade walk's does (0x4b83b/0x4b83f call 0x749a0 with ebx = 0xc
+  and edx = 0) and 0x4b844 raises `or BYTE [result+3],0x2` - bit 1 of
+  byte 3 of the same first dword whose bit 0 AC_BLOK uses (0x4b4ec), the
+  flag PR-394 named AC_UP_DUP. The call sites settle the ORDER inside the
+  physics step: 0x546f0 and 0x54732 are the two blockade walks and 0x5474b
+  is this one, reached from both branches (0x54704 `jmp 0x54746`), with
+  eax = the world global [0xcef40] and ebx = the body in both cases, and
+  both results merged through the same 0x49580 tail. So in one step the
+  engine asks the walls first and the ceilings last. 
+  (e) THE CENSUS - AND WHAT THE KEY ACTUALLY NAMES. A level asks for a
+  registry with its `sufity=` line, and the provider is a member of THAT
+  LEVEL'S OWN CONTAINER SLOT - the sub-member shape PR-392 measured for
+  `platformy=`, which PR-396 did not re-read in the loader. All 52
+  `.DES` members of the CD-stage LEVELDES container (the same 13 level
+  descriptors in four language slots ENG, GER, POL, POL.ORG) carry
+  exactly one such line; the HD ETAPY's own 103 `.DES` members carry
+  none. What they name, and what is shipped: 4 `kadmar.suf` ->
+  KADMAR.07/KADMAR.SUF, 15 bytes, `1` then `0,0,3000`; 4 `ran.suf` ->
+  RAN.01/RAN.SUF, 17 bytes, `1` then `20,100,28800`; 4 `kara.suf` ->
+  KARA.07/KARA.SUF, 37 bytes, `3` then `0,0,1600`, `125,290,10`,
+  `1535,40,10`; 12 `sufity.des` -> the ENA.03, SADES.06 and TUNGA2.12
+  members named SUFITY.DES, 14 bytes `1 / 0,20,6720`, 76 bytes
+  `6 / 0,185,1000 / 47,997,241 / 495,1384,178 / 41,1817,53 /
+  55,2621,272 / 0,0,1000` and 48 bytes `4 / 0,613,358 / 0,740,358 /
+  0,-40,2600 / 0,235,233`; and 28 `none.des` -> the NONE.DES member of
+  KADMAR2, JUNCTION, LONA.05, ENA2, ZARIA.01, ZARIA.02 and TUNGA.11,
+  whose whole content is the token `0`. So EVERY provider named by a
+  shipped descriptor is shipped, and the seven `none` levels are
+  authored EMPTY REGISTRIES, not missing files - PR-396's own first
+  reading of this paragraph held that neither `none.des` nor
+  `sufity.des` exists as a member of any shipped container, and that is
+  corrected here. The
+  shipped total is therefore 13 registries, 6 of them with records, the
+  largest header 6 (SADES.06) - which is what LL_SUF_MAX 8 is sized
+  against. Negative y is authored (TUNGA2.12's `0,-40,2600`, above the
+  y 0 that four other files use as the map's top line), every file
+  carries exactly 1+3*count integers, CRLF, no leftovers and no short
+  rows, and no `.SUF`, `SUFITY.DES` or `NONE.DES` member exists in the
+  ANIMACJE, SOUND or CD-stage ETAPY containers (all of it in
+  /tmp/opencode/pr396_suf_des.txt). For the OI-078 climb this is now a
+  DIRECT answer rather than an absence: ZARIA.01 and ZARIA.02 each ship
+  a NONE.DES holding `0`, so 0x4b808 skips the walk entirely and no
+  ceiling can be hit on that climb.
+  (f) THE PINS BITE - AND WHERE THEY CANNOT. The leg is data-free:
+  `./ll_level --play-selftest` runs 53 new CHECKs and passes (rc=0,
+  pr396_playst6.log). Five of the six non-empty shipped registries supply
+  its bytes - KADMAR.SUF's one line, RAN.SUF's one, KARA.SUF's three,
+  SADES.06's six and TUNGA2.12's four with its negative y - beside a
+  NONE.DES `0`, the interval algebra, and the port cap. A mutation
+  harness (/tmp/opencode/pr396_mutate.py, which rebuilds ll_play.c
+  against a standalone driver pr396_playst.c) breaks one law at a time:
+  the x gate's lower bound made strict, its upper bound widened, the
+  whole x gate dropped, the top test made strict, the top test dropped,
+  the d test made strict, the d test dropped, the dy sign flipped, dy
+  made absolute, the header cap off by one, the cap widened by one, the
+  row keeping y as its length, the record's x and y swapped, the row
+  reading two numbers instead of three, the walk taking the LAST answer,
+  and the walk skipping record 0. The selftest FAILS on 15 of the 16
+  (pr396_mut1.log). The survivor is `*dy = d < 0 ? -d : d`, and no pin
+  can catch it: 0x4557a's `test / jle` already established d >= 1, so the
+  absolute value of that value is the same number - an equivalent mutant,
+  not a gap. Two gaps the first run found and closed are the cap
+  boundary (8 accepted, 9 refused, and now a widened cap refused too) and
+  the FIELD ORDER of the record, which only the swap mutant pins.
+  SADES.06 is what makes the first-answer law bite on real bytes: at ax
+  500, ay 1300, top 1400 rows 0 and 5 span the x but neither can answer,
+  row 2 answers with dy 84, and the nearer line of a later row is never
+  asked.
+```
+
+- WHY. PR-395 closed the wall registry and named its own ceiling half as
+  the next unread thing - "0x4b7f0 asks through [[entry+0x10]+0x4], a
+  different builder, unread" - and OI-127's PR-394 paragraph had already
+  said the two 0x14 registries are "a different shape again". The shape
+  turned out to be the missing piece of a mechanism, not a second data
+  layout: this binary gives every record its own method table through its
+  class's constructor, whose fields sit at C+1/C+5/C+9/C+0xd. That single
+  fact answered the .SUF record, the .SUF query, and PR-395's open calloc
+  question in one pass - and it says the port's own record comments were
+  wrong about where the zeroes come from, which is fixed here rather than
+  left to drift. The census also moved twice while this row was written,
+  and both moves are recorded here rather than quietly fixed: the first
+  reading said ten of the thirteen `sufity=` names point at a file nobody
+  ships, and the measurement says the opposite - every named provider is
+  shipped, as a `.SUF`, a `SUFITY.DES` or a `NONE.DES` member of the
+  level's own slot, and the ten are authored zeros. A row that ends with
+  "the shipped data says no" has to be sure the data was looked for
+  properly, and here it was not the first time.

@@ -87,8 +87,17 @@ int  ll_plt_first_below(const ll_plt *o, int x, int from_y, ll_xy *hit);
  * far down it goes): 0x455e0 runs the engine's scanner 0x49920 three
  * times over one token cursor, with the formats "%d,%d" (0x91d0f, into
  * +0x4 and +0x8, through 0x4a0b0), "%d" (0x9183d, into +0x10) and the
- * bare "," (0x91840, a separator probe). +0x0 and +0xc are never
- * written: the block is calloc'd at 0x4dbb9. A record is therefore a
+ * bare "," (0x91840, a separator probe). +0x0 and +0xc never come from
+ * the file: the record's CONSTRUCTOR 0x4fb70 - the first field of the
+ * class record 0xa14c0, which keeps its fields at C+1/C+5/C+9/C+0xd -
+ * zeroes +0x4, +0x8 and +0x10 and stores the method table 0xa2178 at
+ * +0x0 and the shared class table 0x98278 at +0xc (PR-396 read
+ * this; it
+ * corrects what PR-395 said about calloc). The allocation 0x76a64 is
+ * the engine's plain malloc chain (0x5c320 -> 0x7521f -> 0x78ce0) and
+ * 0x76bb7 -> 0x76b24 writes the count at [mem], runs that constructor
+ * over count records, and returns mem+4 - which is what the registry
+ * stores at [world+0x70]. A record is therefore a
  * VERTICAL wall at x, from y down to y+ly - and the ten `.BLK` members
  * of the HD ETAPY read exactly that way: headers 2, 2, 2, 3, 4, 6, 6,
  * 9, 11 and 49 records (94 in all), every file carrying exactly
@@ -105,8 +114,8 @@ typedef struct { ll_blk_rec *r; int n; } ll_blkreg;
  * (0x49820) and then a run of scans over that same object, so the file
  * is a stream of numbers and not a set of lines - the header count
  * first (0x4db8e, format "%d" at 0x91f24), then count triples. A
- * record whose numbers are missing keeps the zero the allocation gave
- * it: the loader reports nothing about a short file (0x4dbcf-0x4dbe4
+ * record whose numbers are missing keeps the zero its constructor
+ * wrote: the loader reports nothing about a short file (0x4dbcf-0x4dbe4
  * runs count times whatever happens) and ignores anything past the
  * count. 0 = a count was read; 1 = the first token is not a number, or
  * a count the port will not hold. */
@@ -142,6 +151,84 @@ int ll_block_hit(const ll_blk_rec *rec, int bx0, int bx1, int by0, int by1,
  * and *idx -1. */
 int ll_block_walk(const ll_blkreg *reg, int bx0, int bx1, int by0, int by1,
                   int *dx, int *idx);
+
+/* ------------------------------------------------------------------ .suf
+ * The `sufity=` CEILING registry - the query the SAME physics step runs
+ * after the blockades (0x546f0 and 0x54732 are the blockade walks,
+ * 0x5474b is this one, with the same eax = the world [0xcef40] and the
+ * same ebx = the body). 0x4da90 builds [world+0x78], count
+ * [world+0x84], stride 0x14; the walk is 0x4b7f0 and the test is
+ * 0x45500. Its record class is 0xa14d8, whose constructor 0x4fbd0
+ * zeroes rec+0x0, rec+0x4 and rec+0xc, puts the shared class table
+ * 0x98278 at
+ * rec+0x8 and the method table 0xa218c at rec+0x10; the loader then
+ * calls [[rec+0x10]] - 0x454d0 - once per record over the same token
+ * cursor, and 0x454d0 parses the file's three numbers: "%d,%d , "
+ * (0x91d0f, through 0x4a0b0) into rec+0x0 and rec+0x4, then "%d"
+ * (0x91836) into rec+0xc, then the probe " , " (0x91839). A ceiling
+ * record is therefore a HORIZONTAL line: it starts at x, runs lx px
+ * along +x, and sits at y. The shipped registries read exactly that
+ * way: the three `.SUF` members (KADMAR.07 `0,0,3000`, RAN.01
+ * `20,100,28800`, KARA.07 `0,0,1600`, `125,290,10`, `1535,40,10`) and
+ * the three `SUFITY.DES` sub-descriptors (ENA.03 `0,20,6720`,
+ * TUNGA2.12 `0,613,358` and three more, SADES.06 six rows) - which is
+ * what the `sufity=` lines of the level descriptors name. The other
+ * seven name a `NONE.DES` sub-descriptor holding the single token `0`:
+ * an authored EMPTY registry, not a missing file (census:
+ * /tmp/opencode/pr396_suf_des.txt). */
+#define LL_SUF_MAX 8           /* records one file may own; the measured
+                                * maximum across the shipped set is 6 */
+typedef struct { int x, y, lx; } ll_suf_rec;
+typedef struct { ll_suf_rec *r; int n; } ll_sufreg;
+
+/* 0x4da90's read, one 0x400-byte read into the scanner object
+ * (0x4dabb, the same scanset 0x961fc as `.BLK`) and a run of scans over
+ * it: the header count first (0x4dac0, format "%d" at 0x91f21) into
+ * [world+0x84], then the record scan EXACTLY count times
+ * (0x4db12-0x4db2e). A count of 0 allocates nothing and leaves
+ * [world+0x78] at 0 (0x4dadf); a short file leaves the rest of the
+ * records at their constructed zero. 0 = a count was read; 1 = the
+ * first token is not a number, or a count the port will not hold. */
+int ll_sufreg_parse(const char *text, ll_sufreg *out);
+void ll_sufreg_free(ll_sufreg *o);
+
+/* The ceiling test 0x45500 for one record. Unlike 0x45620 it is given
+ * the BODY, not a box: it asks the body's class slot +0x68 and keeps
+ * only [4] of what comes back (the `top` argument, to which the engine
+ * adds NO delta, 0x45566), and asks slot +0xb0 for two numbers and then
+ * adds [obj+0xca] and [obj+0xce] to them (0x4553c-0x4554f) - the
+ * `ax`,`ay` here are those two sums, i.e. where the body's ANCHOR would
+ * be once the pending delta is applied. Both getters are the ones
+ * PR-305..PR-308 read: +0x68 is 0x23900 = `add eax,0xd6`, so the box is
+ * the point object at [obj+0xd6]/[obj+0xda] - the STORED presented
+ * point, refreshed by the class's +0x1c verb 0x54e00, not every step -
+ * and +0xb0 is 0x544f0, which copies the LIVE [obj+0]/[obj+4] and then
+ * an attachment path for a body flagged at [obj+0xb6]. Those are two
+ * different positions, which is why this function takes all three values
+ * as parameters instead of choosing one. A record answers when all four
+ * hold: ax in [rec.x, rec.x + rec.lx] inclusive at both ends (0x45555,
+ * 0x45562); the body's top is
+ * at or BELOW the line, top >= rec.y (0x4556c `cmp [esi+4], rec.y /
+ * jl`); and the anchor is strictly ABOVE it, rec.y - ay >= 1 (0x45576
+ * `sub`, 0x45578 `test / jle`). Then 0x45582-0x45584 ADDs rec.y - ay
+ * to [obj+0xce], which lands the anchor exactly ON the line; *dy is
+ * that amount. A ceiling therefore pulls a body down to the line it is
+ * sticking above - it never pushes it up and never stops it. Returns 1
+ * with *dy set, or 0 with *dy at 0 (the engine never writes the field
+ * on a miss). */
+int ll_ceiling_hit(const ll_suf_rec *rec, int ax, int ay, int top, int *dy);
+
+/* The walk 0x4b806-0x4b818: it asks the records in FILE ORDER, the
+ * count is [world+0x84] (re-read every step, 0x4b80d), and 0x4b82d
+ * `test eax,eax / je` moves on while a record refuses - the FIRST one
+ * that answers ends the walk (0x4b82f). The caller's result block is
+ * then cleared (0x4b83b-0x4b83f, 0x749a0 with the 0xc size, exactly as
+ * the blockade walk's miss path) and 0x4b844 raises the ceiling flag,
+ * `or BYTE [result+3],0x2` - a different byte and bit from AC_BLOK's
+ * `or BYTE [result],0x1`. Returns 1 with *dy and *idx set, or 0 with
+ * *dy at 0 and *idx -1. */
+int ll_ceiling_walk(const ll_sufreg *reg, int ax, int ay, int top,
+                    int *dy, int *idx);
 
 /* ------------------------------------------------- .MOV state machine ---
  * EXTENDED version of the viewer's mov_t (ll_level.c PR-38): same frame
