@@ -61560,3 +61560,97 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   contact table to be modelled separately from the input
   pipeline - in the engine they are the same vector.
 
+
+## PR-449 - THE ROW CLASS 0xa260c: THE STEP METHODS ARE WRAPPERS
+## OVER THE SCENE CLASS'S (WHOSE +0x8/+0x10 ARE IDENTITY), THE
+## RECORD IS 12 BYTES, AND THE ROW-ENTRY BODY IS THE ROW-CLOCK
+## RESET WITH THE SEQ_REV_X TEST IN IT
+
+```
+KIND: read
+SUBSYSTEM: the class table installed at [row+0x44] (and at
+  scene-header +0x16) - the row methods the PR-448 sequence and
+  the PR-448 dispatch call: +0x8/+0xc/+0x10 (the step record),
+  +0x1c (row entry, with the PR-109 accumulator reset and the
+  SEQ_REV_X bit at its call site), +0x20 (row exit), +0x4
+  (identity), and the scene-structure ctor 0x51700
+ADDRESSES: 0xa260c, 0x51757, 0x517c2, 0x51851, 0x51700, 0x3e8,
+  0x559c0, 0x749a0, 0x23c90, 0x23c80, 0x521f0, 0x495b0, 0xa9504,
+  0x52470, 0x52360, 0x52070, 0x76bcc, 0x7fff, 0x523e0, 0x52d00,
+  0x95, 0x99, 0x9d, 0xa1, 0x12, 0x16, 0x2e, 0x44, 0x70, 0x30,
+  0x34, 0x8, 0xc, 0x10, 0x1c, 0x20
+NAMES: row class table, scene class, step record clear,
+  row-entry reset, row-clock accumulator reset, SEQ_REV_X call
+  site, frame-span helper, pr449_rowclass.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT 0x521f0 COMPARES - the 0x495b0 call over the
+    scene's +0x8 temp and the constants 0xa9504/0xcf068 (a name
+    lookup? the flag's [obj+0x95] = 1 store is its purpose, its
+    condition is unread); WHO READS [obj+0x95] and [obj+0x99]
+    (set 1 at entry, cleared in the +0xc wrapper); the frame
+    span words [row+0x8]/[row+0xa] -> 0x76bcc * 0x7fff (the
+    row-duration scale, the PR-141 time_scale field's consumer
+    candidate); the scene class behind [[row+0x2e]+row+4] (its
+    +0x8/+0x10 are identity here, but other scene classes may
+    not be); the object's virtuals +0x70 (the SEQ_REV_X index)
+    and +0x30/+0x34 (the exit chain); and whether the scene-
+    header ctor's 0x3e8 default is the port's default time.
+CLOSES: PR-448's first OPENS - the row-table method class is
+  0xa260c, installed at [row+0x44] by both row-instantiation
+  sites (0x517c2/0x51851) and at the scene header's +0x16 by
+  its ctor 0x51700; the per-step +0x8/+0xc/+0x10 are thin
+  wrappers: +0x8 just clears the caller's record, +0x10 delegates
+  to the scene class's +0x10 (identity 0x23c80), and the scene
+  class's +0x8 is identity too (0x23c90) - so the step scratch
+  is built by the OBJECT methods around it, not by the row.
+  It also grounds PR-445's census twice more: 0x52385 is the
+  SEQ_REV_X bit's live call site (`test BYTE [row+0x12],0x10`
+  then the object's virtual +0x70 select - the exact pair PR-410
+  described), and the row-entry body 0x52360 IS the per-row
+  arm of the row clock: chains 0x52070 (row timer [obj+0x9d]=0,
+  frame span [row+0x8]/[row+0xa] scaled through 0x76bcc),
+  zeroes [obj+0xa1] - the PR-109 step accumulator, now with its
+  reset site - and sets [obj+0x99]=1. PR-448's row-exit open:
+  +0x20 is one jump to 0x52d00, the +0x30/+0x34 virtual pair.
+CORRECTS: PR-448's sentence "its tail copies 13 bytes ... into
+  the scratch record - the contact record's size" reading that
+  size as a record fact: the row class's own record size is 12
+  (0x559c0 clears it with ebx=0xc and 0x52430 calls the row's
+  +0x10 with ecx=0xc); the 13-byte count in the physics tail is
+  a byte-copy tail (dwords + `and cl,3` remainder) over that
+  12-byte record plus one byte - it does not identify a 13-byte
+  contact record. PR-448's other readings stand.
+MEASURED: (a) THE TABLE. Slot walk of 0xa260c: +0x0 0x51910
+  (the PR-410 parser), +0x4 identity 0x23c90, +0x8 0x559c0,
+  +0xc 0x521f0, +0x10 identity-adjacent 0x23c80, +0x14 0x518f0,
+  +0x18 0x520c0, +0x1c 0x52360, +0x20 0x523e0, +0x24 0x55970,
+  +0x28 0x52470, +0x2c 0x55820, +0x30-0x3c the 0x457e0-0x458e0
+  chain (the contact-list helpers of PR-448), +0x40 0x51620.
+  (b) THE STEP RECORD. 0x559c0: record[+0xc]=0 and a 12-byte
+  clear through the 0x749a0 memset - PR-448's sequence scratch
+  is a plain 12-byte block, zeroed each step for this row class.
+  (c) ROW ENTRY. 0x52360 (the PR-448 dispatch's +0x1c): 0x52070
+  resets [obj+0x9d] and turns the row's frame-span words into a
+  scaled duration; [obj+0xa1]=0 (the row-clock accumulator),
+  [obj+0x99]=1; then if arg >= 0 and the row's control word has
+  SEQ_REV_X, the object's virtual +0x70 is queried and a < 0
+  answer selects index 1 - the PR-410 sequence-reverse rule at
+  its call site. (d) ROW EXIT. 0x523e0 -> 0x52d00: virtuals
+  +0x30, +0x34, and again +0x30 chained on the result. (e) THE
+  PORT. The port's row clock (PR-109/147/148) already resets
+  its accumulator on row entry and reads SEQ_REV_X the same way;
+  the frame-span scale is the PR-141 time_scale's engine site -
+  named at OPENS as the place to check the port's default-time
+  handling against, not changed here.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The last unnamed table in the step sequence has a name,
+  and it is mostly empty: the row class delegates or zeroes,
+  while the real per-step work sits in the object methods - the
+  opposite of what the sequence's shape suggested. It also
+  fixed one number two rows old: the step record is 12 bytes,
+  not 13.
+

@@ -6617,6 +6617,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     table method class (the [row+0x44] table's +0x8/+0xc/+0x10
     - PR-410 read the parser, not these), the 13-byte copy's
     target, virtual +0x8c, and [obj+0x9d].]
+    [PR-449 NAMES THAT CLASS: 0xa260c, installed at [row+0x44]
+    by BOTH row-instantiation sites and at scene-header +0x16 by
+    the scene ctor 0x51700 (header defaults incl. a 0x3e8 = 1000
+    dword). Its step methods are near-empty: +0x8 (0x559c0) only
+    clears the caller's record (12 bytes, ebx=0xc - so PR-448's
+    "13-byte contact record size" is corrected: the tail copy is
+    dwords+remainder over that 12-byte block); the scene class's
+    +0x8/+0x10 are identity (0x23c90/0x23c80); +0xc (0x521f0)
+    zeroes the owner's [obj+0x95] and compares a 0x495b0 temp
+    against string constants. The interesting slots: +0x1c
+    (0x52360) is the row-entry arm of the row clock - 0x52070
+    zeroes the row timer [obj+0x9d] and scales the frame-span
+    words [row+8]/[row+0xa] via 0x76bcc, then [obj+0xa1]=0 (the
+    PR-109 accumulator's reset site!), [obj+0x99]=1, and the
+    SEQ_REV_X bit test at its live call site (0x52385) feeding
+    virtual +0x70 (PR-410's rule re-verified); +0x20 exits
+    through 0x52d00's +0x30/+0x34 pair; +0x30..+0x3c are
+    PR-448's contact-list chain. Open: the 0x521f0 comparison,
+    [obj+0x95]/+0x99 readers, the frame-span scale vs the
+    port's time_scale, other scene classes, and the 0x3e8
+    default.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
