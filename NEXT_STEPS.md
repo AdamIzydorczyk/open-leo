@@ -65752,3 +65752,98 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   behavior is in the 0x45xxx verb family, which is now the
   marked next step.
 
+
+## PR-498 - THE ROOT OBJECT CLASS: CTOR 0x44fe0 INSTALLS THE
+## CODE-ONLY VTABLE 0xa0cc0, EXACTLY 22 CTOR FAMILIES CALL
+## IT, AND 0xa0c5c IS NOT A SETTINGS VTPR BUT A VERB BLOCK
+
+```
+KIND: read
+SUBSYSTEM: the object-model layer under the factory chain.
+  0x44fe0 (4 insns, PR-493's "record-header init") is the
+  ROOT CLASS CTOR: [p]=0xa0cc0, [p+4]=0, [p+8]=0. Its table
+  0xa0cc0 is CODE-ONLY: a raw scan of the whole image finds
+  ZERO dword occurrences of 0xa0cc0 - the root vtable is
+  never stored in data, only installed by code. Exactly 22
+  functions call 0x44fe0 (63 call sites): the tier-1 factory
+  0x4df10, the options loader 0x4ea10, PR-493's computed-
+  form ctor anchors 0x1f2b0 (JBRANCH) / 0x1f5f0 (JROPE) /
+  0x1f870 (ZARIA cluster, 4 sites), and 17 more class-ctor
+  families 0x202d0 0x20c10 0x26860 0x269a0 0x29090 (9 sites)
+  0x29b30 0x2ba90 0x2ca80 0x34c20 0x35200 0x35cf0 0x383c0
+  0x38a60 0x3a250 0x3a4a0 0x3acf0 0x3c3f0 - per-family site
+  counts in pr498_derive.txt/pr498_verbs.txt. Their dtor
+  verbs are the paired 3-branch functions 0x44f90 (cl&4 ->
+  print via descriptor 0xa0c78; else install root and
+  destroy [obj+4] with edx=2; cl&2 -> free 0x5c370) and
+  0x44e40 (same shape, but stores [obj+8]=0x97f50 - a table
+  NOT in the 158-row census, third miss after PR-106's
+  computed forms and PR-497's unaligned tables). This root
+  0xa0cc0 is DISTINCT from the PR-106 base object 0xa2550
+  (own vtable, installed only inside the base-ctor chain at
+  0x528c6; class ctors reach it by calling 0x52860, not by
+  storing the table - which is why zero of the 158 detected
+  ctors store either root). And 0xa0c5c is NOT the settings
+  vptr: the settings ctor's pointer walk (esi=eax+4 at
+  0x443bb, +12 x5 to obj+0x40) stores it at [settings+0x40]
+  (0x44451) - a verb/ops block whose 4 aligned entries ARE
+  the root verbs (0x44fe0 +0x1d, 0x44f90 +0x25, 0x45730
+  +0x31, 0x44e40 +0x39) and whose 5-byte records are print
+  descriptors for 0x456e0/0x456b0 plus small field values
+  0xd/0xc/0x4/0x15. The settings object is itself a root-
+  derived object built through this block.
+ADDRESSES: 0x44fe0, 0xa0cc0, 0x44f90, 0xa0c78, 0x44e40,
+  0x97f50, 0xa0c5c, 0x443bb, 0x44451, 0x5c370, 0x74bc0,
+  0x74be0, 0x528c6, 0xa2550, 0x52860, 0x4df10, 0x4ea10,
+  0x1f2b0, 0x1f5f0, 0x1f870, 0x202d0, 0x20c10, 0x26860,
+  0x269a0, 0x29090, 0x29b30, 0x2ba90, 0x2ca80, 0x34c20,
+  0x35200, 0x35cf0, 0x383c0, 0x38a60, 0x3a250, 0x3a4a0,
+  0x3acf0, 0x3c3f0, 0xa0c8c, 0xa0c48, docs/OPEN_ITEMS.md
+NAMES: root class, code-only vtable, ctor families, dtor
+  verb pair, verb block, print descriptor, base-object
+  distinction, pr498_verbs.txt, pr498_derive.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT 0x97f50 IS (0x44e40's store, not in any census
+    - start the census-above-158 here); WHICH FAMILY each of
+    the 17 remaining 0x44fe0 callers belongs to (level names
+    per PR-492's cluster map); whether the 22 families and
+    the 158-row mtable census overlap (first cross-join);
+    and the PR-495/PR-497 carry-overs: three plan strings'
+    stages, the non-plan 0x57dd0 probes, ds:0xceed4.
+CLOSES: PR-497's OPENS "which class the 0x44f90..0x45730
+  verb set implements": they are the ROOT-CLASS ctor/dtor
+  verbs (0x44fe0/0x44f90/0x44e40/0x45730), and the block
+  holding them is an ops block stored at [settings+0x40],
+  not a class vtable. The "record-header init" of PR-493 is
+  promoted to the root object ctor.
+CORRECTS: PR-497's "the settings class table at 0xa0c5c
+  (installed by ctor 0x443b0 at 0x44453)": the store lands
+  at [settings+0x40] (esi=obj+0x40 after the ctor walk), so
+  0xa0c5c is never a vptr; PR-497's "slot -0x8 = getter of
+  ds:0xceed4" inherits the same misreading - 0x44a40 is an
+  entry in that ops block, not a settings vtable slot.
+MEASURED: (a) RAW IMAGE SCAN: 0 data dwords = 0xa0cc0
+  (pr498_root.txt). (b) CALLER CENSUS: 63 sites / 22
+  functions with per-family counts (pr498_verbs.txt,
+  pr498_derive.txt). (c) VERB BODIES verbatim 0x44e40/
+  0x44f90/0x44fe0 (pr498_bodies.txt). (d) CTOR WALK
+  arithmetic 0x443bb-0x44451 establishing obj+0x40. (e)
+  mtable cross-check: 0 of 158 ctor-detected tables store
+  0xa2550 or 0xa0cc0. (f) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port's object layer can be built on one root:
+  alloc + root-ctor (3 fields + vtable 0xa0cc0) + the paired
+  dtor shape (flag-tested print/child-destroy/free). The
+  22-family caller list is now the authoritative enumeration
+  of root-derived construction for the coverage ledger.
+
+- WHY. The port's object layer can be built on one root:
+  alloc + root-ctor (3 fields + vtable 0xa0cc0) + the paired
+  dtor shape (flag-tested print/child-destroy/free). The
+  22-family caller list is now the authoritative enumeration
+  of root-derived construction for the coverage ledger.
+

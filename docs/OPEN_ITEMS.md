@@ -7516,6 +7516,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     12 unguarded sites are the direct-thunk ones, now
     listed (4 per thunk). ds:0xceed4 (slot -0x8 getter)
     and the 0x45xxx verbs open.]
+    [PR-498 PROMOTES 0x44fe0 TO THE ROOT OBJECT CTOR: it
+    installs [p]=0xa0cc0, [p+4]=0, [p+8]=0; 0xa0cc0 is a
+    CODE-ONLY vtable (zero raw dword occurrences image-wide)
+    called by exactly 22 ctor families / 63 sites (0x4df10,
+    0x4ea10, 0x1f2b0/0x1f5f0/0x1f870 + 17 more, per-family
+    counts in pr498_verbs.txt). Its dtor verbs 0x44f90/
+    0x44e40 share a 3-branch shape (cl&4 print via desc
+    0xa0c78, else destroy [obj+4] edx=2, cl&2 free 0x5c370);
+    0x44e40 stores [obj+8]=0x97f50, a table in NO census.
+    Root 0xa0cc0 is distinct from base object 0xa2550
+    (installed only at 0x528c6; class ctors reach it via
+    0x52860 - hence 0 of 158 mtable ctors store either).
+    Corrects PR-497: 0xa0c5c is NOT a settings vptr - the
+    ctor walk stores it at [settings+0x40] as a verb block
+    (root ctor/dtor entries + print descriptors + field
+    ints 0xd/0xc/0x4/0x15). What 0x97f50 is stays open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
