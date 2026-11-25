@@ -6714,6 +6714,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x99804) and incs/decs them - offsets belong to classes.
     Open: the 12 case bodies, the config words table, the
     0xa6/0xa7 bit census, and 0x54c00.]
+    [PR-454 CLOSES THE DANGER KEYWORD'S EFFECT: the consumer
+    0x51016 asks the EVENT TARGET's current-row word (its
+    +0x44 getter - correction to PR-445, which read it as the
+    actor's), and bit 13 set calls the TARGET's virtual +0xd0;
+    the method's answer record always carries byte0 0x80 =
+    signal index 7 = AC_ENEMY after the +0x9c/+0x40 gates. The
+    +0xd0 default (0x54550, 38 tables) is `[obj+0xad] -= ebx`
+    - the verb decrements the PR-399 state-reset timer; the
+    [obj+0x11a]==7 arm calls it with [obj+0xb1] as the amount;
+    the lion's override 0x50ed0 gates on [obj+0x11a] in {6,7}
+    and [obj+0x126]==0. Every control= keyword PR-410
+    tabulated now has a consumer and an effect. Open: the slot
+    of the method 0x50f80 (64 tables, DIFFERENT offsets per
+    class - not one virtual), the +0x9c/+0x40 predicates, the
+    lion +0xd0 body past its gates, and whether any leg should
+    now port the DANGER hit (AC_ENEMY is parsed, never raised).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

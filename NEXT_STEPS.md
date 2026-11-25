@@ -62007,3 +62007,94 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   belong to classes, and after PR-452 the actor class finally
   has a name to attach them to.
 
+
+## PR-454 - WHAT DANGER DOES: IN THE EVENT-RECORD METHOD THE
+## TARGET'S ROW GATES A CALL TO ITS +0xd0 DECREMENT VERB (ON THE
+## STATE-RESET TIMER [obj+0xad]); THE ANSWER RECORD CARRIES
+## AC_ENEMY (INDEX 7)
+
+```
+KIND: read
+SUBSYSTEM: the effect side of the PR-445 DANGER consumer - the
+  method 0x50f80 (present in the player/actor-class tables at
+  varying slots, reached through the event-record chain
+  0x53ae0): its gates, the DANGER test on the TARGET's current
+  row via the +0x44 getter, the AC_ENEMY record write, and the
+  +0xd0 verb's default arithmetic
+ADDRESSES: 0x50f80, 0x50fa9, 0x53ae0, 0x50fb6, 0x50fce, 0x50fd4,
+  0x51011, 0x51016, 0x51019, 0x5101e, 0x51030, 0x51050, 0x5105d,
+  0x51071, 0x54550, 0x50ed0, 0x23a40, 0x23860, 0x23920, 0x96960,
+  0xcef40, 0x54, 0x44, 0x9c, 0x40, 0xd0, 0xad, 0xb1, 0x11a,
+  0x126, 0x12a, 0x64, 0x80
+NAMES: danger effect, event record method, AC_ENEMY raise,
+  decrement verb, state-reset timer, pr454_danger.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE SLOT OF 0x50f80 - it appears in 64 table slots at
+    DIFFERENT offsets per class (not one virtual; the dispatch
+    through 0x53ae0's chain is unmapped); what virtuals +0x9c
+    (default 0x23a40, 135 tables) and +0x40 (default 0x23860,
+    116) ask - both defaults unread; the lion's +0xd0 override
+    0x50ed0 past its gates (its body after the +0x40 test);
+    the semantics of [obj+0xad] past "the state-reset timer"
+    (PR-399's reset writes 0x64, the decrement is by the
+    passed dword); and whether any authored leg needs AC_ENEMY:
+    the signal is parsed and named in the port and raised by
+    NO port path today.
+CLOSES: PR-445's consumer reading with its EFFECT: 0x51016/
+  0x51019 does not merely "test DANGER" - inside an event-
+  record method, after the +0x9c and +0x40 gates pass, it
+  asks the TARGET's current-row control word (virtual +0x44 =
+  the PR-445 getter 0x23920) and when bit 13 is set it calls
+  the TARGET's virtual +0xd0; the method's answer record
+  carries byte 0 bit 0x80 = signal index 7 = AC_ENEMY (the
+  PR-331 8-bits-per-dword layout), merged (0x49580) and
+  copied out (0x51071, the 12-byte tail). So the event
+  answers with AC_ENEMY and, on a DANGER row, the target is
+  ALSO hit through +0xd0 - the charge-then-walk reading of
+  the keyword is now byte-backed end to end. And the +0xd0
+  DEFAULT (0x54550, 38 tables) is `[obj+0xad] -= ebx` - the
+  verb decrements the state-reset timer of PR-399/447; the
+  same verb is called with [obj+0xb1] as the amount at the
+  [obj+0x11a]==7 arm (0x50fb6).
+CORRECTS: PR-445's sentence "0x51016 calls virtual +0x44 and
+  0x51019 tests `test ah,0x20`... DANGER - the charge-then-
+  walk keyword... has a consumer in the input-class family":
+  the +0x44 call is made on the TARGET of the event (`mov
+  edx,[esi+0x8]`, the other object's table), not on the
+  actor - the DANGER row is the OTHER object's. The consumer
+  itself stands; its argument changes.
+MEASURED: (a) THE METHOD. 0x50f80: 12-byte local record
+  (ebx=0xc memset), gate 0x53ae0 on the incoming record, then
+  (if [obj+0x11a]==7) the target's +0xd0 with [obj+0xb1];
+  virtual +0x9c, virtual +0x40, then the DANGER arm; finally
+  an unconditional record build - byte[0] |= 0x80 at 0x51050 -
+  merged via 0x49580 and copied to the out record. THE PRECISE
+  READING: the DANGER arm itself only makes the +0xd0 call
+  (0x51030) and falls through 0x51036; the byte[0] |= 0x80 at
+  0x51050 is in the method's ALWAYS tail - the event record
+  the method answers with carries AC_ENEMY whenever the +0x9c/
+  +0x40 gates pass, and DANGER decides whether the target is
+  ALSO hit (+0xd0). What the +0x9c gate itself tests (its
+  default is a stub, so it is a per-class predicate) is what
+  selects "this is that kind of event" - at OPENS. (b) THE
+  VERB. Default +0xd0 = sub [obj+0xad],ebx; the lion overrides
+  it with gates on
+  [obj+0x11a] in {6,7}, [obj+0x126]==0 and +0x40. (c) THE
+  DATA. 386 DANGER lines in 195 files (PR-444's count) - the
+  corpus's most-used "behavioral" control bit after CH_DIR.
+  (d) THE PORT. AC_ENEMY is parsed (ll_play.c:654) and never
+  raised; DANGER parses to ctrl_other (ll_play.c:756); no
+  current leg consumes either, so no port change - but the
+  T3/DANGER work now has its engine rule to port.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The last named-but-unexplained keyword in the control
+  table is explained: DANGER makes an object's row deal the
+  hit - the target-side test, the +0xd0 decrement verb on the
+  state-reset timer, and the AC_ENEMY signal in the event
+  record. Every control= keyword PR-410 tabulated now has its
+  consumer AND its effect on the record.
+
