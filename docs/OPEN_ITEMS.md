@@ -6338,6 +6338,23 @@ OI-128: what landing and leaving a surface does - the class verbs
     CORRECTS PR-429: verbs DO carry behaviour, at +0x04; only
     +0x08/+0x0c/+0x10 are universal forwarders. Closes PR-431's
     +0x04 item.]
+    [PR-433 READS THE ACTOR SIDE OF THE VERBS. zero_v and MOVE
+    enqueue 16-byte events {next, type, a, b} at the tail of
+    [actor+0x10] via 0x52b10 (types 8 and 1) - motion is queued,
+    not immediate. LOCK/UNLOCK: bit 0 of [actor+0xb6] is the
+    locked state; lock runs only when clear and sets it (0x54f7b
+    `or +0xb6,1`), unlock only when set and clears it (0x54fcb
+    `and +0xb6,0xfe`); both gated by virtual [table+0xbc]==0 and
+    route through virtual +0x48 and the result's +0x33 table slot.
+    The atc bit (bit 5) has a getter at 0x23860 (shl 0x1a/shr 0x1f).
+    DIRECTION: ldir/rdir write -1/+1 at [actor+0x6d] (59 sites in
+    31 funcs incl. 14 in 0x82581); chdir 0x53670 indexes the row
+    array [[actor+0x50]+[actor+0x5c]*4], and negs direction ONLY
+    when the row's CH_DIR bit is set - `mov edx,[edx+0x12]; test
+    dh,0x8` (byte +0x13 bit 0x8, PR-410 keyword at 0x51cdd). That
+    hidden form corrects PR-410's bit-test census: full scan = 40
+    sites; FRAME_REV's +0x12.0x8 still has no consumer; identity of
+    +0x14 sites in 0x1197e/0x164dd/0x7af24/0x7b062/0x7b262 open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

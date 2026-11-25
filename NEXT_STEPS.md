@@ -59889,3 +59889,107 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   near-identical commands are one code path plus a data flag, and
   a faithful port should model commands as (opcode record, flag,
   parsed pair), not as text-specific routines.
+
+## PR-433 - THE VERB EFFECTS LAND ON ONE SHARED ACTOR: a LOCKED BIT,
+## a MOVE EVENT QUEUE at +0x10, a DIRECTION WORD at +0x6d - AND THE
+## chdir VERB IS GATED BY THE AUTHORED CH_DIR CONTROL BIT
+
+```
+KIND: read
+SUBSYSTEM: the targets of the PR-432 verb effects: the actor fields
+  the verbs write ([actor+0x10] event queue, +0x6d direction, +0x99
+  and +0x9d counters, +0xb6 flag byte), the methods they call
+  (0x52070, 0x52b10, 0x54f40, 0x54f90, 0x53670), and the complete
+  image-wide census of consumers of the PR-410 control bytes
+  +0x12/+0x13/+0x14
+ADDRESSES: 0x52070, 0x52b10, 0x54f40, 0x54f7b, 0x54f90, 0x54fcb,
+  0x53670, 0x5367b, 0x5367e, 0x53683, 0x53689, 0x459f0, 0x45a10,
+  0x51cdd, 0x23860, 0x238b0, 0x238b5, 0x52184, 0x52311, 0x76bcc,
+  0x82581, 0x1197e, 0x164dd, 0x7af24, 0x7b062, 0x7b262, 0x08, 0x0a,
+  0x10, 0x12, 0x13, 0x14, 0x33, 0x48, 0x50, 0x54, 0x5c, 0x6d, 0x99,
+  0x9d, 0xb6, 0xbc, 0xfe, 0x7fff
+NAMES: locked bit, atc getter, direction word, move event queue,
+  chdir gate, CH_DIR consumer, control-bit census, row array,
+  pr433_ctlbits.txt, OI-016, OI-091, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHO DEQUEUES [actor+0x10] - the consumer that runs the 16
+    byte events {type 8 = zero_v, type 1 = MOVE} is still unread;
+    WHAT VIRTUAL CALLS +0xbc, +0x48, +0x50, +0x54 AND [obj+0x33]
+    +0x04 DO on the actor's own table; WHAT [actor+0x8]/[+0xa] (the
+    word pair 0x52070 differences and scales by 0x7fff) and
+    [actor+0x9d] are - a clock or a position pair; why the driver
+    compares [eax+0x99] against -1 at 0x52184 (sentinel meaning);
+    whether the +0x14 sites in 0x1197e, 0x164dd, 0x7af24, 0x7b062
+    and 0x7b262 are the PR-410 control bytes at all or another
+    record shape; and who maintains the row array [actor+0x50] plus
+    cursor [actor+0x5c] that 0x53670 indexes.
+CLOSES: PR-432's OPENS item on the actor fields for the lock
+  family and atc: bit 0 of [actor+0xb6] IS the locked state - lock
+  runs only when it is clear and sets it with `or BYTE PTR
+  [ecx+0xb6],0x1` at 0x54f7b, unlock runs only when set and clears
+  it with `and BYTE PTR [ecx+0xb6],0xfe` at 0x54fcb; the 0x45c20
+  atc bit (bit 5) has a read-only getter at 0x23860 (shl 0x1a /
+  shr 0x1f extracts bit 5). Also closes the PR-410 OPENS item for
+  CH_DIR: its bit - byte [rec+0x13] 0x8, set by the keyword at
+  0x51cdd - is consumed by 0x5367e, the chdir verb's own effect:
+  chdir negs [actor+0x6d] only for rows authored CH_DIR.
+CORRECTS: PR-410's "across the whole decoded image the only bit
+  tests on these three bytes are [the 0x52xxx/0x527xx list]": a
+  full ops-text census finds 40 sites, adding an indexed dword form
+  invisible to the byte-test regex (mov edx,[edx+0x12]; test dh,0x8
+  at 0x5367b-0x5367e = CH_DIR) and further +0x14-shape sites at
+  0x1197e, 0x164dd, 0x7af24, 0x7b062, 0x7b262 and 0x828f6 whose
+  record identity is open. FRAME_REV's byte +0x12 bit 0x8 still has
+  NO consumer under either scan form.
+MEASURED: (a) THE EVENT QUEUE. 0x52b10 (used by zero_v with
+  (8,0,0) and MOVE with (1,[cmd+0xc],[cmd+0x8])) walks [x+0x0]
+  from [actor+0x10] to the tail, allocs 0x10 and appends {next=0,
+  type, a, b} - actor motion and velocity resets are queued
+  events, not immediate writes. (pr433_ctlbits)
+  (b) ZERO. 0x52070 sets [actor+0x9d] = 0, then movsx-differences
+  the WORD pair [actor+0xa] - [actor+0x8], scales through 0x76bcc
+  and divides by 0x7fff - a fixed-point rate over a word pair.
+  (c) LOCK/UNLOCK. 0x54f40: skip if virtual [table+0xbc] nonzero
+  or bit 0 of +0xb6 set, else compute through virtual +0x48 and the
+  result's table slot +0x33, +0x50, and set the bit; 0x54f90 the
+  mirrored guard, clearing it. (d) DIRECTION. ldir stores -1 and
+  rdir +1 at [actor+0x6d] (0x459f0/0x45a10); chdir 0x53670 loads
+  the current row record as [[actor+0x50]+[actor+0x5c]*4], tests
+  its control dword +0x12 with `test dh,0x8` (byte +0x13, the
+  CH_DIR bit), negs [actor+0x6d] and tail-virtuals +0x54. The
+  field has 59 sites in 31 functions, including thin wrappers at
+  0x23890/0x238b0 that pass direction together with the table slot
+  [obj+0x33] into virtual calls, and 14 sites inside FUN_00082581
+  (PR-426's second AC_ comparison function). (pr433_ctlbits)
+  (e) THE CONTROL-BIT CENSUS. 40 test/and/or/xor sites on
+  +0x12/+0x13/+0x14 image-wide: the parser writes all keyword bits
+  (0x51b6f-0x51d93); consumers stay in 0x520c0 (0x10/0x20),
+  0x52360 (0x10/0x20), 0x52790 (+0x13.0x2, +0x12.0x40/0x80) and
+  the new 0x53670 (CH_DIR); plus the open-identity +0x14 group.
+  (pr433_ctlbits)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr433_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr433_ctlbits.txt: the 40-site control-bit census
+  with the load-then-test-dh scan, the field census counts, and the
+  decodings of 0x52070, 0x52b10, 0x54f40, 0x54f90, 0x53670,
+  0x23860 and 0x238b0 from their own entry addresses.
+```
+
+- WHY. This is where the script layer meets the physics layer the
+  port has been rebuilding: the engine's own authoritative actor
+  state is now visible at concrete offsets - a locked flag whose
+  set/clear conditions exactly match the port's AC_/lock semantics,
+  a direction word with one sign-flip accessor, a move-event queue
+  in front of motion, and a control bit (CH_DIR, authored in 556
+  states per PR-410's census) that gates whether the authored
+  chdir command does anything. Each one is testable against the
+  port: ll_play already models locked state and facing; wiring the
+  direction field and a queued-move model is now unblocked work.
+  The corrected control-bit census also upgrades the method:
+  bit-test searches must include the load-then-test-dh form, which
+  is how CH_DIR hid from PR-410 and how FRAME_REV may still hide.
