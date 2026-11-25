@@ -6983,6 +6983,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     cleanest orphan found so far. Open: what [obj+0x126] is,
     who reads the [obj+0x10] queue, and the nine deep-slot
     dispatcher entries.]
+    [PR-469 FINDS THE AUTHORED-CLASS-NAME FACTORY: the strcmp
+    chain 0x1f879-0x1ff2d compares the name token against the
+    block at 0x90708-0x90795 (SEP2, DRABINKA, RYBA, POKAZ,
+    STRUMIEN, PIANA, SPLYW, ZWODOSPD, KAMIEN, KATAPULT,
+    KILOF_PL, PALMA, WODA, PLANT, ZARROW, CROCODIL, BRANCH,
+    TREE, JBRANCH, JROPE, ZTABL, TLewZaria, TLewZariaB) and on
+    a match allocates the class's own size (0x44..0x12e) and
+    stores [obj+0x8]=table plus [obj+0xc]=table-8 - the
+    two-view pattern outside a ctor. It answers PR-463 and
+    PR-457 for the named part: 7 of the 41 window-blind classes
+    are SPLYW (flow), STRUMIEN x2 (current), WODA (water),
+    ZARROW (arrow) and ZWODOSPD x2 - all water/fluid props, so
+    "never has an ATC window" is a game-design fact, not a
+    quirk. Six of PR-466's 20 child-list owners are named too:
+    ZARROW, CROCODIL, ZTABL, STRUMIEN, ZWODOSPD x2. DRABINKA
+    gets the ladder table 0x97f50 at +0xad and the parameter
+    block 0x98274 at +0x10; KAMIEN/KATAPULT/BRANCH/TREE store
+    the format table 0x98278 at [obj+0x8] instead of a class
+    table. Open: POKAZ/PIANA/PALMA/PLANT/JBRANCH/JROPE (no
+    table stored) and the 11 other strcmp clusters (379 sites).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

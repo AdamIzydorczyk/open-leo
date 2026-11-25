@@ -63217,3 +63217,94 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   real event system: per-class overrides, a shared fallback, and
   explicit consumes.
 
+
+## PR-469 - THE AUTHORED CLASS NAMES ARE RESOLVED BY A
+## COMPARISON FACTORY AT 0x1f879-0x1ff2d: IT NAMES 7 OF THE 41
+## WINDOW-CLASSES - ALL OF THEM WATER AND FLUID PROPS
+
+```
+KIND: read
+SUBSYSTEM: the class-name factory: the strcmp (0x76a69) chain
+  0x1f879-0x1ff2d that compares the authored class-name token
+  against the data block at 0x90708-0x90795 (SEP2, DRABINKA,
+  RYBA, POKAZ, STRUMIEN, PIANA, SPLYW, ZWODOSPD, KAMIEN,
+  KATAPULT, KILOF_PL, PALMA, WODA, PLANT, ZARROW, CROCODIL,
+  BRANCH, TREE, JBRANCH, JROPE, ZTABL, TLewZaria, TLewZariaB)
+  and for each match allocates the object and stores its class
+  table into [obj+0x8] with the second view into [obj+0xc]; the
+  cross-tab of that name map with the PR-463 window-blind set
+  and the PR-466 child-list owners
+ADDRESSES: 0x76a69, 0x1f879, 0x1f8b3, 0x1f96a, 0x1f9a4,
+  0x1f9d0, 0x1fa1f, 0x1fa4b, 0x1fa85, 0x1fadb, 0x1fb39,
+  0x1fbad, 0x1fc0f, 0x1fc64, 0x1fc9e, 0x1fcca, 0x1fd04,
+  0x1fd3e, 0x1fdd4, 0x1fe6a, 0x1fe90, 0x1feb6, 0x1fef2,
+  0x1ff26, 0x1ff15, 0x1ff1c, 0x5c320, 0x1e0a0, 0x90708,
+  0x9078b, 0x90795, 0x96874, 0x96960, 0x96ddc, 0x96e94,
+  0x96f20, 0x96fd8, 0x970bc, 0x9719c, 0x97254, 0x9755c,
+  0x978dc, 0x97f50, 0x9815c, 0x981e8, 0x98274, 0x98278,
+  0x8, 0xc, 0xad, 0x10, 0x12e, 0x44
+NAMES: class-name factory, authored class names, name block,
+  two-view install, water props, pr469_namemap.txt,
+  pr469_classnames.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE SIX NAMES WITH NO CLASS TABLE STORED - POKAZ, PIANA,
+    PALMA, PLANT, JBRANCH, JROPE (their arms allocate and then
+    do something else; PIANA/PLANT share the 0xa5 size with
+    SPLYW/WODA/ZARROW, so they are the same base with a
+    different setup, unread); the OTHER factory windows - the
+    strcmp clusters at 0x24f69, 0x29099 (the PR-455 spawn-option
+    band), 0x2ba99, 0x2ea09, 0x34c29, 0x383c9, 0x45e85 (39),
+    0x48010-0x494fb (73, the PR-38 keyword arms), 0x4df1c
+    (31), 0x51b51, 0x6153b - 379 strcmp sites in all, only this
+    window read; whether the 26 still-unnamed window-blind
+    classes have names in a second factory (the 0x90708 block
+    continues with looser.mod and A_DEAD, which PR-176 tied to
+    0x988ec/0x98f34); and why the KAMIEN/KATAPULT/BRANCH/TREE
+    arms store the FORMAT table 0x98278 at [obj+0x8] instead of
+    a class table.
+CLOSES: PR-463's OPENS "which game objects the other 29
+  window-blind tables are" and PR-457's "which classes those 12
+  tables are", for the part the image can answer: the factory
+  names seven of the 41 - 0x96ddc = SPLYW (flow), 0x96e94 and
+  0x9815c = STRUMIEN (current), 0x96f20 = WODA (water), 0x9719c
+  = ZARROW (arrow), 0x978dc and 0x981e8 = ZWODOSPD (the
+  up/down-in-water pair). They are exactly the water and fluid
+  props, which is the sharpest possible confirmation of PR-463's
+  inference: an object made of water never has an ATC window.
+  It closes PR-466's "which classes are the child-list owners"
+  for six of the 20: ZARROW, CROCODIL, ZTABL, STRUMIEN(0x9815c)
+  and ZWODOSPD twice - a crocodile, a table, an arrow, a
+  current and the swim helper own arrays of children. And it
+  shows the two-view pattern of the journal's ctor rule in a
+  second place: the factory stores the table at [obj+0x8] AND
+  table-8 at [obj+0xc] (0x96960/0x96958 for TLewZaria), and
+  gives the ladder table 0x97f50 to DRABINKA's field +0xad and
+  the parameter block 0x98274 to its +0x10.
+CORRECTS: nothing. (PR-176's "the identity of the twelve is
+  PR-176's named task" and PR-463's "by table neighbourhood
+  they are the prop/scenery band, unproven" are both upheld;
+  the names are now from the code, not from neighbourhoods.)
+MEASURED: (a) THE SHAPE, verbatim at 0x1fef2: `mov ebx,eax;
+  mov edx,0x9078b; call 0x76a69; test eax,eax; jne <next arm>`
+  - a matched name (strcmp returns 0) falls through to `mov
+  eax,0x12e; call 0x5c320`, the ctor call `0x1e0a0`, then
+  `[eax+0x8]=0x96960; [eax+0xc]=0x96958`. (b) THE SIZES: each
+  name has its own allocation size, 0x44 (ZWODOSPD) to 0x12e
+  (TLewZaria, JBRANCH); the sizes are the object-class sizes the
+  journal's 0x15d table size refers to. (c) THE CROSS-TAB: in
+  the evidence file, every PR-466 owner and every window-blind
+  class marked with its name if the map has one. (d) THE PORT.
+  Unchanged: the port reads the same authored names from the
+  level data and maps them to its own state machine.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The journal had a census of class tables and a block of
+  authored names but no recorded link between them. The link is
+  not a registry - it is a comparison chain. With it, the
+  anonymous sets from PR-457 and PR-463 acquire real names, and
+  the "window-blind" law becomes a game-design statement: water
+  never gets a window.
+
