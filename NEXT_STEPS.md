@@ -65447,3 +65447,75 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   computed-form classes - and that three authored names
   intentionally have no class beyond the base.
 
+
+## PR-494 - THE "KEY IDS" 0x42/0x62 ARE CHARACTERS: THE BELT
+## BUILD GATE READS THE LEVEL-PLAN SCRIPT ('B' PRESENT OR 'b'
+## ABSENT), AND THE SETTINGS OBJECT IS THE PLAN INTERPRETER
+
+```
+KIND: read
+SUBSYSTEM: resolves PR-489's OPENS "what ids 0x42 and 0x62
+  are". They are not record keys: 0x57dd0 is a plain
+  byte-presence scan over the blob at [rec] (verbatim: walk
+  bytes, match dl, stop at NUL, return the byte offset or
+  -1; no case folding). The record at [X+0x30] is the
+  level-plan script chain - PR-190 F3 / PR-191 F2 established
+  its alphabet is 'A','B','L','T' either case (TOUPPER
+  0x76e98), and the interpreter 0x4af10 is exactly the
+  settings object's method of PR-487 (its body ends with the
+  error print 'Bledny opis poziomu - plany', 0x91d2a at
+  0x4b0b0). So the gate at 0x4d5e8 is plain text: BUILD the
+  0x8c settings object (tables 0xa0c5c, tools/crown, PR-487)
+  iff the plan contains 'B' (0x42), or contains no 'b'
+  (0x62). A plan that uses lowercase 'b' without any 'B' is
+  the author's opt-out and leaves [X+0x38c] = 0; 'B' forces
+  the object; no B/b at all builds it by default.
+ADDRESSES: 0x4d5e8, 0x4d5eb, 0x4d5f2, 0x4d5fc, 0x4d603,
+  0x4d60d, 0x4d638, 0x57dd0, 0x57e2e, 0x4af10, 0x4b0b0,
+  0x91d2a, 0x76e98, 0x4b140, 0x4b1d0, 0x4b2ca, 0x44074,
+  0x59f80, 0x59f89, 0x5a3b0, 0x5a462, 0x44020, 0x961fc,
+  0x42, 0x62, 0x2e, 0x3a, 0x7c, docs/OPEN_ITEMS.md
+NAMES: byte-presence scan, plan characters, author opt-out,
+  B-flag, b-flag, settings interpreter, plany, pr494_plan.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH REAL SHIPPED PLANS CONTAIN 'B'/'b' - the per-
+    level effect of the gate needs the plan bytes from the
+    ETAPY/level data, not the EXE; WHERE the plan script is
+    LOADED into [X+0x30] (PR-190 F3 took the chain as
+    given); WHAT THE FOUR NON-PLAN PROBES mean: 0x44074
+    (tag 0x2e, on a record built with the 0x961fc options
+    descriptor in 0x44020), 0x4b2ca (tag 0x7c, inside
+    0x4b1d0 - the function right after the plan-'A' counter
+    0x4b140), 0x59f90/0x5a469 (tag 0x3a, via helper
+    0x59f80); and whether any other interpreter-visible
+    character ('L','T') gates level objects the way 'B' does.
+CLOSES: PR-489's OPENS "WHAT IDS 0x42 AND 0x62 ARE - 0x57dd0
+  takes a numeric ...": resolved - 0x57dd0's second argument
+  is a raw byte, and 0x42/0x62 are the plan-script letters
+  'B'/'b'; the belt gate is a text feature flag on the
+  level plan, not a record key lookup. PR-487's "belt/HUD
+  settings object" and PR-190 F3's "plan interpreter object"
+  are ONE object: 0x4af10 lives in the settings object's
+  method table and holds the 'plany' validator.
+CORRECTS: PR-489's phrasing "0x57dd0 id 0x42 present, or id
+  0x62 absent, in the [X+0x30] record": they are not ids -
+  they are single-byte character searches in the plan script
+  bytes; and the note that the gate keys on "0x57dd0 numeric
+  ids" in the register wording.
+MEASURED: (a) 0x57dd0 VERBATIM (37 insns, pr494_plan.txt).
+  (b) THE GATE VERBATIM in pr489_loader.txt (0x4d5e8-
+  0x4d638). (c) 0x4af10's tail VERBATIM 0x4b0a1-0x4b0d2
+  with push 0x91d2a. (d) CROSS-REFERENCE: 0x4b140 counts
+  plan 'A's (PR-190); 0x4b2ca probes tag 0x7c on a [obj+
+  0x30]-shaped record - plan-subsystem reuse of the scanner.
+  (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port must know when the settings/plan object even
+  exists: it is the plan text ('B'/'b') that decides it, and
+  per-level behavior differences authors observed trace to
+  that one character, not to tools=/crown= parsing.
+

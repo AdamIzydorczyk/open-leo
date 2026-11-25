@@ -7453,6 +7453,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     pr493_miss.py lists 313 further non-mtable immediates
     from other clusters (TRASA a1f90...) - census above 158
     still open. Corrects PR-492's "no table store" claim.]
+    [PR-494 DECODES THE 'BELL GATE' IDS: 0x57dd0 is a raw
+    byte-presence scan of the blob at [rec] (walk bytes,
+    stop at NUL, return offset or -1). The record at
+    [X+0x30] is the LEVEL-PLAN SCRIPT (PR-190 F3), so 0x42/
+    0x62 are its characters 'B'/'b': the 0x8c settings
+    object is built iff the plan has a 'B' or lacks any 'b'
+    - lowercase 'b' alone is the author's opt-out leaving
+    [X+0x38c]=0, 'B' forces it, neither default-builds. The
+    settings object is PR-190 F3's plan interpreter: its
+    method 0x4af10 ends with the 'Bledny opis poziomu -
+    plany' validator (0x91d2a at 0x4b0b0). Corrects PR-489's
+    "numeric ids in the [X+0x30] record" wording. Other
+    0x57dd0 probes use punctuation tags 0x2e/0x3a/0x7c on
+    non-plan records (0x44074, 0x4b2ca, 0x59f90, 0x5a469) -
+    open; per-level 'B'/'b' census needs the ETAPY plan
+    bytes.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
