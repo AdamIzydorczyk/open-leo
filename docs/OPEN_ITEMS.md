@@ -6638,6 +6638,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     [obj+0x95]/+0x99 readers, the frame-span scale vs the
     port's time_scale, other scene classes, and the 0x3e8
     default.]
+    [PR-450 FINDS THE STEP'S REAL ORDER AND A THIRD FACE
+    CONSUMER: slot +0x8c IS the PR-442 flag builder (0x54910
+    in 102 tables) - the physics step 0x536f0 calls it and
+    merges the answer into &obj+0x60 via 0x49580 BEFORE the
+    PR-448 sequence, so the input pipeline is the object's own
+    virtual, run per step; variants: 0x23a60 (24 tables, a
+    bare cleared record), 0x504e0 (11, the input family, gates
+    on virtual +0xf8 + [obj+0xd2] + [obj+0xa5] bit 2). The
+    attach tail's ORs (byte0 0x10/byte1 0x20/byte2 0x04 at
+    0x54785/0x547d1/0x54800) write the out arg directly, so
+    at transition sites they write the flag vector itself. And
+    the +0x70 the SEQ_REV_X arm queries (PR-449) defaults to
+    0x239f0 = `mov eax,[obj+0x6d]; ret` in 140 tables - the
+    face - so SEQ_REV iff face negative, a third [obj+0x6d]
+    consumer beside 0x5367e and 0x53e86; PR-444's p->face
+    identity check now has three test sites. Corrects PR-448:
+    the physics-return merge at 0x53725 targets the step
+    scratch, not &obj+0x60. Open: virtual +0xf8 and the
+    unnamed input class, the 24-table +0x8c variant, the
+    [obj+0x6d] value domain (+/-1?), and that three-consumer
+    identity check.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

@@ -61654,3 +61654,95 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   fixed one number two rows old: the step record is 12 bytes,
   not 13.
 
+
+## PR-450 - THE FLAG BUILDER IS THE OBJECT'S VIRTUAL +0x8c: THE
+## PHYSICS STEP RUNS IT BEFORE THE PHYSICS AND MERGES ITS ANSWER
+## INTO THE FLAG VECTOR; THE +0xac OUT ARG AND THE +0x70 FACE
+## DEFAULT MAKE THE PR-442/441 MODELS LITERAL AT THE CALL SITES
+
+```
+KIND: read
+SUBSYSTEM: the object method table's slot +0x8c - the PR-442
+  flag builder 0x54910 is the default in 102 of the 158
+  detected tables, called by the PR-448 physics step (0x536ff)
+  right before the per-step sequence; its two variants (the
+  24-table record-clear 0x23a60, the 11-table input gate
+  0x504e0); the direct flag-vector writes in the +0xac attach
+  tail (confirming PR-448's out-argument reading); and slot
+  +0x70, whose default 0x239f0 returns [obj+0x6d] - the face -
+  which the PR-449 row-entry SEQ_REV_X arm queries
+ADDRESSES: 0x536ff, 0x53705, 0x5370c, 0x5371c, 0x53725, 0x54910,
+  0x54931, 0x5494d, 0x5495b, 0x5499d, 0x23a60, 0x504e0, 0x50504,
+  0xf8, 0x547d1, 0x54800, 0x54785, 0x239f0, 0x6d, 0x23b40,
+  0x52385, 0x52390, 0x52397, 0x8c, 0x70, 0x60, 0xa5, 0xd2
+NAMES: flag-builder virtual, face getter, SEQ_REV face test,
+  input builder variant, physics-step merge order,
+  pr450_slot8c.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE INPUT VARIANT 0x504e0's chain - what its virtual
+    +0xf8 answers and the call it gates (the 0x502f0 class is
+    still unnamed after PR-442); the 24-table +0x8c variant
+    class (scene furniture that answers a bare cleared record -
+    which objects and why); the +0x70 variant 0x23b40 (17
+    tables); whether the engine ever flips [obj+0x6d] to a
+    value other than +/-1 (the face domain, still unproven);
+    and the port-side check PR-444 asked for: the identity
+    between the port's p->face and this [obj+0x6d] is now
+    testable against THREE consumers (0x5367e, 0x53e86, 0x52390)
+    - a named follow-up, not done here.
+CLOSES: PR-448's OPENS "virtual +0x8c (the step-start vector
+  merged into the flag vector before the physics)" - it is the
+  PR-442 flag builder: the slot census says 0x54910 in 102
+  tables, and 0x536ff calls it with the object and merges the
+  answer into &obj+0x60 through 0x49580 immediately before the
+  physics sequence. The input pipeline of PR-442 is therefore
+  not a separate feed - it is the object's own virtual run once
+  per step by the physics step, alongside the transition-time
+  calls of +0xac. It also confirms PR-448's out-argument claim
+  at the byte level: at the transition call sites edx =
+  &obj+0x60 and the attach tail's ORs (byte0 0x10 at 0x54785,
+  byte1 0x20 at 0x547d1, byte2 0x04 at 0x54800) write the
+  flag vector directly. And it grounds PR-410/PR-449's
+  SEQ_REV_X rule completely: the virtual +0x70 it queries is,
+  in 140 tables, `mov eax,[obj+0x6d]; ret` - the face - so
+  "sequence reversed iff the row has SEQ_REV_X and the object
+  faces backwards" is literal, a third consumer of the same
+  field as PR-444's 0x5367e and PR-445's 0x53e86.
+CORRECTS: PR-448's sentence "the physics return is merged into
+  &obj+0x60 through 0x49580 like the +0x8c vector": only the
+  +0x8c vector is merged into &obj+0x60 (0x53705); the merge
+  after the sequence (0x53725) targets the step scratch record,
+  not the flag vector. PR-448's other readings stand.
+MEASURED: (a) THE STEP ORDER. 0x536f0: virtual +0x8c (the
+  builder) -> 0x49580 merge into &obj+0x60 -> 0x5371c the PR-
+  448 sequence (whose +0xa8/+0xac run against the scratch) ->
+  merge into the scratch. Flags first, contact/physics second,
+  once per step. (b) THE BUILDER AT ITS CALL SITE. 0x54910
+  entry matches PR-442 exactly: 12-byte local record (ebx=0xc
+  memset), [obj+0xa5] bit tests (0x54931 bit 1 -> byte[+4]
+  0x80; 0x5494d bit 5), [obj+0xba]/[obj+0xbe] intent tests
+  (0x5495b/0x5499d). (c) THE VARIANTS. 0x23a60 (24 tables)
+  answers a bare cleared 12-byte record; 0x504e0 (11 tables,
+  the input family) gates on virtual +0xf8, [obj+0xd2] and
+  [obj+0xa5] bit 2 before chaining the base behavior. (d) THE
+  FACE. 0x239f0 (140 tables) = the [obj+0x6d] getter; the row-
+  entry arm 0x52385-0x5239c calls it under SEQ_REV_X and picks
+  frame index 1 exactly when the returned face is negative.
+  (e) THE PORT. ll_play.c's live_bits_with is the port's model
+  of (b); its per-step order (signals before physics) matches
+  (a); the SEQ_REV legs read p->face the way (d) reads
+  [obj+0x6d]. The identity check of PR-444 against all three
+  consumers is the named next step; nothing moves now.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The two pipelines this journal built from opposite ends -
+  the input/flag line (PR-438/442) and the row/physics line
+  (PR-313/448) - meet at one virtual slot: the physics step
+  asks every object for its own flags, every step. That is the
+  engine's actual per-step order, and the milestone row for the
+  450th: the model the port has carried since PR-442 is now
+  anchored at the call site, not just in the builder body.
+
