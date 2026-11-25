@@ -62258,3 +62258,70 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   0x550a0 pairs name the release edge PR-442's 0x551f0 note
   has been circling.
 
+
+## PR-457 - THE INPUT SLOT'S THIRD TIER: CLASSES WHOSE +0xcc
+## ANSWER IS "CLEAR THE SURFACE CANDIDATE AND STEP THE PHYSICS
+## ONCE" - INPUT ARRIVES FOR THEM ONLY AS AN EVENT
+
+```
+KIND: read
+SUBSYSTEM: the +0xcc variant 0x550a0 (7 detected tables:
+  0x97cdc/0x9a07c/0x9a2b4/0x9ac90/0x9bb40/0x9cfd0/0x9da40)
+  and the 5 classes (0x9ba88/0x9e4c0/0x9ed18/0xa1bfc/0xa1dfc)
+  whose +0xcc is the bare physics step 0x536f0 - the third
+  tier of the PR-456 input-slot design
+ADDRESSES: 0x550a0, 0xe6, 0xea, 0x536f0, 0xcc, 0x97cdc, 0x9a07c,
+  0x9a2b4, 0x9ac90, 0x9bb40, 0x9cfd0, 0x9da40, 0x9ba88, 0x9e4c0,
+  0x9ed18, 0xa1bfc, 0xa1dfc, 0x27e1d, 0x282a1
+NAMES: physics-only input variant, candidate clear, event-driven
+  step, pr457_tiers.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH CLASSES THE 12 TABLES ARE - no name string sits
+    near their ctors (unlike the TLew* band); by their table
+    neighborhoods (0x9a-0x9d) they are among the scene object
+    families the journal's earlier rows call the drabki/
+    stone/prop band, but that is neighborhood reasoning, not a
+    read; WHO CALLS THEM at the two identified sites (0x27e1d/
+    0x282a1, both followed by 0x550a0 directly - the caller
+    applies the input to the lion first, then hands the event
+    to one of these objects); and why clearing [obj+0xe6]/
+    [obj+0xea] belongs in an input handler at all (the natural
+    reading: these objects drop their surface attachment when
+    any input event happens - e.g. a world change).
+CLOSES: PR-456's OPENS "the 7-table +0xcc variant 0x550a0's
+  class" as far as its body goes: 0x550a0 is four instructions
+  - [obj+0xe6] = 0, [obj+0xea] = 0, then call the PR-448
+  physics step 0x536f0 on itself. So for those classes the
+  input virtual does nothing but drop the PR-122/447 surface
+  candidate (the pair the PR-446 attach machine reads) and
+  run one physics step: they are physics-only objects for
+  whom an input event means "re-resolve". The 5-table variant
+  is the same without the clear - the bare step. The slot
+  design is now fully three-tiered: feed override (actors),
+  raw applier (interactive objects), step-only (physics
+  props).
+CORRECTS: nothing.
+MEASURED: (a) 0x550a0 = mov [eax+0xe6],0; mov [eax+0xea],0;
+  call 0x536f0; ret - and 0x536f0 is verbatim the PR-448
+  sequence entry (virtual +0x8c merged into &obj+0x60, then
+  the 0x523f0 physics sequence). (b) The 12 tables split 7
+  with the clear, 5 without; none is a player-family table
+  (0x96874/0x96960 band). (c) The two call sites 0x27e1d/
+  0x282a1 call +0xcc on one object and then 0x550a0
+  DIRECTLY (a plain call) on ebx - the second target is a
+  physics-only object handled without dispatch. (d) THE PORT.
+  The port steps its props from its own world step, not from
+  input events; no leg changes. No port change.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The small row that finishes the input-slot picture: the
+  engine has three grades of "what input means to you", and
+  the lowest - props - treat an input event as "detach and
+  re-step". It also re-uses the journal's oldest chain: the
+  [obj+0xe6]/[obj+0xea] pair first read in PR-122 is exactly
+  what these classes drop, six hundred addresses away from
+  where it is set.
+

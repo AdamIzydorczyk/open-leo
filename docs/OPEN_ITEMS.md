@@ -6764,6 +6764,20 @@ OI-128: what landing and leaving a surface does - the class verbs
     pump above 0x4abd0), the six other call sites' events, the
     [obj+0x102] countdown's meaning, and the 7-table +0xcc
     variant 0x550a0's class.]
+    [PR-457 READS THE THIRD TIER: 0x550a0 is four instructions
+    - [obj+0xe6]=0, [obj+0xea]=0, then call the PR-448 physics
+    step 0x536f0 on itself. Seven tables take that variant,
+    five more take the bare step (0x536f0 directly) at +0xcc:
+    physics-only props for whom an input event means "drop the
+    surface candidate and re-step". Their classes carry no name
+    strings (unlike the TLew band) - their 0x9a-0x9d table
+    neighborhoods say scene props, unproven. Two call sites
+    (0x27e1d/0x282a1) do the pattern in the open: apply +0xcc
+    to one object, then call 0x550a0 directly on ebx. The
+    input slot's design is now complete in tiers: feed
+    override (actors), raw applier (interactive objects),
+    step-only (props). Open: which classes those 12 tables are
+    and who dispatches to them.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
