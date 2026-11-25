@@ -7396,6 +7396,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     calls belt method 0x44910. KLODA records success bit 0x26
     / mismatch bit 0x27 in its own event map; [this+0xfa] also
     broadcasts kind 0x12 with edx=ds:0xcee2c.]
+    [PR-491 ENUMERATES THE WHOLE NAME CLUSTER SET: the 8
+    factory ctors hold 161 comparison sites, 155 resolving to
+    names, 152 distinct authored class names (0x4df10 31,
+    0x29090 24: LISC/PLATF/SCHODY1-4/PIASEK/NINJA/KOBRA/
+    PTAK/BOSS/CAMEL/MALPA*/ZOLW/POCISK2..., 0x2ba90 13: the
+    SWIATLO/LEW_SWT/OBJ_SWT/OBRECZ switch family +
+    WINDA/FARAON/MACH_A/B/PODMUCH,
+    0x2ea00 29: sea enemies + BUTLA/BRAMA/TAB_*/WYBUCH/
+    PURCHAWA, 0x33370 6: the RAN pieces, 0x34c20 19: K-*
+    cutscene actors, 0x3a250 7, 0x3acf0 11: TUNGA props +
+    PANTERA/GORYL, 0x383c0 18: winter + KRA0-2/SKJUMP/FLAGA).
+    65 class tables get direct [eax+8] stores; independent
+    re-confirmation of POCISK2=0x9a134, PURCHAWA=0x9c05c,
+    LONAKULA=0x9e740, GRABOBJL1/2=TABLICZKALONA=0x9815c.
+    PR-491 corrects PR-176: 0x9ac90 is OBRECZ's class (store
+    at 0x2bbcf); LEW_SWT = 0x9ab18/0x9ab10 (computed store
+    0x2bb2e). Duplicates SCHODY/TGA_OBJ/POCISK exist in two
+    clusters (first match wins). Full list: pr491_vocab.txt.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

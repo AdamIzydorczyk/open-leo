@@ -65172,3 +65172,99 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   stage controller's state machine - a level-scoped state map
   the port has no model for at all.
 
+
+## PR-491 - THE COMPLETE CLASS-NAME VOCABULARY: NINE NAME
+## CLUSTER CTORS, 161 COMPARISON SITES, 152 DISTINCT AUTHORED
+## NAMES - AND A WRONG TABLE PAIR IN PR-176
+
+```
+KIND: read
+SUBSYSTEM: the full inventory of the factory name clusters.
+  Cluster 0x4df10 (31 arms, PR-486) is followed in one tail
+  (0x4e994-0x4e9e7) by seven more cluster ctors, and their
+  arms were now all read: 0x29090 (LISC, PLATF, SCHODY1-4,
+  KPALMA, CIUCHCIA, BRECT, BICZRECT, WSPRECT, PIASEK,
+  KOLUMNA, NINJA, KOBRA, PTAK, BOSS, CAMEL, MALPA/2/4, ZOLW,
+  POCISK2, SMIGLO), 0x2ba90 (switch family SWIATLO/LEW_SWT/
+  OBJ_SWT/OBRECZ, GWIZADKI, KRZYZYK, WINDA, SCHODY, FARAON,
+  MACH_A/B, ODBIJACZ, PODMUCH), 0x2ea00 (KALAMARN, KONIKI,
+  KRABY, MEWA, MURENA, OSMIORNI, PERLOPLA, ROZ_KOLC, SLIMAK,
+  STULBIA/STULB_ST, PURCHAWA, PILA, ARMATA, WULKAN, STONE,
+  BUTLA/GWIAZDKA/KOREK/TAB_*/BRAMA*/SIATKA/WYBUCH/ROBALE),
+  0x33370 (RAN pieces GEN_RAN/GPTAK_RA/PIOR_RAN/SEP_RAN/
+  POCISK/BAL_RAN), 0x34c20 (cutscene K-*: KSOWA, KZABA,
+  SZCZURK/S, KSMOK, KLINA, KMIOTLA, KDRABINA, KDYBY, KWINDA,
+  KBLOK, KGARNEK, KMAG, KPAJECZ, KKULA, KTRASA, KBLOKZ,
+  KBOMBA, KMASKA), 0x3a250 (PR-490), 0x3acf0 (TUNGA props
+  and animals: PTAKPLAT, GEJZER, TWINDA, PANTERA, GORYL,
+  DOMEK, DRAB, KALUZA, ZAPADNIA, SPAD), 0x383c0 (winter and
+  level pieces: SOPEL, FOKA, YETI, CEBRZYK, PINGWIN,
+  LONAKULA, IGLO, GRABOBJL1/2, WODOSPAD2, KRA0/1/2,
+  SOUNDSOURCE, SKOCZNIE, SKJUMP, FLAGA, TABLICZKALONA)
+ADDRESSES: 0x29090, 0x2ba90, 0x2ea00, 0x33370, 0x34c20,
+  0x3acf0, 0x383c0, 0x4e994, 0x4e9e7, 0x2bb2e, 0x2bb38,
+  0x2bbcf, 0x2bbd6, 0x2bb1c, 0x2d820, 0x531f0, 0x5c320,
+  0x76a69, 0x9ab18, 0x9ab10, 0x9ac90, 0x9ac88, 0x9a134,
+  0x9c05c, 0x9e740, 0x9815c, 0x9aa60, 0x9c224, 0x9ca80,
+  0x9ce04, 0x9cd24, 0x9a36c, 0x9a674, 0x9a778, 0x9a2b4,
+  0x9ad48, 0x9b244, 0x9ae34, 0x9c78c, 0x9c140, 0x9c6a0,
+  0x9c5b4, 0x9be98, 0x9bf7c, 0x9c874, 0x9c4d0, 0x9b9a8,
+  0x9bbf8, 0x9bcd8, 0x9cb64, 0x9ba88, 0x9bb40, 0x9bdb8,
+  0x9c3e8, 0x9d088, 0x9d168, 0x9d460, 0x9d8a8, 0x9d960,
+  0x9df44, 0x9da40, 0x9daf8, 0x9de64, 0x9dc9c, 0x9dd7c,
+  0xa0538, 0xa0150, 0xa0070, 0x9e4c0, 0x9e578, 0x9ed18,
+  0x9edd0, 0xa1f6c
+NAMES: name cluster, fallback ctor, full class vocabulary,
+  cluster ctors, pr491_vocab.txt, pr491_fallbacks.txt,
+  pr491_counts.py
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE ~30 ARMS WHOSE CLASS TABLE IS NOT A DIRECT
+    [eax+8] STORE (NINJA/KOBRA/PTAK/BOSS/MALPA/FOKA/YETI/
+    WODOSPAD2/GWIZADKI/SWIATLO/KSOWA/KMAG/... - pair stores
+    like 0x9aa60/0x9aa58 appear in their windows but need the
+    computed-offset walk done properly); THE DUPLICATE NAMES:
+    SCHODY exists in 0x29090 AND 0x2ba90, TGA_OBJ in 0x2ea00
+    AND 0x3acf0, POCISK in 0x4df10 AND 0x33370 - earlier
+    clusters win, so the later arms are level-specific dead
+    code unless an earlier arm returns null; the SHARED tables
+    (MURENA/PILA/ROBALE = 0x9c224, STULBIA/STULB_ST =
+    0x9ca80, TAB_KOT/TAB_KOLO = 0x9ce04, BRAMA/BRAMA_B =
+    0x9cd24) - same-class-under-two-rows again; and whether
+    the 152 names + the internal TLew*/controller classes
+    account for ALL 158 class tables of PR-479.
+CLOSES: PR-490's OPENS "the other seven fallback ctors and
+  their name clusters": read, 130 more arms, 152 distinct
+  authored names across the nine clusters - the runtime class
+  roster is now enumerated (full table at pr491_vocab.txt).
+  It also independently confirms, from this second source,
+  PR-477's 0x9a134 = POCISK2, PR-157's PURCHAWA = 0x9c05c,
+  PR-176's LONAKULA = 0x9e740, GRABOBJL1/2 = TABLICZKALONA = 0x9815c
+  (four names share one table), and it names ~45 class tables
+  new to the journal (SUBSYSTEM/ADDRESSES lists the stores).
+CORRECTS: PR-176's "LEW_SWT -> 0x9ac90": 0x9ac90/0x9ac88 is
+  installed by the OBRECZ arm (0x2bbcf); LEW_SWT's class is
+  0x9ab18/0x9ab10, stored through the computed form
+  `add eax,0xa9 ... mov [eax-0xa1],0x9ab18` (0x2bb1c-0x2bb38)
+  after a sub-object build at 0x2d820.
+MEASURED: (a) COUNTS (exact, /tmp/opencode/pr491_counts.py): 161
+  comparison sites, 155 resolving to names, 152 distinct.
+  Per-cluster sites 31/26/14/29/6/19/5(+2 TLew ctors, 7 per
+  PR-490)/11/20. Of the six sites that do not resolve to a
+  name, five compare against pointers into dword data, not
+  names (0x29099, 0x29796, 0x2bed0, 0x386d0, 0x388be); the
+  sixth is 0x4df10's BAL arm (no string, PR-486). (b) THE CORRECTION,
+  verbatim above. (c) THE SHARING: direct [eax+8] stores for
+  65 distinct tables, several names pointing at one table.
+  (d) The name strings are packed in blocks: cluster 1 at
+  0x90a00+ region, 2-3 at 0x90a00-0x90d00, 5 at 0x910a0-0x91130.
+  (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. With 152 authored names the journal can now tell which
+  of the 158 class tables are level-script classes and which
+  are engine-internal controllers, and any future "what is
+  this table" question gets a name lookup first.
+
