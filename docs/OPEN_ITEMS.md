@@ -7595,6 +7595,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x9ac90, SOPEL, SOUNDSOURCE, DRABINKA. Manager internals
     (what 0x513a0 builds) and the 0xa9-byte light field map
     stay open.]
+    [PR-503 IDENTIFIES THE MANAGER: 0x513a0 is the startup
+    init block - it builds SIX singletons with the generic
+    ctor 0x44350 (alloc via [mgr+0x398] verb +0x4):
+    ds:0xcf000 (settings, known) then cf050 = light manager
+    (0x51568) + cf054/cf058/cf05c/cf060 back-to-back, no
+    specialization. The light base is an OWNING-ARRAY class:
+    verb-head table 0x9b4bc (dtor 0x2d8f0 head) installed at
+    [light+0x10] by 0x2d90b/0x2d938/0x2d9a3 only - zero
+    data dwords, the 4th/5th code-installed class table
+    beside 0x9b4b4; 0x2d8a0 is the owning loop calling
+    [[L+0x10]+4](elem, edx=4) + free. Direct loads of
+    ds:0xcf050: exactly 3 (getter 0x2b4c0, print branch
+    0x2cb40, the init store) - all consumer use goes via
+    the +0xc getter verb. Element class + the five other
+    cf05x singletons: open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

@@ -66179,3 +66179,82 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   optional +0xa9 light attachment on 12 class types - not a
   per-class light subsystem.
 
+
+## PR-503 - THE LIGHT "MANAGER" IS ONE OF SIX STARTUP
+## SINGLETONS BUILT BY THE 0x513a0 INIT BLOCK, AND THE LIGHT
+## BASE IS AN OWNING-ARRAY CLASS ON TABLES 0x9b4b4/0x9b4bc
+
+```
+KIND: read
+SUBSYSTEM: PR-502's OPENS "what 0x513a0 does". 0x513a0 is
+  the engine init routine the journal already knows (its
+  0x51532 `call 0x44350` builds the ds:0xcf000 settings
+  singleton - PR-16x wording at journal line 17407). In one
+  straight-line block it builds SIX singletons with the
+  generic ctor 0x44350 (which allocates through the level
+  manager at [mgr+0x398] verb +0x4, template string 0x917c4):
+  ds:0xcf000 (0x51532), 0xcf050 (0x51568 = the light
+  manager), 0xcf054, 0xcf058, 0xcf05c, 0xcf060 (0x51572-
+  0x51595) - the five cf05x are built back-to-back with NO
+  intervening setup, so they are plain base-built objects;
+  debug print descriptors 0xa2198/0xa21ac/0xa21c0 guard the
+  0x51400-area allocations (fields: 0x74bac, code addr,
+  size 0x514/0x510). THE LIGHT BASE IS A CONTAINER: its
+  verb head table is 0x9b4bc (head = dtor verb 0x2d8f0,
+  then 0x2dd10/0x2da90/0x2dd20/0x2dc50/0x2dc10) and it is
+  installed at [light+0x10] by code only - 0x2d7f7 installs
+  0x9b4b4 (ctor's own table, PR-502), 0x2d90b/0x2d938/
+  0x2d9a3 install 0x9b4bc; a raw image scan finds the value
+  0x9b4bc ONLY inside those three instructions, zero data
+  dwords (4th/5th code-installed class tables). 0x2d8a0 -
+  called by both ctors - is the owning-array loop: while
+  [L+8] elements, call [[L+0x10]+4](elem, edx=4) then
+  0x74be0 free, and zeroes [L]/[L+8]/[L+0xc]. So a light
+  base object = {array ptr, count, capacity} + element-ops
+  block - the light classes own arrays of element objects.
+  Access census: direct loads of ds:0xcf050 exist ONLY at
+  the getter verb 0x2b4c0, the print branches 0x2cb40 in
+  0x2ca80, and the init store 0x5156d; no indirect call on
+  the manager within 8 insns of any direct load - all
+  consumer use flows through the +0xc getter verb.
+ADDRESSES: 0x513a0, 0x51532, 0x51568, 0x51572, 0x5157c,
+  0x51586, 0x51590, 0x44350, 0x917c4, 0xcf050, 0xcf054,
+  0xcf058, 0xcf05c, 0xcf060, 0x9b4bc, 0x9b4b4, 0x2d8f0,
+  0x2d8a0, 0x2d90b, 0x2d938, 0x2d9a3, 0x2d7f7, 0x2b4c0,
+  0x2cb40, 0xa2198, 0xa21ac, 0xa21c0, docs/OPEN_ITEMS.md
+NAMES: startup singleton block, generic ctor 0x44350,
+  owning-array loop, element ops block, code-installed
+  tables, pr503_mgr.txt, pr503_lightbase.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE ARRAY ELEMENTS ARE (their class table = the
+    ops installed at [L+0x10]? no - that is the ELEMENT
+    DTOR block; the element ctor is still unidentified);
+    what the other five cf05x singletons are (cf000 = the
+    settings object, known); and reading one of the 12
+    consumers' +0xc verb call to see the registration call
+    (the 16-tables-0x53770 overlap is the place to look).
+CLOSES: PR-502's OPENS "WHAT 0x513a0 DOES when it creates
+  the manager": it does not specialize it - the light
+  manager is one of six base-built startup singletons; the
+  light-specific machinery is the container tables
+  0x9b4b4/0x9b4bc and the owning-array protocol.
+CORRECTS: none. (PR-502's "embedded root 0x9b4b4" stands;
+  0x9b4bc is the same class's verb-head table installed on
+  other code paths, added here.)
+MEASURED: (a) 0x513a0 body verbatim (pr503_mgr.txt), the
+  six singleton stores 0x51532-0x51595. (b) 0x44372/0x44350
+  generic-ctor body (alloc via [mgr+0x398] verb +0x4).
+  (c) 0x2d8a0/0x2d8f0 verbatim (pr503_lightbase.txt). (d)
+  RAW SCAN: 0x9b4bc occurs only at 0x2d90e/0x2d93b/0x2d9a6
+  (all code immediates). (e) DIRECT-LOAD census of ds:
+  0xcf050 = 3 sites, no nearby indirect calls. (f) THE
+  PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The light system's shape for the port is now exact:
+  one base-built global singleton, and per-attached-object
+  owning arrays whose elements are constructed elsewhere -
+  no special manager class exists to model.
