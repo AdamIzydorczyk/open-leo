@@ -7550,6 +7550,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     255 sites - first-class tables, not data templates.
     Cross-join of the three sets and the pair semantics
     remain open.]
+    [PR-500 CROSS-JOINS THE DETECTORS (MILESTONE): sets are
+    mtable 158, signature 52, intersection 37, evidence-
+    backed union 173 class tables. Pair scan of the 158:
+    only 37 carry 0x23ea0/0x23e00 at +4/+8, 49 anywhere in
+    80 slots, 109 none - the pair is a CLASS DIALECT, not
+    universal (corrects PR-499). All 15 new tables attributed
+    from journal word-pairs: 0x96c38 PALMA, 0x96d1c
+    KATAPULT (PR-303 names them), 0x9dbfc/0x9e294 TRASA/
+    KTRASA/BERLO, 0xa1f90 TRASA, 0xa2054 TRASA2; 0x98278 is
+    the engine-wide stub/placeholder CLASS installed by 92
+    functions (base-ctor chain, root verbs, tier-1 factory,
+    per-level families) - closes the 0x98274/0x98278 item.
+    Six new tables still lack direct names (installer pairs
+    0x2ba90/0x2ca80, 0x34c20/0x35200, 0x3a250/0x3a4a0,
+    0x3f560/0x3f5a0, 0x45620) - word-pair reads open;
+    pr500_join.txt, pr500_pairs.txt.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

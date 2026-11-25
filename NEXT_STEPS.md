@@ -65935,3 +65935,92 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   placeholder-pair convention (every class table carries the
   0x23ea0/0x23e00 pair unless it overrides those slots).
 
+
+## PR-500 - MILESTONE CROSS-JOIN OF THE THREE CLASS-TABLE
+## DETECTORS: 15 NEW TABLES ALL NAMED, AND THE PAIR IS A
+## CONVENTION OF ONE HALF THE POPULATION, NOT UNIVERSAL
+
+```
+KIND: read
+SUBSYSTEM: cross-join of the PR-499 detectors over the
+  whole class population (pr500_join.txt, pr500_pairs.txt).
+  Sets: mtable src='ctor' = 158; placeholder-pair signature
+  ([t+4]=0x23ea0 and [t+8]=0x23e00) = 52; intersection =
+  37; union of the two evidence-backed sets = 173 class
+  tables. Pair distribution across the 158: exactly 37 at
+  +4/+8, 49 anywhere in the first 80 slots, 109 with NO pair
+  at all - so the pair marks a CLASS DIALECT (roughly a
+  third of the population, the one the signature finds),
+  not a universal convention; the other dialects are what
+  the ctor-store detector finds. Every one of the 15 new
+  tables is now NAME-ATTRIBUTED from existing journal word-
+  pair evidence (PR-303's full class-name record plus the
+  PR-493 per-arm scan in pr493_miss_full.txt): 0x96c38 =
+  PALMA, 0x96d1c = KATAPULT (PR-303 names those tables at
+  0x96c38/0x96d1c directly); 0x9dbfc/0x9e294 = TRASA/KTRASA/
+  BERLO arms (pr493_miss_full.txt lists those exact pairs);
+  0xa1f90 = TRASA, 0xa2054 = TRASA2; 0x98278 = the stub-
+  template class, installed by 92 distinct constructor and
+  verb functions spanning the WHOLE engine - the base-ctor
+  chain (0x52860/0x531f0/0x53ff0), root verbs (0x44fe0's
+  family 0x45070/0x45320/0x45400), the tier-1 factory and
+  settings loader (0x4df10/0x4ea10) and per-level ctor
+  families everywhere; it is the engine-wide placeholder
+  object class, not a level-specific table. The remaining
+  new tables' installers pair two ctor families each (the
+  0x1f870/0x202d0, 0x2ba90/0x2ca80, 0x34c20/0x35200,
+  0x3a250/0x3a4a0, 0x3f560/0x3f5a0 pairs) - same two-arms-
+  per-cluster shape PR-492 documented; direct names for
+  those six await word-pair reads. This record is the
+  PR-500 milestone: since PR-477, 24 records of factory,
+  settings, plan-script and class-model reading, no port
+  code changed since PR-441, and the class-model open item
+  (the census above 158) now has an enumerated answer with
+  named tables instead of a count gap.
+ADDRESSES: 0x96c38, 0x96d1c, 0x9dbfc, 0x9e294, 0xa1f90,
+  0xa2054, 0x98278, 0x98274, 0x23ea0, 0x23e00, 0x4df10,
+  0x4ea10, 0x1f870, 0x202d0, 0x2ba90, 0x2ca80, 0x34c20,
+  0x35200, 0x3a250, 0x3a4a0, 0x3f560, 0x3f5a0, 0x52860,
+  0x531f0, 0x53ff0, docs/OPEN_ITEMS.md
+NAMES: detector cross-join, class dialect, word-pair
+  attribution, stub-template class, engine-wide placeholder,
+  pr500_join.txt, pr500_pairs.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WORD-PAIR NAMES for the six remaining new tables
+    (0x9aa60/0x9ab18/0x9abd4/0x9b324, 0x9d6e0, 0x9f7b4,
+    0xa0780, 0xa0cb4 installer pairs); WHY two ctor families
+    per cluster install the same table pair (PR-492's chain
+    vs per-level specialization); the 0x23ea0/[+4]=ebx pair
+    holder semantics; and the PR-498/PR-499 carry-overs
+    (0x97f50 owner, the 0x45xxx live verbs, three plan
+    strings' stages, non-plan 0x57dd0 probes 0x2e/0x3a/0x7c).
+CLOSES: the PR-492/PR-499 census-above-158 line of work:
+    173-table union enumerated, 15 new tables listed with
+    installer sites, 6 of them named outright via existing
+    evidence. Also closes "what 0x98274/0x98278 are": the
+    engine-wide stub/placeholder object class (0x98278 =
+    class table installed by 92 functions).
+CORRECTS: PR-499's "the near-universal class-table pair":
+    the placeholder pair sits in only 49 of 158 mtable rows
+    (37 at +4/+8) - it is a dialect marker, and the 15 new
+    signature hits are that dialect's tail, not the general
+    census gap.
+MEASURED: (a) pr500_join.txt: set sizes 158/52, intersection
+    37, union 173, installer function lists for all 15.
+    (b) pr500_pairs.txt: pair scan of all 158 rows (37/49/
+    109). (c) 0x98278 installed by 92 distinct functions
+    (list in pr500_join.txt). (d) Name attributions quote
+    PR-303's record and pr493_miss_full.txt lines 169-183,
+    275, 278 verbatim. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port's class registry can be built from the 173-
+  table union; the two detector dialects tell the port which
+  tables to expect near ctor stores and which near the
+  placeholder pair; and every settings/placeholder behavior
+  now traces to the 0x98278 stub class rather than to a
+  mystery data template.
+
