@@ -7650,6 +7650,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x98274. Runtime append STILL unfound; the +0xb9
     getters in SOUNDSOURCE families 0x3f1c0/0x3f390 and
     renderer [r+0x140]/[r+0xc8] meanings: open.]
+    [PR-507 RESOLVES BOTH OPEN HOOKS: r=[mgr+0x390] is the
+    PR-303 CAMERA, and 0x57500/0x57530 are its world->tile
+    transforms (cam[+0x10/+0x14] * plane table / dims
+    modulus, y adds cam[+0x28+plane*4]); [r+0xc8]/[r+0x140]
+    are camera offset/extent sub-blocks - light draw is
+    camera math, no private light renderer. And 0x44350 is
+    NOT a type factory: [mgr+0x398] is the PR-255 frame-
+    record POOL (built at level ctor 0x4c8a0: 0x1a-byte
+    container via 0x43fb0, block 0xa0bd0, 0x1e-byte elems
+    via 0x43df0; stored 0x4c97c) - 0x44350 appends plain
+    base objects there, so the six cf05x singletons are
+    pool-allocated base objects. Old OPEN question 9 half
+    ("call index -> .des TYPE") CLOSED: no type mapping.
+    Camera +0xc8/+0x140 field map and the light append
+    verb: open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

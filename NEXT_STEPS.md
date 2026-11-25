@@ -66475,3 +66475,79 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   light rendering goes through the shared level renderer,
   not a private light drawing path.
 
+
+## PR-507 - THE LIGHT DRAW PATH USES THE KNOWN CAMERA'S
+## WORLD->TILE TRANSFORMS, AND THE GENERIC CTOR 0x44350
+## ALLOCATES FROM THE FRAME-RECORD POOL AT [mgr+0x398]
+
+```
+KIND: read
+SUBSYSTEM: PR-506's OPENS "what [r+0x140]/[r+0xc8] are".
+  r = [mgr+0x390] is THE CAMERA - settled in PR-303's
+  camera note (scroll fields [0x10]/[0x14], dims moduli
+  [0x34]-[0x40]). The helpers the light draw verb 0x2b6c0
+  calls are the camera's own coordinate transforms:
+  0x57500(eax=camera, edx=plane) = `cam[+0x10] *
+  plane_tbl[edx*4] / cam[+0x20 + dims*4]` and 0x57530 the
+  y-form, additionally adding cam[+0x28 + plane*4] (a
+  per-plane screen offset). So `lea edx,[r+0x140]` and
+  `lea esi,[r+0xc8]` pass the addresses of two camera
+  sub-blocks (world-extent and offset tables) alongside the
+  tile indices - world->screen for light drawing goes
+  THROUGH THE CAMERA, exactly as object drawing does. The
+  transforms are a shared pair: 25 + 22 call sites in the
+  same 16 functions (0x2b6c0/0x2b860 light draws included).
+  SECOND FINDING closes a decades-old journal question:
+  0x44350 "the factory a startup routine calls" (journal
+  line 4637, "which call index yields which .des TYPE") -
+  its body (PR-503) calls [mgr+0x398] verb +0x4, and
+  [mgr+0x398] is the frame-record POOL container built at
+  level-ctor time by the frame-loop/settings function
+  0x4c8a0: `mov eax,0x1a; call 0x5c320; call 0x43fb0` ->
+  stored at 0x4c97c. 0x43fb0 is the PR-255 element factory
+  installing the PR-255 method block 0xa0bd0 and appending
+  a 0x1e-byte element (0x43df0) - so 0x44350 does not pick
+  any .des TYPE: it constructs a PLAIN base object and
+  appends it to the frame-record pool. The six startup
+  singletons (PR-503) and everything else built by 0x44350
+  (134 sites, 16 factory functions) are pool-allocated base
+  objects; level-ctor 0x4c8a0 also zeroes the camera's
+  fields as it builds it.
+ADDRESSES: 0x390, 0x398, 0x57500, 0x57530, 0x2b6c0,
+  0x2b860, 0x140, 0xc8, 0x10, 0x14, 0x20, 0x24, 0x28,
+  0x4c8a0, 0x4c8c1, 0x4c97c, 0x43fb0, 0xa0bd0, 0x43df0,
+  0x44350, 0x5c320, docs/OPEN_ITEMS.md
+NAMES: world-to-tile transforms, camera sub-blocks,
+  frame-record pool allocation, plain-base-object factory,
+  pool-allocated singletons, pr507_renderer.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE CAMERA SUB-BLOCK MAP at +0xc8 (offset tables?)
+    and +0x140 (extent tables?) - the field census so far
+    only knows +0x10..+0x44; WHO CONSUMES the 6 pool-
+    allocated cf05x singletons' other verbs; and the
+    runtime light append verb (still the one open piece of
+    the light model).
+CLOSES: PR-506's OPENS "what [r+0x140]/[r+0xc8] are"
+  (camera sub-blocks, not renderer endpoints) and the
+  journal's OPEN question 9 half "which 0x44350 call index
+  yields which .des TYPE": none - 0x44350 builds base
+  objects in the frame-record pool.
+CORRECTS: none. (PR-503 called [mgr+0x398] "the level
+  manager" generically; it is the frame-record pool
+  container of PR-255 - the alloc mechanism is unchanged.)
+MEASURED: (a) 0x57500/0x57530 bodies verbatim
+  (pr507_renderer.txt) incl. the idiv-modulus form. (b)
+  call-site join: identical 16-function user set for both.
+  (c) 0x4c8a0 0x4c8c1-0x4c97c verbatim (pool then camera).
+  (d) 0x43fb0 body + 0xa0bd0 single-installer census. (e)
+  THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. Two port-relevant laws: light drawing is camera
+  math, so no separate light renderer belongs in the port;
+  and 0x44350 is not a type factory - any "des TYPE from
+  call index" model of startup singletons is wrong.
+
