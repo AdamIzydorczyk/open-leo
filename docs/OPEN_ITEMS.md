@@ -6533,6 +6533,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     census cannot state a negative. Open: the honest dis-scan
     over all 24 bits, the input-turn vs authored-turn race, and
     the [obj+0x6d]=p->face identity check.]
+    [PR-445 RUNS THE CENSUS: the row instantiation copies the
+    parsed control dword into the row object (0x5181a/0x5181d,
+    table 0xa260c two instructions later), so row+0x12 IS the
+    state's control word. Consumers found: the mode field & 0x7
+    selects the row-clock feeds at 0x543a2 (abs of +0xca/+0xce
+    into [obj+0xa1]); the +0xac default 0x546a0 runs the
+    0x4b600/0x4b430 registry queries into the flag vector ONLY
+    when the row has CHECK_BASE_LN (bit 14, test ah,0x40 at
+    0x546c5); the +0xa8 default 0x54860 turns vy>0 into
+    idiv(-2*vy,3) when the row has SOLID AND INV_V - and the
+    corpus uses INV_V on exactly the three ZARIA KAMIEN stone
+    texts; object method +0x44 (0x23920) returns the current
+    row's control word, and 0x51019 tests DANGER on it; 0x53e40
+    returns the frame sign from FRAME_REV + [obj+0x6d]==-1.
+    CHECK_LN's bit 8 has NO consumer found - the only unbound
+    bit. Fixes two PR-410 sentences: bit 0x8000 IS set, by
+    CHECK_ALL_PLANE (0x51d2b), and FRAME_REV IS tested, at
+    0x53e86 (register form in a drifted region). Open: the
+    0x4b600/0x4b430 bodies, the +0xa8 arg-record chain, whether
+    to model the bounce (3 states, no leg touches them), and
+    the dis-scan that could settle CHECK_LN.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

@@ -61127,3 +61127,126 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   bit", and the corrected wording tells the next reader where
   the truth was actually established.
 
+
+## PR-445 - THE CONTROL WORD HAS CONSUMERS: THE MODE FIELD FEEDS THE
+## ROW CLOCK, CHECK_BASE_LN OPENS THE SCENE QUERIES, SOLID+INV_V
+## BOUNCE vy AT -2*vy/3, DANGER AND FRAME_REV ARE READ, AND CHECK_LN
+## IS THE ONE BIT NOBODY TURNS OUT TO TEST
+
+```
+KIND: read
+SUBSYSTEM: every read-back of the PR-410 control word: the row
+  instantiation that copies it into the row object, the row-clock
+  mode switch 0x543a2, the +0xac default 0x546a0 (CHECK_BASE_LN
+  gating the 0x4b600/0x4b430 registry queries into the flag
+  vector), the +0xa8 default 0x54860 (the SOLID+INV_V bounce of
+  [obj+0xc6]), the current-row control getter at object slot
+  +0x44 (0x23920) with its DANGER-test caller 0x51016, and the
+  frame-sign helper 0x53e40 - the honest census PR-444 asked for
+ADDRESSES: 0x5181a, 0x5181d, 0x51851, 0x517c2, 0xa260c, 0x5439f,
+  0x543a6, 0x543af, 0x543b2, 0x543be, 0x543c6, 0x543dc, 0x5443f,
+  0xa1, 0xca, 0xce, 0x546a0, 0x546c2, 0x546c5, 0x4b600, 0x4b430,
+  0x49580, 0xcef40, 0x54860, 0x54873, 0x54876, 0x5489a, 0x548ae,
+  0x548b4, 0x23920, 0x968b8, 0x50fe0, 0x51016, 0x51019, 0x55130,
+  0x53e40, 0x53e80, 0x53e86, 0x53e8c, 0x527b3, 0x527db, 0x52805,
+  0x51d2b, 0x52790, 0x12, 0x13, 0x14, 0x44, 0x5c, 0xa260c
+NAMES: control consumer census, row-clock switch, CHECK_BASE_LN
+  gate, INV_V bounce, current-row control getter, DANGER test,
+  frame-sign helper, pr445_ctrlbits.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: CHECK_LN'S CONSUMER - bit 8 is written by the parser and
+    named by the port as the keep-ground rule, but NO test of it
+    was found in the image, and the port's keep-ground law came
+    from behavior (PR-69/72), not from a bit test: the honest
+    form of THAT negative is a dis-scan, not the ops query, and
+    the named search is open; the BODIES of 0x4b600/0x4b430 (the
+    gate is now named, the queries are not); the record argument
+    of +0xa8 - who calls the method and fills the [ecx]/[ecx+2]
+    flag bytes (the contact-query chain of PR-338 is the
+    candidate); whether the port should model the INV_V bounce -
+    three authored states use it, all three are the ZARIA KAMIEN
+    stones, and none of them is under a current leg; frame node
+    +0x14 (the frame-reverse field the 0x53e40 helper reads);
+    and the class behind the DANGER consumer 0x50fe0 (the
+    0x502f0 family - same family as the input feed, still
+    unnamed after PR-442).
+CLOSES: PR-444's OPENS "THE HONEST CENSUS OF THE 24 BITS" for
+  every bit EXCEPT CHECK_LN's bit 8: the mode field (& 0x7) is
+  consumed by 0x543a2's switch (the PR-109/147 row-clock feeds,
+  now with its selector pinned); SEQ_REV_X/Y by 0x52158/0x52171/
+  0x52385/0x523a0 (PR-410); CHECK_ANI/CHECK_ZW/CHECK_LEW by the
+  mover at 0x527db/0x52805/0x527b3 (PR-60's reading re-verified
+  against the bit table); FRAME_REV by 0x53e86; SOLID+INV_V by
+  0x54876/0x5489a; CH_DIR by 0x5367e (PR-444); DANGER by
+  0x51019. PR-410's first OPENS item: "WHICH KEYWORD SETS THE
+  BIT [rec+0x12] & 0x8000 ... no keyword in this table writes
+  bit 15 of [rec+0x12], and SOLID2 / SEMI_SOLID do not either,
+  so it is set somewhere other than the control= parser" - the
+  first clause is CHECK_ALL_PLANE itself, ORed as [rec+0x13]
+  byte-bit 0x80 at 0x51d2b, exactly the bit 0x52790 passes on.
+  It also grounds what PR-443/444 assumed: 0x5181a/0x5181d copy
+  the parsed control dword into the row object as it is
+  instantiated (table 0xa260c at +0x44 two instructions later),
+  so "the CURRENT row's [row+0x12]" is the state's own control
+  word, and the getter at object slot +0x44 (0x23920) walks the
+  cursor to the same answer.
+CORRECTS: PR-410's OPENS sentence "NOTHING AT ALL tests
+  FRAME_REV's 0x08" a second, independent way: 0x53e40 loads the
+  word (`mov ebx,DWORD PTR [ebx+0x12]`, 0x53e80) and masks
+  0x8 (`and ebx,0x8`, 0x53e86), gated with `[obj+0x6d] == -1`,
+  and that whole region decodes mid-instruction in the index.
+  The remaining half of PR-410's negative - "CHECK_LN ... must
+  be read through whole-word compares or through some other copy
+  of the record" - is untouched by this census; it stands as an
+  OPEN with the stronger method named.
+MEASURED: (a) THE ROW-CLOCK SWITCH. 0x543a2: edx = current row
+  through the cursor; `and eax,0x7` on its word; `cmp eax,4 / ja
+  default`; jump table at 0x54380; arms 0x543c6 and 0x543dc add
+  abs([obj+0xca]) / abs([obj+0xce]) to [obj+0xa1] (the xor/cdq/
+  sub absolute-value idiom) - the modes' step-word feeds, the
+  PR-147/148 model's source, with the default arm for the two
+  non-mode values and for anything above 4. (b) THE SCENE-QUERY
+  GATE. +0xac default 0x546a0: bails when [obj+0xb6] bit 2;
+  otherwise tests the CURRENT ROW word `test ah,0x40` = bit 14 =
+  CHECK_BASE_LN (0x546c5) and only then runs the ds:[0xcef40]
+  registry queries 0x4b600 (and at 0x546e7 the second buffer
+  arm) merging through 0x49580 - an authored bit deciding what
+  joins the flag vector, exactly the pipeline of PR-438/442.
+  (c) THE BOUNCE. +0xa8 default 0x54860: unless arg byte [ecx+
+  2] bit 4, if [obj+0xc6] > 0 AND [ecx] bit 0x10 AND the row
+  has SOLID (`test ah,0x4`, 0x54876) AND INV_V (`test dh,0x10`,
+  0x5489a): [obj+0xc6] = idiv(-2*[obj+0xc6], 3) (0x5489f-
+  0x548b4) - a third-energy rebound; with SOLID but not INV_V,
+  vy is zeroed (0x548b2). INV_V in the corpus is EXACTLY the
+  three ZARIA KAMIEN stone texts - stones that bounce. (d) THE
+  DANGER READ. 0x23920 is an object method (table dword at
+  0x968b8, slot +0x44 of the player-family table) that returns
+  the CURRENT ROW's control word; 0x51016 calls virtual +0x44
+  and 0x51019 tests `test ah,0x20` = bit 13 = DANGER - the
+  charge-then-walk keyword (386 lines in 195 files) has a
+  consumer in the input-class family. (e) FRAME SIGN. 0x53e40
+  returns -1 when a frame node's +0x14 is set, or when the row
+  has FRAME_REV and [obj+0x6d] == -1; else +1 - the row-level
+  half of the frame-mirror the SEQ_REV pair (PR-410) selects at
+  the sequence level. (f) THE PORT. The mode switch is already
+  the port's row clock (PR-109/147/148 feed law); the DANGER
+  keyword is parsed into ctrl_other and unmodelled, matching the
+  port's rule for unmodelled names; the keep-ground behavior
+  runs on CHECK_LN's NAME without needing its consumer; the
+  bounce and the BASE_LN query gate are new behavior, unused by
+  any current leg, named at OPENS rather than guessed in.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The control= table had been read twice (PR-59, PR-410)
+  but only ever from the parser's side; this is the consumer
+  side, and it is where the table becomes behavior: which bit
+  feeds the row clock, which bit lets a scene query vote into
+  the flag vector, which pair makes a stone bounce, and which
+  bit no one reads at all (CHECK_LN - the port has carried its
+  BEHAVIOR for 400 PRs without its consumer ever mattering, and
+  this row says that is not an accident). The two PR-410
+  negatives that were too strong are fixed where they were said.
+
