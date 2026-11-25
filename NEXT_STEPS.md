@@ -64806,3 +64806,95 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   including the LINA class the journal had carried as unknown
   since PR-191.
 
+
+## PR-487 - THE "HIT RECORD" [mgr+0x38c] IS THE BELT/HUD
+## SETTINGS OBJECT: 0x8c BYTES, CTOR 0x443b0, BUILT FROM THE
+## LEVEL TEXT KEYS "tools = %s " AND " crown = %s "
+
+```
+KIND: read
+SUBSYSTEM: the object stored at [level+0x38c] (the field
+  PR-483/PR-484 called the "hit record slot"): built at level
+  start by 0x4c8a0 (0x4d60d allocates 0x8c bytes via 0x5c320,
+  0x443b0 constructs), read by twelve method families
+  (`mov eax,[eax+0x38c]` at 0x1e16d, 0x27499, 0x33025, 0x33ecd,
+  0x365a9, 0x39e7e, 0x3bad4, 0x3d31e, 0x50795, 0x50e6a,
+  0x4b051...) and destroyed by the level cleanup through the
+  verb +0x4 edx=2 pair (PR-484); its constructor's literal
+  strings are " tools = %s " (0x917d2) and " crown = %s "
+  (0x917e3) with the word "off" (0x917df) - the same two keys
+  the port's level parser already reads (ported/ll_level.c:8867)
+ADDRESSES: 0x443b0, 0x44451, 0x44453, 0x4447b, 0x4449f,
+  0x444c2, 0x444dc, 0x444e5, 0x444fc, 0x44542, 0x44562,
+  0x44579, 0x4459c, 0x445a0, 0x445b8, 0x445d7, 0x445ef,
+  0x44370, 0x448c0, 0x449bf, 0x449d0, 0x44a10, 0x44a40,
+  0x449d8, 0x44a18, 0x4a0b0, 0x49950, 0x49820, 0x57d30,
+  0x76d20, 0x4c8a0, 0x4a65f, 0x4d5d6, 0x4d5e3, 0x4d5f2,
+  0x4d603, 0x4d60d, 0x4d625, 0x4d62e, 0x4d638, 0x57dd0,
+  0x4af10, 0x4b051, 0x4b061, 0xa0c5c, 0xa0c34, 0xa0c48,
+  0x917d2, 0x917df, 0x917e3, 0x917f0, 0x917f3, 0x91f09,
+  0x961fc, 0x38c, 0x50, 0x54, 0x58, 0x5c, 0x60, 0x64, 0x70,
+  0x74, 0x78, 0x7c, 0x80, 0x84, 0x88, 0x8c, 0x44, 0x48,
+  0x100, 0x1b, 0x64
+NAMES: belt settings object, tools flag, crown flag, item
+  frame divisor, belt array builder, settings key lookup,
+  pr487_hitrec.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE FIVE BELT ARRAYS the ctor builds at +0x70..+0x88
+    (0x44370 + 0x4a0b0 over the embedded heads at +0x4..+0x4c) -
+    which entries go into which of the five, since only the +0x74
+    one is linked to the 0x1b attach (PR-347); the other string
+    read at 0x44558 (push 0x917f3 into the 0x64-divisor
+    sprintf-style call 0x49950) - its text is unfetched; THE
+    ANCHOR'S OWN COPIES of +0x64..+0x88 (PR-347: zeroed at
+    0x4a613-0x4a64f) - do they ever get filled, or is the
+    manager's block the only live one; the sub-block descriptors
+    0xa0c34/0xa0c48 the dtors 0x449d0/0x44a10 delete; and the
+    keyboard handler 0x4af10's letter cases 0x41/0x42/0x4c/0x54
+    around the 0x448c0 call.
+CLOSES: PR-347's "what is left: whether the builder carries the
+  vtable 0xa0c5c ... and what a tool entry's method table is"
+  (the second half): the record-parsed belt family is not just
+  a field pattern - it is a real 0x8c-byte object installed at
+  [level+0x38c] by 0x4c8a0, which looks the keys up through
+  0x57dd0 and 0x4a910, so the family IS filled at level start.
+  It retracts the "hit record" name PR-483/PR-484 used for
+  [mgr+0x38c]: the object's ctor parses exactly the two HUD
+  keys the port documented (tools/crown), sets booleans at
+  +0x50 (tools) and +0x54 (crown), computes 0x64/(n-1) into
+  +0x70 (the item-count digit spacing), and builds the belt
+  arrays at +0x74/+0x7c always and +0x78/+0x80 only when the
+  tools key is on (0x445c3 branches on [esi+0x50]). It also
+  gives the frame-side consumer: the keyboard/belt method
+  0x4af10 loads [esi+0x38c] at 0x4b051 and calls its method
+  0x448c0 - the same leg family PR-476 measured.
+CORRECTS: PR-483's and PR-484's "hit record slot [mgr+0x38c]":
+  [mgr+0x38c] is the belt/HUD settings object (belt record of
+  PR-67, family of PR-347), not a hit record; the cleanup's
+  [[obj]+0x4] edx=2 call on it is the belt object's delete.
+MEASURED: (a) THE BUILD, verbatim 0x4d60d-0x4d638: `mov eax,
+  0x8c; call 0x5c320; ...; call 0x4a910 (eax=level, edx=
+  [ebp+0x42]); mov edx,eax; call 0x443b0; mov [esi+0x38c],eax`
+  behind 0x57dd0 key probes (0x4d5e3: skip the whole build when
+  the key at 0x91f0b is absent). (b) THE CTOR: 0x4447b
+  `ecx=0x400; call 0x49820`, then 0x57d30 with the "tools"/
+  "crown" pair descriptors (0x961fc) and strcmp against "off"
+  (0x444cb), then the array builders 0x4a0b0/0x44370 over the
+  seven embedded {0, table-8, 0} pairs the prologue wrote
+  (0x443be-0x4444f). (c) THE TABLE: [obj+0x0]=0xa0c5c installed
+  at exactly two code sites (0x44453 ctor, 0x449bf a second
+  zeroer), table = {0x44a40, 0x449d0, tag 0xa0c64}. (d) THE
+  CENSUS: 15 code sites read +0x38c (list in SUBSYSTEM; three
+  in 0x5e410 are stack `lea`, excluded). (e) THE PORT.
+  Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port refuses to model the inventory and the crown
+  and reads the two keys in level files; this is the engine
+  object those keys build, and the arrays at +0x74..+0x88 are
+  where the tool entries - the thing the 0x1b attach path
+  scores against (PR-347) - actually live.
+

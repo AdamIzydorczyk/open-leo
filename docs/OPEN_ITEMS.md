@@ -7326,6 +7326,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     0xa1bfc DNGANI, 0x97f50 LINA (PR-191's unknown class),
     0xa1a08 BERLO. Three of PR-477's unnamed tables resolve.
     PR-480's "only two names read" is now complete.]
+    [PR-487 IDENTIFIES THE OBJECT AT [mgr+0x38c] - it is the
+    belt/HUD settings object, not a "hit record" (PR-483/484's
+    name, corrected). 0x8c bytes: 0x4c8a0 allocates and
+    constructs it at level start via 0x443b0 behind a 0x57dd0
+    key probe; the ctor parses " tools = %s " (0x917d2) and "
+    crown = %s " (0x917e3), "off" = 0x917df, setting the
+    booleans +0x50 (tools) and +0x54 (crown), computing the
+    digit spacing 0x64/(n-1) at +0x70, and building the belt
+    arrays at +0x74/+0x7c always and +0x78/+0x80 only when
+    tools is on; table 0xa0c5c installed at 0x44453/0x449bf.
+    Twelve method families read [X+0x38c]; the belt/keyboard
+    method 0x4af10 calls its 0x448c0 (PR-476's leg family); the
+    level cleanup deletes it via [[obj]+0x4] edx=2. This closes
+    PR-347's "is the belt family ever filled" half: the live
+    copy is the manager's block at +0x38c.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
