@@ -8285,3 +8285,22 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
      loop's second path (pr398_direct.py), so the fields these elements
      start with come from the class constructor alone and the two paths can
      be modelled as one.
+    PR-513 CLOSES THIS ROW'S OPEN HALF FROM THE DATA SIDE.
+    The engine string table authors the directives
+    'ground_on' 0x9181b / 'ground_off' 0x91827 (PR-353/354
+    compiled their clause nodes 0xa10d8/0xa10a8). A
+    recursive LLRS walk of both containers (28 blocks, 274
+    sub-blocks, 777 .MOV members) finds NEITHER WORD ONCE;
+    controls in the same scan: 'lock' 56 scripts, 'goto'
+    43, 'pos' 4 lines in 3 files. So the 0x54f40/0x54f90
+    ground runners CAN NEVER FIRE on shipped data - the
+    port's unmodelled ground_on count is faithful, and no
+    [view+0x48] element chain is required. With PR-390's
+    position half (aim-pair only, no live snap) OI-129 is
+    answered whole: no wiring, no contradiction. New census
+    fact (corrects PR-310's wording): 'pos' occurs in FOUR
+    lines - ZARIA.01's pos 1020,692 pair AND RAN.01
+    LEW.MOV A_DEAD1's POS 220,140/POS 200,140. Left:
+    why the directive exists at all (low), and the 56-file
+    lock/lock2 port legs - the real standing-transition
+    work now.

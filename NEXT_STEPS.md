@@ -66908,3 +66908,76 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   handle - and the '#' ejection can be left unimplemented
   for shipped levels without losing fidelity.
 
+
+## PR-513 - NO SHIPPED SCRIPT SAYS ground_on: THE 777-.MOV
+## CENSUS FINDS ZERO, AND THE AUTHORED DIRECTIVE TABLE'S
+## GROUND ARMS ARE GRAMMAR-ONLY
+
+```
+KIND: read
+SUBSYSTEM: OI-129/PR-390's OPENS "whether any shipped level
+  reaches the 0x54f40 ground_on runner". The engine string
+  table holds the directive words 'ground_on' (0x9181b) and
+  'ground_off' (0x91827) next to the ones the port already
+  runs; PR-353/354 showed their builders compile the clause
+  nodes 0xa10d8/0xa10a8. A full-tree scan of BOTH
+  containers through the LLRS free-table (28 top blocks,
+  274 sub-blocks, 777 .MOV members, all payloads in the
+  fixture ANIMACJE/ETAPY files) finds NEITHER WORD ONCE -
+  the token never occurs in any authored script (case-
+  insensitive, whole-payload). The same scan cross-checked
+  live tokens: 'lock' occurs in 56 scripts (PR-321's
+  modelled directive), 'goto' in 43, and 'pos' in 4 lines
+  of 3 scripts. CONSEQUENCE FOR OI-129: the contradiction
+  is fully dissolved - the ~31 px .SEQ anchor step is the
+  AIM-SAMPLING pair (PR-363/390: (88,681)/(88,650) while
+  grounded), the ground_on/ground_off runners can never
+  fire (no data names them), and the port's unmodelled
+  ground_on count is therefore FAITHFUL for shipped levels;
+  no per-object [view+0x48] element chain is needed. What
+  remains of the standing-transition work is the `lock`
+  family, which IS authored 56 times. DATA-CENSUS NOTE:
+  'pos' appears in FOUR authored lines across 3 files:
+  ZARIA.01/LEW.ZAR/LEWPL.MOV and LEW.MOV (`pos 1020,692`,
+  PR-310's exit rows) and RAN.01/LEW.RAN/LEW.MOV twice
+  (`POS 220,140`, `POS 200,140` in A_DEAD1 rows).
+ADDRESSES: 0x9181b, 0x91827, 0xa10d8, 0xa10a8, 0x54f40,
+  0x54f90, docs/OPEN_ITEMS.md
+NAMES: shipped-negative ground_on, 777-member census, LLRS
+  free-table walk, aim-sampling pair, authored directive
+  table, pr513_groundon.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHY THE ENGINE SHIPS THE ground_on DIRECTIVE AND
+    compiles its clause nodes if no authored file uses it
+    (internal default? later-game tooling?) - low priority;
+    and the 56-script `lock` family's remaining port legs
+    (the lock2/unlock2 PAIR specifically: counted in which
+    of those files, and the port's model there).
+CLOSES: PR-390's OPENS (no shipped level reaches the
+  ground_on runner - it cannot: the token is never
+  authored); OI-129's measurement is now answered on BOTH
+  halves (PR-390 position half + this data half): no
+  position snap, no ground_on, port stands as-is.
+CORRECTS: PR-310's "whose rows carry the only two `pos`
+  directives in the shipped set" - the token appears in
+  four lines of three scripts (RAN.01's A_DEAD1 rows are
+  the other two). ZARIA.01's exit rows stay the only
+  LOWER-CASE `pos 1020,692` pair; the claim was scoped to
+  that pair's lines and still miscounts the token.
+MEASURED: (a) LLRS recursive walk of both containers:
+  28/274/777 counts, zero 'ground' substrings anywhere in
+  .MOV payloads (pr513_groundon.txt). (b) Token controls in
+  the same walk: lock 56, goto 43, pos 4-in-3. (c) Engine
+  strings 0x9181b/0x91827 verbatim from the str table.
+  (d) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The whole "wire the land/leave pair" branch of the
+  ZARIA.01 plan is CLOSED as un-needed: shipped data never
+  asks for it. The exit-chain work can go straight to the
+  `lock` semantics and the chasm carrier - the two things
+  the level actually uses.
+
