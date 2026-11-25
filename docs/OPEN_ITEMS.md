@@ -6188,6 +6188,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     indexes the descriptor base 0x961c4 at run time (index*8+4, then
     0x76a64/0x76bb7), so class entries are consulted at run time, not
     only compiled in.]
+    [PR-424 FINDS THE NAME-KEYED OBJECT FACTORY AND THE ETAPY
+    MANIFEST. 0x33370 compares a name through 0x76a69 and allocates:
+    GEN_RAN -> 0x68/0x32530, GPTAK_RA -> 0xf6/0x53ff0, PIOR_RAN ->
+    0x1bad/0x531f0, SEP_RAN -> 0x10e/0x53ff0, POCISK -> 0xf2/
+    0x3d8c0, BAL_RAN -> 0xa5/0x531f0 - so PR-423's 7085-byte class
+    IS the running-feather PIOR_RAN, and BAL_RAN's 0xa5 proves
+    0x531f0's prefix is a complete base class. The names are authored:
+    ETAPY (the llrs container in the repo root) carries text lines
+    `CLASS,dummy,<mov>.mov, x, y` plus parameter lines - 178
+    distinct leading names (ANIBACK x761, ZWIERZ x191, DNGANI x158,
+    POCISK x123, PIOR_RAN x52) and key lines sample= x95, number=
+    x76, name= x52, time x24. CORRECTS PR-419: `JumpCoef1000 = 40`
+    IS in shipped data (one YETI entry); narty_param still is not.
+    Refines PR-421: the engine branches on authored names too, not
+    only compiled variants. Nearby data adds the module default
+    `karade.mod` (used at 0x33c84 when [0xcf074] is zero).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

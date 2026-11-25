@@ -58992,3 +58992,104 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   0x52860 give the engine's real class depth: root 0x3c bytes, a
   0xa5-byte family prefix, then per-class bytes - the scene object
   0x28c and the state record 0x60 sit inside that scheme, and the
+
+## PR-424 - THE ENGINE HAS A NAME-KEYED OBJECT FACTORY, SIX CLASSES,
+## FED BY AUTHORED NAMES IN THE ETAPY CONTAINER - AND THE LARGEST CLASS
+## OF PR-423 IS THE PIOR_RAN OBJECT
+
+```
+KIND: read
+SUBSYSTEM: the factory at 0x33370 that turns an authored class name
+  into an allocated object, the ETAPY LLRS container whose text
+  members carry those names and the per-object parameter lines, the
+  default-module string karade.mod, and the census of ETAPY's
+  name vocabulary
+ADDRESSES: 0x33370, 0x33394, 0x333be, 0x333e4, 0x32530, 0x3d8c0,
+  0x53ff0, 0x531f0, 0x5c320, 0x76a69, 0x90fb5, 0x90fbd, 0x90fc6,
+  0x90fcf, 0x90fd7, 0x90fde, 0x90fe6, 0x90ff0, 0x91000, 0x91012,
+  0xcf068, 0xcf074, 0x33c84, 0x562e0, 0x52750, 0x068, 0x0f6, 0x10e,
+  0x0f2, 0x0a5, 0x1bad
+NAMES: name-keyed factory, ETAPY container, class vocabulary,
+  PIOR_RAN, POCISK, BAL_RAN, TLewRan, karade.mod, JumpCoef1000,
+  llrs manifest, pr424_factory.txt, OI-016, OI-091, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHERE THE FACTORY'S NAME STRING COMES FROM AT RUN TIME - its
+    single xref at 0x4e9bb sits in a misaligned region and the input
+    register has not been traced, though the ETAPY lines are the only
+    authored source of those six names in the shipped data; WHY ONLY
+    SIX NAMES ARE COMPILED INTO THIS FACTORY when ETAPY names 178 -
+    the other classes must be constructed by other code, and PR-415's
+    per-state +0x18 factory verb is the known second path; what the
+    middle token of every ETAPY line is - it is dummy or xxx in the
+    samples, so a slot, an owner or an unused field; and whether the
+    172 other names reach a different factory or the class-descriptor
+    mechanism of PR-423 directly.
+CLOSES: PR-423's OPENS item WHICH CLASS THE 0x1bad = 7085 BYTE OBJECT
+  IS: the factory maps PIOR_RAN to size 0x1bad through ctor 0x531f0 -
+  it is the running-feather obstacle class. It also closes PR-419's
+  OPENS item whether the scanner keys exist in shipped level data, and
+  part of PR-421's WHY THE SCENE-OBJECT FAMILY HAS EXACTLY TWELVE -
+  at least some authored variety enters through compiled name
+  branches, not only through variants.
+CORRECTS: PR-419's sentence that neither narty_param nor
+  JumpCoef1000 appears in unpacked shipped data: ETAPY, the LLRS
+  container in the repository root, carries `JumpCoef1000 = 40` once,
+  attached to a YETI entry, together with damage=, bounds=, scope=,
+  energy=, number=, name= and sample= lines - narty_param is still
+  absent everywhere. It also refines PR-421's closing contrast, that
+  the port branches on authored object names while the engine encodes
+  variety as compiled variants only: the engine does both - this
+  factory branches on names too.
+MEASURED: (a) THE FACTORY. 0x33370(name=eax): six comparisons through
+  the strcmp-style helper 0x76a69 against literals at 0x90fb5..,
+  each hit doing `mov eax,SIZE; call 0x5c320; call CTOR`:
+  GEN_RAN -> 0x68 ctor 0x32530; GPTAK_RA -> 0xf6 ctor 0x53ff0 with
+  table views 0x9d088/0x9d080; PIOR_RAN -> 0x1bad ctor 0x531f0;
+  SEP_RAN -> 0x10e ctor 0x53ff0; POCISK -> 0xf2 ctor 0x3d8c0;
+  BAL_RAN -> 0xa5 ctor 0x531f0 (TLewRan, compared last, has no
+  visible branch in this window). Its only xref is 0x4e9bb.
+  (pr424_factory)
+  (b) THE BASE PREFIX, INDEPENDENTLY. BAL_RAN's object is 0xa5 bytes
+  and its constructor is 0x531f0 alone - so 0x531f0's initialised
+  prefix is exactly a complete class, which is what PR-423's `derived
+  ctor continues at +0xa5` observation implied.
+  (c) ETAPY. The file starts `llrs\x01` - the container the port's
+  llrs.c reads. Inside it, text manifests list one object per line,
+  `CLASS,dummy,<movfile>.mov, x, y` followed by indented parameter
+  lines, e.g. `PIOR_RAN,dummy,piorun1.mov, 130, 0` with `number=6`
+  and `name=piorun`, and `YETI,dummy,yeti.mov,2100,170` with
+  `damage=22 bounds=2000,2350 scope=40 energy=300` then
+  `JumpCoef1000 = 40`. Census over the raw file: 178 distinct leading
+  names, top ANIBACK x761, ZWIERZ x191, DNGANI x158, POCISK x123,
+  BAL x52, PIOR_RAN x52; key lines: sample= x95, number= x76, name=
+  x52, time x24, JumpCoef1000 x1.
+  (d) THE MODULE DEFAULT. The data block right after the six factory
+  names holds `karade.mod`, ` frame = %d `, `A_DEAD`, `A_SQUAT`,
+  ` id = %d `, ` spawn = %d , %d `, ` bounds = %d , %d `; 0x33c84
+  calls 0x562e0 with eax = the BSS buffer 0xcf068 when [0xcf074] is
+  zero - the engine's fallback module file name.
+```
+
+- WHY. This row joins three things the journal had separately. The
+  scanner keys of PR-419 are manifest keys of the ETAPY container;
+  the class-name factory explains how authored names become engine
+  objects for at least six classes, so the port's name branching in
+  ll_level.c stands on the same design the engine itself uses; and
+  the 7085-byte mystery object of PR-422/423 has a name - PIOR_RAN,
+  the running feather. The 178-name census is also the sharpest
+  remaining statement of the port's task: those names, minus the six
+  here, are exactly what the other construction paths must cover, and
+  counting them gives a completion measure for the object model.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr424_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr424_factory.txt: the factory branch table read from
+  the instruction stream, plus the ETAPY name and key census and the
+  JumpCoef1000 context printed alongside it. 0x33370, 0x33c84 and the
+  six constructors were decoded from their entry addresses; the
+  0x4e9bb caller region is flagged misaligned in the record.
+```
