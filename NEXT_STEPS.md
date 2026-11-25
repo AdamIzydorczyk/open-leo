@@ -59379,3 +59379,94 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   goto are the verbs a faithful port needs; zero_v/zero_t/Wait are
   engine-only slack, exactly like the 9 unused built-ins of
   PR-426.
+
+## PR-428 - EVERY STATE-BODY COMMAND BECOMES AN OBJECT WITH A
+## FOUR-SLOT HANDLER RECORD: THE FULL VERB-TO-HANDLER TABLE, 37 PAIRS
+## IN THE TABLE FAMILY 0xa0f28-0xa11e0
+
+```
+KIND: read
+SUBSYSTEM: what the state-body executor of PR-427 actually builds and
+  runs - the per-verb strcmp chain inside 0x45df0, the command-record
+  table family each branch installs, the four handler slots and their
+  run stubs 0x46d70-0x47710, and the verb frequency cross-check
+ADDRESSES: 0x45df0, 0x45ec1, 0x45ed2, 0x45f05, 0x4640b, 0x4641b,
+  0x46739, 0x46749, 0x46bc0, 0x46bd0, 0x45770, 0x5c320, 0x76a69,
+  0xa0f28, 0xa0f40, 0xa0f58, 0xa0f70, 0xa0f88, 0xa0fa0, 0xa0fb8,
+  0xa0fd0, 0xa0fe8, 0xa1030, 0xa1048, 0xa1078, 0xa1090, 0xa10d8,
+  0xa10f0, 0xa1108, 0xa1120, 0xa1138, 0xa1150, 0xa1168, 0xa1198,
+  0xa11b0, 0xa11e0, 0x46d70, 0x46dd0, 0x46e30, 0x46e90, 0x46ef0,
+  0x46f50, 0x46fb0, 0x47010, 0x47070, 0x470d0, 0x47190, 0x471f0,
+  0x47260, 0x472e0, 0x47340, 0x473a0, 0x47400, 0x47460, 0x47580,
+  0x475f0, 0x476b0, 0x47710, 0x45800, 0x45870, 0x04
+NAMES: command record, handler record, run stub, argument handler,
+  verb table family, executor, pr428_verbtable.txt, OI-016, OI-091,
+  OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT EACH RUN STUB DOES - 24 stubs in 0x46d70..0x47710 are
+    now named by verb but none has been read; WHICH PAIRINGS IN THE
+    TABLE ARE GRAMMAR ALIASES AND WHICH ARE EXTRACTION ARTIFACTS -
+    zero_t/zero, vol_music/smp_loop, the lock/unlock/ground family
+    and goto/gotorel/goto_rel share records with the same run stub,
+    which may be genuine (one behaviour, parameter-selected) or the
+    nearest-install pairing heuristic; WHO DRAINS THE QUEUE of
+    command objects after state load; and how the AC_ items built at
+    0x46b09 with table 0xa11e0 are run relative to the verb objects.
+CLOSES: PR-427's OPENS item WHAT THE 12-BYTE INTERPRETER ITEM HOLDS:
+  the object is 0xc bytes with a 0x8-byte sibling allocation seen at
+  0x4641b-0x4643c: +0x4 = pointer to its 24-byte handler record, and
+  +0x8 = a pointer to that sibling; what the sibling holds is open.
+CORRECTS: PR-427's division "verbs are executed directly, unknown
+  names become items": both paths allocate items - the verb branches
+  at 0x45ed2/0x4641b/0x46749/0x46bd0 each do `mov eax,8/0xc; call
+  0x5c320`, call the shared initialiser 0x45770 and store a per-verb
+  handler record at +0x4; only the record differs, and the AC_ path
+  (0x46b09, table 0xa11e0) is the fallback, not the special case.
+MEASURED: (a) THE EXECUTOR CHAIN. Each command word captured by the
+  grammar block is compared through 0x76a69 inside 0x45df0 at
+  0x45ec1 (zero_v) .. 0x46bc0 (end_level) - 29 verb literals
+  compared there; on a hit the branch allocates the command object
+  (0x8 or 0xc bytes via 0x5c320), initialises it at 0x45770, and
+  stores `DWORD PTR [obj+0x4] = record`, record in
+  0xa0f28..0xa11e0 at a 0x18 stride. (pr428_verbtable)
+  (b) THE HANDLER RECORDS. Every record holds four code slots: a
+  verb run stub (0x46d70 rev, 0x46dd0 chdir, 0x46e30 ldir, 0x46e90
+  rdir, 0x46ef0 pos, 0x46f50 zero, 0x46fb0 zero_v, 0x47010
+  smp_unloop, 0x47070 smp_stop, 0x470d0 vol/smp_loop family,
+  0x47190 smp, 0x471f0 smp2, 0x47260 smp3, 0x472e0 smpauto,
+  0x47340 smpauto2, 0x473a0 smpprior, 0x47400 atc_on/off, 0x47460
+  lock family, 0x47580 I/F/IC/FC frame markers, 0x475f0 MOVE/M,
+  0x476b0 end_level, 0x47710 goto family), an argument handler
+  (0x457e0-0x45ce0), and the same two tail methods 0x45800 and
+  0x45870 in all 37 extracted pairs.
+  (c) THE FULL PAIRING TABLE is in pr428_verbtable.txt: 37 verb to
+  record pairs from the nearest-install extraction, including the
+  shared-record families listed under OPENS.
+```
+
+- WHY. This turns PR-427's language census into an implementation
+  map: every verb a level can write now has a named run stub, and
+  the shared record shape says the port needs one command-object
+  type plus a per-verb handler table, not a bespoke mechanism per
+  verb. The shared families are also data: one run stub behind
+  several verbs means the engine itself merged those behaviours
+  behind a parameter (lock/unlock/ground_on/ground_off share
+  0x47460), which is the cheapest guide to how they are modelled in
+  the engine's state - and the port should model the same way. With
+  the run stubs named, reading them in file-frequency order
+  (MOVE 0x475f0, end_level 0x476b0, goto 0x47710, then the
+  0x47460 family) is the direct next step toward a state machine
+  the port can execute instead of merely display.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr428_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr428_verbtable.txt: the 37 verb-to-record pairs
+  extracted from 0x45df0's instruction stream with the handler slots
+  read from build/leo/leo.img. The example branches at 0x45ec1,
+  0x4640b, 0x46739 and 0x46bc0 were decoded from their own
+  addresses.
+```
