@@ -56376,3 +56376,142 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   retires a nine-year-old loose end, PR-101's item (4): the mysterious
   0x98278-indirect call inside the row-advance is a base delete, so the
   row-advance frees what it visited.
+
+## PR-402 - THE GLOBAL AT 0xcf518 IS NOT AN ARRAY OF CLASS ROWS: 0xa9ab8
+## IS A FOUR-ENTRY BASE-IMPLEMENTATION TABLE OF THREE ARITHMETIC THUNKS
+## AND AN INITIALIZER, AND THE 12-WAY JUMP AT 0x74b4d DISPATCHES ON THE
+## CALLING CONVENTION WORD OF A METHOD DESCRIPTOR
+
+```
+KIND: read
+SUBSYSTEM: the unread block 0x749b8-0x74c08 - the invoke-by-descriptor
+  helper that PR-401's two remaining visit sites live inside, the table
+  it installs at 0xcf518, the pure-virtual-style error 0x7539b posts, and
+  the static blocks at 0x96140-0x96480 that carry the descriptor kind
+  words the block dispatches on
+ADDRESSES: 0x749b8, 0x749d7, 0x749e4, 0x749ea, 0x749fc, 0x74a02, 0x74a05,
+  0x74a08, 0x74a0a, 0x74a14, 0x74a17, 0x74a1c, 0x74a4c, 0x74a5a, 0x74a6e,
+  0x74a77, 0x74a7a, 0x74a85, 0x74a8a, 0x74a8d, 0x74a98, 0x74aab, 0x74ab0,
+  0x74ab9, 0x74ac0, 0x74ac7, 0x74ad0, 0x74ad2, 0x74ad4, 0x74ae4, 0x74ae7,
+  0x74aea, 0x74aed, 0x74af4, 0x74b09, 0x74b16, 0x74b3a, 0x74b3d, 0x74b40,
+  0x74b4d, 0x74b55, 0x74b58, 0x74b63, 0x74b68, 0x74b7c, 0x74b86, 0x74b8a,
+  0x74b92, 0x74bc0, 0x74be8, 0x74bec, 0x74bf9, 0x74bfe, 0x74c08, 0x7539b,
+  0x753a0, 0x76a13, 0x76a1f, 0x77bdc, 0x77cd2, 0x77ce7, 0x77cee, 0x77cf3,
+  0x10300, 0x10308, 0xa9ab0, 0xa9ab8, 0xa9abc, 0xa9ac0, 0x95c40, 0x95c6c,
+  0x96140, 0x96152, 0x961c4, 0x961ec, 0x961f4, 0x961fc, 0x96200, 0x9622c,
+  0x96318, 0x9632c, 0x9636c, 0x96478, 0xcf4f4, 0xcf500, 0xcf518, 0x5c370,
+  0x76c00, 0x95, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x09, 0x0b
+NAMES: base implementation table, method descriptor, calling-convention
+  kind, invoke helper, current-object global, pure virtual message,
+  virtual-this thunk, kind block, static string block,
+  pr402_keyed.py, pr402_keyed.txt, pr402_region.txt, pr402_kind.txt,
+  pr402_stubs.txt, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. OI-128's account of
+  the 0xcf518 array is corrected in this commit.
+HOOKS: none - no leg and no fixture moves; nothing in this block is
+  modelled by the port.
+OPENS: WHO CALLS 0x74bfe - the function that installs 0xa9ab8 at 0xcf518
+  is not named by any rel32 edge and its dwords are not named by any
+  table either, so the base entry is installed by a mechanism this row
+  did not find; whether [class+0x0c] is really where a descriptor's kind
+  word is read from in all cases (the evidence is one site, 0x74b3a, and
+  the one comparison 0x76a13 makes against the constant 4); WHAT THE
+  BLOCKS AT 0x96140-0x96480 ARE - 98 static dwords point into them and
+  they are (kind word, values) records, but no field of them has been
+  tied to authored data; whether the 200/1 header at 0xa9ab0-0xa9ab4 and
+  the .MNU name block at 0x92f16-0x92f85 belong to the same object; and
+  what the other global 0xcf4f4 - the current object passed to the same
+  helper at 0x74b8a and written at 0x10308 - holds during a level.
+CLOSES: PR-401's OPENS item "WHAT 0xcf518 INDEXES OVER" in the part that
+  asked what the static row at 0xa9ab8 is: it is not a class row and not
+  a row of the 0xa0f28 run - it is a four-entry base-implementation
+  table. It does not close who-writes-the-other-slots.
+CORRECTS: PR-401's sentence "0xa9ab8 is a static block ... so this array
+  holds a different family of rows", and the OI-128 sentence copied from
+  it. There is no family of rows. [0xa9ab8+0x00] = 0x74be8 is `add
+  eax,0x4; ret` (2 bytes), +0x04 = 0x74bec is `push ebx; shl edx,0x3;
+  mov ebx,[eax+0x4]; add edx,ebx; add eax,[edx]; pop ebx; ret` (the
+  virtual-this computation: this + [[obj+4]+8*idx]), +0x08 = 0x74bf9 is
+  `mov BYTE PTR [eax+0x8],0x0; ret`, and +0x0c = 0x74bfe is the
+  initializer that writes 0xa9ab8 into 0xcf518. So the `call [ecx+0x4]`
+  at 0x74a98 and 0x74b63, taken with the default slot, is not a visit of
+  a node class at all: it is that thunk. PR-401's census of the three
+  sites stands - they are still the only `call [reg+4]` sites whose base
+  comes from an indexed load - but only 0x520e1 is a node-class visit.
+MEASURED: (a) THE TABLE. Every dword in the image that points into
+  0x74a1c-0x74c10 is either one of the 12 jump-table entries at 0x74a1c
+  or one of exactly three: 0xa9ab8 -> 0x74be8, 0xa9ab0+0xc -> 0x74bec,
+  0xa9ac0 -> 0x74bf9 (pr402_region.txt). The 16 bytes at 0xa9ab0 are
+  0xc8, 1, then those three pointers, i.e. a count, an index and a
+  three-entry dispatch table. 0x74bfe (`mov DWORD PTR ds:0xcf518,
+  0xa9ab8; ret`, 0x74bfe-0x74c08) has no rel32 caller and no pointer to
+  it exists in the image, so nothing in the file reaches the base entry
+  by an edge this row can see.
+  (b) THE HELPER. 0x74a4c is `push ecx/esi/edi/ebp; sub esp,0x18; push
+  eax; mov edi,edx; lea eax,[esp+4]; call 0x77cd2; ...; mov ebp,[edi+4];
+  call 0x749b8`. 0x77cd2 copies a call descriptor: it stores edx at
+  [eax], copies [edx+8] to [eax+4], zeroes [eax+9], then re-reads
+  `[[edx+4]*4+0xcf518]` and calls its +0x08 (0x77ce7-0x77cee); 0x77cf3
+  is `sub DWORD PTR [eax+4],0x2`. 0x749b8 finds the entry for a name
+  (it calls 0x77d7d with the name in edx, then walks: `cmp DWORD
+  PTR [eax],0`, `cmp ecx,[edx+4]`/`[edx+9]`, and reads a WORD at
+  [[eax+4]] comparing 2 and 4 at 0x749e4-0x749ee) and 0x7539b is the
+  failure path: it writes the string at 0x95c6c, "stack data has been
+  corrupted!", into ds:0xcf500 and jumps to the poster at 0x75384; the
+  sibling stub 0x74bec-above path is reached with the string at 0x95c40,
+  "undefined constructor or destructor called!", as the message.
+  (c) THE 12 CASES AND THE KIND WORD. The dispatch is 0x74b3a-0x74b4d:
+  `mov esi,[edx+4]; mov ax,[esi]; cmp ax,0xb; ja 0x74a85; jmp
+  [ax*4+0x74a1c]`. With the descriptor read as [kinds word at +0],
+  [offset at +2], [callee at +6], [extra at +a] (0x74a05-0x74a17), the
+  bodies are: 0 and 1/5 -> 0x74a8a/0x74a85, the `[[ctx]*4+0xcf518]+4`
+  call of (a) followed by `mov ebx,[esi+0xa]; mov edx,[esi+6];
+  add eax,[esi+2]; call 0x76c00` at 0x74a9b-0x74aa4; 2, 3, 4 -> 0x74aed,
+  which compares two argument counts and on difference calls 0x7539b
+  (0x74aed-0x74afc); 6 -> `mov ecx,0x11; mov edx,1; call 0x74a02`;
+  7 -> `mov ecx,0x10` then the same with edx=1; 8 -> the same with
+  edx=0; 9 and 10 -> read [desc+2] as an index, take three fields from
+  [edi+idx], and either `call [desc+6]` (0x74aea) or fall into the
+  shared tail; 11 -> `mov eax,[esi+2]; mov edx,[esi+0xa]` and the array
+  read at 0x74ae7. The same descriptor shape is used by a caller at
+  0x76a02-0x76a1f, which copies [edx+4] and [edx+8] into argument slots,
+  tests `cmp DWORD PTR [eax],0x4` at 0x76a13 and only for that kind
+  copies [edx+0xc] as a fourth argument, then calls 0x74b86 - which is
+  `xor eax,eax; mov edx,ds:0xcf4f4; call 0x74a4c`. So the kind word
+  selects a CALLING CONVENTION (how many arguments and from where), not
+  an object type, and the two entry points 0x74b7c and 0x74b86 pass the
+  global current object 0xcf4f4 as the receiver.
+  (d) THE KIND BLOCKS. The words 1, 4, 5, 6, 7, 8 and 11 appear as the
+  first word of blocks in 0x96140-0x96480 followed by small values, e.g.
+  0x96152 = 7, 0xfff4, 0xffff, then 0x7a00, 0x5, 0xc; 0x961f4 = 1, 0, 0
+  and 0x961ec = 1, 2, 0. 98 static dwords point into this region, from
+  0x1035c, 0x10500, 0x15304, 0x1c4f0, 0x21cf0, 0x33ae8, 0x43e80,
+  0x45e44, 0x49670 (three times) and others, and the table at 0x9622c
+  names 0x961f4, 0x9628a, 0x96298, 0x962a6 in order. So the kinds the
+  dispatcher branches on are data in the image, and their values are
+  read at fixed offsets - but which authored table each block belongs to
+  is not established here.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr402_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). Each
+  function quoted was decoded from its own address with
+  `python3 tools/re/leodb.py dis`; the pointer and immediate scans are
+  the scripts named in NAMES with their output kept beside them.
+```
+
+- WHY. PR-401 found three `call [reg+4]` sites selected by index and
+  assumed all three were node-class visits, which made the 0xcf518 slot
+  look like a second family of clause rows. It is not: 0xa9ab8 is the
+  base-implementation table of an invoke-by-descriptor helper, and its
+  three entries are arithmetic thunks - one of them is the textbook
+  virtual-this computation. Reading the block turns a false lead into a
+  real mechanism: the engine calls methods through a DESCRIPTOR whose
+  first word is a calling-convention kind, with twelve cases, two entry
+  points that take the receiver from a global current object, and a
+  message path that names itself ("undefined constructor or destructor
+  called!"). That is worth recording before it is mistaken for game
+  semantics again - and the 0x96140 blocks show the descriptors are
+  authored data, which is the thread a later row should pull.

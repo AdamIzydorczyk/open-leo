@@ -4155,7 +4155,10 @@ OI-111: which row-step path the port's row clock models -
     `test dl,0x2` to 0x5c370 - so the row-advance disposes of what it
     visited. The three sites that start a visit anywhere in the image are
     that one plus 0x74a98 and 0x74b63 indexing the global slot 0xcf518;
-    what that slot indexes over stays open.
+    what that slot indexes over stays open. [PR-402: it does not index
+    over rows. 0xcf518 holds the static base-implementation table at
+    0xa9ab8, and 0x74a98/0x74b63 are calls of a base thunk inside the
+    invoke-by-descriptor helper 0x74a4c - see OI-128's correction.]
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port
@@ -5868,7 +5871,14 @@ OI-128: what landing and leaving a surface does - the class verbs
     through `call [ctx+0x44]+0x18` at 0x52338, and 0x74a98 and 0x74b63
     index a global slot 0xcf518 that the image fills once, with the
     static row at 0xa9ab8. No `call [reg+4]` in the image takes its base
-    from a `[x+4]` load. WHICH NODE TYPE EACH ROW IS - each row is installed at
+    from a `[x+4]` load. [CORRECTED BY PR-402: 0xa9ab8 is not a class
+    row. It is a four-entry BASE-IMPLEMENTATION table - `add eax,4; ret`,
+    the virtual-this thunk `shl edx,3; add edx,[eax+4]; add
+    eax,[edx]`, `mov BYTE [eax+8],0; ret`, and the initializer that
+    writes 0xa9ab8 into 0xcf518 - belonging to an invoke-by-descriptor
+    helper at 0x74a4c whose 12-way jump at 0x74b4d branches on a
+    CALLING-CONVENTION kind word. Only 0x520e1 is a node-class visit.]
+    WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;
     why the point provider runs the element's LEAVE verb; and a setter
