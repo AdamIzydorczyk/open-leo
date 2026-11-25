@@ -7665,6 +7665,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     ("call index -> .des TYPE") CLOSED: no type mapping.
     Camera +0xc8/+0x140 field map and the light append
     verb: open.]
+    [PR-508 MAPS THE PAYLOAD + RUNTIME FLOW: PODMUCH's ctor
+    0x2bf49 embeds the light base at +0xa9 THEN a named
+    TLewKadmar2 controller at +0xbf (vptr pair 0x9b324/
+    0x9b31c, string guard 0x96858); the TLewKadmar2 base
+    ctor is 0x2bfa0 (0x132 bytes, pair 0x9b4d4/0x9b4cc -
+    explaining 0x2dc50's install), and A_DEAD/A_LOOKUP/
+    A_LOOKDOWN variants (0x2c016/0x2c037/0x2c056) alloc
+    0x60 + payload block at [obj+0x44] (0x9b5f4/0x9a8cc/
+    0x9a894). THE LEVEL OWNS A LIGHT ARRAY [level+0x74]
+    count [level+0x80]; A_LOOKUP verbs 0x4b6d0/0x4b760
+    iterate it calling each light's verb +0x6c (gated by
+    [obj+0xa9]!=0, [obj+0x5c]==1, flags 0x20/0x40 at
+    [obj+0x64]). Msg handler 0x54560 code 0x1b = the
+    SETTER of the +0xa9 light pointer (destroy old via
+    verb+0, construct new). Verb +0x6c meaning and the
+    light-array producer: open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

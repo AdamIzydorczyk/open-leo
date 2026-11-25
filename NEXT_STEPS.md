@@ -66551,3 +66551,79 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   and 0x44350 is not a type factory - any "des TYPE from
   call index" model of startup singletons is wrong.
 
+
+## PR-508 - PODMUCH'S 0x575 PAYLOAD IS AN EMBEDDED LIGHT
+## BASE + A NAMED TLewKadmar2 HERO-LIGHT CONTROLLER; THE
+## LEVEL KEEPS A LIGHT ARRAY THE BEHAVIORS QUERY
+
+```
+KIND: read
+SUBSYSTEM: PR-505's OPENS "PODMUCH's 0x575 payload map"
+  and PR-506's "who consumes the light objects". (1) THE
+  PODMUCH ctor arm 0x2bf49: alloc 0x575, chain 0x531f0,
+  `add eax,0xa9; call 0x2d820` (the PR-505 embedded light
+  base), then at light_end = +0xa9+0x16 builds a NAMED
+  OBJECT: `mov ebx,0x96858; mov edx,0x64; call 0x76ab0`
+  (string check, len 0x64) and stores its vptr pair [obj+
+  0xb9]=0x9b324 / [obj+0xbd]=0x9b31c - PODMUCH = light
+  base at +0xa9 + a second embedded object at +0xbf (the
+  0x575-0xbf = 0x4b6 payload follows). (2) THE TLew-
+  KADMAR2 CONSTRUCTION FAMILY (name-gated by 0x90b36
+  'TLewKadmar2', 0x90b42 'A_DEAD', 0x90b49 'A_LOOKUP',
+  0x90b52 'A_LOOKDOWN'): the TLewKadmar2 base itself is
+  0x2bfa0 - alloc 0x132, base ctor 0x500b0, [obj+0x12a]=-1,
+  [obj+0x12e]=1, pair [obj+0x8]=0x9b4d4/[obj+0xc]=0x9b4cc
+  (the PR-176/PR-303 named pair - the SAME pair verb
+  0x2dc50 of the light ops family installs, PR-504's open
+  "why" answered: light-family objects carry a TLew-
+  Kadmar2 controller); the behavior variants 0x2c016/
+  0x2c037/0x2c056 alloc 0x60, base 0x524e0, and install
+  their payload block at [obj+0x44]: 0x9b5f4 / 0x9a8cc /
+  0x9a894. (3) RUNTIME FLOW: the level object keeps a
+  LIGHT ARRAY at [level+0x74] with count [level+0x80];
+  A_LOOKUP/A_LOOKDOWN verbs 0x4b6d0/0x4b760 (direct-
+  called only from payload verbs 0x2c1c0, which first
+  check [obj+0xa9]!=0 and [obj+0x5c]==1 and gate on flag
+  bit 0x20/0x40 at [obj+0x64]) iterate it calling each
+  light's ops verb +0x6c. The msg-handler 0x54560 code
+  0x1b arm (0x5460e) is the SETTER: destroy the old
+  [obj+0xa9] via verb+0, store the new one from [ecx+8],
+  construct it via verb+0.
+ADDRESSES: 0x2bf49, 0x575, 0x2bfa0, 0x132, 0x9b4d4,
+  0x9b4cc, 0x96858, 0x9b324, 0x9b31c, 0x2c016, 0x2c037,
+  0x2c056, 0x9b5f4, 0x9a8cc, 0x9a894, 0x90b36, 0x90b42,
+  0x90b49, 0x90b52, 0x2c1c0, 0x4b6d0, 0x4b760, 0x74, 0x80,
+  0x5460e, 0x2c130, 0x2dc50, docs/OPEN_ITEMS.md
+NAMES: PODMUCH payload, hero-light controller, light
+  array at +0x74, behavior variants, light setter arm,
+  pr508_append.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT VERB +0x6c ON THE TLew PAIR DOES per light
+    (visibility? registration - the last unmodeled light
+    verb); the level-light-array PRODUCER (who appends to
+    [level+0x74]); and which of the 12 light-aware classes
+    own the msg-handler 0x1b arm (its object has BOTH a
+    light pointer at +0xa9 and a child slot [ecx+8]).
+CLOSES: PR-505's OPENS "PODMUCH's 0x575 payload map"
+  (embedded light base + embedded TLewKadmar2 controller)
+  and PR-504's OPENS "why 0x2dc50 installs the TLewKadmar2
+  pair inside the light family" (it builds the controller).
+CORRECTS: none. (PR-506's "per-class union" stands; this
+  record shows one arm of the union in detail: PODMUCH
+  embeds, other classes hold a pointer set by msg 0x1b.)
+MEASURED: (a) 0x2bf49/0x2bfa0/0x2c016-0x2c085 bodies
+  verbatim (pr508_append.txt). (b) name strings 0x90b36-
+  0x90b52 verbatim. (c) 0x4b6d0/0x4b760 heads: the
+  [level+0x74]/[level+0x80] loop with verb +0x6c. (d)
+  0x4b6d0/0x4b760 have ZERO table stores - direct-called
+  only from 0x2c1c0. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port's light model gains two concrete parts: a
+  level-owned light array that behaviors query, and a
+  controller object embedded in PODMUCH / pointed to by
+  behavior classes - the +0xa9 slot's second union arm.
+
