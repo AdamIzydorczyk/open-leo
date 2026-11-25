@@ -61922,3 +61922,88 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   own flags in two [obj+0xee] states - the numeric meaning of
   those states is the next honest question.
 
+
+## PR-453 - THE ACTOR'S +0xee IS A TEN-STATE MODE SELECTOR WITH
+## KEY-BOUND SETTERS AND A 12-ARM SWITCH; THE FLAG-BUILD GATE
+## EXCLUDES ONLY MODES 2/3; THE SAME OFFSET CARRIES SCENE-SCRIPT
+## POINTERS IN THE OTHER FAMILY
+
+```
+KIND: read
+SUBSYSTEM: [obj+0xee] in the TLew* actor class - the setter
+  chain 0x50514-0x5062a (ten guarded mode stores bound to
+  input-word bytes and config words), the 12-arm switch at
+  0x50648, the +0xf8 gate's exclusion of modes 2/3, the
+  inc/cmp helpers, the player-birth copy of the word, and the
+  same-offset pointer stores in the scene/cutscene family
+ADDRESSES: 0xee, 0x50514, 0x50526, 0x50542, 0x5055e, 0x5057a,
+  0x50596, 0x505b2, 0x505ce, 0x505ea, 0x50606, 0x5062a, 0xcef5c,
+  0xcef80, 0x50648, 0x504b0, 0x5065b, 0x506a8, 0xb, 0x1e2f0,
+  0x1f100, 0x1f116, 0x54c00, 0x3be6c, 0x29a58, 0x29a70, 0x9a754,
+  0x99804, 0x1ed02, 0x1ed18, 0x96874, 0x613f0, 0xa5, 0xa6, 0xa7
+NAMES: mode selector, mode setter chain, mode switch, config
+  words table, mode gate exclusion, scene-script pointer slot,
+  pr453_modeword.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE TEN MODES DO - the switch's 12 case bodies
+    (0x5065b-0x506ad, reached from the 0x50648 dispatch) are
+    unread past their pads; the config words ds:[0xcef5c]-
+    [0xcef80] (the second guard of every setter - a loaded
+    key-bind or cheat table, the same window family as the
+    registry 0xcef40); the input-word extension: the setters
+    test bytes [obj+0xa6]/[obj+0xa7], so the PR-442 button
+    word is THREE bytes (0xa5/0xa6/0xa7), and PR-442 named
+    bits only in 0xa5 - the census of the other two bytes is
+    open; 0x54c00 (run when mode >= 3 at 0x1f100); and the
+    inc/dec helpers' class (0x1f116, 0x3be6c/0x3be74 - the
+    pointer family's counter use).
+CLOSES: PR-452's OPENS "what [obj+0xee] states 2/3 are", in
+  the negative and with the mechanism: the actor's +0xee is a
+  selector with EXACTLY ten settable values - 0..9 - each
+  written only behind a test of a distinct INPUT-WORD bit
+  ([obj+0xa5] bits 0x40/0x80, [obj+0xa6] bits 1/2/0x40/0x80,
+  [obj+0xa7] bits 1/2/4/8) AND a distinct config word
+  ds:[0xcef5c+4k] being nonzero: a keyed, config-gated mode
+  switch (the cheat/debug family the LEO_PLAY_DANGER of PR-90
+  reads belongs to). The flag-build gate 0x1e2f0 excludes only
+  2 and 3; 0x1f100 runs 0x54c00 when the mode reaches 3; a
+  12-arm switch (cmp 0xb, table 0x504b0) dispatches per mode
+  in the actor's update. The player-birth site 0x1ed02/0x
+  0x1ed18 copies the word into the new player beside
+  installing the player tables - the mode follows the player.
+CORRECTS: nothing. (PR-442's reading of [obj+0xa5] as the
+  input struct's third dword is re-confirmed, and extended -
+  two sibling bytes 0xa6/0xa7 carry more tested bits; that is
+  an OPENS census, not a correction of what PR-442 named.)
+MEASURED: (a) THE SETTERS. Ten identical shapes: test byte bit
+  -> test config word != 0 -> store the constant k, k = 0..9
+  in order, bits and config slots advancing together (0xa5.
+  0x40/0xcef5c, 0xa5.0x80/0xcef60, 0xa6.1/0xcef64, 0xa6.2/
+  0xcef68, 0xa6.0x40/0xcef6c, 0xa6.0x80/0xcef70, 0xa7.1/
+  0xcef74, 0xa7.2/0xcef78, 0xa7.4/0xcef7c, 0xa7.8/0xcef80).
+  (b) THE DISPATCH. 0x50648: cmp 0xb / ja out, jmp table at
+  0x504b0, twelve arms; the +0xf8 gate excludes {2,3} from
+  the actor's flag build; 0x1f100: mode >= 3 -> 0x54c00;
+  0x1f116: inc. (c) THE OTHER FAMILY. Scene/cutscene objects
+  store POINTERS at +0xee (0x29a58 = 0x9a754, 0x29a70 =
+  0x99804) and inc/dec them (0x3be6c/0x3be74, 0x1f116) - the
+  same slot-collision pattern as PR-451's +0x6d: an offset is
+  a member only within a class. (d) THE PORT. Nothing here is
+  modelled today and nothing in the legs depends on it: the
+  modes are input-driven session modes, not state-machine
+  behavior; the port's signal enum reads only the 0xa5 bit
+  group PR-442 named. No port change.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The gate PR-452 found was the last "two unnamed states"
+  in the flag pipeline; they turn out to be two of ten
+  key-bound session modes, set behind config words - i.e. the
+  engine's own debug/cheat layer, which the port correctly
+  never modelled. And the second slot collision (+0xee as
+  pointer vs mode) keeps teaching the journal's rule: offsets
+  belong to classes, and after PR-452 the actor class finally
+  has a name to attach them to.
+

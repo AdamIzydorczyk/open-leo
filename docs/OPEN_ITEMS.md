@@ -6696,6 +6696,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     mean, the two unnamed factories (0x98284, 0x2f0f0's -
     probably Sades/Kara), and why 0x20495 builds the table a
     second time (TLewZariaB?).]
+    [PR-453 READS THE MODE WORD: [actor+0xee] has ten setters,
+    0..9, each guarded by a distinct input-word bit AND a
+    distinct config word ds:[0xcef5c+4k] != 0 - the bit groups
+    run across THREE input bytes [obj+0xa5]/[0xa6]/[0xa7] (so
+    PR-442's button word is 3 bytes; only 0xa5's bits are
+    named so far - open census). A 12-arm switch dispatches on
+    the mode in the actor's update (cmp 0xb, table 0x504b0);
+    0x1f100 runs 0x54c00 when mode >= 3, 0x1f116 increments.
+    The flag-build gate excludes exactly {2,3} - session modes,
+    the cheat/debug layer (cf. PR-90's LEO_PLAY_DANGER), not
+    state-machine behavior; the port rightly models none of it.
+    Player birth 0x1ed02/0x1ed18 copies the mode to the new
+    player beside installing the player tables. Second slot
+    collision like PR-451's +0x6d: the scene/cutscene family
+    stores POINTERS at +0xee (0x29a58=0x9a754, 0x29a70=
+    0x99804) and incs/decs them - offsets belong to classes.
+    Open: the 12 case bodies, the config words table, the
+    0xa6/0xa7 bit census, and 0x54c00.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
