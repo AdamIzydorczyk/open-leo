@@ -58561,3 +58561,106 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   thing about a jump coefficient. Neither key appears in the unpacked
   shipped levels, so today they are inert - but a port that does not
   know them cannot report that honestly.
+
+## PR-420 - THE `(x)` ROW ARGUMENT OF AN AUTHORED TRANSITION LINE IS NOT
+## A NAME: THE PARSER HAS NO x CASE, AND A NON-NUMERIC ARGUMENT BECOMES 0
+
+```
+KIND: read
+SUBSYSTEM: the row argument of an authored transition line - the exact
+  parse of `A_FOLLOW(x)=K_GEN2`, the three helpers it uses, what each
+  shape of argument yields, the corpus counts of the argument forms, and
+  what the states that use `x` look like
+ADDRESSES: 0x51e07, 0x51e12, 0x51e17, 0x51e1f, 0x51e22, 0x51e27, 0x51e2a,
+  0x51e2f, 0x51e36, 0x51e3b, 0x51e3e, 0x51e43, 0x51e4d, 0x51e54, 0x52360,
+  0x52381, 0x523cb, 0x57d30, 0x57d44, 0x57db0, 0x57dbb, 0x57dc3, 0x57fd0,
+  0x74cc8, 0x76fa3, 0x76fc4, 0x76fd3, 0x76ff0, 0x76fff, 0x9225c, 0x92310,
+  0xa9510, 0xa68b4, 0xa25d4, 0x11, 0x04, 0x7d, 0x1f4
+NAMES: row argument, transition line parse, non-numeric argument, atoi
+  skip, ctype class table, authored x, row start, pr420_rowargs.txt,
+  OI-016, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. The port's behaviour
+  for this case is already what the engine's is - see WHY.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE AUTHORS MEANT BY x - 44 of the 777 unpacked .MOV files
+    use it, always as the whole argument, and the states that carry it are
+    dominated by control=BY_TIME and FRAME_REV, so it reads as "start at
+    the beginning", but no comment or code supports a different intent;
+    whether any packed level outside the unpacked corpus uses another
+    non-numeric argument, since the parse would silently turn it into 0
+    too; WHAT THE 125-ENTRY TABLE AT 0xa9510 IS, copied by 0x57d30 into a
+    0x1f4-byte scratch buffer - it is the token grammar this parser
+    works from, and it has not been read; and whether the 0x76fa3 helper
+    is shared with other parsers, which would make every one of them
+    equally tolerant of a non-numeric value.
+CLOSES: PR-411's OPENS item WHETHER THE AUTHORED PARENTHESISED ROW
+  ARGUMENT IS THE ENGINE'S INTERVAL LOOKUP. It is not: the transition
+  parser never calls anything near 0x37150, and the argument never reaches
+  a numeric table - it is converted by sscanf/atoi at parse time and
+  stored as a small integer.
+CORRECTS: PR-107's note in the port, at ported/ll_play.c:483-518, which
+  says an "absent or non-numeric" token stores -1: only an ABSENT or
+  EMPTY group stores -1.
+  A PRESENT but non-numeric argument such as x stores 0, because
+  0x51e36 is reached only when the %ld scan succeeded and the value it
+  calls is an atoi-style scanner, not a strict one. The port's outcome for
+  `x` is unchanged - it treats it as -1 and starts at row 0, and the
+  engine's 0 also means row 0 - so this corrects the description, not the
+  model.
+MEASURED: (a) THE GRAMMAR OF ONE TRANSITION LINE. 0x51e12 loads ecx =
+  0x9225c, whose bytes are ` ( %[^) ] %*[)] = `, with edx = 1, and calls
+  0x57d30, which copies a 125-entry table from 0xa9510 into a 0x1f4-byte
+  stack buffer and matches the line against it. Exactly ONE capture group
+  exists - the left-hand state name - and everything inside parentheses
+  is matched by `%*[)]`, i.e. skipped. So the name is what the parser
+  resolves (0x51e4d: `call 0x49610` with the name in ecx); the argument
+  is handled separately: 0x51e27 calls 0x57db0, which pushes the format
+  0x92310 = `%ld` and calls the scanner 0x74cc8, returning 1 only if a
+  long was read. (pr420_rowargs)
+  (b) THE THREE OUTCOMES. Empty or missing group: 0x57db0 returns 0, so
+  0x51e3e stores -1. A numeric group: 0x51e36 calls 0x57fd0 = `call
+  0x76fa3`, and 0x51e3b decrements - the authored 1-based number becomes
+  a 0-based row. A NON-NUMERIC group: 0x57db0 also returns 1, because
+  0x76fa3 is not strict - it first SKIPS letters (0x76fa6: while ctype
+  [c+1] AND 0x2, i.e. alnum, advance), then takes an optional sign, then
+  accumulates digits (0x76ff0: `ebx = ebx*10 + c`, minus 0x30), and
+  returns 0 when no digit was ever seen - and note that the two tests
+  disagree, so a mixed token such as `x2` fails the %ld scan yet still
+  yields 2 from this one. `x` therefore becomes 0, and the
+  row-setter at state entry, 0x52360, writes rec+0x04 = 0 (its only
+  refusal is a negative argument, `test edx,edx; jl` at 0x52381).
+  (c) THE CORPUS. Across the 777 unpacked .MOV files the parenthesised
+  argument is `(1)` 2415 times, `(x)` 208 times, and other small numbers
+  a few dozen each - so `x` is 8 percent of the uses, in 44 distinct
+  files. It is always the whole argument: no form such as `A_WAIT(x,2)`
+  occurs. The .MOV files that contain it carry control lines dominated by
+  `control=BY_TIME|FRAME_REV|CHECK_ALL...`.
+  (d) THE ctype TABLE. 0xa68b4 is a 256-entry class table indexed by
+  character: bit 0 space (0x20), bit 3 alphanumerics, bit 5 digits
+  (0x30-0x39). The classes 0x2 and 0x20 are what 0x76fa3 tests, and no
+  bit 4 (punctuation) class exists in the table's used range.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr420_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr420_rowargs.txt (the argument-form census over the 777
+  unpacked .MOV files in /tmp/opencode/mov, and the three parse
+  outcomes). 0x51e07, 0x57db0, 0x57fd0 and 0x76fa3 were decoded from
+  their own entry addresses, and the scan format and grammar literals
+  were read as bytes at 0x9225c and 0x92310 from build/leo/leo.img.
+```
+
+- WHY. PR-411 left "is the authored `(x)` the engine's interval lookup?"
+  as an open question, and PR-412 then made `x` sound like it might mean
+  "my current position". It does not: the transition parser has no case
+  for the letter at all, and an argument it cannot read as a number
+  becomes 0 through an atoi that first throws away letters. Two things
+  follow. The port's model choice is vindicated - its "(x) means start at
+  the top" is what the engine does - but its comment states the wrong
+  reason, and that comment is quoted by future readers, so the difference
+  between "absent means -1" and "non-numeric means 0" is now written down
+  correctly. And the authored habit is measurable: 208 uses in 44 files,
+  always alone, in states whose control word is usually BY_TIME - that is
+  content evidence, not code, and it belongs on the record.

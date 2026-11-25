@@ -6113,6 +6113,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     accumulators +0x136, chain link +0x288 - and the port's scene
     objects have none of that: no class table, no registry index, no
     chain.]
+    [PR-420 SETTLES THE AUTHORED `(x)` ROW ARGUMENT: IT IS NOT A NAME AND
+    NOT A LOOKUP. The transition line is matched by the literal at
+    0x9225c, ` ( %[^) ] %*[)] = `, used by the token matcher 0x57d30
+    against a 125-entry table at 0xa9510: the ONLY capture is the
+    left-hand state name, and the parenthesised group is skipped by
+    `%*[)]`. The argument is then read separately at 0x51e27-0x51e43 with
+    three outcomes: an ABSENT or EMPTY group gives -1 (0x51e3e); a group
+    that passes the `%ld` scan (0x57db0, format 0x92310) gives `atoi - 1`
+    (0x51e36 + `dec eax`); and a PRESENT but non-numeric group gives
+    0, because the converter 0x76fa3 first skips alphanumerics using the
+    class table at 0xa68b4, then accumulates digits and returns 0 when it
+    saw none. `x` is therefore simply row 0 - there is no `x` string in
+    the image at all - and the two tests even disagree for mixed tokens
+    like `x2`, which fail %ld yet yield 2. CORPUS: 777 unpacked .MOV
+    files give 2415 uses of `(1)`, 208 of `(x)` in 44 files, and other
+    numbers in the tens; `x` is always the whole argument, and those
+    states' control lines are dominated by BY_TIME and FRAME_REV.
+    CORRECTS PR-107's wording in ported/ll_play.c:483-518 - "absent or
+    non-numeric stores -1" - only absent or empty does; the port's
+    OUTCOME for x is unchanged.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
