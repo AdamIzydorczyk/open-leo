@@ -6204,6 +6204,23 @@ OI-128: what landing and leaving a surface does - the class verbs
     Refines PR-421: the engine branches on authored names too, not
     only compiled variants. Nearby data adds the module default
     `karade.mod` (used at 0x33c84 when [0xcf074] is zero).]
+    [PR-425 MAPS THE WHOLE AUTHORED CLASS VOCABULARY TO CODE. The
+    dispatch helper 0x76a69 is a CASE-FOLDING string compare with 379
+    call sites; the parse handler 0x4aaa0 feeds it the first token of
+    a level-description line (grammar ` %[^,\r\n] , ` at 0x91d1c),
+    and 0x4df10 (31 branches) tail-calls 0x33370 while further
+    branch tables sit at 0x38558, 0x25242 and 0x3afea. CENSUS: 352
+    distinct names are compared in the image, 160 equal ETAPY
+    leading names, the other 18 differ only by case or are
+    sub-variants - so ALL 178 authored names have a compiled branch.
+    IDENTITIES: PINGWIN -> 0x28c via 0x72780, the first ctor slot of
+    PR-421's descriptor 0xa6428 - the scene-object class IS the
+    penguin; YETI -> 0x130 via 0x73e50 (the 0x9f298/0x9f290 family);
+    GORYL -> 0x3ee; the 29 size-0x120 classes are the fish family
+    RMLOT/REKIN/RPILA/RYBKA with own ctors 0x695b0-0x6c850; plain
+    decorations share the root ctor 0x52860 at 0x40-0x68. The 192
+    non-ETAPY compared names include an `AC_*` action vocabulary,
+    unplaced.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

@@ -59093,3 +59093,112 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   six constructors were decoded from their entry addresses; the
   0x4e9bb caller region is flagged misaligned in the record.
 ```
+
+## PR-425 - THE AUTHORED OBJECT VOCABULARY IS A COMPILED NAME DISPATCH:
+## 160 OF ETAPY'S 178 CLASS NAMES MATCH NAME BRANCHES IN THE IMAGE
+## (CASE-INSENSITIVE), THE FACTORY CHAIN STARTS AT A LINE PARSER, AND
+## THE PR-418 SCENE-OBJECT CLASS IS THE AUTHORED PINGWIN
+
+```
+KIND: read
+SUBSYSTEM: the engine's name-to-class dispatch - the case-insensitive
+  compare helper 0x76a69 and its 379 call sites, the factory chain
+  from the level-description line parser through six factory regions,
+  the census matching every ETAPY leading name to a compiled branch,
+  and the identities that lock when factory sizes and constructors
+  meet PR-422's class descriptors
+ADDRESSES: 0x76a69, 0x4df10, 0x4aaa0, 0x4e9bb, 0x33370, 0x91d1c,
+  0x38558, 0x25242, 0x3afea, 0x72780, 0x73e50, 0x531f0, 0x53ff0,
+  0x52860, 0x3d8c0, 0x6b2c0, 0x6a910, 0x69f60, 0x695b0, 0x6c850,
+  0xa6428, 0x9cf50, 0x28c, 0x130, 0x120, 0x3ee, 0x91247, 0x9086d,
+  0x91371, 0x5c320
+NAMES: name dispatch, case-insensitive compare, level description
+  parse, factory chain, class vocabulary, PINGWIN, YETI, RMLOT,
+  REKIN, RPILA, RYBKA, GORYL, AC vocabulary, pr425_mainfactory.txt,
+  pr425_secondfactory.txt, pr425_coverage.txt, OI-016, OI-091,
+  OI-111, OI-127, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE 192 COMPARED NAMES THAT ARE NOT ETAPY LEADERS ARE -
+    the visible cluster `AC_APPEAR`, `AC_ATAK`, `AC_BLOK` and the
+    rest reads as an action or command vocabulary of another authored
+    file kind, and none of it has been placed; WHICH SIX FACTORY
+    REGIONS EXIST in total - branches were harvested from five
+    regions plus an image-wide name census, but the regions were
+    found by sampling xrefs, not enumerated; what the 29 size-0x120
+    classes' six dedicated ctors 0x695b0-0x6c850 differ in; whether
+    any name matches twice across regions with different classes; and
+    the second caller of 0x4df10 at 0x4dcdc, unexamined.
+CLOSES: PR-424's OPENS item WHERE THE FACTORY'S NAME STRING COMES
+  FROM: 0x4aaa0 runs the line parser 0x57a40 with the grammar
+  ` %[^,\r\n] , ` at 0x91d1c over the level description and hands
+  the captured first token to 0x4df10. PR-424's WHY ONLY SIX NAMES
+  ARE COMPILED INTO THAT FACTORY: it is not six - the dispatch is
+  spread over at least five regions and 160+ branches. PR-422's OPENS
+  item WHAT THE 29 CLASSES OF SIZE 0x120 ARE: they are the fish and
+  creature classes RMLOT, REKIN, RPILA, RYBKA and their siblings,
+  each with its own ctor in 0x695b0-0x6c850.
+CORRECTS: PR-424's OPENS guess that "the other classes must be
+  constructed by other code" is confirmed and quantified, and its
+  count of the factory as six classes stands corrected: the same
+  function 0x4df10 itself holds 31 branches and calls 0x33370 as a
+  tail. PR-419's key census gains its mechanism: 0x76a69 folds case,
+  so ETAPY's lowercase leaders (plant, demotext, grabg, winda...)
+  are the same branches as the upper-case literals - all 178 ETAPY
+  names have a compiled branch once case is folded.
+MEASURED: (a) THE COMPARE HELPER. 0x76a69 compares two strings after
+  folding A-Z to a-z on both sides, byte by byte; 379 call sites.
+  (pr425_coverage)
+  (b) THE CHAIN. 0x4aaa0 calls the token matcher 0x57a40 with
+  grammar 0x91d1c = ` %[^,\r\n] , ` (data there is followed by
+  `Bledny opis poziomu - plan...`, "wrong level description"), then
+  calls 0x4df10 with the captured token; 0x4df10 = 31 branches,
+  tail-calling 0x33370's six. Branch tables continue at 0x38558 (20
+  branches: SOPEL, FOKA, YETI, CEBRZYK, PINGWIN, LONAKULA, IGLO,
+  GRABOBJL1/2, WODOSPAD2, KRA/KRA0/KRA1/KRA2, KRY, SOUNDSOURCE,
+  SKOCZNIE, SKJUMP, FLAGA, TABLICZKALONA), 0x25242 (18: RMLOT,
+  REKIN, RPILA, RYBKA all 0x120 with own ctors 0x6a910/0x69f60/
+  0x695b0/0x6c850, KRAB, ROZGW, OLEJ, RBLOK, KOTWICA, SKALA,
+  SKALA_A, GLAZ, KROPLA, KROPLAS, PILAGEN, PILARYB, KONIK) and
+  0x3afea (7: GORYL 0x3ee, DOMEK, DRAB, KALUZA, ZAPADNIA, SPAD).
+  (pr425_mainfactory, pr425_secondfactory)
+  (c) THE COVERAGE CENSUS. Across the whole image 352 distinct
+  strings are compared through 0x76a69; 160 equal ETAPY leading
+  names; the 18 that do not differ only by case or are sub-variants
+  (STULB_D, ROZGWIAA-C, GLON, faraon...), which case folding or a
+  longer name covers. 192 compared strings are not ETAPY leaders;
+  the visible family is `AC_*` action names.
+  (d) THE IDENTITIES. PINGWIN -> 0x28c via ctor 0x72780 - the exact
+  first ctor slot of PR-421's scene-object descriptor 0xa6428, so
+  the PR-418/421/422 scene object IS the authored penguin class and
+  its 0x28c field map is a penguin's. YETI -> 0x130 via 0x73e50 -
+  PR-421's sibling factory that installs 0x9f298/0x9f290. GORYL ->
+  0x3ee = PR-422's third-largest class. The 0x120-size cluster is
+  the fish family. Plain decoration names (PICT, TABLICA, RECT,
+  ZONE, GRUPA...) share the root ctor 0x52860 at small sizes
+  0x40-0x68. (pr425_coverage)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr425_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr425_mainfactory.txt, pr425_secondfactory.txt and
+  pr425_coverage.txt - the branch tables harvested from the five
+  factory regions and the image-wide 0x76a69 name census matched
+  against the ETAPY leaders. 0x76a69, 0x4aaa0, 0x4df10 and the
+  quoted constructors were decoded from their entry addresses.
+```
+
+- WHY. The port's object model has always branched on authored names
+  because that is what the data contains; this row proves the engine
+  does exactly the same, mechanically: names come off the level
+  description line, case is folded, and 160+ compiled branches pick
+  size plus constructor. The practical payoff is a completion measure
+  with a denominator - the 178 ETAPY leaders, each of which the port
+  must map to a behaviour - and three named identities that turn
+  abstract rows into things: the scene-object class is a penguin,
+  the 0x120 class family is fish, and the third-largest class is a
+  gorilla. It also opens the second, larger vocabulary (`AC_*`) whose
+  owner file and parser have not been placed - the next known
+  unknown.
