@@ -7165,6 +7165,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     PR-477 corrects PR-475's "growth helper": 0x22780 is the
     realloc; the push_back is written out at the call site
     (0x43ff1-0x44013).]
+    [PR-478 COUNTS THE MESSAGE KINDS: 66 call sites of the queue
+    push 0x52b10, 64 with a literal kind in edx, 19 distinct
+    kinds - hot are 0x19 (11 sites), 1, 5, 0x1b (7/7/5); and
+    kinds 3 and 4 NEVER enter the queue, so PR-183's message
+    3/4 arms (0x545c6/0x545d2) are reachable only through a
+    direct `call [obj.vt+0x10]`. Type 30 has exactly ONE sender:
+    0x3a1dc inside the authored-trigger function 0x3a170 - the
+    same band as PR-465's type-30 handler 0x39de3. Its gate:
+    the LION singleton [ds:0xcef40+0x394] must have bit 7 of
+    [lion+0x64] set and [lion+0xee] (the field PR-476's emitter
+    indexes) must equal [trigger+0xf2]; on success it pushes
+    kind 30 with payload [trigger+0xf6], sets bit 0x40 in
+    [[trigger+0x64]+2], and if [trigger+0xfa] also runs the
+    broadcast 0x4bc40 with count 0x12. The broadcast also
+    answers PR-464's +0xc question: it calls `[[element+0x8]
+    +0xc]` per element and compares the result with an argument
+    (0x4bcc6) - +0xc is a COMPARISON verb selecting targets -
+    and it forwards the kind in edx, supplied at 0x3a20d by the
+    data-segment global ds:0xcee2c.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

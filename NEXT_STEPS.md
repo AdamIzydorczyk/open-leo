@@ -64012,3 +64012,85 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   reallocs. Naming that shape - and proving the element tags are
   not authored names - removes two families of guesswork at once.
 
+
+## PR-478 - THE MESSAGE-KIND CENSUS: 64 OF THE 66 QUEUE PUSHES
+## NAME THEIR KIND, KIND 30 IS SENT EXACTLY ONCE BY AN AUTHORED
+## TRIGGER, AND KINDS 3 AND 4 NEVER ENTER THE QUEUE
+
+```
+KIND: read
+SUBSYSTEM: the 66 call sites of the queue push 0x52b10 and the
+  kind each passes in edx; the single kind-30 sender 0x3a170
+  (its gate on the LION singleton [mgr+0x394], the byte
+  [lion+0x64] bit 7 and the array word [lion+0xee]); the
+  broadcast helper 0x4bc40, which passes its caller's edx
+  (0x3a20d supplies ds:0xcee2c) and filters through verb +0xc;
+  and the absence of kinds 3 and 4 among pushed kinds
+ADDRESSES: 0x52b10, 0x3a170, 0x3a1a7, 0x3a1b5, 0x3a1c9,
+  0x3a1cf, 0x3a1dc, 0x3a1e7, 0x3a1ec, 0x3a200, 0x3a20d,
+  0xcee2c, 0x394, 0x38c, 0x64, 0xee, 0xf2, 0xf6, 0xfa, 0x2,
+  0x4bc40, 0x4bcc6, 0x4bcd7, 0x4bd13, 0x54560, 0x545c6,
+  0x545d2, 0x52bb0, 0x50d60, 0x39de3, 0x39e8d, 0x1e931,
+  0x2c240, 0x53b70, 0x53ba4, 0x1f3b6, 0x1f3ce, 0x3c3b8,
+  0x3dc7b, 0x41d0f, 0x45cfd, 0x364f0, 0x3ded8, 0x3e588,
+  0x3e71a, 0x1ef22, 0x2c9aa, 0x4, 0x8, 0xc
+NAMES: message kind census, kind-30 trigger, broadcast helper,
+  comparison verb +0xc, queue-free kinds, pr478_msgkinds.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH TRIGGER FIELD THE KIND-30 GATE USES - [obj+0xf2]
+    is compared with [lion+0xee] and [obj+0xf6] is the payload,
+    so the trigger carries an id plus a parameter, but the field
+    family +0xf2/+0xf6/+0xfa is otherwise unread; WHO READS
+    ds:0xcee2c apart from that one broadcast - it is a message
+    kind kept in the data segment; the two pushes at 0x4bcd7/
+    0x4bd13, whose kind is the helper's own edx, so the
+    broadcast's kind set is only known through its callers; and
+    how kinds 3 and 4 reach the 0x545c6/0x545d2 arms at all -
+    no push carries them and the only direct-receive pattern
+    seen is the collision family's inline payloads (0x1e931).
+CLOSES: PR-464's and PR-468's "who sends message type 30": the
+  sender is unique - 0x3a1dc in the function 0x3a170, the
+  authored-trigger family (its sibling class band is PR-465's
+  type-30 handler at 0x39de3, 0x70 bytes away in the image).
+  The gate is a three-part test: the LION singleton at
+  [ds:0xcef40+0x394] must have bit 7 of [lion+0x64] set, and
+  the array word [lion+0xee] - the same field PR-476's emitter
+  leg indexes as [[mgr+0x394]+0xee] - must equal the trigger's
+  [obj+0xf2]. On success the trigger pushes kind 30 with payload
+  [obj+0xf6], sets bit 0x40 in its own flag byte at
+  [[obj+0x64]+2], and only if [obj+0xfa] is set also runs the
+  broadcast 0x4bc40 with the count 0x12. It closes PR-464's
+  virtual +0xc filter: 0x4bc40 calls `[[element+0x8]+0xc]` per
+  element and compares the result with a caller argument
+  (0x4bcc6-0x4bccb) - +0xc is a COMPARISON verb used to select
+  broadcast targets, and the helper forwards the message kind in
+  edx, which at 0x3a20d is the global ds:0xcee2c. And it
+  settles the reach of PR-183's message 3/4 arms: of the 64
+  pushes whose kind is a literal, the set is 1, 2, 5, 8, a, b,
+  c, d, f, 10, 11, 12, 14, 15, 18, 1b, 1d, 1e, 21 - nineteen
+  kinds, and 3 and 4 are never queued.
+CORRECTS: nothing. (PR-468's dispatch facts stand; the queue and
+  the direct-receive path were already separated in PR-93.)
+MEASURED: (a) THE CENSUS: all 66 push sites with the enclosing
+  function and the kind immediate, in the evidence file; hot
+  kinds are 19 (11 sites), 1, 5 and 27 (7, 7, 5), while 10
+  kinds appear once. (b) THE KIND-30 ARM, verbatim at 0x3a1a7:
+  `mov edx,ds:0xcef40; mov edx,[edx+0x394]; mov bl,[edx+0x64];
+  test bl,0x80; ...; mov edx,[eax+0xee]; mov ebx,[esi+0xf2];
+  cmp edx,ebx; jne ...; mov edx,0x1e; mov ecx,[esi+0xf6]; call
+  0x52b10`. (c) THE BROADCAST, verbatim at 0x4bcc6: `mov
+  edx,[esi+0x8]; mov eax,esi; call [edx+0xc]; cmp eax,ecx; jne
+  <next element>` then `mov ecx,<kind arg>; mov ebx,<p1>; mov
+  edx,<p2>; mov eax,esi; call 0x52b10` inside a `[+0x34]`
+  element walk. (d) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The type table had 21 kinds and no sender map, so "who
+  sends 30" and "what is the +0xc filter" stayed open for four
+  records. Counting the pushes answers both, and the negative -
+  kinds 3 and 4 are never queued - bounds where those arms can
+  ever fire.
+
