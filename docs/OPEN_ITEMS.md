@@ -7341,6 +7341,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     level cleanup deletes it via [[obj]+0x4] edx=2. This closes
     PR-347's "is the belt family ever filled" half: the live
     copy is the manager's block at +0x38c.]
+    [PR-488 DECODES THE MAGIC TAG 0x8138764 (PR-479's open):
+    it is a protocol marker on the message verb +0x10. The
+    default handler 0x53770 accepts only kind 0x10 with
+    payload [+8] == the marker, and treats payload [+0xc] as
+    an event CODE: it sets bit (code % 0x20) in word
+    (code / 0x20) of a 3-dword map and ORs it into
+    [obj+0x60..0x68] via 0x49580 (68 callers; [obj+0x64] bit
+    7 = code 0x27 is the gate PR-478 measured). Kind-0x10
+    messages WITHOUT the marker are dropped by these 16
+    tables; other kinds tail-call 0x52bb0. Delivery trio:
+    broadcast 0x4bc40, queue-push 0x52b10 (eax=target,
+    edx=kind, ebx=a, ecx=b), and direct call through the
+    child picker 0x55760. Exactly 7 sites name the marker;
+    codes 0xa (to parent), 0x15 (queued to the [[mgr+0x394]]
+    singleton, once flag +0x571), 0x1b/0x1c/0x21 (broadcast
+    from 0x2c4a0; 0x21 also stores ds:0xcec70=1), 0x39 (to
+    earlier siblings). The sender methods sit in tables
+    0x9aeac/0x9b39c/0x9a068/0xa1d2c.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

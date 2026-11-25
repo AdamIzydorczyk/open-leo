@@ -64898,3 +64898,93 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   where the tool entries - the thing the 0x1b attach path
   scores against (PR-347) - actually live.
 
+
+## PR-488 - THE MAGIC TAG 0x8138764 IS A PROTOCOL MARKER:
+## KIND-0x10 MESSAGES CARRYING IT SET ONE EVENT BIT IN THE
+## RECEIVER'S BITMAP AT [obj+0x60..+0x68]
+
+```
+KIND: read
+SUBSYSTEM: the second default message handler 0x53770 (the
+  verb +0x10 of 16 class tables, PR-479) and the senders of
+  the magic-tag protocol. The handler tests payload +4 == 0x10
+  (kind) and +8 == 0x8138764; on a match it takes the payload
+  byte at +0xc as an event code, builds a 3-dword bitmap with
+  bit (code % 0x20) of word (code / 0x20) set and ORs it into
+  [obj+0x60..+0x68] through 0x49580; a kind-0x10 message
+  WITHOUT the tag is dropped silently, any other kind
+  tail-calls the next default 0x52bb0. The tag immediate
+  occurs at exactly 7 code sites: 6 senders (0x2882d, 0x2c5e1,
+  0x2c613, 0x2c653, 0x2c99a, 0x3eacf) and the one compare
+  0x53780
+ADDRESSES: 0x8138764, 0x53770, 0x5377b, 0x53780, 0x53790,
+  0x537a5, 0x537be, 0x537cf, 0x537d4, 0x537db, 0x537e2,
+  0x49580, 0x49589, 0x749a0, 0x287a0, 0x2882d, 0x28835,
+  0x2883f, 0x2885a, 0x2c4a0, 0x2c5e1, 0x2c5e6, 0x2c613,
+  0x2c624, 0x2c653, 0x2c664, 0x2c910, 0x2c99a, 0x2c9aa,
+  0x2c9af, 0x3e980, 0x3eac8, 0x3eacf, 0x3eae3, 0x3eaf1,
+  0x4bc40, 0x52b10, 0x55760, 0x52bb0, 0x9aeac, 0x9b39c,
+  0x9a068, 0xa1d2c, 0x4, 0x8, 0xc, 0x10, 0x3c, 0x40, 0x60,
+  0x64, 0x68, 0x394, 0x571, 0xa, 0x15, 0x1b, 0x1c, 0x21,
+  0x39, 0x20, 0x66, 0x68
+NAMES: magic tag, protocol marker, event code, event bitmap,
+  bit index word, drop law, protocol sender, pr488_magic.txt,
+  pr488_senders.txt, pr488_bcast.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE CODES MEAN - the six authored codes are 0xa
+    (relayed to a parent by 0x287a0), 0x15 (queued to the
+    singleton [[mgr+0x394]] by 0x2c910, once flag [obj+0x571]),
+    0x1b/0x1c/0x21 (broadcast by the method at 0x2c4a0, the 0x21
+    branch also stores 1 to ds:0xcec70) and 0x39 (sent to every
+    earlier sibling child by 0x3e980); WHICH CLASSES RECEIVE -
+    the 16 tables installing 0x53770 (PR-479) are unnamed except
+    via PR-486's names, and the sender methods live in tables
+    0x9aeac, 0x9b39c, 0x9a068, 0xa1d2c; FULL READER SET of the
+    bitmap - 0x49580 has 68 callers, and PR-478's trigger
+    0x3a170 already gates on [lion+0x64] bit 7 = code 0x27, so
+    more code senders must exist through non-protocol paths;
+    and who consumes the non-magic kind-0x10 broadcasts (they
+    are dropped by these tables).
+CLOSES: PR-479's OPENS "the meaning of the magic tag 0x8138764
+  required in payload [+8]": it is a protocol marker separating
+  event-bit messages from ordinary kind-0x10 traffic on the
+  same verb slot, and the payload law is complete - {next,
+  kind, marker, code} at +0/+4/+8/+0xc, the same node shape
+  0x52b10 queues ({next,kind,a,b}) and the same stack shape
+  direct senders build at 0x28849. It also names the delivery
+  trio: broadcast 0x4bc40 over the level, queue-push 0x52b10
+  to one object, and direct verb call through the relative
+  picker 0x55760 ([[parent+0x40][i]] with count [parent+0x3c],
+  PR-480's child arrays). And it identifies the receiver side
+  effect: the OR-setter 0x49580 over the 3-dword field at
+  +0x60, so the [obj+0x64] bit test that gates PR-478's
+  authored trigger reads exactly this event map.
+CORRECTS: nothing.
+MEASURED: (a) TAG CENSUS: `ops like '%8138764%'` over the insn
+  table gives 7 sites; the dword table lists them as immediates.
+  (b) THE HANDLER, verbatim 0x53789-0x537d4: zero a 0xc-byte
+  stack buffer (0x749a0), `mov cl,[edx+0xc]`, dword index
+  cl/0x20 (shr 5 then idiv 0x20 for the remainder), set 1 <<
+  rem, then `lea eax,[esi+0x60]; call 0x49580`; 0x49580 ORs 3
+  dwords over [obj..obj+0xc]. (c) THE SITES: 0x2c4a0 ends with
+  three `push code; mov ecx,magic; mov ebx,0x10; mov eax,
+  ds:0xcef40; call 0x4bc40` blocks; 0x2c9aa is `mov ecx,0x15;
+  mov ebx,magic; mov edx,0x10; mov eax,[[0xcef40]+0x394]; call
+  0x52b10` followed by storing 1 at [obj+0x571]; 0x2883f/
+  0x3eadb build the 4-word stack payload and call [rel+0x10].
+  (d) THE PUSH CALL CONVENTION: every 0x52b10 site loads
+  eax=target, edx=kind, ebx=a, ecx=b (66 sites; two sampled
+  verbatim in the evidence file). (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The event bits at [obj+0x60] are how authored triggers
+  gate level behaviour (PR-478's bit-7 test), and the port has
+  no counterpart for this message bus. The marker makes one
+  verb slot carry two protocols, and the six observed codes
+  show the intended use: relay to parent, queue to the hero
+  singleton, broadcast to all objects, and fan-out to sibling
+  children.
+
