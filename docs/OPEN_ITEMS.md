@@ -5970,15 +5970,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     [rec+0x36] is that count, and 0x73090 fills it (with [obj+0x32])
     from `DWORD [k*12+0xced1c]` where k = [obj+0x3a] - PR-411 CORRECTS
     "is a kind": k is the ENTRY INDEX returned by the interval lookup
-    0x37150, which scans an 18-entry 12-byte table of (low, high, group)
-    x-ranges at 0xced18 and returns the first entry containing its
-    numeric argument ([[obj+0x26]+4]), or 0x11 for none; 0x73082 stores
-    that index at [obj+0x3a]. [obj+0x32] is the interval's LOW end and
-    [rec+0x36] its HIGH end - the table is mirrored from the image at
-    0xa8f88 by 0x36d90 (image minus BSS = 0x25d84 uniformly, so BSS
-    +0x0c is the image's first field), and the object then measures 10
-    units in from both ends and asks its container a point question at
-    each (0x730c6-0x730f4). Also: a record class
+    0x37150, which scans a 12-byte-stride table of (low, high, anchor)
+    x-ranges at 0xced18 and returns the first entry whose range contains
+    its KEY, or 0x11 for none; 0x73082 stores that index at [obj+0x3a],
+    and [obj+0x32] / [rec+0x36] are that entry's LOW and HIGH ends.
+    PR-411 also said the high end is filled at run time and the third
+    field is an unused group id - PR-413 CORRECTS BOTH: 0x36d90 copies
+    all three fields of image entries 1..18 (0xa8f94..0xa9060 ->
+    0xced18..0xceddc, image minus BSS = 0x25d84 uniformly), the lookup's
+    signature is `0x37150(key=eax, probe=edx, start=ebx)` with the
+    matcher 0x36d60 taking key=edx and probe=ebx, so at 0x73073 KEY =
+    [[obj+0x26]] and PROBE = [[obj+0x26]+4]; the match additionally
+    requires `|probe - [[entry+8]*4+0xa906c]| < 0xa`, the anchor table
+    holding 61,154,256,358,451,547 (steps of about 96). The scan bound
+    0x11 covers indices 0..16 - the 17 real ranges - and skips image
+    entry 0 (4,0,3), which is not copied, and image entry 18
+    (-10000,10000,0), which is copied to 0xcede4 but never scanned. The
+    object then measures 10 units in from both ends and asks its
+    container a point question at each (0x730c6-0x730f4). Also: a record class
     differs from another only at +0x08 (six values) and +0x1c (two), and
     0x523f0 shows the call-in `mov esi,[eax+0x44]; call [esi+0x08];
     call [esi+0x0c]`. THE PORT WALKS ITS LADDER FORWARD - this is a

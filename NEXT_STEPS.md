@@ -57789,3 +57789,116 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   entry (jge there, cmp -1 in the row path) is recorded as found, not as
   explained; it is either a bug in the original or a hint that the entry
   call answers something else, and the OPENS line says so.
+
+## PR-413 - CORRECTING MY OWN PR-411: THE SEGMENT LOOKUP TAKES (KEY,
+## PROBE, START), THE THIRD ENTRY FIELD INDEXES A TABLE OF ANCHOR
+## VALUES, AND THE WHOLE TABLE IS SEEDED FROM DATA
+
+```
+KIND: read
+SUBSYSTEM: the segment-interval machinery of PR-411 - the argument order
+  of the lookup 0x37150 and its matcher 0x36d60, the second table at
+  0xa906c that the matcher compares the probe against, the exact seeding
+  of the BSS copy by 0x36d90, and the scan bound
+ADDRESSES: 0x36d60, 0x36d61, 0x36d65, 0x36d6a, 0x36d6d, 0x36d74, 0x36d7d,
+  0x36d82, 0x36d90, 0x36da0, 0x36da3, 0x36da9, 0x36dbb, 0x36dc1, 0x36dc7,
+  0x36dd0, 0x36ee8, 0x36f06, 0x36f27, 0x36f31, 0x36f3c, 0x36f3d, 0x36f42,
+  0x36f4b, 0x36fdb, 0x37150, 0x37158, 0x3715a, 0x37161, 0x37165, 0x3716c,
+  0x37182, 0x37184, 0x37188, 0x37191, 0x37198, 0x73073, 0x73076, 0x73078,
+  0x7307b, 0x7307d, 0x73090, 0x733ed, 0x733f0, 0x733f4, 0x735b4, 0x735b9,
+  0xa8f88, 0xa8f94, 0xa9054, 0xa9060, 0xa906c, 0xced18, 0xcedd8, 0xcede4,
+  0xcedf0, 0x6c, 0x26, 0x32, 0x36, 0x3a, 0x5c, 0x120, 0x130, 0x11, 0x14,
+  0x0a
+NAMES: segment lookup argument order, anchor table, probe tolerance, scan
+  bound, catch-all range, seeding, pr413_tables.txt, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE PROBE IS, physically - it is read from a vtable +0x6c
+  call result at 0x36f3d and from [[obj+0x26]+4] at 0x73078, i.e. a
+  second coordinate of the same container whose first coordinate is the
+  key, but neither field is named; WHY THE ANCHOR TABLE INCREASES BY ABOUT
+  96 - 61, 154, 256, 358, 451, 547, 558, 535 for indices 0..7 - whether
+  it is a y ladder, a row of spawn columns, or per-level data; WHAT
+  REACHES BSS INDEX 17, the (-10000,10000,0) catch-all at 0xcede4, since
+  the lookup cannot scan it; whether the retry at 0x36f27 (`mov ebx,0xff
+  ffffff` then `inc ebx`, so start index 0 then 1) is a second attempt
+  after a miss or a two-segment scan; and the still-open PR-411 question
+  of which class the +0x70 predicate belongs to.
+CLOSES: PR-411's OPENS item WHO FILLS THE f1 FIELD - nobody: the seeding
+  at 0x36d90 copies all three fields of every entry, so an interval's
+  high end is data, not computed. It also closes PR-411's OPENS item WHAT
+  THE THREE FIELDS ARE CALLED, in the part about the third one: it is an
+  index into the anchor table, and the matcher uses it, so it is not an
+  unused group id.
+CORRECTS: PR-411 in four places. (1) The signature: I wrote
+  FUN_00037150(entry, key, start) and FUN_00036d60(entry, key, probe);
+  0x37150 saves eax to edi, edx to ebp and uses ebx as the start index
+  (0x37154-0x37158), then at 0x37182-0x37186 sets `ebx = ebp` and
+  `edx = edi` before the call - so eax = KEY, edx = PROBE, ebx = START,
+  and in 0x36d60 edx is the range value and ebx the probe. At the call
+  sites that means key = [[obj+0x26]] and probe = [[obj+0x26]+4], the
+  other way round from PR-411. (2) I wrote that the probe table at
+  0xa906c is "indexed by the ENTRY NUMBER (three dwords per entry)": it
+  is indexed by the entry's THIRD FIELD (`mov eax,[eax+8]` at 0x36d6a)
+  with a 4-byte stride. (3) I wrote that the seeding "starts at +0x0c ...
+  and NOT the 0xced18/0xced1c pair the object reads" - in the version of
+  the record that shipped, and in OI-128, that is wrong: the loop's
+  first body runs with eax = 0xc and it copies three dwords per step, so
+  BSS 0xced18, 0xced1c and 0xced20 are exactly image 0xa8f94, 0xa8f98,
+  0xa8f9c. (4) I called the third field "a group id ... never compared
+  in the matcher"; it is compared, through the anchor table, with a
+  tolerance of 0xa.
+MEASURED: (a) THE MATCHER. 0x36d60(entry=eax, key=edx, probe=ebx):
+  fails if `edx < [eax]` (0x36d61 jl) or `edx > [eax+4]` (0x36d65 jg);
+  then `edi = [[eax+8]*4 + 0xa906c]` (0x36d6a-0x36d6d) and fails if
+  `|ebx - edi| >= 0xa` (0x36d74-0x36d80); otherwise returns 1.
+  (b) THE SCAN. 0x37150: `cmp ebx,0x11; jl 0x3716c` else return 0x11
+  (0x3715a); 0x3716c builds ecx = start*12 + 0xced18; the loop tests
+  that entry and on a miss does `inc esi; add ecx,0xc; cmp esi,0x11;
+  jl` (0x37161-0x37168) - so the highest index ever tested is 0x10 and
+  the scanned range is BSS 0xced18 .. 0xcedd8+12, exactly 17 entries.
+  (c) THE SEEDED DATA. 0x36d90 (a method, ecx = an object):
+  `xor eax,eax` then the body at 0x36da0 starts with `add eax,0xc`,
+  copies [eax+0xa8f88], [eax+0xa8f8c], [eax+0xa8f90] to
+  [eax+0xced0c], [eax+0xced10], [eax+0xced14], and exits when eax is
+  0xd8 (0x36dc7-0x36dcc) - that is, image entries 1..18 into BSS
+  0xced18..0xcede4, all three fields, then `mov ds:0xcedf0,0`
+  (0x36dd0). Image entry 0 at 0xa8f88 = (4,0,3) is NOT copied and is not
+  a range; image entry 18 at 0xa9060 = (-10000,10000,0) IS copied to
+  0xcede4, which the scan of (b) never reaches. The 17 reachable ranges
+  are unchanged from PR-411: (172,389,0) ... (727,775,5). (d) THE
+  ANCHOR TABLE. At 0xa906c the image holds 61, 154, 256, 358, 451, 547,
+  558, 535, 512 for indices 0..8 - six of them used by the 17 ranges
+  (the third field is 0..5), spaced about 96 apart. (pr413_tables)
+  (e) A CALLER THAT USES A REAL PROBE. 0x36f06 requires [obj+0x5c] == 1
+  and [obj+0x120] <= 0, then 0x36f27 sets ebx = -1 and the loop at
+  0x36f3c does `inc ebx` (start index 0, then 1 on a retry), taking the
+  key from `[[obj vtable +0x6c]() + 4]` (0x36f34) and the probe from
+  `[[obj vtable +0x6c]() + 0]` (0x36f40) before `call 0x37150`
+  (0x36f42); on 0x11 it gives up (0x36f4b), otherwise it multiplies the
+  index by 0x14 (20) and adds it to the object - a per-entry scratch
+  block of five dwords, not the 12-byte table.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr413_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr413_tables.txt (the interval table and the anchor
+  table read as signed ints at aligned addresses from build/leo/leo.img).
+  0x36d60, 0x37150 and 0x36d90 were re-decoded from their own entry
+  addresses, and the argument mapping was taken from the register saves
+  at 0x37154-0x37158 and the re-load at 0x37182-0x37186.
+```
+
+- WHY. PR-411 was the first row to name this mechanism and it got three
+  of its four structural facts wrong, which matters because PR-412 then
+  built on it: the segment predicate is keyed on the container's FIRST
+  dword and gated on its SECOND being within ten of an anchor value, so
+  the "segment" an object walks is selected by a two-coordinate test, not
+  by an index the object carries. With the seeding also corrected - the
+  ranges, their high ends and their anchor indices are all compiled-in
+  data in the executable, not level data and not computed - the open
+  question becomes the honest one: whose coordinates are those, and why
+  the anchors step by 96. That is a question the shipped level files can
+  answer, not more disassembly.
