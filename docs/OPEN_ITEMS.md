@@ -7079,6 +7079,28 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x27918-0x27cd3) - offsets belong to classes. Open: what
     the tested field +0 is, the class map of the field, and
     " v_bounds = %d, %d " at 0x913ee.]
+    [PR-474 CLOSES PR-467's "HOW THE DRAW VERBS ARE REACHED":
+    the element block is entered at ITS +0x10 entry by the
+    render band - `mov esi,[rec+0x33]; mov ebx,<arg>; mov
+    edx,<arg>; call [esi+0x10]` at 0x446db/0x446f8, and the
+    same shape inside PR-49's own draw methods (loads at
+    0x42567/0x42597, call at 0x42570/0x425ba; 0x42597 reads the
+    singleton [ds:0xcef40+0x390] and subtracts its +0x10 first).
+    Under the 0xa0c08 view that entry is PR-467's draw wrapper
+    0x421f0; under the 0xa0bd0/0xa0bdc views it is a bare `ret`
+    stub (0x44270/0x442e0). And the block doubles as the
+    allocation TYPE TAG: 0x74bc0 reads the allocator header word
+    at [obj-4] and passes it to 0x76c00, 0x74be0 is the plain
+    free (jmp 0x5c370), and both take the tag in edx - called
+    736/824 times with literals from 0xa0b00-0xa0d00 (0xa0b2c,
+    0xa0b60, 0xa0b94, 0xa0ba8, 0xa0bbc, 0xa0c34, 0xa0c5c,
+    0xa0c64, 0xa0c78, 0xa0ca0, 0xa0cb4, 0xa0cc0, 0xa0ce4,
+    0xa0cf8). Only four sites store one into a field, giving a
+    THIRD view: 0x41ee5 writes 0xa0c08 at [rec+0+8]. So the
+    record keeps three handles to its element type (+0x8, +0x16,
+    +0x33). This also reopens PR-473's 0x8ca: as a small tag id
+    beside a 0x32 size it looks like an element-type tag, not a
+    bound.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

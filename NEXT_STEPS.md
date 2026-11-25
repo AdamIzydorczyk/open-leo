@@ -63654,3 +63654,95 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   PR-468's "consume" from a mystery into a rule: an object with
   authored bounds swallows the message kind that would move it.
 
+
+## PR-474 - THE ELEMENT BLOCKS ARE ALLOCATION TYPE TAGS: THE
+## ALLOCATOR STORES ONE AT [p-4] AND EVERY DELETE NAMES IT; THE
+## RENDER BAND ENTERS THE BLOCK AT ITS +0x10, WHICH IS PR-467's
+## DRAW WRAPPER
+
+```
+KIND: read
+SUBSYSTEM: the element/frame descriptor family in the data block
+  0xa0b2c-0xa0cf8 (nine bases seen as arguments, four installed
+  as field values: 0xa0bd0, 0xa0bdc, 0xa0c08 twice); the delete
+  pair 0x74bc0/0x74be0 and the header word [p-4] they read; the
+  render-band call shape `mov r,[x+0x33]; call [r+0x10]` at
+  0x446db, 0x446f8, 0x42570 and 0x425ba; and the entry +0x10 of
+  each block
+ADDRESSES: 0x74bc0, 0x74be0, 0x76c00, 0x5c370, 0xa0b2c,
+  0xa0b60, 0xa0b94, 0xa0ba8, 0xa0bbc, 0xa0bd0, 0xa0bdc,
+  0xa0c08, 0xa0c34, 0xa0c5c, 0xa0c64, 0xa0c78, 0xa0ca0,
+  0xa0cb4, 0xa0cc0, 0xa0ce4, 0xa0cf8, 0x41ee5, 0x41f4d,
+  0x43cf5, 0x43fca, 0x4421b, 0x44270, 0x442e0, 0x446d2,
+  0x446db, 0x446f8, 0x421f0, 0x42567, 0x42570, 0x425ba,
+  0x449d8, 0x449dd, 0xa94f0, 0x390, 0x33, 0x16, 0x8, 0x10,
+  0x4, 0x7c, 0x1c, 0x20
+NAMES: allocation type tag, header word, delete helper,
+  descriptor family, draw entry, render band, block entry +0x10,
+  pr474_dispatch.txt, pr474_elementverbs.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE FIVE UNNAMED SLOTS OF THE RENDER BAND (0x446ef-
+    0x448c0: the same `call [view+0x10]` with arguments from
+    [x+0x20]/[x+0x1c], [x+0x7c]+8 indexed by ds:0xa94f0 and
+    other pairs) - which verb each leg draws or updates; the
+    other descriptor bases of the family (0xa0b2c, 0xa0b60,
+    0xa0b94, 0xa0ba8, 0xa0bbc, 0xa0c34, 0xa0c5c, 0xa0c64,
+    0xa0c78, 0xa0ca0, 0xa0cb4, 0xa0cc0, 0xa0ce4, 0xa0cf8) -
+    which element type each tags, since 0xa0bdc/0xa0c08 are the
+    frame and element ones; and whether the 60+ reads of
+    [x+0x16] in the 0x61000-0x74700 band go through the field
+    PR-467 installed (0xa0bd0) or through the other value that
+    lives there, the state-record block 0xa260c at 0x51757.
+CLOSES: PR-467's OPENS "HOW THE DRAW VERBS ARE REACHED": the
+  element block is entered through its +0x10 entry, and the call
+  sites are in the render band - `mov esi,[rec+0x33]; mov
+  ebx,<arg>; mov edx,<arg>; call [esi+0x10]` at 0x446db and
+  0x446f8, and the same shape at 0x42570 and 0x425ba inside
+  PR-49's own draw methods, which load [rec+0x33] at 0x42567
+  and 0x42597. Under the 0xa0c08 view that entry IS PR-467's
+  wrapper 0x421f0; under the 0xa0bd0 and 0xa0bdc views it is a
+  bare `ret` stub (0x44270, 0x442e0), so the same bytes hold a
+  real draw only through the 0xa0c08 view. It also explains the
+  family: the block is not only a method table but the
+  allocation TYPE TAG of the element. The delete helper 0x74bc0
+  reads the allocator header word at [obj-4] and hands it to
+  0x76c00, and 0x74be0 is the plain free (jmp 0x5c370); both
+  take the type tag in edx, and the engine calls them 736 and
+  824 times, each with a literal tag out of 0xa0b00-0xa0d00.
+  The field [rec+0x8] is the third view of the same block
+  (0x41ee5 stores 0xa0c08 there), so the record keeps three
+  handles to its element type.
+CORRECTS: PR-473's "the authored bounds pair with +0x122" for
+  the 0x8ca constant: 0x74bc0's second argument is a type tag
+  out of this same data block, so 0x27f1b's `mov [obj+0x126],
+  0x8ca` more likely stores a tag than a bound. The bounds
+  reading still stands for the slots at +0x122/+0x126, which
+  0x3b500 prints and 0x3b530 tests; only the meaning of the
+  2250 default moves back to open.
+MEASURED: (a) THE HEADER READ, verbatim at 0x74bc0: `test
+  eax,eax; jne .go; xor ecx,ecx; jmp .out` / `.go: lea
+  ecx,[eax-4]; mov esi,[ecx]; mov ebx,edx; mov edx,esi; call
+  0x76c00` - the stored tag at [obj-4] replaces the caller's
+  tag before the real deallocator runs. (b) THE TAG CENSUS: all
+  dword values in 0xa0b00-0xa0d00 - twenty sites, nineteen of
+  them immediates to 0x74bc0/0x74be0/0x76a64 and four stores
+  into fields (0x41ee5 -> +0x8, 0x41f4d -> +0x33, 0x43cf5 ->
+  +0x33, 0x43fca -> +0x16). (c) THE ENTRY TABLE: +0x10 of each
+  block: 0xa0bd0 -> 0x44270 (ret), 0xa0bdc -> 0x442e0 (ret),
+  0xa0c08 -> 0x421f0 (the draw wrapper), 0xa0cc0 -> 0x44f90,
+  0xa0b2c/0xa0b60 -> 0x40b60, 0xa0c34/0xa0c64 -> 0. (d) THE
+  RENDER LEGS: 0x446d5 passes [ecx+0x8]/[ecx+0x4] and 0x446f5
+  [ecx+0x20]/[ecx+0x1c]; 0x42597 reads the singleton
+  [ds:0xcef40+0x390] and subtracts its +0x10 before the call.
+  (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The block had two installations and no visible caller,
+  which looked like a hole in the model. It is not: the same
+  pointer is the record's element-type handle, the allocator's
+  type tag for deleting it, and the render band's entry point -
+  one object type, three uses, all consistent.
+
