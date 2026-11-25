@@ -7581,6 +7581,20 @@ OI-128: what landing and leaving a surface does - the class verbs
     the print-verb family, not a level class. Census work
     CLOSED: every detected table is named. NEW FEATURE GAP:
     a 4-class KADMAR2 light system no port model has.]
+    [PR-502 MODELS THE LIGHT SYSTEM: the four KADMAR2 light
+    classes are near-identical thin wrappers (60-slot verb
+    diff: only the ctor + OBJ_SWT's +0x18=0x2ba40 differ);
+    ctors build a light sub-object AT [obj+0xa9] via ctor
+    0x2d7d0, whose class root is the CODE-EMBEDDED table
+    0x9b4b4 (installed at [light+0x10] by 0x2d7f7/0x2d82d -
+    third embedded table after 0xa0cc0). Shared verb +0xc =
+    0x2b4c0 `mov eax,ds:0xcf050; ret`: the GLOBAL LIGHT
+    MANAGER, written exactly once (0x5156d in 0x513a0), and
+    that getter sits in exactly 12 of 173 tables at +0xc -
+    the 4 light classes + KOLUMNA/PIASEK, POCISK2/SMIGLO,
+    0x9ac90, SOPEL, SOUNDSOURCE, DRABINKA. Manager internals
+    (what 0x513a0 builds) and the 0xa9-byte light field map
+    stay open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

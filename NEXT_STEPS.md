@@ -66097,3 +66097,85 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   gap for the level port - and the census work is now
   closed: every detected class table has a name.
 
+
+## PR-502 - THE LIGHT SYSTEM: FOUR THIN KADMAR2 CLASSES OVER
+## AN EMBEDDED-TABLE LIGHT BASE AT +0xa9, AND A GLOBAL LIGHT
+## MANAGER ds:0xcf050 GETTED BY 12 CLASS TABLES
+
+```
+KIND: read
+SUBSYSTEM: the PR-501 OPENS "what the light classes do".
+  The four KADMAR2 light classes (SWIATLO 0x9aa60, LEW_SWT
+  0x9ab18, OBJ_SWT 0x9abd4, PODMUCH 0x9b324) are NEARLY
+  IDENTICAL: diffing 60 verb slots, all share the same verb
+  block; only the ctor slot and one verb (OBJ_SWT +0x18 =
+  0x2ba40) differ - the rest of the earlier "diffs" were
+  over-read into the next packed table. Their ctors
+  (0x2caa0/0x2cb90/0x2cc90) have the standard dtor shape
+  (cl&4 print via descriptor 0x9a904/0x9a918/0x9a92c, cl&2
+  free) and the build branch is: `add eax,0xa9; call 0x2d7d0`
+  - the LIGHT SUB-OBJECT CTOR at object offset +0xa9 - then
+  the standard chain ctor 0x53a30. THE LIGHT BASE IS ITS OWN
+  EMBEDDED-ROOT CLASS: table 0x9b4b4 (head verb = the ctor
+  0x2d7d0 itself) is installed at [light+0x10] BY THE CTOR
+  CODE (0x2d7f7, 0x2d82d) - a third code-embedded table
+  after 0xa0cc0 (PR-498), which is why no detector sees it;
+  helpers 0x2d8a0 (alloc+ctor), 0x2d8f0, 0x2d990 build and
+  relocate the light. The base ctor chain callers are the
+  ctor families 0x2ca80 x4 + the 3 print branches - the
+  light base exists only inside the four KADMAR2 classes.
+  And the shared verb +0xc in ALL FOUR (0x2b4c0) is just
+  `mov eax,ds:0xcf050; ret` - the GLOBAL LIGHT MANAGER;
+  that singleton is written exactly ONCE in the image (0x5156d
+  inside 0x513a0) and the same getter verb appears in
+  exactly 12 class tables of the 173-union: the four light
+  classes plus KOLUMNA/PIASEK (0x9a07c/0x9a2b4), POCISK2/
+  SMIGLO (0x9a2b4), LEW_SWT/OBJ_SWT neighbors (0x9ac90),
+  SOPEL (0x9e4c0), SOUNDSOURCE (0x9ed18) and DRABINKA
+  0xa2498 - the journal's "16 tables installing 0x53770"
+  observation overlaps this light-aware set. So: lights are
+  one global manager + per-object light attachments
+  (SWIATLO free-standing, LEW_SWT hero, OBJ_SWT object-
+  mounted, PODMUCH the pumped-light fourth member), with
+  12 light-aware classes.
+ADDRESSES: 0x9aa60, 0x9ab18, 0x9abd4, 0x9b324, 0x2caa0,
+  0x2cb90, 0x2cc90, 0x2d7d0, 0x9b4b4, 0x2d7f7, 0x2d82d,
+  0x2d8a0, 0x2d8f0, 0x2d990, 0x53a30, 0x2b4c0, 0xcf050,
+  0x5156d, 0x513a0, 0x2ba40, 0x9a07c, 0x9a2b4, 0x9ac90,
+  0x9e4c0, 0x9ed18, 0xa2498, 0xa9, docs/OPEN_ITEMS.md
+NAMES: light system, embedded light base, +0xa9 attachment,
+  light manager singleton, light-aware classes, third
+  code-embedded table, pr502_lights.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT 0x513a0 DOES when it creates the manager (the
+    manager's own class table + verbs: scan, attenuation,
+    drawing); the light sub-object field map at 0xa9 bytes
+    (+0x10 = placeholder 0x9b4b4-then-embedded, +0x14 word
+    field per 0x2d831); how SOPEL/SOUNDSOURCE/DRABINKA use
+    the getter; and whether the engine's palette-blending
+    reads [light+...] per pixel (the port has no light
+    model at all - feature gap stays OPEN for M-level work).
+CLOSES: PR-501's OPENS "WHAT THE LIGHT CLASSES DO": thin
+  attachment classes over one embedded light-base class and
+  a global manager singleton; 12 light-aware class tables
+  enumerated. Also adds the third code-embedded table
+  0x9b4b4 to the detector-blind-spot list (PR-498/PR-499).
+CORRECTS: none. (PR-501's quartet attribution is confirmed
+  by the ctor-family pairing 0x2ba90/0x2ca80.)
+MEASURED: (a) VERB-TABLE DIFF of the three light tables
+  over 60 slots (pr502_lights.txt): one ctor + one verb
+  differ. (b) CTOR BODIES verbatim incl. `add eax,0xa9;
+  call 0x2d7d0`. (c) 0x9b4b4 installed only by store sites
+  0x2d7f7/0x2d82d; head = 0x2d7d0. (d) SINGLETON CENSUS:
+  one write of ds:0xcf050; getter 0x2b4c0 in exactly 12 of
+  173 tables at slot +0xc. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. If the port ever renders KADMAR2 faithfully it needs
+  exactly two things: a single light-manager object and an
+  optional +0xa9 light attachment on 12 class types - not a
+  per-class light subsystem.
+
