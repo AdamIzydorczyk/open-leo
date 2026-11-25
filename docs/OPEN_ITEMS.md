@@ -7202,6 +7202,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     [obj+0x30] and kind 21 as the [obj+0x28] latch. Open: what
     0x8138764 is, 0x3d8f0 and 0x1e130, and the remaining 43
     tables' verbs.]
+    [PR-480 CLOSES PR-466's "child initialisation args": they are
+    MESSAGES. The creator is the class-table verb at deep slot
+    +0x84 (0x55530, 4 physical words 0x97960/0x9826c/0x9a2a4/
+    0x9efbc - the PR-479 nesting artifact again, not 16 slots).
+    It calls the class-NAME factory 0x4dcc0 (46 callers; its
+    first strcmp arms name ANITAB at 0x91f3d and PLANT at
+    0x91f44; objects are 0xa5 bytes via 0x5c320), then builds a
+    payload {0, kind, a, b} and calls [[child]+0x10] TWICE:
+    kind 1 with a,b = the parent's two position words, then kind
+    0xe with a = the parent. The payload law is PR-62's node
+    shape {next, kind, a, b} - the "leading 0" is the link word.
+    Kind 14's base arm 0x52bef writes [obj+0x30] = parent (the
+    PR-183 relay target), so a child records its parent there;
+    kind 1 is ignored by the default verb 0x53770, which PR-479
+    listed as open - 0x54560 tail-calls it at 0x5463a/0x54652/
+    0x54675/0x5468d, confirming it is the true default. Also
+    read verbatim: the dispatcher's jump table at 0x50d20, 13
+    entries (kinds 9..0x15): 0->0x50df4, 1->0x50de0 writes
+    [obj+0x14]/[obj+0x18], 2->verb +0xd8, 6->verb +0xfc,
+    0xc->[obj+0x116]=1, rest default.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

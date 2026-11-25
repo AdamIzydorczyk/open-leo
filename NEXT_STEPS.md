@@ -64177,3 +64177,95 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   handlers, one specialised dispatcher, and a magic-tag protocol
   handler nobody had read.
 
+
+## PR-480 - CHILD CREATION IS A NAME FACTORY PLUS TWO MESSAGES:
+## THE CLASS-TABLE VERB +0x84 ALLOCATES BY CLASS NAME, SENDS
+## KIND 1 WITH ITS OWN POSITION, THEN KIND 14 TO ATTACH ITSELF
+
+```
+KIND: read
+SUBSYSTEM: the child-creation method 0x55530, held at deep slot
+  +0x84 of the PR-466 child-list tables (4 physical words, 16
+  nested views); the class-name object factory 0x4dcc0 (46
+  callers, first strcmp arm at 0x4df25 names ANITAB and PLANT,
+  object size 0xa5); the message payload law ({next, kind, a,
+  b}); the two kinds the creator sends (1 and 0xe) and their
+  arms in 0x52bb0 (0x52bef writes [obj+0x30]) and 0x54560; the
+  13-entry dispatcher jump table at 0x50d20 read verbatim
+ADDRESSES: 0x55530, 0x4dcc0, 0x4df10, 0x4df25, 0x4df39,
+  0x4df50, 0x91f3d, 0x91f44, 0x91f2a, 0x91f31, 0x57a40,
+  0x961fc, 0x96200, 0x531f0, 0xa1eb4, 0xa1eac, 0x4a970,
+  0x57f70, 0x57a70, 0x57bb0, 0x57a00, 0x24018, 0x24013,
+  0x978dc, 0x981e8, 0x9a220, 0x9ee88, 0x97960, 0x9826c,
+  0x9a2a4, 0x9efbc, 0x50d20, 0x50df4, 0x50de0, 0x50dae,
+  0x50dc7, 0x50d9c, 0x50e4f, 0x50e58, 0x52bef, 0x52bf2,
+  0x5465d, 0x54680, 0x54683, 0x5463a, 0x53770, 0x5c320,
+  0xa5, 0x10, 0x84, 0x30, 0x34, 0x6d, 0x71, 0x4, 0x8, 0xc
+NAMES: child creation method, class-name factory, attach
+  message, payload law, init message, deep verb +0x84,
+  pr480_childctor.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH CHILD CLASSES ARE BUILT BY VERB +0x84 - the class
+    name is read from the parent record at [+0x0] and [+0x4]
+    (a name string and a second word), so the authored row
+    names the child, but no row was matched to these four table
+    families yet; WHAT [obj+0x30]-as-parent DOES - PR-183
+    called it the relay target, so an attached child relays
+    messages to its parent, unproven here; the child's own +0x10
+    handling of kind 1, which the base verb 0x53770 ignores
+    (only its magic-tag arm exists), so the position payload
+    must be read by an override in the child's class - which
+    one is unresolved; and the factory's other arms: 0x4df10 is
+    a long strcmp chain and only its first two names were read.
+CLOSES: PR-466's OPENS "what the child record's initialisation
+  args are ... and what the leading 0 selects": the call is not
+  an argument list but a MESSAGE. The payload law is {next,
+  kind, a, b} (PR-62's node layout, and the queue push 0x52b10
+  fills exactly +0x4/+0x8/+0xc), so `[+0x10](0, [parent+0],
+  [parent+4])` is kind 1 with a=[parent+0], b=[parent+4] - the
+  parent's two position words - and the "leading 0" is the
+  payload's unused link word. The creator then makes a SECOND
+  payload {0, 0xe, parent, 0} and calls the same verb: kind 14
+  is the attach message, whose base arm 0x52bef writes
+  [obj+0x30] = payload.a, i.e. the child stores its parent in
+  the PR-183 relay-target field. It also closes part of PR-479's
+  OPENS about the magic arm: 0x53770 is the DEFAULT message verb
+  in practice - the generic handler 0x54560 ends its unmatched
+  paths by tail-calling it at 0x5463a/0x54652/0x54675/0x5468d,
+  so kind 1 for a plain child is a no-op unless overridden. And
+  it settles the "16 tables" count of PR-466's deep entries the
+  same way PR-479 settled the dispatcher: 0x55530 appears in 4
+  physical words (0x97960, 0x9826c, 0x9a2a4, 0x9efbc), all at
+  offset +0x84 from the outermost detected table (0x978dc,
+  0x981e8, 0x9a220, 0x9ee88).
+CORRECTS: PR-466's phrasing "0x55530 calls the child's +0x10
+  with (0, [parent+0], [parent+4])": it is one call with a
+  4-dword payload structure whose kind field is 1, followed by a
+  second call with kind 0xe - not a three-argument call.
+MEASURED: (a) THE CREATOR, verbatim: `mov eax,ds:0xcef40; call
+  0x4dcc0` with edx pointing at the parent's name slot; `mov
+  edx,esp; call [[child]+0x10]` with [esp+4]=1, [esp+8]=[this],
+  [esp+0xc]=[this+4]; reload [child] at +8; then `[esp+0x14] =
+  0xe, [esp+0x18] = this` and the same verb again. (b) THE
+  FACTORY: 0x4dcc0 passes a scanf format pair (0x91f2a " %[^,]",
+  0x91f31 "] , ") through 0x57a40, then 0x4df10 chains strcmp
+  against 0x91f3d = ANITAB (first arm) and 0x91f44 = PLANT,
+  each branch allocating 0xa5 bytes with 0x5c320 and calling
+  0x531f0 before storing table pointers at [obj+8]/[obj+0xc].
+  46 call sites. (c) THE JUMP TABLE at 0x50d20, 13 entries,
+  kinds 9..0x15 with base 9: 0 -> 0x50df4, 1 -> 0x50de0
+  ([obj+0x14]/[obj+0x18] := a,b), 2 -> 0x50dae (verb +0xd8), 6
+  -> 0x50dc7 (verb +0xfc), 0xc -> 0x50d9c ([obj+0x116] := 1),
+  all others -> the default 0x50e4f -> 0x54560. (d) THE PORT.
+  Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. PR-466 had the engine "constructing children with three
+  mystery arguments". They are message payloads: a child is
+  created by name and then TOLD where it is and who owns it,
+  through the same +0x10 verb as everything else. That makes the
+  child list a message graph, not a special construction path.
+
