@@ -58839,8 +58839,9 @@ MEASURED: (a) THE INVENTORY. The value passed in edx to a call of the
   `mov eax,0x60; call 0x5c320`; 15 descriptors carry size 0x60 and one of
   them, 0x96420, names 0x524a0 and 0x52500 as constructors - 0x52500 is
   the record constructor of PR-102, whose `operator new(0x60)` this is.
-  The scene-object family of PR-418 and PR-421 has size 0x28c, which fits its field map exactly: its highest
-  field used anywhere is the chain link at +0x288.
+  The scene-object family of PR-418 and PR-421 has size 0x28c, which
+  fits its field map exactly: its highest field used anywhere is the
+  chain link at +0x288.
   (d) A NEARBY BLOCK OF THE SAME SHAPE. 0x9f250 - the dword PR-419 found
   holding the scanner 0x36280 - reads as `00036280 00050300 00036730
   000367a0 00050ea0`: five small code addresses in the same block shape,
