@@ -5227,14 +5227,16 @@ int ll_mov_selftest(void)
            " + PR-352 the ENGINE'S OWN STANDING QUERY on those tables -"
            " 0x45380's bracket (left end inside, right end NOT, a hit is"
            " the first record past x), the flag gate of 0x4540c reading"
-           " record 0 ONLY, and 0x45400's two 0x455a0 calls: the first"
-           " with the bracket's record order at the position snapshot, the"
-           " second with the pair reversed at the aimed block, so the"
-           " column's answerable rows are L2..L1 - no row, one row or two"
-           " depending on the sign of the slope, since `idiv` truncates"
-           " toward zero; 0x4547d rejects a surface above the requester"
-           " unless it is the one at [obj+0xa9], and 0x4549a keeps the"
-           " MOST NEGATIVE clearance, so the highest answerable surface"
+           " record 0 ONLY, and 0x45400's two 0x455a0 calls, which"
+           " PR-392 reads as ONE line value taken at TWO points: both"
+           " take the pair in the bracket's order (A = record i-1, B ="
+           " record i), the first at the +0x6c sample pair [obj+0x89]"
+           " and the second at the aimed block, and `idiv` truncates"
+           " toward zero, so the value sits one pixel above the real"
+           " line on a falling span; 0x4547d rejects a surface above the"
+           " SNAPSHOT unless it is the one at [obj+0xa9], and"
+           " 0x45496/0x4549a require the AIM value to be <= 0 and keep"
+           " the MOST NEGATIVE, so the highest answerable surface"
            " wins. Measured over full cycles, ZARIA.01's four ANIPL2 seat"
            " tables cover x 838..900, 885..947, 930..992 and 307..382 with"
            " tops y 475..482, 380..387, 320..327 and 633..664, all of them"
@@ -10485,10 +10487,13 @@ static int seat_slope(int ax, int ay, int bx, int by, int x, int py)
 {
     /* 0x455a0: (x - A.x) * (B.y - A.y) / (B.x - A.x) + A.y - point.y.
      * C's `/` is the engine's `idiv` (0x455be `sar edx,31`, 0x455c3):
-     * truncated TOWARD ZERO, sign of the dividend. Reversing the pair -
-     * which is what 0x4548d/0x4548f do - gives the same value up to that
-     * truncation, so the two gates bound the clearance to 0 or 1 (PR-350).
-     * There is no guard for B.x == A.x: PR-348's open item, none here. */
+     * truncated TOWARD ZERO, sign of the dividend, so on a falling line
+     * the value sits one pixel ABOVE the real one (100 + trunc(-16.5) =
+     * 84 at x 33 of (0,100)-(100,50)). Both call sites pass the pair in
+     * this order, A = record i-1 and B = record i: the difference between
+     * them is only the point in ebx (PR-392, against PR-350/PR-352's
+     * "reversed pair"). There is no guard for B.x == A.x: PR-348's open
+     * item, none here. */
     return (x - ax) * (by - ay) / (bx - ax) + ay - py;
 }
 
@@ -10505,7 +10510,10 @@ static int seat_rec_flag(const lvl_obj *o, int k)
  * requester, the same structure for this call shape. held is the object's
  * [obj+0xa9]: the query it is asked about is exempt from the first gate
  * (0x45479). Returns 1 when the query answers, having written the winner
- * triple; best is [requester+0xea], which the first ask leaves at 0. */
+ * triple; best is [requester+0xea], which the first ask leaves at 0.
+ * snapx/snapy is the point of the FIRST call, what the asker's class verb
+ * +0x6c hands back - 0x23a10, `add eax,0x89; ret`, the clamp sample pair,
+ * in all 186 class views (PR-351, PR-392). */
 static int seat_ask_core(const lvl_obj *o, int mode, int aimx, int aimy,
                          int snapx, int snapy, int held, int *best)
 {
@@ -10516,13 +10524,21 @@ static int seat_ask_core(const lvl_obj *o, int mode, int aimx, int aimy,
         return 0;
     if (!i)                             /* 0x4542c-0x4542e */
         return 0;
-    ax = o->seat_x[i]; ay = o->seat_y[i];
-    bx = o->seat_x[i - 1]; by = o->seat_y[i - 1];
-    c1 = seat_slope(ax, ay, bx, by, snapx, snapy);   /* 0x45468: the
-                                                     * snapshot point */
-    if (c1 < 0 && held != 1)            /* 0x45477, 0x45479, 0x4547d */
+    /* Both 0x455a0 calls take the pair in the SAME order. The stack dance
+     * at 0x45443-0x45464 leaves eax = array + (i-1)*13 and edx = array +
+     * i*13, and 0x45481-0x4548f builds exactly the same two operands in
+     * registers; only ebx changes, the +0x6c result in the first call and
+     * the caller's point in the second (0x4548b `mov ebx,ebp`, the value
+     * saved at 0x4540a). PR-352 had the second pair reversed. */
+    ax = o->seat_x[i - 1]; ay = o->seat_y[i - 1];   /* A = record i-1 */
+    bx = o->seat_x[i]; by = o->seat_y[i];           /* B = record i   */
+    c1 = seat_slope(ax, ay, bx, by, snapx, snapy);   /* 0x45468: the +0x6c
+                                                      * sample pair */
+    if (c1 < 0 && held != 1)            /* 0x45477, 0x45479, 0x4547d: the
+                                         * first gate reads the SNAPSHOT,
+                                         * and the held surface skips it */
         return 0;
-    c2 = seat_slope(bx, by, ax, ay, aimx, aimy);     /* 0x45491: the aim */
+    c2 = seat_slope(ax, ay, bx, by, aimx, aimy);     /* 0x45491: the aim */
     if (c2 > 0 || c2 > *best)           /* 0x45498 `jg` on `test eax,
                                          * eax`, then 0x4549a `cmp eax,
                                          * [edi+0xea]` / 0x454a0 `jg`: the
@@ -10575,16 +10591,19 @@ static int surface_ask_selftest(void)
     int q, bad = 0;
 
     /* (1) THE LAW, case by case. Every expected value below is arithmetic
-     * done by hand from the instructions quoted above. Writing L1 for the
-     * line value of 0x455a0 with the pair AS THE BRACKET gives it (record
-     * i first) at the SNAPSHOT point, and L2 for the same call with the
-     * pair REVERSED at the AIM point: 0x4547d requires L1 >= snapshot y and
-     * 0x45498 requires L2 <= aim y. The two forms interpolate the same line
-     * with `idiv`, which truncates TOWARD ZERO, so L1 and L2 are the true
-     * line value or the whole pixel beside it - and for ONE point the
-     * answerable rows are L2..L1, which the slope can make empty, one row
-     * or two. The two gates read two different points, and the caller's
-     * (aimed block, position snapshot) pair is what 0x45400 really bounds. */
+     * done by hand from the instructions quoted above. Write L for the line
+     * value of 0x455a0 with the pair AS THE BRACKET GIVES IT (A = record
+     * i-1, B = record i, the same in both calls): the first gate, 0x4547d,
+     * requires L >= the SNAPSHOT y - the point the asker's class verb
+     * +0x6c returns, [obj+0x89] - and waives that test for the surface at
+     * [obj+0xa9]; the second gate, 0x45496/0x454a0, requires the same L at
+     * the AIM y to be <= 0 and better than the incumbent. The value
+     * `idiv` returns is not the real line: on a falling span it truncates
+     * toward zero, so it sits one pixel above it, and the rows the model
+     * accepts are exactly the rows the corrected truncation gives - which
+     * is what separates these pins from PR-350's and PR-352's. The two
+     * gates read two different POINTS of one line, so a query answers when
+     * the snapshot is at or under the line and the aim at or above it. */
     {
         static const struct {
             int sx[2], sy[2], flag[2], mode;
@@ -10608,22 +10627,23 @@ static int surface_ask_selftest(void)
             { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 837, 475, 837, 475,
               0, 0, 0, "and 1 px left of the first: the ONLY range test the"
               " bracket makes" },
-            /* The two gates at a level surface: L1 = L2 = 475, so the only
-             * answerable row of that column is y 475 itself - from 1 px
-             * below the seat 0x4547d rejects, from 1 px above it 0x45498
-             * does. The standing query needs the requester AT the seat. */
+            /* The two gates at a level surface: the value is 475 - y, so the
+             * only answerable row of that column is y 475 itself - from 1
+             * px below the seat 0x4547d rejects, from 1 px above it
+             * 0x45496 does. The standing query needs the requester AT
+             * the seat. */
             { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 474, 860, 474,
-              0, 0, 0, "1 px ABOVE the seat top: L1 = L2 = 475 > y, so"
-              " 0x45498 rejects" },
+              0, 0, 0, "1 px ABOVE the seat top: the value is +1, so"
+              " 0x45496 rejects" },
             { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 476, 860, 476,
-              0, 0, 0, "1 px BELOW the seat top: L1 - y = -1, so 0x4547d"
+              0, 0, 0, "1 px BELOW the seat top: the value is -1, so 0x4547d"
               " rejects a surface the requester does not hold" },
             { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 476, 860, 475,
               0, 1, -1, "the snapshot ON the seat and the aim 1 px into it:"
               " the two gates read DIFFERENT points, so this answers with"
               " the incumbent -1" },
             { { 838, 900 }, { 475, 475 }, { 1, 1 }, 2, 860, 475, 860, 476,
-              0, 0, 0, "and the same pair the other way: L1 = -1 at the"
+              0, 0, 0, "and the same pair the other way: -1 at the"
               " snapshot, so it does not" },
             /* The flag gate 0x4540c-0x45417 reads record 0 ONLY. */
             { { 838, 900 }, { 475, 475 }, { 1, 1 }, 0, 860, 475, 860, 475,
@@ -10631,43 +10651,55 @@ static int surface_ask_selftest(void)
             { { 838, 900 }, { 475, 475 }, { 0, 2 }, 2, 860, 475, 860, 475,
               0, 1, 0, "a flag 2 on record 1 only - the authored `;` before"
               " a pair belongs to the record that FOLLOWS it (PR-344)" },
-            /* A rising span: the true line at x 33 is y 66.5. The pair the
-             * bracket gives truncates to L1 = 67 and the reversed pair to
-             * L2 = 66, so that column answers y 66 AND y 67, and nothing
-             * outside them. */
+            /* A rising span (0,50)-(100,100). At x 33 the pair the bracket
+             * gives is A = record 0, B = record 1, so the value is
+             * 50 + trunc(33*50/100) = 50 + 16 = 66 - point.y. ONE row of
+             * that column answers, y 66; the two gates separate only when
+             * the two points have DIFFERENT y. */
             { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 66, 33, 66,
-              0, 1, 0, "the rising line, at L2: incumbent 0" },
+              0, 1, 0, "the rising line AT its own truncated value: both"
+              " gates read the same 66, and the incumbent is 0" },
             { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 67, 33, 67,
-              0, 1, -1, "the same column at L1: incumbent -1, the more"
-              " negative of the two - and 0x454a0 keeps that one" },
+              0, 0, 0, "one row under that line: the first gate 0x4547d sees"
+              " -1. PR-352 read this column as answering y 67 too, from a"
+              " reversed second pair - 0x45481-0x4548f does not reverse it" },
             { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 65, 33, 65,
-              0, 0, 0, "1 px outside that band above: c2 = +1" },
+              0, 0, 0, "one row above it: c2 = +1, 0x45496 refuses" },
             { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 68, 33, 68,
-              0, 0, 0, "and 1 px below it: c1 = -1" },
+              0, 0, 0, "and two rows under it: c1 = -2" },
+            { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 67, 33, 66,
+              0, 1, -1, "the snapshot ON the line and the aim 1 px under it:"
+              " the first gate reads the snapshot, so this answers at -1" },
+            { { 0, 100 }, { 50, 100 }, { 0, 0 }, 2, 33, 66, 33, 67,
+              0, 0, 0, "and the same pair the other way round: the snapshot"
+              " is the row 0x4547d tests, so it does not" },
             { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 32, 84, 32, 84,
-              0, 1, 0, "a FALLING line sampled where it is exact: 50 +"
-              " trunc(-3400/-100) = 84, so that column answers y 84" },
-            /* The same falling line at x 33: its value is 83.5, the two
-             * truncations give L1 = 83 and L2 = 84, and the band L2..L1 is
-             * EMPTY - no row of that column is answerable at all. A
-             * rounding or a floor division would have made both 83 or both
-             * 84 and answered one row; this is what pins `idiv`. */
+              0, 1, 0, "a FALLING line, exact at x 32: 100 + trunc(-1600/100)"
+              " = 84, so that column answers y 84" },
+            /* The same falling line at x 33: 100 + trunc(33*-50/100) =
+             * 100 + trunc(-16.5). `idiv` truncates TOWARD ZERO, so it is
+             * -16 and the value is 84, not 83. A floor division or a
+             * round-to-nearest would answer y 83 instead; this is what pins
+             * the truncation. */
             { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 33, 83, 33, 83,
-              0, 0, 0, "L1 = 83 at the snapshot but L2 = 84 at the aim" },
+              0, 0, 0, "1 px above that row: c2 = 84-83 = +1, 0x45496"
+              " refuses - truncation toward zero, not floor" },
             { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 33, 84, 33, 84,
-              0, 0, 0, "and one lower: c1 = -1, so 0x4547d rejects" },
+              0, 1, 0, "at the row itself, x 33: c1 = c2 = 0. PR-352 had"
+              " this column EMPTY" },
             { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 33, 84, 33, 83,
               0, 1, 0, "the same column with the gates reading DIFFERENT"
-              " rows - the snapshot at L1 = 83, the aim at L2 = 84: both"
-              " pass, so the band is empty only for one point" },
+              " rows: the snapshot 1 px above the line passes 0x4547d with"
+              " +1 and the aim on the line passes 0x45496" },
             { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 33, 84, 33, 84,
-              1, 1, 0, "the same empty column with the 0x45479 waiver of"
-              " the held surface: only the second gate is left, and it"
-              " accepts L2 itself" },
+              1, 1, 0, "the same, with the 0x45479 waiver of the held"
+              " surface: here it changes nothing, because c1 is 0 anyway" },
             { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 99, 50, 99, 50,
-              0, 0, 0, "near the end of a falling span: trunc(-50/-100) = 0"
-              " gives L1 = 50 while trunc(-4950/100) = -49 gives L2 = 51 -"
-              " empty band again" },
+              0, 0, 0, "near the end of the falling span: 100 +"
+              " trunc(-4950/100) = 51, so at y 50 the value is +1" },
+            { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 99, 51, 99, 51,
+              0, 1, 0, "and at that row: c1 = c2 = 0. The reversed second"
+              " pair of PR-352 answered 50 here, and refused 51" },
             { { 0, 100 }, { 100, 50 }, { 0, 0 }, 2, 100, 50, 100, 50,
               0, 0, 0, "and AT the last record of a span: no bracket at all"
               " (0x4542e)" },
@@ -10718,8 +10750,8 @@ static int surface_ask_selftest(void)
         a.seat_y[0] = a.seat_y[1] = 380;
 
         /* asked while the requester stands at y 475: the seat 95 px ABOVE
-         * him is not answerable, because L1 = 380 - 475 = -95 < 0 and the
-         * 0x45479 waiver covers ONLY the surface at [obj+0xa9]. */
+         * him is not answerable, because the value is 380 - 475 = -95 < 0
+         * and the 0x45479 waiver covers ONLY the surface at [obj+0xa9]. */
         if (!seat_ask_core(&p, 2, 890, 475, 890, 475, 0, &best)) {
             fprintf(stderr, "surface ask selftest: FAILED the seat the"
                             " requester is standing on must be answerable"
@@ -10802,7 +10834,7 @@ static int surface_ask_selftest(void)
         for (it = 0; it < 400; it++) {
             obj_advance(&o, LL_ITER_MS);
             if (o.seat_y[0] != o.seat_y[1])
-                flat = 0;           /* a tilted pair: L1 != L2 in general */
+                flat = 0;         /* a tilted pair: the value depends on x */
             if (o.seat_y[0] < lo)
                 lo = o.seat_y[0];
             if (o.seat_y[0] > hi)
@@ -10835,8 +10867,8 @@ static int surface_ask_selftest(void)
         printf("surface ask: %s authored at (%d,%d): its two records stand"
                " at x %d..%d y %d at rest, and every sampled row pair of"
                " its motion carries the SAME y in both records (%s), so over"
-               " one full cycle the table covers x %d..%d with L1 = L2 at"
-               " its top, y %d..%d. 0x45400 answers such a table at an x in"
+               " one full cycle the table covers x %d..%d with one value"
+               " at its top, y %d..%d. 0x45400 answers such a table at an x in"
                " its span for ONE row: the requester's snapshot y must be <="
                " that top and his aim y >= it, and for a level table those"
                " two bounds meet at the top row itself\n", fx[q].type,

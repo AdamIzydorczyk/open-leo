@@ -54633,3 +54633,125 @@ MEASURED: (a) WHO RUNS THE QUERY. 0x546a0 is stored at +0xAC of 155 class
   raise a signal every step from it. Also that the position carry at
   0x54825 is a sum of the clamp delta and the ask's clearance: the ground
   query moves the body directly, every frame.
+
+## PR-393 - THE TWO 0x455a0 CALLS TAKE ONE RECORD PAIR AT TWO POINTS:
+## THE PORT'S STANDING-QUERY MODEL AND ITS L15 PINS ARE RE-DERIVED, AND
+## THE TRUNCATED LINE VALUE SITS ONE PIXEL HIGH ON A FALLING SPAN
+
+```
+KIND: port
+SUBSYSTEM: F6's standing query, the OI-124 model of 0x45400 - which pair
+  of records 0x455a0 is given, what one column therefore accepts, and the
+  L15 leg that measures ZARIA.01's four ANIPL2 seat tables through it
+ADDRESSES: 0x45380, 0x45400, 0x4543c, 0x45443, 0x45447, 0x4544a, 0x4544d,
+  0x45451, 0x45455, 0x45458, 0x4545a, 0x4545e, 0x45462, 0x45464, 0x45468,
+  0x45477, 0x45479, 0x4547b, 0x4547d, 0x45481, 0x45485, 0x4548b, 0x4548d,
+  0x4548f, 0x45491, 0x45496, 0x45498, 0x4549a, 0x454a0, 0x454a8, 0x454ae,
+  0x454b1, 0x455a0, 0x455a3, 0x455be, 0x455c3, 0x23a10, 0x6c, 0x89, 0x8d,
+  0xa9, 0xea, 0xd
+NAMES: seat_ask_core, seat_slope, seat_bracket, surface_ask_selftest, L15,
+  standing query, bracket pair, record pair, snapshot point, aimed block,
+  clamp sample pair, idiv truncation, accept row, OI-124, pr393_build.log,
+  pr393_verify_fixtures.log, pr393_verify_nofixtures.log,
+  pr393_test_first.log, pr393_after_fix.log
+CODE: yes: ported/ll_level.c only. seat_ask_core now takes A = record i-1
+  and B = record i for BOTH clearances, the order 0x45443-0x45464 and
+  0x45481-0x4548f build, and changes only the sampled point; seat_slope's
+  comment, the leg's (1) comment and the --mov-selftest description string
+  are rewritten to that law; L15's case table is re-derived by hand, four
+  of its rows change answer and two new rows are added. No hook, no return
+  code, no Makefile or tool change.
+HOOKS: none new - L15 stays a data-free leg of `./ll_level --mov-selftest`
+  (verify-level), which is what runs it in both fixture modes.
+OPENS: the model still has no runtime caller: the level step asks its own
+  .plt with ll_plt_first_below, so this is a corrected model and not a
+  behaviour change; the port hands the SAME point to both gates because
+  nothing in it fills a clamp sample pair at [obj+0x89], so the two-point
+  difference is exercised only by hand-written cases; whether any shipped
+  asker runs 0x45400 with a mode other than the 0 and 2 that the
+  control-word bits give (PR-392 counted the tokens, not the runtime); and
+  the live ask fields, still unmeasured.
+CLOSES: PR-392's OPENS item about what the port does with the two points,
+  and the open port half of the note PR-392 added to OI-124.
+CORRECTS: PR-352's L15 pins, four of which this reading makes wrong: it
+  had the rising span (0,50)-(100,100) answering y 67 as well as y 66 at
+  x 33, the falling span (0,100)-(100,50) answering NOTHING at x 33 and
+  y 50 at x 99. The corrected model answers 66, 84 and 51. PR-352's
+  headline stands - "THE STANDING QUERY ANSWERS ONE ROW OF A COLUMN, NOT A
+  BAND" is exactly what the corrected reading gives - but its (a) and (d)
+  derived the row set from a reversed second pair, and PR-350's "measure
+  ONE clearance with the pair reversed" is the same slip; both are the
+  reading PR-392 corrected, applied here to code and to its numbers.
+GATE: make 0 warnings; verify-all fixtures rc=0 111 (ok);
+GATE-FIXTURE-FREE: rc=0 15 (ok) + 21 named
+  Counts are the house verdict pattern of HANDOFF section 2 on
+  /tmp/opencode/pr393b_verify_fixtures.log and pr393b_verify_nofixtures.log
+  - the pair run against THIS tree, so its verify-all carries the docs legs
+  too: `docs structure: ... hold (ok)` and `index: docs/RE_INDEX.md
+  regenerates byte-identical (ok)` are both in the first of them. Build log
+  pr393b_build.log, 0 warnings. The 21 named SKIPs plus the generic
+  `verify: SKIP` are the same 22 as PR-391 and PR-392, and the two verdict
+  SETS differ from PR-392's by that one line only: the mov-selftest
+  description string this record rewrites. An earlier pair against the same
+  code before the record was written is pr393_verify_*. The test evidence
+  for the change itself is pr393_test_first.log and pr393_after_fix.log,
+  quoted in MEASURED (c).
+MEASURED: (a) THE PAIR, INSTRUCTION BY INSTRUCTION. 0x4543c-0x4545e is
+  the compiler's own dance for the first 0x455a0 call: ebx = i*13, edx =
+  (i-1)*13, then base, then base + i*13, then ebx = base + (i-1)*13,
+  edx = [esp+0x4] = base + i*13, [esp+0x4] = ebx, ebx = eax (the +0x6c
+  result) and eax = [esp+0x4]. So eax = base + (i-1)*13 and edx = base +
+  i*13. 0x45481-0x4548f does the same in registers: imul edx,ecx,0xd,
+  dec ecx, imul ecx,ecx,0xd, eax = [esi+4], ebx = ebp, add edx,eax,
+  add eax,ecx. 0x455a0 reads eax as A and edx as B (0x455a3-0x455c1:
+  ecx = A, B.y - A.y, then (point.x - A.x), then B.x - A.x, idiv at
+  0x455c3, then + A.y - point.y). Nothing reverses. Only ebx changes:
+  0x45462 puts the class verb +0x6c result there - 0x23a10, `add
+  eax,0x89; ret`, the clamp sample pair - and 0x4548b puts the caller's
+  point.
+  (b) THE HAND-RE-DERIVATION, ONE COLUMN AT A TIME. Rising span
+  (0,50)-(100,100) at x 33: 50 + trunc(33*50/100) = 50 + 16 = 66, so the
+  column answers y 66 and nothing else; PR-352 had 66 AND 67. Falling
+  span (0,100)-(100,50) at x 33: 100 + trunc(-1650/100) = 100 - 16 = 84,
+  because `idiv` truncates toward zero and -16.5 becomes -16; PR-352 had
+  that column EMPTY (its L1 was 83, its L2 84). Same span at x 99:
+  100 + trunc(-4950/100) = 100 - 49 = 51; PR-352 had 50. At x 32 the
+  value is exact (100 - 16 = 84) and unchanged. Two new rows pin the two
+  POINTS now that the value is one: snapshot on the line with the aim one
+  row under it answers with the incumbent -1, and the same pair the other
+  way round is refused by 0x4547d, which is the only gate that reads the
+  snapshot.
+  (c) THE TEST BITES IN BOTH DIRECTIONS. With the re-derived table in and
+  the code unchanged, `./ll_level --mov-selftest` returns rc=1 and names
+  exactly the four discriminating rows (rising y 67 answered with -1 where
+  0 is wanted, the point-pair mirror, x 33 of the falling span, x 99 of
+  it) - /tmp/opencode/pr393_test_first.log. With the pair order fixed it
+  returns rc=0 with no FAILED line (pr393_after_fix.log). As a mutation
+  check, reversing ONLY the second call again fails 8 of the L15 rows.
+  (d) WHAT DOES NOT CHANGE, AND WHY THE MEASURED HALF STILL HOLDS. Every
+  sampled row pair of ZARIA.01's four ANIPL2 seat tables carries the same
+  y in both records, so B.y - A.y is 0, the division is exact in either
+  order, and the leg's measured envelopes are identical: x 838..900,
+  885..947, 930..992 and 307..382 with tops y 475..482, 380..387,
+  320..327 and 633..664. The top bands stay 53..306 px apart, so
+  0x45400 still carries no step of the authored chain - the answer
+  PR-352 measured is unaffected by its own arithmetic slip.
+  (e) The chain's description string, printed by verify-level, now states
+  the law as one value at two points instead of "the pair reversed ...
+  L2..L1". The string is not pinned by any grep; the leg passes on rc.
+```
+
+- WHY. PR-392 read the bytes and named `seat_ask_core` as carrying the
+  wrong reading into port code. A model that is wrong about which pair it
+  measures is wrong about which rows a column accepts, and the L15 leg was
+  asserting those rows. Re-pin it while the correction is fresh, and let
+  the hand arithmetic - not a re-recording - set the pins.
+
+- WHAT SURPRISED ME. That PR-352's headline conclusion was right while
+  its arithmetic was wrong: one row per column falls out of the corrected
+  reading directly, and the "sometimes empty, sometimes two" band it
+  measured was an artifact of the invented reversal. And that the
+  truncation direction is load-bearing in the visible direction: on a
+  falling line `idiv` puts the engine's surface one pixel ABOVE the real
+  one, so a floor division in the port would have accepted a row the
+  engine refuses.

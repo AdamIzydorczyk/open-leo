@@ -5114,9 +5114,20 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     held element, so a held table is not re-accepted "at any non-positive
     clearance at the snapshot"; the value tested for everything, held
     included, is the AIMED clearance, rejected above 0 and above the
-    incumbent. The port follows the old reading in seat_ask_core
-    (ported/ll_level.c:10521-10525, c2 with the pair reversed); re-pinning
-    it and the L15 leg that runs it is the open port half.
+    incumbent. The port followed that old reading in seat_ask_core,
+    and L15 pinned it in the test table.
+    PR-393 CLOSES THAT PORT HALF AND MOVES THE PINS. seat_ask_core
+    now takes A = record i-1 and B = record i for both clearances and
+    changes only the sampled point, and L15's case table is re-derived by
+    hand: the rising span (0,50)-(100,100) answers y 66 only at x 33 (not
+    66 and 67), the falling span (0,100)-(100,50) answers y 84 at x 33
+    (100 + trunc(-1650/100), `idiv` toward zero - that column is NOT
+    empty) and y 51 at x 99 (not 50), and two new rows pin the two points
+    now that the value is one. What this row concludes is untouched: every
+    sampled pair of the four ANIPL2 tables is level, so the measured
+    envelopes and the 53..306 px gaps between their top bands are
+    identical under either reading, and the standing query is still not a
+    carrier of the authored chain.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that
