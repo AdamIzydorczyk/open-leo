@@ -55676,3 +55676,152 @@ MEASURED: (a) THE BUILDER AND ITS THREE ENTRY SHIMS. 0x76b24 takes eax = a
   matters as method: the byte pattern PR-396 used to guess at 0x98274
   matches 344 places in that region, so it was never evidence, and the three
   addresses it was meant to explain are tables after all.
+
+## PR-398 - EVERY ARRAY IN THE IMAGE IS BUILT BY ONE LOOP, AT FIFTEEN
+## STATICALLY NAMED CLASSES ALL TAKING THE SAME PATH, AND NOT ONE OF THE
+## 257 CONSTRUCTORS READS THE ARGUMENT THAT PATH HANDS IT
+
+```
+KIND: read
+SUBSYSTEM: the array-construction call graph of the engine - who calls
+  0x7b82c, 0x76ab0 and the 0x76bb7 entry, which classes those sites name,
+  and what the constructors of those classes do with the second argument;
+  it settles PR-397's two remaining OPENS items about the kind-byte switch
+  and the element-size argument, and it names the classes behind the .PLT
+  provider array (PR-391) and the point-element array (PR-386)
+ADDRESSES: 0x76bab, 0x76bb3, 0x76bb7, 0x76b24, 0x76ab0, 0x7b82c, 0x21524,
+  0x21c77, 0x21dee, 0x21e6a, 0x22042, 0x221d8, 0x22264, 0x225c2, 0x22705,
+  0x22775, 0x25ae0, 0x25c45, 0x25cd5, 0x2df76, 0x317fc, 0x319c8, 0x31a68,
+  0x3af69, 0x3cc2f, 0x3cd1d, 0x44f4f, 0x4502a, 0x45090, 0x4515f, 0x4b9a7,
+  0x4db02, 0x4dbbe, 0x4dc72, 0x58a37, 0x64dc1, 0x4dc00, 0x4da90, 0x4db50,
+  0x45120, 0x961c4, 0x96678, 0x96768, 0x967b8, 0x96858, 0x9b7f8, 0x9b898,
+  0x9fcd4, 0xa0c64, 0xa0c78, 0xa12c0, 0xa14c0, 0xa14d8, 0xa2844, 0x104b8,
+  0x23d60, 0x23f00, 0x23cf0, 0x309a0, 0x30b50, 0x3cc20, 0x44fe0, 0x456e0,
+  0x495e0, 0x2b4e0, 0x58890, 0x4fb70, 0x4fbd0, 0x961fc, 0x96200, 0x98278,
+  0xa0cb4, 0xa0cc0, 0xcf4f4, 0x96000, 0xa7000, 0x10000, 0x8f000, 0x8,
+  0xc, 0xd, 0x10, 0x14, 0x15, 0x1a, 0x1c, 0xb8
+NAMES: array loop, array builder entry, kind byte, element size, second
+  argument, constructor, dead entry, provider array, point element, class
+  descriptor, objdump slice, linear sweep, instruction boundary, OI-127,
+  OI-129, pr398_paths.py, pr398_paths.txt, pr398_ctorargs4.py,
+  pr398_ctorargs4.txt, pr398_direct.py, pr398_direct.txt
+CODE: no: no file under ported/ or tools/ changes. One sentence of
+  PR-397's MEASURED (b) is narrowed here (CORRECTS) and OI-129's provider
+  paragraph gains the two class names.
+HOOKS: none - no leg and no fixture changes, so the light gate of section 2
+  rule 4 applies.
+OPENS: SEVEN OF THE SEVENTEEN DIRECT SITES PASS A CLASS THE CODE COMPUTED
+  (`ebx` from [eax+0xc], [ecx+0xc] or a register), so the set of classes
+  the loop runs over is larger than the fifteen named ones and this row
+  cannot enumerate it; THREE SITES give no readable class at all (0x2bf7a,
+  0x2d6d5 and 0x64dc1 read back through ebx to 0x1 and to the text word
+  0x93938, which is the backwalk losing the thread, not a class); what the
+  value 2 pushed by 0x76bb3 would have changed, since 0x76bb3 and 0x76bab
+  have NO call site in the image and the flag reaches 0x77e10 only as 1
+  from 0x76bb7; the classes behind 0x961c4, 0x96678, 0x96768, 0x967b8,
+  0x9b7f8, 0x9b898, 0x9fcd4, 0xa12c0 and 0xa2844, named here only by
+  their element sizes (8, 8, 0x15, 0x10, 0x10, 0x1c, 0xb8, 0x14, 0x1a) and
+  their constructors; whether a class built from a pointer kept in DATA
+  (not an immediate) ever carries 4 at [class+0]; and the field at
+  class+0x14 of PR-397's two registry descriptors, still unread.
+CLOSES: PR-397's OPENS item "WHO TAKES THE 0x7b82c PATH" - no call site in
+  the image reaches it: 0x7b82c has no caller, both of the 0x76b24 shims
+  that name a flag are unreached except through 0x76bb7, and all fifteen
+  statically named classes at every array site hold 0 at [class+0]; and
+  PR-397's OPENS item "WHICH CONSTRUCTORS READ the element size" - none
+  does, over the 257 constructors of the named classes and of the
+  construction records; and the naming half of what OI-129 asks about the
+  .PLT provider array - its 12-byte containers and 13-byte records are
+  constructed objects of the class descriptors 0xa0c78 and 0xa0c64, and the
+  method arrays PR-391 saw at 0xa0cb4 and 0xa0cc0 are what those two
+  constructors write.
+CORRECTS: PR-397 - one clause of its MEASURED (b), which this row measured
+  only for two classes and then generalised. It said the class's first byte
+  "says whether the constructor is handed the element size"; measured over
+  all 257 constructors, no constructor reads that argument at all, so the
+  switch has no observable effect on any array in the image, and the
+  honest statement is that 0x76ab0 leaves the element size in edx while
+  0x7b82c zeroes it and nothing looks. PR-397's census of the first byte
+  and its copy-with-release reading stand unchanged.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md, HANDOFF.md and the
+  generated docs/RE_INDEX.md only. Evidence: /tmp/opencode/pr398_docs.log
+  (tools/re_index.py, then `make verify-docs verify-index`, rc=0). The
+  scans are pr398_paths.py (the entry-point call sites and the class each
+  names), pr398_direct.py (the direct sites of the loop, and 0 call sites
+  for 0x7b82c and 0x76bb3) and pr398_ctorargs4.py (the argument census);
+  its first three attempts, pr398_ctorargs.py, pr398_ctorargs2.py and
+  pr398_ctorargs3.py with their outputs, are kept because each one is a
+  measurement error worth recording - MEASURED (d) names them. Individual
+  bodies were read with `tools/re/leodb.py dis`, which slices and decodes
+  from the requested address.
+MEASURED: (a) THE CALL-SITE SET. The three entry points have 19 call edges
+  between them: 0x76b24 has two, its own shims 0x76bad and 0x76bbf;
+  0x76bab has none; 0x76bb7 has seventeen; the loop 0x76ab0 is also called
+  directly from seventeen sites; and 0x7b82c and 0x76bb3 have none at all.
+  So every array in this binary is built by 0x76ab0, either through
+  0x76bb7 - which writes the count, registers the guard and sets the
+  unwind cleanup to the delete thunk - or directly. At every one of
+  0x76bb7's seventeen sites ebx is loaded from an immediate, and the
+  fifteen distinct classes those sites and the direct sites name together
+  (0x961c4, 0x96678, 0x96768, 0x967b8, 0x96858, 0x9b7f8, 0x9b898, 0x9fcd4,
+  0xa0c64, 0xa0c78, 0xa12c0, 0xa14c0, 0xa14d8, 0xa2844) all hold 0 at
+  [class+0], with element sizes 8, 8, 0x15, 0x10, 0xc, 0x10, 0x1c, 0xb8,
+  0xd, 0xc, 0x14, 0x14, 0x14 and 0x1a. Seven further sites compute the
+  class at run time and three give no readable answer (OPENS), so this is
+  not the whole set of classes - but within everything the image names, the
+  kind-byte test never fires.
+  (b) THE .PLT PROVIDER ARRAY IS MADE OF OBJECTS, AND ITS TABLES HAVE A
+  SOURCE. The .PLT loader 0x4dc00 builds its 12-byte containers at 0x4dc72
+  through the class descriptor 0xa0c78: the constructor 0x44fe0 is four
+  instructions, writing 0 at +4 and +8 and the method array 0xa0cc0 at
+  +0. The 13-byte records those containers point at are built at 0x4515f,
+  inside the parser PR-391 named 0x45120, through 0xa0c64: its constructor
+  0x456e0 writes 0, 0, then the shared view 0x98278 at +8 and overwrites
+  that with its own table 0xa0cb4. That is where PR-391's "the container
+  method array at image 0xa0cb4/0xa0cc0" comes from - two constructors, not
+  a loader store - and it makes PR-392's `call [element class + 0x1c]`
+  a call through a class descriptor the loader obtained from the same
+  builder. 0x96858 is the same story for the point-element array: size 0xc,
+  constructor 0x23f00 writes 0, 0 and 0x98278, its dtor field is PR-386's
+  maker 0x23eb0 and its class+9 verb is PR-386's 0x23ed0, which PR-386
+  measured calling 0x74bc0/0x74be0 with edx = 0x96858 - the third instance
+  of the copy-with-release shape PR-397 (d) read, and a consistent one.
+  (c) NO CONSTRUCTOR READS THE SECOND ARGUMENT. Over the 257 distinct
+  constructors named by those classes and by the 290 construction records
+  of 0x96000-0xa7000: 0 use edx before writing it, 29 only push and pop it,
+  228 never mention it. The element size that 0x76ab0 keeps in edx is
+  needed by its own loop (`add ecx,edx`) and is simply what the register
+  holds when the constructor is called. For the port that collapses a
+  question rather than adding one: array construction is one operation with
+  no argument to model, and the fields an array's elements start with come
+  from the class constructor and nothing else - PR-395's and PR-396's law
+  for the two registries is the general law for every array in the image.
+  (d) HOW THIS WAS MEASURED, AND THE THREE WAYS IT WAS FIRST WRONG. The
+  first pass walked the re DB's `insn` table and counted 40 readers; that
+  table's boundaries are a linear sweep and at some entries they start one
+  byte late (its rows for 0x4a380 begin at 0x4a381), so the walk followed
+  the wrong instructions. The second pass decoded one linear sweep from
+  0x10000 and found 61 of the 257 constructor addresses were not boundaries
+  of it, and it still counted `xor edx,edx` as a use. The third pass
+  sliced each constructor's own bytes and decoded them, exactly as
+  `leodb.py dis` does, but counted `pop edx` - an epilogue restore - as a
+  read. Only the fourth pass separates saving the register, overwriting it,
+  and looking at it: the numbers in (c). The rule that matters for any
+  later row: a per-function question must be asked of a decode that starts
+  at that function's own address, never of a sweep.
+```
+
+- WHY. PR-397 had found a switch in the engine's own array builder and
+  could not say who used either side of it, and it had found an argument
+  passed to every constructor and could not say what it was for. Those were
+  the two live questions its record carried, and both are answered here in
+  the same direction: nothing takes the second path and nothing reads the
+  argument. That is worth having, because it turns three separate
+  observations - PR-395's .BLK records, PR-396's .SUF records, PR-391's
+  provider array - into one mechanism that the port can implement once. It
+  also puts names on the .PLT containers and their records, which OI-129
+  had only described as bytes, and it is a reminder about method: three of
+  this row's own passes were wrong about a count as small as forty, each
+  time because the instrument, not the engine, decided where a function
+  began.

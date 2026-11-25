@@ -741,6 +741,16 @@ Pitfalls seen:
   writing anything: HEAD and its subject, the journal's record count and
   last heading, the OPEN_ITEMS rows, and the /tmp/opencode files the notes
   name.
+- A DECODE THAT DOES NOT START AT THE FUNCTION IS NOT EVIDENCE ABOUT THAT
+  FUNCTION. The re DB's `insn` table is a linear sweep, and its boundaries
+  can begin one byte after a function entry (its rows for 0x4a380 start at
+  0x4a381); one sweep from 0x10000 does not even contain 61 of the 257
+  constructor entries PR-398 wanted to walk. The same census run three ways
+  gave 40 readers, then "61 undecoded", then 29 - and the fourth pass,
+  which decodes each function from its own address the way `leodb.py dis`
+  does by slicing, gave 0. Also count carefully what a register mention
+  means: `push edx`, `pop edx` and `xor edx,edx` are not uses of an
+  argument.
 - peak `ll_level` RSS is ~1.1 GB (RAN.01); run one level at a time.
 
 ## 4. Architecture map

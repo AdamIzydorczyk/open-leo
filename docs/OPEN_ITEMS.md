@@ -6253,3 +6253,18 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     two PR-392 sessions with the extended tracer reached a level boundary
     but no playable ZARIA.01, so no TLewZaria object was sampled (see PR-
     392 MEASURED (i)).
+     PR-398 NAMES THE TWO CLASSES BEHIND THAT TABLE, AND SAYS WHERE THEY
+     COME FROM. Both arrays are built by the engine's one array loop, and
+     the method arrays PR-391 saw at 0xa0cb4 and 0xa0cc0 are written by
+     constructors, not by the loader: the .PLT loader 0x4dc00 builds its
+     12-byte containers at 0x4dc72 through the class descriptor 0xa0c78,
+     whose constructor 0x44fe0 zeroes +4 and +8 and stores 0xa0cc0 at +0,
+     and the 13-byte records are built at 0x4515f, inside the parser
+     0x45120, through 0xa0c64, whose constructor 0x456e0 puts the shared
+     view 0x98278 at +8 and then overwrites it with 0xa0cb4. Of the 257
+     constructors that these classes and the construction records name, none
+     reads the second argument the loop leaves in edx
+     (pr398_ctorargs4.py), and no class named at any build site selects the
+     loop's second path (pr398_direct.py), so the fields these elements
+     start with come from the class constructor alone and the two paths can
+     be modelled as one.
