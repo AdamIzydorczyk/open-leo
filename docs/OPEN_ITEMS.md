@@ -5968,8 +5968,17 @@ OI-128: what landing and leaving a surface does - the class verbs
     cursor starts at the COUNT at [rec+0x36] minus the argument minus
     ONE, so authored clause rows are indexed from the last row downward.
     [rec+0x36] is that count, and 0x73090 fills it (with [obj+0x32])
-    from `DWORD [k*12+0xced1c]` where k = [obj+0x3a] is a kind - a
-    12-byte-stride table in BSS, zero in the image. Also: a record class
+    from `DWORD [k*12+0xced1c]` where k = [obj+0x3a] - PR-411 CORRECTS
+    "is a kind": k is the ENTRY INDEX returned by the interval lookup
+    0x37150, which scans an 18-entry 12-byte table of (low, high, group)
+    x-ranges at 0xced18 and returns the first entry containing its
+    numeric argument ([[obj+0x26]+4]), or 0x11 for none; 0x73082 stores
+    that index at [obj+0x3a]. [obj+0x32] is the interval's LOW end and
+    [rec+0x36] its HIGH end - the table is mirrored from the image at
+    0xa8f88 by 0x36d90 (image minus BSS = 0x25d84 uniformly, so BSS
+    +0x0c is the image's first field), and the object then measures 10
+    units in from both ends and asks its container a point question at
+    each (0x730c6-0x730f4). Also: a record class
     differs from another only at +0x08 (six values) and +0x1c (two), and
     0x523f0 shows the call-in `mov esi,[eax+0x44]; call [esi+0x08];
     call [esi+0x0c]`. THE PORT WALKS ITS LADDER FORWARD - this is a

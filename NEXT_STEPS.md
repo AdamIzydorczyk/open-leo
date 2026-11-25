@@ -57527,3 +57527,131 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   output of this row is mostly a retraction, and the journal needs it
   there, because the wrong tables are already in OI-111 and in two
   commit messages.
+
+## PR-411 - WHAT FILLS THE RECORD'S +0x32 AND +0x36: AN INDEXED TABLE OF
+## NAMED X-INTERVALS AT 0xced18, SEEDED FROM IMAGE DATA AT 0xa8f88
+
+```
+KIND: read
+SUBSYSTEM: the object field pair +0x32/+0x36 that PR-407 found initialises
+  the row cursor - the interval table the engine looks the pair up in, the
+  lookup and range-match functions, and the image data the table is seeded
+  from
+ADDRESSES: 0x36d60, 0x36d90, 0x36da0, 0x36da9, 0x36db5, 0x36dc1, 0x36dc7,
+  0x36dce, 0x36f42, 0x36fc3, 0x36fc9, 0x37150, 0x3715a, 0x37161, 0x3716c,
+  0x3717c, 0x37182, 0x37188, 0x37191, 0x37198, 0x371b0, 0x371b8, 0x371bd,
+  0x371c8, 0x371cb, 0x371d4, 0x371e0, 0x37202, 0x37208, 0x3720f, 0x37216,
+  0x3721c, 0x3722a, 0x37256, 0x73060, 0x7306b, 0x73073, 0x73078, 0x7307b,
+  0x7307d, 0x73082, 0x73087, 0x7308b, 0x73090, 0x73093, 0x73096, 0x73098,
+  0x730a1, 0x730ab, 0x730b7, 0x730c1, 0x730c6, 0x730d3, 0x730d6, 0x730de,
+  0x730ee, 0x733e8, 0x733f4, 0x733fb, 0x73407, 0x73411, 0x7341d, 0x73424,
+  0x735a2, 0x735a8, 0x735bb, 0x735c0, 0x735d3, 0x735dd, 0x735e9, 0x735f3,
+  0xa8f88, 0xa9054, 0xa906c, 0xced0c, 0xced10, 0xced14, 0xced18, 0xced1c,
+  0xcedf0, 0x134, 0x26, 0x32, 0x36, 0x3a, 0x42, 0x5c, 0x6c, 0x70, 0x11,
+  0x0a
+NAMES: interval table, segment lookup, range match, row cursor source,
+  x-interval, pr411_paths.txt, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. It does say what the
+  port does not model - see WHY.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE THREE FIELDS OF AN INTERVAL ARE CALLED - f0 and f1 bound
+  an x-range, but f2 holds 0..5 in runs and is never compared in the
+  matcher, so its meaning is a guess until a consumer is found; WHO FILLS
+  THE f1 FIELD - it is zero in the image, and the only writes at those
+  addresses are the permute at 0x37202-0x37216, so an interval's high end
+  is computed at run time and that code is still unnamed; WHAT THE
+  0xa906c TABLE IS - three dwords per entry, values near 595,000 for
+  entries 3..9, which do not look like coordinates; WHAT THE RUNS OF
+  0x730d6 AND 0x730ee RETURN AND WHAT THE CALLER DOES WITH THEM - both
+  compare the result with -1 and +1, but the enclosing function was
+  decoded only from 0x73060 and not from its prologue, so the whole
+  predicate is unread; WHICH OBJECT CLASS THIS IS - [obj+0x26] is a
+  container with vtable verbs at +0x6c (two numeric getters) and +0x70 (a
+  point query) plus a scalar at +0x4 and a getter at +0x5c, which is the
+  shape of the state-record table, so [obj+0x26] may be the state the
+  object is running, and the class of obj itself is not pinned here; and
+  whether the interval table is authored level data at all, since 0xa8f88
+  sits in the executable's own .data and no loader for it was found.
+CLOSES: PR-407's OPENS item WHICH OBJECT 0x73090 FILLS with the
+  0xced18/0xced1c table: it fills [obj+0x32] and [obj+0x36] of the same
+  object the row cursor belongs to, and the three copies are one
+  statement pair repeated verbatim at 0x730ab/0x730be, 0x73411/0x73424 and
+  0x735dd/0x735f3. It also closes the part of that item that asked what
+  the table is: an 18-entry 12-byte-stride array of (range start, range
+  end, group) triples, seeded at load time from the image at 0xa8f88, and
+  looked up not by a kind but by a VALUE - 0x37150 scans the entries and
+  returns the first one that contains its argument.
+CORRECTS: PR-407's description of [obj+0x32] as "the sibling" of the
+  count. Both halves of that pair come from one interval record:
+  [obj+0x32] = interval f0 and [obj+0x36] = interval f1 at the same index
+  (0x730a1 and 0x730b7 index the same base register edx = [obj+0x3a]), so
+  +0x32 is the LOW END of the interval, not a related field of a count.
+  PR-407's claim that k = [obj+0x3a] "is a kind" is also wrong: 0x73082
+  stores the RESULT of the lookup at 0x37150 into [obj+0x3a], so it is an
+  interval index, and 0x11 means not-found.
+MEASURED: (a) THE LOOKUP. FUN_00037150(entry=eax, key=edx, start=ebx) answers
+   an entry index: if ebx >= 0x11 it answers 0x11 at once (0x3715a);
+   otherwise it walks ecx = ebx * 12 + 0xced18 upward in steps of 0xc
+   (0x37161-0x37168), calls 0x36d60 per entry, and returns that entry's
+   number (0x37191), or 0x11. Every call site passes ebx = 0. The key it
+   searches for is a NUMBER, not a name: at 0x73073-0x7307d it is
+   `eax = [[obj+0x26]+4]`, a scalar read out of the object's container,
+   and the guard above it is `[[obj+0x26]+0x5c] == 1` (0x73087).
+   FUN_00036d60(entry=eax, key=edx, probe=ebx) matches when
+   `entry[0] <= key <= entry[1]` (0x36d61-0x36d68) AND
+   `|probe - [eax*4+0xa906c]| < 0xa` (0x36d6a-0x36d7d) - a second,
+   coarser test against a dword table in the image at 0xa906c indexed by
+   the ENTRY NUMBER (three dwords per entry), tolerance ten.
+   (b) THE DATA, AND THE BSS MIRRORING IT. At 0xa8f88 the image holds 18
+   twelve-byte entries - (4,0,3) then (172,389,0) (432,603,0) (33,209,1)
+   (262,654,1) (33,63,2) (115,388,2) (439,757,2) (33,214,3) (262,543,3)
+   (594,761,3) (33,385,4) (438,779,4) (33,62,5) (115,212,5) (265,386,5)
+   (442,675,5) (727,775,5). Entries 1..17 all have f0 < f1 with f1 <=
+   779, the width of a level, and f2 runs 0,0,1,1,2,2,2,3,3,3,4,4,5,5,5,
+   5,5 - a group id over 6 groups. FUN_00036d90 mirrors this table into
+   BSS and clears ds:0xcedf0 (0x36dd0). That the BSS layout is the
+   image's layout one for one is arithmetic, not assumption: its loop
+   `add eax,0xc; cmp eax,0xd8` runs i = 0xc .. 0xd8 and copies
+   [eax+0xa8f88] to [eax+0xced0c], so 0xa8f94 - 0xced18 = 0xa8f88 -
+   0xced0c = -0x25d84, the uniform image-to-BSS displacement. Therefore
+   BSS field +0x0c of an entry IS the image's f0, and the object reads
+   exactly that field into [obj+0x32]; entries 1..17 have their f0
+   seeded from data while f1 and f2 are zero in the image and are filled
+   by something else at run time. (pr411_paths) (c) THE
+  CONSUMER, VERBATIM. In three places the same pair of statements appears,
+  e.g. 0x73090: `mov ebp,[ecx+0x3a]` (the index written by the lookup at
+  0x7307d), `cmp ebp,0x11; je` (not-found), `eax = ebp*12`, then
+  `mov eax,[eax*4+0xced18]; mov [ecx+0x32],eax` and
+  `mov eax,[edx*4+0xced1c]; mov [ecx+0x36],eax`. The two neighbouring
+  copies at 0x733e8 (guarded by `cmp edx,0x1`) and 0x735c8 (where the
+  index is kept at [obj+0x42] instead of [obj+0x3a]) are byte-for-byte the
+  same pair of loads. Then 0x730c6: `edx = [obj+0x32] + 0xa; cmp edx,
+  [[obj+0x26]]` and `edx = [obj+0x36] - 0xa; cmp edx, [[obj+0x26]]`, each
+  followed by `call [vtable +0x70]` on that container, the first compared
+  with -1 and the second with +1 - that is, the object measures ten units
+  inwards from BOTH ends of its interval and asks the container a point
+  question at each end.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr411_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr411_paths.txt (the 0xa8f88 table and the 0xa906c table
+  read at aligned addresses from build/leo/leo.img). Every instruction
+  quoted was decoded from its own aligned address with
+  `python3 tools/re/leodb.py dis`; the image-to-BSS displacement was
+  computed, not assumed.
+```
+
+- WHY. PR-407 left the row cursor's upper bound unexplained: something
+  wrote a "count" into +0x36 and a "sibling" into +0x32 and neither had a
+  source. This row says where they come from - an interval, looked up by
+  value, in a table that is seeded from the executable's own .data - and
+  with it the shape of the thing the port has no analogue for: the port
+  takes a state's row count from the number of authored row lines and
+  never derives one from a range, so the engine's "this walk belongs to an
+  x-interval, and its ends are marked ten units in from each boundary" is
+  unmodelled. That is worth recording before any further row-cursor work,
+  because the mirror branch of 0x52360 counts down from exactly this
+  value.
