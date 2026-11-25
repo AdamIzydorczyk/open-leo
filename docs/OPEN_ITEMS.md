@@ -6730,6 +6730,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     class - not one virtual), the +0x9c/+0x40 predicates, the
     lion +0xd0 body past its gates, and whether any leg should
     now port the DANGER hit (AC_ENEMY is parsed, never raised).]
+    [PR-455 RUNS THE BIT CENSUS: [obj+0xa6]/[obj+0xa7] have
+    exactly two kinds of reader - the ten mode setters and
+    nothing else - and two kinds of writer - the setters and
+    the spawn-toggle path 0x613d8-0x6147e (read-modify-write
+    of single bits in spawn records beside the 0xa/0xb pointer
+    stores: spawn option flags). No offset-addressed site
+    writes the actor's button-word group except the +0x1c
+    reset's zero (0x54e24): the fill comes from the input pump
+    through the buffer the feed 0x50340 passes (register/block
+    addressed - finding it means following the pump, not the
+    offsets). +0xa5's third member: the applier's tail entry
+    0x54bd6 (not in any detected table) stores [[ecx]+8] - a
+    class table under the usual convention - into [obj+0xa5]
+    at 0x54be9; whether a real actor ever holds that when the
+    builder tests the bits is open. PR-314's index-member and
+    PR-442's button-word member both stand.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

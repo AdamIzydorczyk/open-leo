@@ -62098,3 +62098,84 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   record. Every control= keyword PR-410 tabulated now has its
   consumer AND its effect on the record.
 
+
+## PR-455 - THE BUTTON WORD HAS NO OFFSET-ADDRESSED PRODUCER:
+## NOTHING IN THE IMAGE WRITES [obj+0xa6]/[obj+0xa7] EXCEPT THE
+## MODE SETTERS AND ONE SPAWN TOGGLE; +0xa5 CARRIES THREE
+## DIFFERENT MEMBERS ACROSS THE CLASSES
+
+```
+KIND: read
+SUBSYSTEM: the census of the PR-442 input word's three bytes -
+  every writer and reader of [obj+0xa5]/[obj+0xa6]/[obj+0xa7]
+  in the image: the builder and mode-setter tests, the scene
+  index family's uses of +0xa5 (PR-314), the +0x1c reset's
+  zero, the applier tail's table-valued store, and the spawn
+  toggle path
+ADDRESSES: 0xa5, 0xa6, 0xa7, 0x54931, 0x5493f, 0x5494d, 0x50504,
+  0x50514, 0x50530, 0x5054c, 0x5062a, 0x54be9, 0x54bd6, 0x54b90,
+  0x54e24, 0x613d8, 0x613fd, 0x61428, 0x61453, 0x6146b, 0x2b840,
+  0x2b84c, 0x50340, 0x549f0, 0xa9
+NAMES: button word producers, mode setter bits, spawn toggle,
+  table-valued store, pr455_btnword.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE BUTTON WORD'S PRODUCER - no offset-addressed store
+    writes the 0xa5-0xa7 group except the reset zero and the
+    toggle path, so the fill is a block or register-addressed
+    copy from the OS pump (the feed 0x50340 only zeroes when
+    [obj+0x106]==0 and negates intents, PR-442); finding it
+    means following the input pump's buffer, not the offsets;
+    the TAIL ENTRY 0x54bd6 inside the applier region - not in
+    any detected table, its callers unnamed - and what object
+    its ecx names when 0x54be9 stores [[ecx]+8] (under the
+    [+8] = class-table convention, a class TABLE lands in
+    +0xa5 for at least one flow: which class, and when, is
+    unread); and whether any real actor's +0xa5 ever holds
+    that table value when the builder tests its bits (a
+    collision that would read bits of a table address).
+CLOSES: PR-453's OPENS "the 0xa6/0xa7 bit census": the two
+  sibling bytes are tested ONLY by the ten mode setters (bit
+  groups 0xa6.1/2/0x40/0x80, 0xa7.1/2/4/8 - no other reader
+  in the image) and written ONLY there and by the spawn toggle
+  path 0x613d8-0x6147e, which flips single bits at 0xa6.1/
+  0xa6.2/0xa6.0x40 and 0xa7.4 in spawn records next to the
+  0xa/0xb pointer stores PR-453 saw - a per-spawn option flag
+  group, not part of the per-frame signal path. So the
+  PR-442/PR-141 flag model is unaffected: the builder's map
+  reads byte 0xa5 alone.
+CORRECTS: nothing. (PR-314's "0x2b6a0/0x2b840 belong to a
+  different class, +0xa5 is an INDEX into a table at +0xa9" is
+  re-confirmed as one of the three members; PR-442's reading
+  of the actor's +0xa5 as the button word stands on its own
+  evidence - the builder's bit map and the observed behavior.)
+MEASURED: (a) THE READERS. +0xa5: the builder's three bit
+  tests (0x54931/0x5493f/0x5494d), the mode setters' two
+  (0x50504/0x50514/0x50530), the scene index reads (0x2b727/
+  0x2b81b/0x2b84c); +0xa6/+0xa7: the mode setters and the
+  toggle path only. (b) THE WRITERS. +0xa5: the reset zero
+  (0x54e24, the PR-447 +0x1c body), the scene index stores
+  (0x2b6a0/0x2b840), and one table-valued store in the
+  applier's tail entry (0x54be9, eax=[[ecx]+8] with ecx
+  unchanged from the buffer arg - the exact source object
+  unread); the actor group's runtime fill is not visible as an
+  offset store anywhere. (c) THE TOGGLE. 0x613d8-0x6147e:
+  read-modify-write of individual bits of 0xa6/0xa7 in spawn
+  records (each within ~16 bytes of the 0xa/0xb mode-pointer
+  stores) - spawn options. (d) THE PORT. Unchanged: the port's
+  key model covers the signal enum and 0xa5's named bits, the
+  exact behavior model PR-442 verified against fixtures; the
+  mode-setter bits belong to the session-mode layer PR-453
+  left unmodelled on purpose.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. A negative with teeth: the engine never writes its own
+  button word from any named site - it arrives filled from the
+  input pump - and the two bytes that looked like an extended
+  button word are actually a session-mode and spawn-option
+  group. Recording which offsets are NOT written is what keeps
+  future reads from inventing producers; and the third member
+  of +0xa5 keeps the class-collision lesson in front.
+
