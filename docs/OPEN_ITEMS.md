@@ -6431,6 +6431,26 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     ` spawn = `, ` damage = `, ` expldist = `, ` type = `, ` sample = `,
     ` div = `, ` hit_time = `, ` coef = `, ` levels = `, ` Fcontrol = `,
     ` F = `, ` group = `, ` new_bounds = `), each with compiled
+    [PR-419 CLOSES THE VOCABULARY. A scan of the image's strings for
+    the shape `key = %...` finds 117 scan strings, 123 use sites and 64
+    DISTINCT KEY NAMES - the 14 above plus 50 more: FKey, JumpCoef1000,
+    attack_dist, cord, count, direction, div, end_pos, isDeadly, line,
+    loop, name, narty_param, newy, pos, prior, prob, rdamage, rect,
+    scope, sdamage, temp, time, time_no_move, time_rand, time_relax,
+    time_start, timedx, up, width, x_end, x_start, xchg, xdx and others;
+    16 of the 117 are `damage` and 7 `energy`. The helpers are THREE:
+    0x498f0 and 0x49920 share a prologue, 0x497b0 is a sibling with a
+    different one. NEW MECHANISM: the request list is not only name-keyed
+    - 0x362aa loads the dword at 0x961fc, bytes `4c 03 01 00`, i.e. the
+    NUMBER 0x1034c, into the scan buffer, so properties are also
+    addressed by numeric id. WORKED EXAMPLE: the only scanner of
+    ` narty_param=%d,%d;%d,%d` (0x9113f) is 0x36280, a class verb (the
+    single dword at 0x9f250) of the PR-418 scene-object family; it
+    divides all four values by the double 100.0 at 0x91158 and stores
+    them into [obj+0x112]/[obj+0x12a]/[obj+0x12e]/[obj+0x132] - the
+    authored unit is hundredths. `narty` is Polish for skis, and neither
+    narty_param nor JumpCoef1000 (0x95ae0, scanned by 0x73e70, the same
+    family's third ctor) appears in any unpacked shipped level.]
     defaults - `coef` eight floats 0.6/0.02/0.12/0.08/0.06/0.04/0.02/
     0.01, `levels` 0.1/0.2/0.35, `hit_time` 0.6 - and the ` F = ` scan
     runs on the SAME cursor as the point list, right after it. So still

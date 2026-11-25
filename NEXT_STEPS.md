@@ -58448,3 +58448,116 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   counterpart at all. And PR-414's "overlapping views of one table" was
   wrong in a way that mattered: the second field is the BASE table, which
   is exactly what makes the shifted first field make sense.
+
+## PR-419 - THE COMPLETE AUTHORED-PARAMETER VOCABULARY: 117 SCAN
+## STRINGS, 64 KEY NAMES, AND ONE OF THEIR SCANNERS BELONGS TO THE
+## SCENE-OBJECT CLASS OF PR-418
+
+```
+KIND: read
+SUBSYSTEM: the authored object-parameter vocabulary - every scanf-style
+  scan string in the image shaped like `key = ...`, which function uses
+  each one, the full census against the 14 keys PR-378 listed, and the
+  narty_param scanner as a worked example of a parameter and its units
+ADDRESSES: 0x36280, 0x362a1, 0x362aa, 0x362b6, 0x362c7, 0x362d2, 0x362e1,
+  0x362f2, 0x36329, 0x36333, 0x3633b, 0x36347, 0x36353, 0x364e7, 0x3654a,
+  0x36650, 0x36670, 0x366d0, 0x37b10, 0x37b28, 0x380d0, 0x39c30, 0x3dd60,
+  0x3e060, 0x3e470, 0x3e880, 0x3e980, 0x40eb0, 0x41180, 0x443b0, 0x497b0,
+  0x498f0, 0x49920, 0x4dcc0, 0x6eb50, 0x6fb10, 0x73e70, 0x73ec0, 0x73ec5,
+  0x82581, 0x9113f, 0x91158, 0x911d1, 0x91223, 0x9122d, 0x91614, 0x91643,
+  0x9165b, 0x924b3, 0x95ae0, 0x961fc, 0x9f250, 0xcf4f0, 0x00,
+  0x04, 0x08, 0x24, 0x5c, 0x112, 0x124, 0x128, 0x12a, 0x12e, 0x132, 0xb1
+NAMES: authored parameter keys, scan string, property id list, hundredths
+  units, ski parameters, jump coefficient, level-completed flag,
+  pr419_keys.txt, pr419_keytable.txt, OI-111, OI-127
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHY NO SHIPPED LEVEL CONTAINS narty_param OR JumpCoef1000 - the
+    grep over the unpacked game data finds neither, so either the shipped
+    content never uses them or the text lives inside a packed file this
+    repository has not unpacked; WHAT THE PROPERTY ID 0x1034c IS - the
+    first scanner call of 0x36280 passes it as a literal, which means the
+    property list is keyed by numbers as well as by names; WHICH OF THE
+    64 KEYS ARE ACTUALLY PRESENT in the shipped levels, one by one; and
+    what
+    the other 63 keys' scanner functions store their values into, which is
+    a per-class field map this row does not attempt.
+CLOSES: nothing in the register. It extends the property-key census of
+  PR-378, PR-379 and PR-380 from 14 keys to all 64, and it identifies the
+  owner of one more scanner.
+CORRECTS: PR-378's sentence that the 14 named property keys are read by
+  "the same scanner 0x498f0": 0x49920 is a second entry point with that
+  exact prologue and 0x497b0 is a third helper of the same family with a
+  different one, and 0x36280 uses 0x497b0 and 0x49920, not 0x498f0. The
+  list of 14 keys
+  itself is not wrong, only short: the image holds 117 such strings and 64
+  distinct key names.
+MEASURED: (a) THE CENSUS. Scanning the DB's str table for strings of the
+  form optional-space, identifier, '=', a conversion, gives 117 strings;
+  joining them to the instructions that name their address gives 123 use
+  sites in about 40 scanner functions and 64 distinct key names: F, FKey,
+  Fcontrol, JumpCoef1000, R, attack_dist, bounds, coef, cord, count,
+  crown, damage, dir, direction, dist, div, effects, end_pos, energy,
+  expldist, fire, frame, group, hit_time, id, ident, invincible,
+  isDeadly, levels, line, loop, name, narty_param, new_bounds, newy,
+  number, offset, pos, prior, prob, rdamage, rect, sample, scope, sdamage,
+  spawn, speed, temp, time, time_no_move, time_rand, time_relax,
+  time_start, timedx, tools, type, up, v_bounds, vlimit, width, x_end,
+  x_start, xchg, xdx. 16 of the 117 strings are `damage` and 7 `energy`.
+  (pr419_keys) PR-378 named 14 of them; 50 names are new to this journal,
+  including isDeadly, pos, JumpCoef1000, narty_param, newy, prob, end_pos,
+  time_no_move, time_rand, time_start, attack_dist, direction, rect and
+  cord.
+  (b) THE SCANNER FAMILY. 0x498f0 and 0x49920 share a prologue - push
+  ebx, push edx, sub esp,4, lea eax,[esp+0x18], mov ebx,esp - so they
+  are two entry points of one scanning helper, and 0x497b0 opens
+  push ecx/esi/edi: a third helper of the same family with a different
+  prologue. 0x36280 calls 0x497b0 once and 0x49920 twice. The first call
+  at 0x362aa shows the list is not only name-keyed: EDI is loaded with
+  the dword at 0x961fc, whose bytes are `4c 03 01 00` - the number
+  0x1034c, not text - stored into the scan buffer before the call, so a
+  numeric property id is asked for exactly as a named key is. (pr419_keytable)
+  (c) ONE SCANNER BELONGS TO THE PR-418 CLASS. 0x36280 is the only
+  function that mentions ` narty_param=%d,%d;%d,%d` (0x9113f) and it is
+  the class verb stored as a dword at 0x9f250, the only such site. It
+  asks for four integers as two
+  pairs, divides each by the double 100.0 at 0x91158 and stores them as
+  floats into [ecx+0x112], [ecx+0x12a], [ecx+0x12e] and [ecx+0x132] -
+  after filling [ecx+0x112] and [ecx+0x12a] with objects returned by
+  0x4dcc0 through the singleton at 0xcef40, and calling slot +0x5c of
+  those objects with [ecx+0x24]. Those are the same fields PR-418 lists
+  (position triple +0x12a/+0x12e/+0x132, owned object +0x12c) and the
+  same owned-object getter slot. `narty` is Polish for skis: the authored
+  unit for those four values is hundredths, and the parameter does not
+  appear in any unpacked shipped level.
+  (d) ITS FLAG. 0x36280 is also the only reader of the dword at 0xcf4f0
+  (0x3654a, `cmp ..., 0`), and the only writer is 0x73e70's tail at
+  0x73ec5 - the same function that owns the only scan of
+  `JumpCoef1000 = %d` (0x95ae0) and the third ctor of the PR-418 class
+  family.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr419_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical),
+  /tmp/opencode/pr419_keys.txt (every str-table row matching the
+  `key = %...` shape, joined to the instructions that name its address,
+  grouped by the containing function) and /tmp/opencode/pr419_keytable.txt
+  (the scan-string bytes, the /100.0 double and the three scanner
+  prologues). 0x36280, 0x73e70 and the three scanner entry points were
+  decoded from their own entry addresses.
+```
+
+- WHY. The journal has treated "which authored parameters exist" as an
+  open-ended question with a 14-item sample (PR-378). It is now a closed
+  list: 64 names, each with a named scanner. That matters for the port
+  because the accepted-key vocabulary is exactly where an engine and a
+  re-implementation drift apart silently - a key the engine reads and the
+  port ignores is a behaviour gap with no symptom until some level uses
+  it. Two of those 64 also show the cost of not having the vocabulary:
+  narty_param's four values are hundredths, which is only visible from
+  the `/100.0` in its scanner, and JumpCoef1000's name says the same
+  thing about a jump coefficient. Neither key appears in the unpacked
+  shipped levels, so today they are inert - but a port that does not
+  know them cannot report that honestly.
