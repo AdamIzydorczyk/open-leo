@@ -7003,6 +7003,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     the format table 0x98278 at [obj+0x8] instead of a class
     table. Open: POKAZ/PIANA/PALMA/PLANT/JBRANCH/JROPE (no
     table stored) and the 11 other strcmp clusters (379 sites).]
+    [PR-470 READS ALL FIFTEEN CLASS-NAME FACTORY CLUSTERS (the
+    PR-469 window is one of them: 0x1f879, 0x24f69, 0x26869,
+    0x29099, 0x2ba99, 0x2ea09, 0x33379, 0x34c29, 0x383c9,
+    0x3a259, 0x3acf9, 0x4df1c, 0x6153b plus the A_DEAD arms)
+    and names 109 class tables through [obj+0x8]/[obj+0xc]
+    stores. The pay-off is the cross-tab: 34 of the 41
+    window-blind classes and ALL 12 physics-only input classes
+    now have names - LINA (rope), KOLUMNA (column), SMIGLO
+    (propeller), OBRECZ (ring), BUTLA_BL/BUTLA_BK, KPAJECZ
+    (spider), SOPEL (icicle), SKJUMP, DNGANI, BAL_RAN/TLewRan -
+    objects with no animated window state, exactly what PR-463's
+    equivalence predicted. The same comparison-chain idiom
+    carries the other three authored vocabularies: control words
+    (0x45e85), condition names (0x48010), by-words (0x51b51).
+    Ten clusters also store the constant 0x98274 at +0x10, so a
+    name selects a class PLUS a parameter block; several names
+    share one table (0x9815c has nine). Open: 0x9a220, 0x9d220,
+    0x9d2ac, 0x9f0e4, 0xa2498, 0xa2550, the child-list owner
+    0x97bc0, and why A_DEAD arms in six clusters store row
+    tables at [obj+0x44].]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

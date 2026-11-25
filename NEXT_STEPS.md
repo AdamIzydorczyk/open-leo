@@ -63308,3 +63308,91 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   the "window-blind" law becomes a game-design statement: water
   never gets a window.
 
+
+## PR-470 - THE CLASS-NAME FACTORIES ARE FIFTEEN COMPARISON
+## CLUSTERS THAT NAME 109 CLASS TABLES: THE WINDOW-BLIND SET IS
+## ROPE, COLUMN, PROPELLER, RING, BOTTLE, SPIDER, FLAG AND KINDS
+## OF GRAB-OBJECTS
+
+```
+KIND: read
+SUBSYSTEM: the full set of strcmp (0x76a69) comparison clusters:
+  fifteen that install class tables at [obj+0x8]/[obj+0xc] (the
+  object-class factories, 0x1f879, 0x24f69, 0x26869, 0x29099,
+  0x2ba99, 0x2ea09, 0x33379, 0x34c29, 0x383c9, 0x3a259,
+  0x3acf9, 0x4df1c, 0x6153b and the single-site A_DEAD arms),
+  and four that are the other authored vocabularies - control
+  words at 0x45e85, condition names at 0x48010, by-words at
+  0x51b51; the cross-tab of the resulting name map with the
+  PR-463 window-blind set, the PR-457 physics-only tier and the
+  PR-466 child-list owners
+ADDRESSES: 0x76a69, 0x1f879, 0x24f69, 0x26869, 0x29099,
+  0x2ba99, 0x2ea09, 0x33379, 0x34c29, 0x383c9, 0x3a259,
+  0x3acf9, 0x4df1c, 0x6153b, 0x45e85, 0x46bc7, 0x48010,
+  0x494fb, 0x51b51, 0x51d8a, 0x8, 0xc, 0x96ddc, 0x96e94,
+  0x96f20, 0x9719c, 0x97254, 0x9755c, 0x978dc, 0x97a98,
+  0x97cdc, 0x97d94, 0x98078, 0x9815c, 0x981e8, 0x99668,
+  0x9a07c, 0x9a134, 0x9a2b4, 0x9ac90, 0x9ba88, 0x9bb40,
+  0x9cfd0, 0x9d168, 0x9d8a8, 0x9da40, 0x9e4c0, 0x9e578,
+  0x9e82c, 0x9e8bc, 0x9ed18, 0x9edd0, 0x9ee88, 0xa04ac,
+  0xa14f4, 0xa17dc, 0xa1894, 0xa1bfc, 0xa1cb4, 0xa1d70,
+  0xa1dfc, 0xa1eb4, 0xa20f4
+NAMES: class-name factories, name map, window-blind names,
+  physics-only names, LINA, KOLUMNA, SMIGLO, OBRECZ, BUTLA_BK,
+  KPAJECZ, SKJUMP, DNGANI, pr470_namedsets.txt,
+  pr470_strcmp_clusters.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE SIX STILL-UNNAMED WINDOW-BLIND TABLES (0x9a220,
+    0x9d220, 0x9d2ac, 0x9f0e4, 0xa2498, 0xa2550) and the
+    unnamed child-list owner 0x97bc0, which is the
+    second table the TLewZariaB arm stores - the multi-arm
+    branches need a per-arm walk, not a proximity one; whether
+    several authored names sharing one table (0x97cdc = LINA and
+    one more, 0x9815c with nine names) differ only in their
+    parameter block, which would make the name a ROW not a
+    class; and the A_DEAD arms, which appear in six clusters and
+    store row tables at [obj+0x44] - the death-module mechanism
+    PR-176 noted is spread through every factory.
+CLOSES: PR-463's "which game objects the other 29 window-blind
+  tables are" for 34 of the 41, and PR-457's "which classes
+  those 12 tables are" for all 12: the physics-only tier is
+  LINA (rope), KOLUMNA (column), SMIGLO (propeller), OBRECZ
+  (ring), BUTLA_BL/BUTLA_BK (bottle variants), BAL_RAN/TLewRan
+  (the Ran-stage lion's balloon), KPAJECZ (spider), SOPEL
+  (icicle), SKJUMP (the jump-through platform), DNGANI
+  (dungeon gate) and LINA again - objects with no animated
+  window state, exactly as PR-463's equivalence predicted from
+  the other side. It also settles PR-176's named task at scale:
+  the whole authored class vocabulary is in these clusters
+  (SEP2, DRABINKA, RYBA, ..., TLewZaria, KONIK, KOBRA, PTAK,
+  BOSS, CAMEL, MALPA, LICHA, PARROT, PAPUGA and the rest), and
+  it shows the four vocabularies side by side: object classes,
+  control words, condition names, by-words - all by the same
+  one-compare-per-entry chain.
+CORRECTS: nothing. (PR-469's window is one of these fifteen
+  clusters; its names are re-derived here unchanged, and
+  PR-176's twelve-controller question is answered by the same
+  map: TLewZaria/TLewZariaB are named in the first cluster.)
+MEASURED: (a) THE CLUSTERS: all 379 strcmp sites grouped by
+  proximity; fifteen clusters store a table at [obj+0x8] (always
+  with table-8 at [obj+0xc]) - 109 distinct class tables get a
+  name. (b) THE CROSS-TAB: full listing in the evidence file,
+  summarised in CLOSES. (c) THE SHARED TABLES: the same table
+  address is stored by several name arms (0x97cdc by two,
+  0x9815c by nine), and the constant 0x98274 (PR-49's parameter
+  block) is stored at +0x10 by ten clusters - the name selects a
+  class plus a parameter block, not only a class. (d) THE PORT.
+  Unchanged: the port keys its own classes by the same authored
+  names from the level data.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. Three earlier records had produced anonymous class sets
+  and had to leave "which game objects are these?" open. The
+  answer was a single instruction pattern repeated fifteen times,
+  and it turns a census into a game: the classes that can never
+  hold an animation window are ropes, columns, bottles,
+  propellers and spiders.
+
