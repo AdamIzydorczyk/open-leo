@@ -60405,3 +60405,104 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   can now be aligned field by field. The F/T/G row-type letters
   from 0x92281 also name the row classes the parser at 0x52590
   builds - direct input for naming the port's row kinds.
+
+## PR-438 - THE SHARED TABLE DEFAULTS THAT BUILD THE FLAG VECTOR:
+## VELOCITY SIGN BITS, THE CONTACT WORD AND THE POSITION PROPAGATOR
+
+```
+KIND: read
+SUBSYSTEM: the high method-table slots of the PR-435 class-table
+  census (+0x54, +0x8c, +0xa4, +0xa8, +0xac) and their shared
+  default bodies: the position propagator 0x55070 with 0x541f0,
+  the flag collector 0x54910 that turns object state and velocity
+  signs into the PR-437 flag vector, and the row-gated flag
+  contributors 0x546a0 and 0x54860
+ADDRESSES: 0x55070, 0x541f0, 0x54910, 0x54931, 0x5495b, 0x5499d,
+  0x549b9, 0x546a0, 0x546b9, 0x54860, 0x54883, 0x749a0, 0x23bb0,
+  0x239c0, 0x23930, 0x23940, 0xcef40, 0x04, 0x54, 0x8c, 0x98,
+  0xa4, 0xa5, 0xa8, 0xac, 0xb0, 0xbc, 0xba, 0xbe, 0xc2, 0xc6,
+  0xb6, 0x12, 0x20, 0x40
+NAMES: flag collector, velocity sign bits, position propagator,
+  held-surface gate, contact vector, pr438_slots.txt,
+  OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH FLAG EACH BIT OF THE CONTACT WORD [obj+0xa5]
+    CORRESPONDS TO - 0x54910 tests bits 0x1, 0x10 and 0x20 of it
+    and only the first ORs into out byte 4; the rest of 0x54910
+    between 0x5493f and 0x5495b was skimmed, not transcribed;
+    WHAT THE COUNTERS [obj+0xba] AND [obj+0xbe] ARE (0xba gates a
+    bit derived from [obj+0xb6]; 0xbe is the PR-148 y-intent word
+    whose SIGN becomes flags 0x20 and 0x40); WHAT BITS 0x2 AND 0x4
+    OF [obj+0xb6] MEAN - bit 0 is locked and bit 1 gates the
+    +0xbc call, and PR-436's events set bits 0x4 and 0x8; THE
+    BODIES OF THE VIRTUALS +0xb0 AND +0x98 called by the
+    propagator; and the 10 distinct +0xac variants and 7 distinct
+    +0x54 variants beyond the defaults.
+CLOSES: PR-436's OPENS item WHAT THE ACCUMULATED PAIR [obj+
+  0xc2]/[obj+0xc6] FEEDS: 0x54860 tests [obj+0xc6] > 0 as a
+  condition and ported/ll_level.c already records the same field
+  pair as the per-iteration velocity (ll_play.c:1844) - the
+  baseline store/add/clear events of PR-436 drive the velocity.
+  Part of PR-437's WHAT THE VIRTUAL +0x8c RETURNS: the shared
+  implementation 0x54910 (66 tables) is the flag collector - it
+  builds the 12-byte vector from object state, not from outside.
+  Part of PR-434's [actor+0x8] question and PR-433's +0xbc
+  question: the propagator 0x541f0 virtual-calls +0xbc - the
+  held-surface verb of PR-132's port notes - gated by [obj+0xb6]
+  bit 1.
+CORRECTS: PR-437's "virtual [table+0x8c] (the object's own flags)"
+  is made concrete: the default is one function 0x54910 in 66 of
+  110 tables, and the flag vector's documented engine sources are
+  now the contact word, state counters and the velocity signs;
+  and PR-436's framing of 0x52bb0 as the only place velocity
+  changes gains a second consumer side: the vector builder reads
+  [obj+0xc6] sign directly.
+MEASURED: (a) THE SLOT CENSUS (110 tables). +0x54: 7 distinct,
+  default 0x55070 x76; +0x8c: 20 distinct, default 0x54910 x66;
+  +0xa4: 12 distinct, 0x239c0 x95; +0xa8: 30 distinct, 0x54860
+  x56; +0xac: 10 distinct, 0x546a0 x78. (pr438_slots)
+  (b) THE POSITION PROPAGATOR. 0x55070 (eax = object): virtual
+  [table+0xb0] with edx = [obj+0xd6]; then 0x541f0 with edx =
+  [obj+0x89]; then virtual [table+0x98]. 0x541f0: copies [obj+
+  0x00] and [obj+0x04] to the target pair, and while [obj+0xb6]
+  bit 1 is clear calls the held-surface verb [table+0xbc]; bit 1
+  set or a nonzero verb result skips it (0x54200-0x5421f).
+  (pr438_slots)
+  (c) THE FLAG COLLECTOR. 0x54910: zero a 12-byte local; tests
+  bit 0x1 of the contact word [obj+0xa5] and ORs 0x80 into byte
+  4; bits 0x10 and 0x20 gate writes to bytes 5 and 6; when
+  [obj+0xba] is nonzero it ORs a bit derived from [obj+0xb6]
+  (0x54964-0x5499a); [obj+0xbe] < 0 sets out byte 4 bit 0x20 and
+  [obj+0xbe] > 0 sets bit 0x40 (0x5499d-0x549b4); finally the
+  local is copied to the caller buffer with byte +0xc (0x549b9-
+  0x549c8). 0x546a0 (default +0xac, called by the PR-437 selector
+  with the flag buffer): returns early when [obj+0xb6] bit 1 is
+  set; reads row +0x12 and tests ah bit 0x40 = CHECK_ANI, then a
+  scene query through ds:[0xcef40] via 0x4b600. 0x54860 (default
+  +0xa8): tests [row+0x12] control ah bit 0x4 before using
+  [obj+0xc6] > 0 and byte bits 0x10 of the buffer and dh.
+  (pr438_slots)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr438_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr438_slots.txt: the per-slot frequency census over
+  the 110 class tables read from build/leo/leo.img, and full
+  disassemblies of 0x55070, 0x54910, 0x546a0, 0x54860 and 0x541f0
+  from their entry addresses.
+```
+
+- WHY. This closes the loop the physics port has been working
+  toward: the 12-byte flag vector the row conditions test is
+  assembled by shared engine code from exactly the state the port
+  already keeps - the velocity pair at +0xc2/+0xc6 (its sign bits
+  0x20/0x40 are the rising/falling flags ll_level.c:6301 already
+  models), the y-intent word [obj+0xbe] (PR-148's port field),
+  and the [obj+0xa5] contact vector (PR-338's port table). The
+  velocity events of PR-436, the collector here and the selector
+  of PR-437 are one pipeline, and the row +0x12 control bits gate
+  which contributors run - PR-410's authored control= table
+  operating exactly as the port assumed.

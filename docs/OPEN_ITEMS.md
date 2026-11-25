@@ -6415,6 +6415,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     descriptor 0xa25d4. Closes PR-435's 0x536f0 item and the
     PR-433 row-array consumer. Open: +0x8c bodies, [obj+0x24]
     descriptor, +0x28, cursor writers 0x44582/0x524c8/0x1583c.]
+    [PR-438 NAMES THE FLAG-VECTOR SOURCES. Slot census over the
+    110 tables: +0x54 default 0x55070 x76 (position propagator:
+    virtual +0xb0 on [obj+0xd6], 0x541f0 copies [obj+0x00]/[+0x04]
+    to [obj+0x89] and while [obj+0xb6] bit 1 clear calls the
+    held-surface verb +0xbc, then virtual +0x98); +0x8c default
+    0x54910 x66 = THE FLAG COLLECTOR: contact word [obj+0xa5]
+    bits 0x1/0x10/0x20 gate out bytes 4/5/6, [obj+0xba] nonzero
+    ORs a [obj+0xb6]-derived bit, [obj+0xbe] < 0 sets byte4 0x20
+    and > 0 sets 0x40 - the velocity-sign flags the port already
+    models; +0xa8 default 0x54860 x56 (tests [obj+0xc6] > 0 under
+    row +0x12.0x4) - closes PR-436's +0xc2/+0xc6 readers: the
+    pair IS the velocity (ll_play.c:1844 agrees); +0xac default
+    0x546a0 x78 (gated by [obj+0xb6] bit 1, tests row +0x12
+    ah 0x40 CHECK_ANI, scene query via ds:[0xcef40]/0x4b600);
+    +0xa4 0x239c0 x95. Open: [obj+0xa5] bit map, [obj+0xba],
+    +0xb6 bits 2/3, bodies +0xb0/+0x98.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
