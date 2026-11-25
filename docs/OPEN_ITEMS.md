@@ -6944,6 +6944,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     field +0x5c compared with 0x17, and which classes the 20
     are (12 are window-blind per PR-463, 3 physics-only per
     PR-457).]
+    [PR-467 CLOSES PR-458'S DRAW-VERB QUESTION AND MERGES TWO
+    LEDGER ENTRIES: the draw verbs are not object-class
+    virtuals - they are entries of ONE element/frame method
+    block at 0xa0bd0 (25 entries) installed per record. Block B
+    0xa0c08, which PR-255 named "the frame records' shared
+    method block", is block A's TAIL: its 11 entries are A's
+    +0x38..+0x60 verbatim (A+0x38 = 0x42930, the live box, so
+    the block is a method table and not an offset map). Only two
+    aligned dwords point into block A: 0x41f4d stores 0xa0bdc
+    into [rec+0x33] (the known view: draws at +0x40..+0x50, box
+    at +0x38) and 0x43fca, in the element factory 0x43fb0,
+    stores 0xa0bd0 into a SECOND view field [rec+0x16].
+    Correction to PR-255: not "one global" but one block with
+    two view fields; box facts unchanged. That is also why the
+    lion's 512-entry table holds no slot into 0x57xxxx. Open:
+    how the draws are dispatched (no call site loads through
+    [x+0x16], no class table points at the four draw bodies),
+    and block A's head half (+0x00..+0x34, the element/factory
+    verbs).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

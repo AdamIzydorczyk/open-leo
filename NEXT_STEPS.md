@@ -63035,3 +63035,94 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   that family makes the pattern findable in one slot scan next
   time instead of a dozen disassemblies.
 
+
+## PR-467 - THE DRAW VERBS LIVE IN A 25-ENTRY ELEMENT BLOCK AT
+## 0xa0bd0; PR-255'S "FRAME RECORDS' SHARED METHOD BLOCK" IS ITS
+## TAIL AT +0x38, INSTALLED AT VIEW +0x33, THE WHOLE BLOCK AT
+## VIEW +0x16
+
+```
+KIND: read
+SUBSYSTEM: the element/frame method block 0xa0bd0 (25 entries,
+  enumerated in the evidence file) and its relation to the block
+  0xa0c08 that PR-255 named; the two method-view fields of the
+  records - [rec+0x16] (base 0xa0bd0) and [rec+0x33] (base
+  0xa0bdc); the element factory 0x43fb0 that installs the first
+  view, and the five draw verbs at the tail of block A
+  (0x421f0/0x42230/0x422f0/0x423c0/0x42480, the last four =
+  PR-49's anchor-subtracting draw methods)
+ADDRESSES: 0xa0bd0, 0xa0bdc, 0xa0c08, 0x421f0, 0x42210,
+  0x42230, 0x422f0, 0x423c0, 0x42480, 0x42930, 0x42980,
+  0x429d0, 0x42a20, 0x442f0, 0x41f4d, 0x43cf5, 0x43fb0,
+  0x43fca, 0x4438e, 0x45abf, 0x52c80, 0x21880, 0x5c320,
+  0x426a0, 0x16, 0x33, 0x38, 0x48, 0x4c, 0x50, 0x54, 0x58,
+  0x5c, 0x7fff, 0x398
+NAMES: element method block, draw verb block, view field
+  +0x16, view field +0x33, element factory, block tail,
+  pr467_elementblock.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: HOW THE DRAW VERBS ARE REACHED - no call site loads a
+    method through [x+0x16] (searched every call insn with a
+    60-byte load window), and no ctor class table holds a
+    pointer to 0x42230/0x422f0/0x423c0/0x42480, so the dispatch
+    is through a register or a saved pointer the index does not
+    tie to a view field; the 14 entries at +0x00..+0x34 of block
+    A (0x44210/0x44020/... 0x441b0) - the element and factory
+    verbs, all unread; what 0x21880 (eax=?, edx=0xa, ebx=1)
+    allocates, versus the 0x1e-byte block allocated right after
+    it in the same factory; and whether the +0x48 wrapper
+    0x421f0 (which calls PR-49's 0x426a0 with the mirror word
+    [rec+0x17]) is the mirrored draw or a size-zero variant.
+CLOSES: PR-458's OPENS "the draw verb": the draw verbs are not
+  object-class virtuals at all - under the view the journal knows
+  ([rec+0x33] = 0xa0bdc) they sit at slots +0x40..+0x50, i.e. in
+  ONE element/frame method block at 0xa0bd0 installed per record,
+  which is exactly why the lion's 512-entry table holds no slot
+    into the render band. It also unifies two things the journal
+  had named separately: the
+  block PR-255 recorded at 0xa0c08 is the tail of this block -
+  its 11 entries are block A's entries +0x38..+0x60 verbatim,
+  and the two "different" installations are the same block seen
+  from two view bases: 0x41f4d stores 0xa0bdc into [rec+0x33]
+  and 0x43fca stores 0xa0bd0 into [rec+0x16]. The block is a
+  method table, not an offset map - its first entry 0x42930
+  under both views is PR-255's live box, which settles that
+  question arithmetically.
+CORRECTS: PR-255's "(c) THAT POINTER IS ONE GLOBAL ... 0xa0c08 is
+  the frame records' shared method block": true but incomplete -
+  it is an 11-entry TAIL window of a 25-entry block beginning at
+  0xa0bd0, and there is a second installation site (0x43fca)
+  writing the block base into a different view field [rec+0x16],
+  so "one global" should read "one block, two view fields". The
+  box facts themselves are unchanged.
+MEASURED: (a) THE TWO BLOCKS SIDE BY SIDE: block A 0xa0bd0 +0x38
+  .. +0x60 = 0x42930, 0x42980, 0x429d0, 0x42a20, 0x421f0,
+  0x42230, 0x422f0, 0x423c0, 0x42480, 0x42210, 0x442f0 = block
+  B 0xa0c08 +0x00..+0x28, item for item; gap -0x2c bytes, i.e.
+  B starts inside A. Under the view the journal has already used
+  (base 0xa0bdc = A + 0xc) those tail entries land at +0x38
+  (live box, PR-255) and +0x40..+0x50 (the five draw verbs).
+  (b) THE INSTALLATIONS: aligned dwords whose
+  value lies in block A are exactly two - 0x41f4d -> 0xa0bdc and
+  0x43fca -> 0xa0bd0 (the latter inside the factory 0x43fb0,
+  right after 0x21880 with edx=0xa, ebx=1 and a 0x1e-byte
+  0x5c320 block). (c) THE VIEW READERS: 26 code sites read
+  [x+0x16]; the element-namespace ones are 0x4438e (the factory
+  singleton [ds:0xcef40+0x398] through its +0x4 verb) and
+  0x45abf/0x45ae8 (a created element passed to 0x52c80). (d) THE
+  VERBS: 0x421f0 pushes [rec+0x17] and calls PR-49's 0x426a0;
+  0x42230 tests the 0x7fff sentinel and subtracts the anchor, as
+  PR-49 recorded. (e) THE PORT. Unchanged: the port's obj_draw
+  implements the same anchor/sentinel law directly.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. Two ledger entries - PR-49's "element vtable +0x4c..
+  +0x58" and PR-255's "frame records' shared method block" -
+  were the same table seen from two view offsets. Saying so
+  closes the draw-verb question PR-458 reopened, and it leaves a
+  clean map: the block's head half is element/factory verbs,
+  its tail half is the frame verbs (box, margins, draws).
+
