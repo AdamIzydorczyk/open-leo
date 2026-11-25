@@ -66627,3 +66627,75 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   controller object embedded in PODMUCH / pointed to by
   behavior classes - the +0xa9 slot's second union arm.
 
+
+## PR-509 - THE LIGHT ARRAYS ARE FEED BY THE SETTINGS NAME-
+## LIST PARSERS (0x4dc00-family -> factory 0x4df10), AND
+## THE TLew +0x6c SLOT IS THE SHARED IS-BUSY THUNK 0x238e0
+
+```
+KIND: read
+SUBSYSTEM: PR-508's OPENS "the light-array producer" and
+  "what verb +0x6c does". (1) PRODUCER: the level object's
+  list fields [level+0x74]/count [level+0x80] (stride 0xc)
+  and [level+0x7c] (stride 0x14) are filled by settings
+  parsers 0x4dc00/0x4db50 - siblings of the 0x4db00 group -
+  all called ONLY from the level settings/frame-loop
+  function 0x4c8a0: scanf "%d" for the count (push 0x91f24/
+  0x91f27), then ' %[^,\r\n] , ' per entry, and record
+  verb+0 = the PR-104 FACTORY 0x4df10 fed the name string
+  (0x4dcc0 reads the name via the PR-2xx settings scanner
+  and calls 0x4df10 directly). So lights - like the journal's
+  PLANT/GRABOBJ/ANITAB sections - are INSTANTIATED FROM
+  NAME LISTS in the level settings file; allocation is
+  `n*3*4+4` bytes (0x76a64) with defaults 0xa14c0/0xa0c78.
+  (2) VERB +0x6c of the TLew pair 0x9b4cc = 0x238e0, a
+  member of the engine's SHARED THUNK BLOCK (0x23a10 =
+  `add eax,0x89; ret` - the +0x89 sub-object locator seen
+  in the same census): 0x238e0 = `if [obj+0x5c]==2 return
+  0; else return [[obj+8]+8](obj)` - an IS-ACTIVE check
+  delegating to the object's own ops verb +8. A_LOOKUP's
+  per-light call is therefore a liveness/busy probe, not a
+  registration: light REGISTRATION is msg-code 0x1b (the
+  PR-508 setter), completing the light model: build (ctor)
+  -> register (msg 0x1b) -> query (A_LOOKUP loops) ->
+  draw (camera math). (3) The 0x5da60 level-object cleaner
+  zeroes such list fields in groups of four ([+0x5c..0x68],
+  [+0x6c..0x78], [+0x7c..0x80]).
+ADDRESSES: 0x4dc00, 0x4db50, 0x4db00, 0x4dcc0, 0x4df10,
+  0x49920, 0x91f24, 0x91f27, 0xa14c0, 0xa0c78, 0x74, 0x80,
+  0x7c, 0x84, 0x238e0, 0x23a10, 0x9b4cc, 0x5da60,
+  docs/OPEN_ITEMS.md
+NAMES: name-list section parsers, is-busy thunk, shared
+  thunk block, liveness probe, list-field cleaner,
+  pr509_close.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH SETTINGS SECTION KEYS name the light lists
+    (the scanf-key strings sit beside ' %[^,' at 0x91f24
+    but the section NAME strings near 0x4c8a0's section
+    walk are unmapped); and the stride-0x14 list at
+    [level+0x7c] - which object family its factory builds.
+CLOSES: PR-508's OPENS "the level-light-array PRODUCER"
+  (settings name-list parsers -> factory 0x4df10) and
+  "WHAT VERB +0x6c DOES" (shared liveness thunk 0x238e0).
+  The LIGHT MODEL IS NOW CLOSED end to end: class tables
+  (PR-502), manager singleton (PR-503), pair slots (PR-
+  504), construction (PR-505), unions + draw (PR-506),
+  camera + pool (PR-507), controller + flow (PR-508).
+CORRECTS: none.
+MEASURED: (a) 0x4dc00/0x4dcc0/0x4db50 bodies verbatim
+  (pr509_close.txt) incl. the scanf strings. (b) 0x238e0/
+  0x23a10 bodies verbatim. (c) field-store census for
+  +0x74/+0x80 writers (0x445a7/0x445f6, 0x4dc7f, 0x4a621/
+  0x4a63f). (d) 0x5da60 group-zeroing pattern. (e) THE
+  PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+
+- WHY. Lights are ordinary factory-created objects named in
+  the level settings file - the port needs no light-specific
+  spawning code, only the name->factory path PR-104 already
+  models, plus a liveness check when behaviors query them.
+

@@ -7681,6 +7681,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     SETTER of the +0xa9 light pointer (destroy old via
     verb+0, construct new). Verb +0x6c meaning and the
     light-array producer: open.]
+    [PR-509 CLOSES THE LIGHT MODEL END TO END: the level's
+    list fields [level+0x74]/[level+0x80] (stride 0xc) and
+    [level+0x7c] (0x14) are filled by settings name-list
+    parsers 0x4dc00/0x4db50 (called only from 0x4c8a0):
+    "%d" count + ' %[^,\r\n] , ' names, each record's
+    verb+0 = the PR-104 factory 0x4df10 - lights are
+    ORDINARY factory objects named in the settings file,
+    like PLANT/GRABOBJ sections. The TLew pair's +0x6c =
+    0x238e0 in the SHARED THUNK BLOCK (0x23a10 = add
+    eax,0x89): `if [obj+0x5c]==2 return 0 else [[obj+8]
+    +8](obj)` - a liveness probe, so A_LOOKUP queries
+    whether each light is active. Full lifecycle: ctor ->
+    msg-0x1b register -> A_LOOKUP probe -> camera draw.
+    Settings section names + the stride-0x14 list's object
+    family: open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
