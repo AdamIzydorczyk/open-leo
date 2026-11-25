@@ -7761,6 +7761,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     way back to the authored directive, but none has been tied to a name;
     why the point provider runs the element's LEAVE verb; and a setter
     for bit 0x10.
+    PR-512 READS THE NAMED BLOCK AND CLOSES THE '#' ITEM.
+    0x546de-0x54700 is the collector fan-out of 0x546a0:
+    lock2 ([obj+0xb6] bit 0x02) SKIPS the whole standing
+    pass; else the state control word (PR-410's +0x12)
+    gates it - CHECK_ANI 0x40 runs 0x4b600 mode 0,
+    CHECK_ALL 0x10 runs it mode 2 - and two more collectors
+    always run: 0x4b430 (provider 0x534e0's +0x68 point +
+    the [obj+0xca]/[+0xce] delta) and 0x4b7f0, the SECOND
+    registry [anchor+0x78]/[+0x84] stride 0x14, entry class
+    verb +4, first hit. All merge via 0x49580. The o-
+    family fields ARE this verb's own outputs: [obj+0xe6]
+    handle, [obj+0xe2] flag, [obj+0xea] clearance stored at
+    0x5478e/0x547bc - so the 0x54766 arm is the TERMINAL-
+    FALL DROP of a held flag-2 surface (PR-392's v_y
+    reading), not a timer. FRESH CENSUS: 28 container
+    entries, NO authored '#' line (matches the port leg at
+    ll_level.c:10144) - flag 2 never occurs shipped, so the
+    timed/terminal seat-drop is ELIMINATED as an OI-124
+    carrier. Left open: 0x4b600's mode byte 0-vs-2, who
+    fills the 0x78/0x84 registry (0x4db50 is the prime
+    suspect, PR-509 named that family), its entry class.
 
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -

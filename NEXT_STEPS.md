@@ -66827,3 +66827,84 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   record chain told its stage count via verb +0x5c - a
   hard engine bound any faithful loader must enforce.
 
+
+## PR-512 - THE GROUND-CONTACT VERB FULL: THREE CONTROL-BIT-
+## GATED SURFACE COLLECTORS, AND THE [obj+0xe2/e6] ANSWER
+## FIELDS ARE ITS OWN OUTPUTS
+
+```
+KIND: read
+SUBSYSTEM: OI-128's named unread block 0x546de-0x54700
+  inside the ground-contact verb 0x546a0 (the +0xAC verb of
+  118 class views, PR-345). The verb's first test is
+  [obj+0xb6] bit 0x02 = `lock2` - set means the WHOLE
+  standing pass is skipped and control jumps to the tail at
+  0x54804. Otherwise it reads the CURRENT STATE's control
+  word ([[obj+0x50]+[obj+0x5c]*4]+0x12, PR-410's state
+  record) and fans out on the port-named bits:
+  CHECK_ANI (0x40) runs the PR-346 collector 0x4b600 with
+  mode ecx=0, CHECK_ALL (0x10) runs it with mode ecx=2;
+  each answer set is OR-merged into the signal block by the
+  PR-189 12-byte merge 0x49580, then TWO more collectors
+  run: 0x4b430 asks the object's own POINT PROVIDER 0x534e0
+  (the +0x68 verb pair -> {x,y}, the +0x48 current-script
+  accessor) and offsets the answer by [obj+0xca]/[obj+0xce]
+  - the OI-129 delta pair - and 0x4b7f0 walks the SECOND
+  registry [anchor+0x78]/count [anchor+0x84] at stride 0x14
+  calling each entry's class-view +4, first hit wins; all
+  merge the same way. 0x4b600's own head confirms it asks
+  0x541f0 (the aim chain) at the provider point + the
+  ca/ce delta with the 0x98278 placeholder triple.
+  SECOND FINDING: the fields the ejection test reads are
+  the verb's OWN outputs from the previous call -
+  0x5478e/0x547bc store the winning handle at [obj+0xa9]
+  and the scan blocks receive the triple at [obj+0xe6]
+  (handle), [obj+0xe2] (record flag byte), [obj+0xea]
+  (clearance) (PR-350/PR-392). So the '#' arm 0x54766 is:
+  the surface held SINCE LAST STEP has flag 2 and v_y
+  [obj+0xc6] >= 0x58c -> leave it (terminal-fall drop,
+  PR-392's reading). THIRD: fresh scans of both containers
+  (28 entries, /tmp/opencode/pr512_hashcensus.txt) find
+  '#' in NO authored entry line - confirming the port leg's
+  own note (ported/ll_level.c:10144 'NOT in any' shipped
+  entry): flag 2 is grammar-only, so the terminal-fall drop
+  NEVER fires in shipped levels, and the carrier search of
+  OI-124 loses the timed-drop-seat candidate for good.
+ADDRESSES: 0x546a0, 0x546de, 0x54700, 0x546c5, 0x5470b,
+  0x4b600, 0x4b430, 0x4b7f0, 0x4b890, 0x49580, 0x534e0,
+  0x541f0, 0x68, 0x48, 0xca, 0xce, 0xe2, 0xe6, 0xea, 0xa9,
+  0x54766, 0x58c, 0x78, 0x84, 0xb6, docs/OPEN_ITEMS.md
+NAMES: three-collector fan-out, lock2 skip, terminal-fall
+  drop, answer triple, second registry, flag-2 zero census,
+  pr512_hash.txt, pr512_hashcensus.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE MODE BYTE 0/2 DOES INSIDE 0x4b600 (PR-392
+    called it a minimum-query mode - the mode-vs-registry
+    split stays unread); WHO FILLS [anchor+0x78]/[+0x84]
+    (the second registry, stride 0x14 - the PR-509 name-
+    list family with the 0x14 stride is the prime suspect,
+    0x4db50 fills exactly that pair); and the second
+    registry's entry class.
+CLOSES: OI-128's named unread block (read in full above)
+  and OI-128's '#' item (zero shipped instances, twice
+  confirmed); narrows OI-124 by eliminating the timed/
+  terminal-fall seat-drop mechanism.
+CORRECTS: none. (PR-509 already supplied the OI-127 "who
+  fills the array" answer - name-list parsers; recorded
+  here as the register closure, no new claim.)
+MEASURED: (a) 0x546a0 0x546a0-0x54810 verbatim incl. the
+  bit gates (pr512_hash.txt). (b) 0x4b600/0x4b430/0x4b7f0/
+  0x534e0 heads verbatim. (c) Container census: 28 entries,
+  0 authored '#' (pr512_hashcensus.txt). (d) THE PORT.
+  Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The standing pass is now fully readable as port
+  code: skip on lock2, ask the held surface, then the two
+  control-gated registries, then land/leave the [obj+e6]
+  handle - and the '#' ejection can be left unimplemented
+  for shipped levels without losing fidelity.
+
