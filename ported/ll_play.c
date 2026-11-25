@@ -184,6 +184,163 @@ int ll_plt_first_below(const ll_plt *o, int x, int from_y, ll_xy *hit)
     return found;
 }
 
+/* ------------------------------------------------------------------ .blk
+ * The `blokady=` registry the physics step's blockade query walks
+ * (0x4db50 builds [world+0x70], count [world+0x7c], stride 0x14; the
+ * query is 0x4b430 and the test is 0x45620 - PR-313 named the
+ * registry, PR-394 read the query, PR-395 read the record bytes).
+ *
+ * The record's three authored numbers are PARSED, not copied: 0x455e0
+ * moves its `eax` to rec+4 and its `ecx` to rec+0x10 and calls
+ * 0x4a0b0, which scans the format "%d,%d" (0x91d0f) out of the row
+ * into rec+0x4 and rec+0x8; then 0x455e0 scans "%d" (0x9183d) into
+ * rec+0x10 and probes for a "," (0x91840). rec+0x0 and rec+0xc are
+ * never written - the block comes from calloc (0x4dbb9) - and 0x45620
+ * never reads them. So a record is a VERTICAL WALL: its face x at
+ * rec+0x4, its top y at rec+0x8, and how far down it goes at
+ * rec+0x10. That is what the authored files are: ZAR.BLK's six rows
+ * are the walls x=0 and x=2240 over the whole 700 px height - the two
+ * world edges - and four short ones at 1299/341+118, 1462/244+28,
+ * 1540/194+27 and 1620/0+200.
+ *
+ * The file is read as ONE token stream, not as lines: 0x4db7b reads up
+ * to 0x400 bytes into the engine's token cursor and 0x4db8e scans the
+ * header count (the format "%d" at 0x91f24) from it, and then
+ * 0x4dbcf-0x4dbe4 runs the record scan EXACTLY count times. So the
+ * count is authoritative in both directions - extra rows are never
+ * read, and a file that runs out of numbers leaves the rest of the
+ * records at their allocated zero. */
+#define LL_BLK_MAX 64          /* records one file may own; the measured
+                                * maximum across the shipped set is 49 */
+
+/* The next number in the engine's token stream: 1 and *out set, or 0 at
+ * the end. What separates is exactly what the loader's own scans accept:
+ * the format "%d,%d" (0x91d0f) carries its separator argument " , "
+ * (0x91d15, through 0x498f0 at 0x4a0c4) and 0x455e0 probes a bare ","
+ * (0x91840) after every triple - and the authored rows use commas, CR,
+ * LF and spaces. The port treats all of them as separators anywhere. */
+static int blk_next(const char **pp, int *out)
+{
+    const char *p = *pp;
+    char *end = NULL;
+    long v;
+
+    while (*p == ',' || *p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')
+        p++;
+    v = strtol(p, &end, 10);
+    if (end == p)
+        return 0;
+    *out = (int)v;
+    *pp = end;
+    return 1;
+}
+
+int ll_blkreg_parse(const char *text, ll_blkreg *out)
+{
+    const char *p = text;
+    int count = 0, i, k;
+    ll_blk_rec *v;
+
+    out->r = NULL;
+    out->n = 0;
+    if (!blk_next(&p, &count))
+        return 1;                   /* no header: not a blokady file */
+    if (count < 0 || count > LL_BLK_MAX)
+        return 1;                   /* the port will not hold it */
+    v = count ? calloc((size_t)count, sizeof *v) : NULL;
+    if (count && !v)
+        return 1;
+    for (i = 0; i < count; i++) {
+        int f[3] = { 0, 0, 0 };     /* calloc, exactly as the engine's */
+        for (k = 0; k < 3; k++)
+            if (!blk_next(&p, &f[k]))
+                break;
+        v[i].x = f[0];
+        v[i].y = f[1];
+        v[i].ly = f[2];
+    }
+    out->r = v;
+    out->n = count;
+    return 0;
+}
+
+void ll_blkreg_free(ll_blkreg *o)
+{
+    free(o->r);
+    o->r = NULL;
+    o->n = 0;
+}
+
+int ll_block_hit(const ll_blk_rec *rec, int bx0, int bx1, int by0, int by1,
+                 int *dx)
+{
+    int target, dist;
+
+    *dx = 0;
+    /* 0x45626-0x45634: `cmp [rec+4], [block+0]` / `jl` and
+     * `cmp [rec+4], [block+8]` / `jg` - the wall's face x must lie
+     * between the requester's two x, both ends inclusive. */
+    if (rec->x < bx0 || rec->x > bx1)
+        return 0;
+    /* 0x4563a-0x45649 and 0x4564b-0x4565a: the wall is the interval
+     * [y, y+ly] (rec+8 and rec+8 + rec+0x10, and an authored ly may be
+     * negative) and the requester is [block+4, block+0xc]. The record
+     * is refused only when BOTH ends of one of those intervals lie
+     * outside the other, which is an OVERLAP test, not a point test:
+     * `cmp y, hi / jle` skips the length check, and only `y + ly > hi`
+     * (0x45647) or `y + ly < lo` (0x45658) is a miss. */
+    if (rec->y > by1 && rec->y + rec->ly > by1)
+        return 0;
+    if (rec->y < by0 && rec->y + rec->ly < by0)
+        return 0;
+    /* 0x4565c-0x45676: which side to move to. The comparison is
+     * `([rec+4] - [block+0]) >= ([block+8] - [rec+4])`, so the wall's
+     * distance from the requester's NEAR x against its distance from
+     * the FAR x, with the tie (jge) taking the far side. The two
+     * targets are the REQUESTER's own edges plus one - [block+0] - 1 or
+     * [block+8] + 1 - never a face of the record: the engine is
+     * resolving an overlap, not aiming at the wall. */
+    target = (rec->x - bx0 >= bx1 - rec->x) ? bx1 + 1 : bx0 - 1;
+    /* 0x45677-0x45686: d = [rec+4] - target, and its absolute value
+     * (0x4567e-0x45681 is the `cdq/xor/sub` idiom) is refused when it
+     * is <= 1, which is exactly the case where the requester is already
+     * flush against the wall: it is TOUCHING, not overlapping, and the
+     * engine leaves it alone and never writes [obj+0xca] at all. */
+    dist = rec->x - target;
+    if (dist < 0)
+        dist = -dist;
+    if (dist <= 1)
+        return 0;
+    *dx = rec->x - target;          /* 0x4568e ADDs this, signed, to
+                                     * [obj+0xca] - so the requester's
+                                     * near or far edge lands on the
+                                     * wall's x minus/plus one. */
+    return 1;
+}
+
+int ll_block_walk(const ll_blkreg *reg, int bx0, int bx1, int by0, int by1,
+                  int *dx, int *idx)
+{
+    int i, v;
+
+    *dx = 0;
+    *idx = -1;
+    for (i = 0; i < reg->n; i++) {
+        /* 0x4b494-0x4b4bc: the count is [world+0x7c], the stride is
+         * 0x14, and 0x4b4af `test eax,eax / jne 0x4b4d6` leaves the
+         * walk AT THE FIRST record that answers. Its tail clears the
+         * request block's flag byte and 0x4b4ec `or BYTE [result],0x1`
+         * raises AC_BLOK once. */
+        if (ll_block_hit(&reg->r[i], bx0, bx1, by0, by1, &v)) {
+            *dx = v;
+            *idx = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
 /* ------------------------------------------------------- .MOV parse ---- */
 
 int ll_mov_find(const ll_mov_t *m, const char *name)
@@ -2710,6 +2867,156 @@ int ll_play_selftest(void)
     CHECK(ll_plt_parse("nope\r\n1 0,0;5,0;\r\n", &plt3) == 0 && plt3.n == 1);
     ll_plt_free(&plt3);
 
+    /* .blk grammar and the blockade query, PR-395. The bytes are
+     * ZARIA.01/ZAR.BLK exactly as the HD ETAPY container carries them
+     * (/tmp/opencode/pr395_blk/ZAR.BLK, 76 bytes, sha256
+     * 66a8c17cb0fe2738...), and a requester is written as the engine's
+     * FOUR request-block fields - near x, far x, near y, far y -
+     * because those are the four dwords 0x4b441-0x4b490 build and
+     * shift, every one of them carrying the pending clamp delta. The
+     * record's three numbers are x, TOP y and HEIGHT, which is what
+     * 0x455e0's own formats say ("%d,%d" at 0x91d0f into rec+4 and
+     * rec+8, "%d" at 0x9183d into rec+0x10) and what the authored
+     * files are: ZAR.BLK's first two rows are the world's left and
+     * right edges, x 0 and x 2240, both 700 px tall. */
+    {
+        static const char ST_BLK[] =
+            "6\r\n0,0,700\r\n2240,0,700\r\n1299,341,118\r\n1462,244,28\r\n"
+            "1540,194,27\r\n1620,0,200\r\n";
+        ll_blkreg bl;
+        int d, idx;
+        CHECK(ll_blkreg_parse(ST_BLK, &bl) == 0 && bl.n == 6);
+        CHECK(bl.r[0].x == 0 && bl.r[0].y == 0 && bl.r[0].ly == 700);
+        CHECK(bl.r[1].x == 2240 && bl.r[1].y == 0 && bl.r[1].ly == 700);
+        CHECK(bl.r[2].x == 1299 && bl.r[2].y == 341 && bl.r[2].ly == 118);
+        CHECK(bl.r[3].x == 1462 && bl.r[3].y == 244 && bl.r[3].ly == 28);
+        CHECK(bl.r[4].x == 1540 && bl.r[4].y == 194 && bl.r[4].ly == 27);
+        CHECK(bl.r[5].x == 1620 && bl.r[5].y == 0 && bl.r[5].ly == 200);
+
+        /* THE X GATE IS ON THE WALL, NOT ON THE BODY. 0x45629 and
+         * 0x45631 leave unless [block+0] <= rec.x <= [block+8], so a
+         * body fully inside the world never meets either world edge:
+         * the wall's x is outside its box. */
+        CHECK(!ll_block_hit(&bl.r[0], 20, 60, 100, 140, &d) && d == 0);
+        CHECK(!ll_block_hit(&bl.r[1], 20, 60, 100, 140, &d) && d == 0);
+        /* A body that really does cover x 0 is overlapped. The side
+         * test of 0x4566a is `([rec+4]-[block+0]) >= ([block+8]-
+         * [rec+4])` = 20 >= 20, and `jge` takes the far side, so the
+         * target is [block+8] + 1 = 21 and dx = 0 - 21 = -21. Adding
+         * that to [obj+0xca] leaves the body's FAR edge at -1: the
+         * engine throws the body out of the wall on the side its box
+         * overlapped it least. */
+        CHECK(ll_block_hit(&bl.r[0], -20, 20, 100, 140, &d) && d == -21);
+        /* The same wall 15 px the other way: 5 < 35 takes the near
+         * side, target [block+0] - 1 = -6, dx = +6, so the body's NEAR
+         * edge lands at 1. */
+        CHECK(ll_block_hit(&bl.r[0], -5, 35, 100, 140, &d) && d == 6);
+        /* TOUCHING IS NOT OVERLAPPING. A body whose near edge is at
+         * the wall's x scores 0 >= 40 = false, target x - 1, distance
+         * 1, and 0x45683 refuses it; a body whose far edge is at the
+         * wall's x gets distance -1 and the same refusal. On a refusal
+         * the engine does not write [obj+0xca] at all, which is why
+         * these pins read d == 0. */
+        CHECK(!ll_block_hit(&bl.r[0], 0, 40, 0, 40, &d) && d == 0);
+        CHECK(!ll_block_hit(&bl.r[0], -40, 0, 0, 40, &d) && d == 0);
+        /* One px past the right edge of the world is a real overlap,
+         * and the throw-back is 2 px: 10 >= 1 takes the far side,
+         * target 2242, dx = -2. */
+        CHECK(ll_block_hit(&bl.r[1], 2230, 2241, 0, 40, &d) && d == -2);
+
+        /* THE Y TEST IS AN OVERLAP OF TWO RANGES, not a point test:
+         * the wall is [rec+8, rec+8 + rec+0x10] and it is refused only
+         * when BOTH its ends are past one end of the body's range
+         * (0x45640/0x45647 above, 0x45651/0x4565a below). ZAR.BLK's
+         * edge walls stop at y 700, the floor, and 701 is already out -
+         * the level's own height, read from the file. */
+        CHECK(ll_block_hit(&bl.r[1], 2230, 2241, 700, 740, &d) && d == -2);
+        CHECK(!ll_block_hit(&bl.r[1], 2230, 2241, 701, 740, &d) && d == 0);
+        /* An interior wall: 1299,341,118 stands from y 341 to y 459,
+         * so a body at y 100..140 is not asked at all, and one at
+         * 400..500 is: 9 < 31 takes the near side, target 1289, and
+         * dx = +10 puts the body's near edge at 1300, clear of x 1299. */
+        CHECK(!ll_block_hit(&bl.r[2], 1290, 1330, 100, 140, &d) && d == 0);
+        CHECK(ll_block_hit(&bl.r[2], 1290, 1330, 400, 500, &d) && d == 10);
+        /* both ends of the wall's y range are inclusive: a body whose
+         * FAR y is exactly the wall's top y is asked (0x45640 tests
+         * `y > hi` before it looks at the height at all), and so is one
+         * whose NEAR y is exactly the wall's bottom end. */
+        CHECK(ll_block_hit(&bl.r[2], 1290, 1330, 300, 341, &d) && d == 10);
+        CHECK(ll_block_hit(&bl.r[2], 1290, 1330, 459, 460, &d) && d == 10);
+        CHECK(!ll_block_hit(&bl.r[2], 1290, 1330, 460, 461, &d) && d == 0);
+        /* A wall with a height of 0 is a one-pixel band and its ends
+         * are the same number: it answers at its own y and not one px
+         * away. No shipped row is zero-height; this is the law. */
+        {
+            const ll_blk_rec band = { 100, 300, 0 };
+            CHECK(ll_block_hit(&band, 90, 110, 300, 320, &d) && d == -11);
+            CHECK(!ll_block_hit(&band, 90, 110, 301, 320, &d) && d == 0);
+        }
+        /* and the two flush cases on that wall: near edge at 1299,
+         * distance +1; far edge at 1299, distance -1; both refused,
+         * while one px of overlap moves the body by 2. */
+        CHECK(!ll_block_hit(&bl.r[2], 1299, 1339, 400, 500, &d) && d == 0);
+        CHECK(!ll_block_hit(&bl.r[2], 1200, 1299, 400, 500, &d) && d == 0);
+        CHECK(ll_block_hit(&bl.r[2], 1200, 1300, 400, 500, &d) && d == -2);
+        /* A record whose height is authored NEGATIVE is the interval
+         * [y, y+ly] upside down and the engine handles it as one,
+         * because both of its tests look at the two ENDS. 500,-100 is
+         * the wall y 400..500: it answers at 450..460 and not at
+         * 600..650. No shipped .BLK row is negative, so this is the
+         * law, not the data. */
+        {
+            const ll_blk_rec inv = { 100, 500, -100 };
+            CHECK(ll_block_hit(&inv, 90, 110, 450, 460, &d) && d == -11);
+            CHECK(!ll_block_hit(&inv, 90, 110, 600, 650, &d) && d == 0);
+        }
+        /* THE WALK STOPS AT THE FIRST ANSWER. 0x4b4af
+         * `test eax,eax / jne 0x4b4d6` leaves the loop over
+         * [world+0x70] as soon as one record answers, and 0x4b4ec then
+         * raises AC_BLOK once. A body that spans the whole world width
+         * covers BOTH edge walls - the left one answers (10 >= 2250 is
+         * false, target -11, dx +11) and the right one is never asked,
+         * let alone added: the second wall would have answered -11 and
+         * the two would have cancelled. */
+        CHECK(ll_block_walk(&bl, -10, 2250, 100, 140, &d, &idx) &&
+              idx == 0 && d == 11);
+        /* File order, not nearest: the same six walls, asked by a body
+         * only the LAST row reaches, answer at index 5. */
+        CHECK(ll_block_walk(&bl, 1600, 1700, 100, 140, &d, &idx) &&
+              idx == 5 && d == 21);
+        CHECK(!ll_block_walk(&bl, 500, 600, 600, 650, &d, &idx) &&
+              idx == -1 && d == 0);
+        ll_blkreg_free(&bl);
+
+        /* THE GRAMMAR, AS THE LOADER READS IT. One 0x400-byte read and
+         * a token cursor (0x4db7b), the header count first (0x4db8e),
+         * then the record scan run EXACTLY count times
+         * (0x4dbcf-0x4dbe4) - so lines mean nothing and the count wins
+         * in both directions. */
+        ll_blkreg g;
+        CHECK(ll_blkreg_parse("2\r\n0,0,700\r\n", &g) == 0 && g.n == 2 &&
+              g.r[1].x == 0 && g.r[1].y == 0 && g.r[1].ly == 0);
+        ll_blkreg_free(&g);
+        CHECK(ll_blkreg_parse("1\r\n0,0,700\r\n5,5,5\r\n", &g) == 0 &&
+              g.n == 1 && g.r[0].x == 0 && g.r[0].y == 0 &&
+              g.r[0].ly == 700);
+        ll_blkreg_free(&g);
+        CHECK(ll_blkreg_parse("2 0,0,700 2240,0,700", &g) == 0 && g.n == 2 &&
+              g.r[1].x == 2240 && g.r[1].ly == 700);
+        ll_blkreg_free(&g);
+        CHECK(ll_blkreg_parse("1\r\n0,\r\n 0, 700\r\n", &g) == 0 && g.n == 1 &&
+              g.r[0].x == 0 && g.r[0].y == 0 && g.r[0].ly == 700);
+        ll_blkreg_free(&g);
+        CHECK(ll_blkreg_parse("1\r\n1,2,3,4\r\n", &g) == 0 && g.n == 1 &&
+              g.r[0].x == 1 && g.r[0].y == 2 && g.r[0].ly == 3);
+        ll_blkreg_free(&g);
+        CHECK(ll_blkreg_parse("0\r\n", &g) == 0 && g.n == 0);
+        ll_blkreg_free(&g);
+        CHECK(ll_blkreg_parse("nope\r\n0,0,700\r\n", &g) == 1 && g.n == 0);
+        CHECK(ll_blkreg_parse("65\r\n", &g) == 1 && g.n == 0);
+        ll_blkreg_free(&g);
+    }
+
     /* .MOV extended grammar: physics numbers, flags, transitions, per-state
      * seq, M4-C clamp (frames say 6 ms -> 100) */
     CHECK(ll_mov_parse(ST_MOV, &m) == 3);
@@ -4998,8 +5305,20 @@ int ll_play_selftest(void)
                " 20%% and 25%% difference against PR-134's video counts is"
                " this truncation, named at OI-015), a released key leaves"
                " a 4 px slide and a residue the arithmetic never zeroes,"
-               " and a state that authors no T= takes nothing away at all"
-               " (ok)\n");
+               " and a state that authors no T= takes nothing away at all,"
+               " PR-395: the .blk record is x, TOP y and HEIGHT at"
+               " rec+4/+8/+0x10 (the loader scans a comma pair and then"
+               " one more number out of one token cursor, and its header"
+               " count runs that scan that many times, so lines mean"
+               " nothing),"
+               " and the blockade query 0x45620 wants the wall's x inside"
+               " the requester's TWO x and the wall's y RANGE to overlap"
+               " its two y, then throws the body out of the wall on the"
+               " side it overlapped it least - the target is the"
+               " requester's own edge plus one, never a face of the"
+               " record - and refuses a body already flush at 0 or 1 px"
+               " without writing [obj+0xca]; the walk over the registry"
+               " stops at the FIRST record that answers (ok)\n");
 
     /* PR-199: the `end_level <n>` row tail, end to end INSIDE the
      * player. The engine side is PR-198's read (the parse arm

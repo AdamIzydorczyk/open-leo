@@ -738,12 +738,21 @@ OI-064: the ANIMACJE record format: the per-tag description layout
   status: OPEN
   origin: PR-192 item (2), carried bounded PR-193
 
-OI-065: ZAR.BLK fields + the GRP format (WODOSPAD/KIJ/KILOF), the
-  KAMIEN sixth field (1308/1218/1115) and the stone corridor
-  1299..1620 (G-3) - read ZAR.BLK like a .PLT
-  status: OPEN
+OI-065: the GRP format (WODOSPAD/KIJ/KILOF), the KAMIEN sixth
+  field (1308/1218/1115) and the stone corridor 1299..1620 (G-3)
+  status: PARTIAL
   origin: PR-93 item 11.4; the placement lines naming them are
     counted as group headers, not placed
+  notes: PR-395 CLOSED the ZAR.BLK-fields half. A row's three
+    numbers are a wall x, its TOP y and its height, PARSED by the
+    loader into rec+0x4/+0x8/+0x10 with its own formats "%d,%d"
+    (0x91d0f) and "%d" (0x9183d); ZAR.BLK is the two world-edge
+    walls x 0 / x 2240 over the full 700 px plus the four
+    stone-corridor walls 1299/341+118, 1462/244+28, 1540/194+27
+    and 1620/0+200 - the corridor this row asks about, authored
+    as walls, not floors. Shipped as a port model (ll_blkreg_parse,
+    ll_block_hit, ll_block_walk, pinned in --play-selftest). The
+    GRP/KAMIEN half of this row stays open.
 
 OI-066: the 84-byte STATUS.LEO record: field meaning AND the field
   map vs the port's ll_save codec (no test verdict yet); the map's
@@ -3065,6 +3074,32 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     is unchanged, and both branches of 0x546c5 still end at the shared
     0x4b7f0 + 0x49580 tail (0x54704 `jmp 0x54746`), the second one with
     a pre-filled [esp+0x10] buffer.
+    PR-395 RE-READS THOSE BYTES AND CORRECTS THE PARAGRAPH ABOVE.
+    The record's three numbers are PARSED, not copied: 0x455e0 hands
+    rec+4 and rec+0x10 to 0x4a0b0, which scans the format "%d,%d"
+    (0x91d0f) into rec+4 and rec+8, and 0x455e0 then scans "%d"
+    (0x9183d) into rec+0x10 and probes a "," (0x91840); rec+0 and
+    rec+0xc stay zero from the 0x4dbb9 allocation and 0x45620 never
+    reads them. The third file word IS a length, at +0x10, and
+    `2240,0,700` is the wall x 2240 spanning y 0..700 - the level's
+    right edge - not x 2240..2940: PR-313's shape was right and
+    PR-394's "right edge at +0xc" was not. The y test is an OVERLAP
+    of the wall's [rec+8, rec+8+rec+0x10] with the requester's
+    [block+4, block+0xc] (0x4563a-0x4565a), not a point test. The
+    side test is ([rec+4]-[block+0]) >= ([block+8]-[rec+4]) with the
+    tie taking the far edge (0x4566a), and the distance is measured
+    from the wall's x to the REQUESTER's own edge plus one; 0x45683
+    refuses at <= 1 and on a refusal nothing writes [obj+0xca] at
+    all. And the walk does NOT ask every entry - 0x4b4b1
+    `jne 0x4b4d6` leaves AT the first record that answers, and
+    AC_BLOK is raised once. A blockade therefore TELEPORTS a body
+    out of an overlapped wall through [obj+0xca]; it never stops it.
+    All ten `.BLK` members of the HD ETAPY carry exactly 1+3*count
+    integers (94 records over 10 files, max header 49) and their
+    walls span each whole world - RAN.BLK even authors one at x -1,
+    outside it. The port's model lives in ported/ll_play.c
+    (ll_blkreg_parse, ll_block_hit, ll_block_walk), pinned in the
+    data-free --play-selftest leg.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

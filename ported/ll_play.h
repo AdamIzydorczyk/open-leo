@@ -78,6 +78,71 @@ int  ll_plt_surface_at(const ll_plt *o, int x, int want_y, int tol,
  * first while falling). 0 = none (continue falling). */
 int  ll_plt_first_below(const ll_plt *o, int x, int from_y, ll_xy *hit);
 
+/* ------------------------------------------------------------------ .blk
+ * The `blokady=` registry the physics step's blockade query walks
+ * (0x4b430 over [world+0x70], count [world+0x7c], stride 0x14; PR-313
+ * named the registry, PR-394 read the query, PR-395 read the record).
+ * One record is FIVE dwords and the loader parses the file's three
+ * numbers into +0x4 (the wall's x), +0x8 (its top y) and +0x10 (how
+ * far down it goes): 0x455e0 runs the engine's scanner 0x49920 three
+ * times over one token cursor, with the formats "%d,%d" (0x91d0f, into
+ * +0x4 and +0x8, through 0x4a0b0), "%d" (0x9183d, into +0x10) and the
+ * bare "," (0x91840, a separator probe). +0x0 and +0xc are never
+ * written: the block is calloc'd at 0x4dbb9. A record is therefore a
+ * VERTICAL wall at x, from y down to y+ly - and the ten `.BLK` members
+ * of the HD ETAPY read exactly that way: headers 2, 2, 2, 3, 4, 6, 6,
+ * 9, 11 and 49 records (94 in all), every file carrying exactly
+ * 1+3*count integers, with the walls spanning each whole world (the
+ * minimum authored x is -1..3, the maximum the level's right edge;
+ * census: /tmp/opencode/pr395_census.txt). */
+typedef struct { int x, y, ly; } ll_blk_rec;
+typedef struct { ll_blk_rec *r; int n; } ll_blkreg;
+
+#define LL_BLK_MAX 64          /* records one file may own; the measured
+                                * maximum across the shipped set is 49 */
+
+/* 0x4db50's read: ONE read of up to 0x400 bytes into the scanner object
+ * (0x49820) and then a run of scans over that same object, so the file
+ * is a stream of numbers and not a set of lines - the header count
+ * first (0x4db8e, format "%d" at 0x91f24), then count triples. A
+ * record whose numbers are missing keeps the zero the allocation gave
+ * it: the loader reports nothing about a short file (0x4dbcf-0x4dbe4
+ * runs count times whatever happens) and ignores anything past the
+ * count. 0 = a count was read; 1 = the first token is not a number, or
+ * a count the port will not hold. */
+int ll_blkreg_parse(const char *text, ll_blkreg *out);
+void ll_blkreg_free(ll_blkreg *o);
+
+/* The blockade test 0x45620 for one record. bx0..by1 are the
+ * requester's four request-block fields as 0x4b430 leaves them at
+ * 0x4b462-0x4b490 - [0] and [4] are the body's own x and y through the
+ * +0x68 getter, [8] and [0xc] its far corners, and all FOUR carry the
+ * pending clamp delta ([obj+0xca] added to both x fields at
+ * 0x4b479/0x4b47b, [obj+0xce] to both y fields at 0x4b47d/0x4b48a). So
+ * the box here is where the body WOULD be after the move it has not
+ * applied yet. Returns 1 with *dx set to what 0x45688-0x45690 ADD to
+ * [obj+0xca], or 0 with *dx at 0 (the engine never writes the field on
+ * a miss). A record answers when the wall's x lies between the body's
+ * two x (0x45629/0x45631, both ends inclusive) AND the wall's y range
+ * y..y+ly OVERLAPS the body's two y (0x4563d-0x45649 and
+ * 0x4564b-0x4565a - it is an overlap test, not a point test). The body
+ * is then moved to the side of the wall its NEARER edge is on, so that
+ * that edge lands at wall.x -/+ 1; a distance of 0 or 1 means the body
+ * is already flush and is not a hit (0x4567e-0x45686). A blockade
+ * therefore TELESCOPES a body out of a wall through the [obj+0xca] the
+ * position carry at 0x54825 applies - it never stops it. */
+int ll_block_hit(const ll_blk_rec *rec, int bx0, int bx1, int by0, int by1,
+                 int *dx);
+
+/* The walk 0x4b4a1-0x4b4bc over the registry, and what it does with the
+ * answer: it asks the records in FILE ORDER and 0x4b4b1 leaves at the
+ * FIRST one that answers - it does not add several pushes. The caller
+ * then raises AC_BLOK once (0x4b4ec `or BYTE [result],0x1`). Returns 1
+ * with *dx set and *idx the record that answered, or 0 with *dx at 0
+ * and *idx -1. */
+int ll_block_walk(const ll_blkreg *reg, int bx0, int bx1, int by0, int by1,
+                  int *dx, int *idx);
+
 /* ------------------------------------------------- .MOV state machine ---
  * EXTENDED version of the viewer's mov_t (ll_level.c PR-38): same frame
  * semantics (a frame number is 1-based, its sign the mirror flag, see

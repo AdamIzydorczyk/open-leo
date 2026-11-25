@@ -54954,3 +54954,218 @@ MEASURED: (a) THE FULL LADDER, AGAIN. 0x546c2 reads the state control
   `ret` there, so their sample point is their own position, and their
   whole state block is a single global buffer at 0xcf004 that the image
   leaves zero.
+
+## PR-395 - THE .BLK RECORD IS A VERTICAL WALL: x AT +0x4, TOP y AT +0x8
+## AND ITS LENGTH AT +0x10; THE QUERY OVERLAPS THE TWO RANGES AND THROWS
+## THE BODY PAST ITS OWN EDGE, AND THE WALK STOPS AT THE FIRST ANSWER
+
+```
+KIND: port
+SUBSYSTEM: F6's blockade registry - the .BLK grammar (the loader 0x4db50
+and its record builder 0x455e0), the test 0x45620 that 0x4b430 walks, and
+the port's model of both in the data-free `./ll_level --play-selftest`
+leg (verify-play)
+ADDRESSES: 0x4db50, 0x4db59, 0x4db72, 0x4db77, 0x4db7b, 0x4db80, 0x4db8e,
+  0x4db99, 0x4dbb9, 0x4dbc6, 0x4dbcf, 0x4dbd7, 0x4dbdf, 0x4dbe2, 0x4dbe4,
+  0x4dbe6, 0x961fc, 0x91f24, 0x455e0, 0x455e9, 0x455ec, 0x455f2, 0x455f8,
+  0x45600, 0x45606, 0x4a0b0, 0x4a0b1, 0x4a0bc, 0x4a0c4, 0x4a0ca, 0x49920,
+  0x498f0, 0x49820, 0x49a10, 0x91d0f, 0x91d15, 0x9183d, 0x91840, 0x45620,
+  0x45626, 0x45629, 0x4562b, 0x45631, 0x45634, 0x4563a, 0x4563d, 0x45640,
+  0x45642, 0x45644, 0x45647, 0x45649, 0x4564b, 0x4564e, 0x45651, 0x45653,
+  0x45655, 0x45658, 0x4565a, 0x4565c, 0x45666, 0x45668, 0x4566a, 0x4566c,
+  0x4566e, 0x45673, 0x45676, 0x45677, 0x4567a, 0x4567c, 0x4567e, 0x4567f,
+  0x45681, 0x45683, 0x45686, 0x45688, 0x4568e, 0x45690, 0x4b4af, 0x4b4b1,
+  0x4b4d6, 0x4b4ec, 0x54825, 0x70, 0x7c, 0x14, 0x4, 0x8, 0xc, 0x10, 0xca
+NAMES: ll_blk_rec, ll_blkreg, ll_blkreg_parse, ll_blkreg_free, blk_next,
+  ll_block_hit, ll_block_walk, LL_BLK_MAX, play selftest, blokady, .BLK,
+  ZAR.BLK, RAN.BLK, KADMAR2.BLK, AC_BLOK, vertical wall, top y, length,
+  x gate, y overlap, flush refusal, ejection target, token stream, header
+  count, world edge walls, first answer wins, OI-065, OI-078, pr395_blk/,
+  pr395_census.txt, pr395_mut4.log, pr395_equiv.txt
+CODE: yes: ported/ll_play.h and ported/ll_play.c only. New: ll_blk_rec /
+  ll_blkreg / LL_BLK_MAX with ll_blkreg_parse and ll_blkreg_free (the
+  loader's grammar: one read, the header count first, then exactly count
+  triples over one token stream, missing numbers left at the allocated
+  zero); ll_block_hit, the 0x45620 law in full; ll_block_walk, the
+  0x4b4a1-0x4b4bc walk, first answer wins. 39 CHECK pins in a new
+  ll_play_selftest section, hand-derived from ZAR.BLK's six rows plus the
+  interval algebra, and the --play-selftest description string rewritten
+  to that law. No hook, no Makefile or tool change.
+HOOKS: none new - verify-play runs `timeout 30 ./ll_level
+  --play-selftest`, a data-free leg that runs in both fixture modes.
+OPENS: the model still has no runtime caller: the port's physics step
+  applies its own clamp deltas and never asks ll_block_walk, so this is a
+  named model, not a behaviour change - wiring it means settling which
+  port bodies carry a [obj+0xca]-style pending delta; the [world+0x78]
+  ceiling registry's record shape (0x4b7f0 asks through
+  `[[entry+0x10]+0x4]`, a different builder, unread); whether the
+  engine's scanner refuses a pair separated by anything but its "%d,%d"
+  and " , " arguments - the port's blk_next accepts every separator
+  everywhere, which is strictly more permissive than the shipped rows
+  need; and the live ask fields, still unmeasured.
+CLOSES: PR-394's OPENS item "the .BLK loader's handling of the third
+  word, since the engine reads it as an absolute right edge while the
+  authored files read as lengths" - the third word IS a length and the
+  engine reads it as one, at +0x10; and the ZAR.BLK half of OI-065.
+CORRECTS: PR-394 - four claims in its MEASURED (b) and (c), and the
+  note it added to OI-078. (1) "0x455e0 copies FOUR dwords from the
+  parsed row ... the record's [0x00], [0x04], [0x08] are the file's
+  three numbers verbatim and [0xc] is the unparsed remainder": nothing is
+  copied - 0x455e0 hands rec+4 and rec+0x10 to 0x4a0b0, which scans
+  "%d,%d" (0x91d0f) into rec+4 and rec+8 through 0x49920 (0x4a0bc), and
+  0x455e0 then scans "%d" (0x9183d) into rec+0x10 (0x455f2) and probes a
+  bare "," (0x91840, 0x45606); rec+0 and rec+0xc are never written and
+  stay zero from the 0x4dbb9 allocation, and 0x45620 never reads them.
+  (2) "0x45620 uses [0x08] as the absolute RIGHT EDGE" - it uses +0x10,
+  as a length: the wall is the range [rec+8, rec+8 + rec+0x10]. The
+  puzzle PR-394 recorded ("2240,0,700 ... spans x 2240..2940, past the
+  world edge") dissolves: it is the right-edge wall x 2240 spanning y
+  0..700, the level's own height. PR-313's "(entry x at +0x4, y at +0x8,
+  length at +0x10)", retracted by PR-394, is exactly right and is
+  restored here. (3) "its y at [entry+8] between [block+4] and
+  [block+4]+[block+0xc]" - the y test is not a point test against the
+  requester's own extent; it is an OVERLAP of the wall's range with the
+  requester's [block+4, block+0xc] (0x4563a-0x4565a). (4) "asks every
+  entry of [world+0x70]" and the mangled side algebra "([block+0]-
+  [entry+4]) >= ([entry+8]-[block+0]) ... takes |[block+4] - that
+  target|" - the walk LEAVES AT THE FIRST record that answers (0x4b4b1
+  `jne 0x4b4d6`), the comparison is ([rec+4]-[block+0]) >= ([block+8]-
+  [rec+4]) with the tie (0x4566c jge) taking the far side, and the
+  distance is measured from the WALL's x to the requester's own edge
+  plus one. PR-394's request-block, shift and AC_BLOK account stands.
+GATE: make 0 warnings; verify-all fixtures rc=0 111 (ok);
+GATE-FIXTURE-FREE: rc=0 15 (ok) + 21 named
+  Counts are the house verdict pattern of HANDOFF section 2 on
+  /tmp/opencode/pr395_gate_fix.log and pr395_verify_nofixtures.log - the
+  pair run against THIS tree, so its verify-all carries the docs legs
+  too: the docs-structure and RE_INDEX legs are in the first of them.
+  Build log pr395_gate_build.log, 0 warnings. The 111 verdicts match
+  PR-393's and PR-394's counts and the 21 named SKIPs plus the generic
+  `verify: SKIP` are the same 22; this leg adds its description line to
+  the --play-selftest banner and no other verdict text moved. The test
+  evidence for the change itself is pr395_selftest10.log, the mutation
+  run pr395_mut4.log and the equivalence run pr395_equiv.txt, quoted in
+  MEASURED (f); the data census is pr395_census.txt over the dumps in
+  pr395_blk/.
+MEASURED: (a) THE RECORD IS PARSED, NOT COPIED. 0x455e0 (eax = the
+  record, edx = the token cursor): 0x455e2-0x455e9 set ecx = rec+0x10,
+  eax = rec+4 and call 0x4a0b0, which at 0x4a0b1 takes ebx = rec+8 and
+  at 0x4a0bc calls the engine's scanner 0x49920 with the format "%d,%d"
+  (0x91d0f) - the row's first pair lands in rec+4 and rec+8 - then
+  probes its separator string " , " (0x91d15) through 0x498f0 (0x4a0c4).
+  Back in 0x455e0, 0x455f2-0x455f8 scan "%d" (0x9183d) into rec+0x10
+  and 0x45600-0x45606 probe a bare "," (0x91840) and drop the answer.
+  rec+0 and rec+0xc are written by nothing: the array comes from a
+  zeroed allocation at 0x4dbb9 (ecx = 0 into 0x76a64, count*0x14+4
+  bytes). So a record is a VERTICAL WALL at x = rec+4 running from y =
+  rec+8 down by rec+0x10 - and ZAR.BLK's six rows are exactly the
+  world's edges x 0 and x 2240 over the full 700 px plus four
+  stone-corridor walls at 1299/341+118, 1462/244+28, 1540/194+27 and
+  1620/0+200, the very corridor OI-065 asks about.
+  (b) THE FILE IS A TOKEN STREAM. 0x4db50 (esi = the level anchor):
+  0x4db59/0x4db77 put the table pointer 0x961fc at cursor+9 and
+  0x4db72-0x4db7b build the cursor at 0x49820 with a 0x400-byte buffer
+  and read the whole file ONCE; 0x4db80-0x4db8e scan the header count
+  straight into [world+0x7c] with the format "%d" (0x91f24); a zero
+  count skips the allocation (0x4db9b); 0x4dbcf-0x4dbe4 then run the
+  record scan once per record - eax = [world+0x70] + i*0x14, edx = that
+  SAME cursor, the loop gated by `cmp ecx,[world+0x7c]; jl` at 0x4dbe2 -
+  and 0x4dbe6 destroys the cursor. Lines mean nothing: after the one
+  read the count is authoritative in both directions - extra numbers are
+  never read and a short file leaves the remaining records at their
+  allocated zero, which is what the pins "2 + a missing triple gives
+  0,0,0" and "1 + a fourth number ignores it" pin. What separates
+  numbers is exactly what those scans carry: "%d,%d" with its " , "
+  argument and the trailing "," probe; the port treats commas, spaces,
+  tabs and newlines as separators everywhere.
+  (c) THE TEST, GATE BY GATE (0x45620: eax = record, ebx = the request
+  block, ecx = edx = the requester). x: 0x45629/0x4562b (`jl`) and
+  0x45631/0x45634 (`jg`) leave unless bx0 <= rec.x <= bx1 - the gate is
+  on the WALL's face, so a body strictly inside the world never meets an
+  edge wall; a wall exactly at an edge passes the gate and is then
+  always refused at 0x45683 (see (f)). y: 0x45640 first tests `rec.y >
+  block+0xc` and looks at the height only when it is true
+  (0x45644/0x45647); 0x45651 tests `rec.y < block+4` and likewise
+  (0x45655/0x45658) - both ends of the wall's range past the same end
+  of the requester's is the ONLY refusal, so it is an OVERLAP of the
+  two ranges, and it handles a negative authored length as the same
+  interval upside down. Side: 0x45666/0x45668 compute bx1 - rec.x and
+  rec.x - bx0, 0x4566a compares with `jge` at 0x4566c - the TIE takes
+  [block+8]+1 (0x45673/0x45676), else [block+0]-1 (0x4566e): the
+  target is the REQUESTER'S OWN EDGE plus one, never a face of the
+  wall, because the engine is resolving an overlap, not aiming at it.
+  Push: 0x4567a d = rec.x - target; 0x4567e-0x45681 is the cdq/xor/sub
+  absolute value; 0x45683/0x45686 refuse |d| <= 1, which is exactly the
+  already-flush case, and on a refusal [obj+0xca] is NEVER written;
+  0x45688-0x45690 ADD d, signed, to [obj+0xca] - the same field the
+  carry at 0x54825 applies - so the requester's near or far edge lands
+  at the wall's x minus/plus one. A blockade TELEPORTS a body out of an
+  overlapped wall; it never stops it.
+  (d) THE WALK STOPS AT THE FIRST ANSWER. 0x4b4af `test eax,eax` and
+  0x4b4b1 `jne 0x4b4d6`: the loop over [world+0x70] leaves as soon as
+  one 0x45620 call returns 1, and 0x4b4ec raises AC_BLOK once. A body
+  spanning BOTH edge walls gets ONE push, from the FIRST row in file
+  order - the second wall, which would have answered the other way, is
+  never asked. Pinned: ZAR.BLK's six walls, asked by a body at x
+  -10..2250, answer index 0 with dx +11, and a body only the last row
+  reaches answers index 5.
+  (e) THE CENSUS. All ten `.BLK` members of the HD ETAPY (dumped to
+  /tmp/opencode/pr395_blk/, table in /tmp/opencode/pr395_census.txt):
+  ENA 2, ENA2 9, KADMAR 3, KADMAR2 49, KARA 11, LONA 6, RAN 4, TUNGA 2,
+  ZAR 6, ZARIA_B 2 - 94 records, and EVERY file carries exactly
+  1+3*count integers: no leftovers, no short rows, all CRLF. The walls
+  span each whole world in every file - the minimum authored x is in
+  {-1, 0, 2, 3} (RAN.BLK's first row is `-1,0,450`, a wall one px
+  OUTSIDE the left edge, so x values are not clamped to the world) and
+  the maximum reaches 1597..28880, the level's right edge; most authors
+  put long walls at those edges FIRST (ENA, RAN, TUNGA, ZAR, ZARIA_B,
+  KADMAR, ENA2's 1200-px wall at row 1), but LONA buries its edge
+  walls at rows 3 and 5 and KADMAR2 - the biggest registry - has no
+  long edge wall at all, its leftmost being a 198-px stub at y 1400
+  for a vertically scrolling level. File order is not position order,
+  which is exactly what the first-answer walk of (d) depends on. No
+  authored length is negative or zero (min 8, KADMAR2), so the
+  inverted-range pins are the law, not the data. The largest header is
+  49, so LL_BLK_MAX 64 has room.
+  (f) THE PINS BITE - AND WHERE THEY CANNOT. A mutation harness
+  (pr395_mut4.log, pr395_mutate.py over pr395_mut_main.c) rebuilds
+  ll_play.c 14 times with one law broken each: the 1-px flush rule off,
+  each x-gate end exclusive, each y-gate end exclusive, the y test made
+  a point test or a containment test, the side test turning 1 px early,
+  the two sides swapped, the push sign flipped, the walk summing every
+  record, the walk reversed, a short file truncating instead of
+  zero-padding, a missing number defaulted to -1. `./ll_level
+  --play-selftest` FAILS on 12 of them, naming 1-16 checks each. The
+  two survivors are the x gate's two end strictnesses, and an
+  exhaustive check (pr395_equiv.c, output pr395_equiv.txt) proves no pin
+  could catch them: over 997,953,125 record/requester cases the
+  exclusive-end variants differ NOWHERE from the inclusive ones, because
+  every one of the 59,078,825 cases where rec.x sits exactly on a
+  requester x edge is refused by the |d| <= 1 rule - a record at the
+  edge is always flush. The inclusiveness of that gate is not
+  observable behaviour of 0x45620; the port follows the bytes (jl at
+  0x4562b, jg at 0x45631) either way.
+```
+
+- WHY. PR-394 read the query and stopped at an unresolved record shape -
+  one whose authored data ("2240,0,700 spans past the world edge") did not
+  fit its own reading - and the port's .blk header comments had already
+  started repeating that reading. The registry is named in the plan
+  (HANDOFF section 8, OI-065 and the OI-078 note), so the shape had to be
+  settled before anything could be modelled: one more pass over
+  0x4db50/0x455e0/0x4a0b0 with the formats read out of the image resolved
+  it, and a data-free leg is the cheap place to pin the law while it is
+  fresh.
+
+- WHAT SURPRISED ME. That the two obvious half-pixels are unfalsifiable:
+  making either end of the x gate exclusive changes NOTHING across
+  997,953,125 cases, because the |d| <= 1 rule already refuses every
+  record sitting exactly on a requester edge - so a test suite can never
+  confirm that part of the law, and only the bytes (jl at 0x4562b, jg at
+  0x45631) record it. And that the shipped registries disagree with each
+  other about everything except the grammar: RAN.BLK authors an edge
+  wall at x -1, outside the world; LONA buries its edge walls at rows
+  3 and 5; KADMAR2's 49 walls contain no long edge wall at all - and
+  still every file carries exactly 1+3*count integers. The ZAR.BLK
+  "puzzle" PR-394 recorded was never in the engine at all, only in one
+  wrong read of its formats.
