@@ -58664,3 +58664,117 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   correctly. And the authored habit is measurable: 208 uses in 44 files,
   always alone, in states whose control word is usually BY_TIME - that is
   content evidence, not code, and it belongs on the record.
+
+## PR-421 - THE SCENE-OBJECT CLASS FAMILY HAS TWELVE VARIANTS, EACH WITH
+## ITS OWN 20-BYTE CLASS-DATA BLOCK, AND ITS CONSTRUCTORS DEPEND ON A
+## FLAG BIT IN THE SECOND ARGUMENT
+
+```
+KIND: read
+SUBSYSTEM: the shape of the compiled class family of PR-418 - the
+  503 class-data blocks handed to the base constructor thunk, the 12
+  sibling blocks of the scene-object family, what its three overridden
+  methods do, and the base initialiser 0x37020 that sets the state field
+  to 5
+ADDRESSES: 0x36de0, 0x37020, 0x37027, 0x37031, 0x3703b, 0x370a0, 0x370c0,
+  0x37b00, 0x37b0b, 0x37b10, 0x37b15, 0x37b1f, 0x37b24, 0x37b30, 0x37ba0,
+  0x37bd2, 0x37d50, 0x37d7b, 0x37e00, 0x37e04, 0x37e0e, 0x37e27, 0x37e33,
+  0x37e40, 0x37e50, 0x37e55, 0x37e5c, 0x37e70, 0x37ec0, 0x3dd60, 0x40eb0,
+  0x4dcc0, 0x5c370, 0x74bc0, 0x74be0, 0x92310, 0x95ae0, 0x9f290, 0x9f298,
+  0x9f378, 0xa25d4, 0xa6428, 0xa643c, 0xa6504, 0xa6518, 0xa6520, 0xceec8,
+  0x00, 0x04, 0x08, 0x0c, 0x0e, 0x120, 0x124, 0x128, 0x12a, 0x132, 0x288,
+  0x02, 0x04
+NAMES: class-data block, variant, constructor flag, delete-and-free, base
+  initialiser, twelve variants, census of class data, pr421_family.txt,
+  OI-111, OI-127, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH FLAG SETS BIT 0x4 OF THE SECOND ARGUMENT of these
+    constructors - the callers are all virtual, so the flag's origin is a
+    construction-mode argument that has not been traced; WHAT THE 20-BYTE
+    CLASS-DATA BLOCKS CONTAIN - their addresses are known but their bytes
+    have not been read; WHY THE SCENE-OBJECT FAMILY HAS EXACTLY TWELVE -
+    one per authored object kind, or one per engine subsystem; what the
+    state value 5 written at [obj+0x120] by 0x37020 means, against the 0,
+    1, 0x22 and 0x23 values of that same field seen by PR-411 and
+    PR-417; and whether the same class-data census identifies the OTHER
+    class families - 503 blocks were counted and only this family's 12
+    have been placed.
+CLOSES: PR-418's OPENS item HOW MANY DERIVED TABLES EXIST for this
+  family: twelve, counted by the twelve sibling class-data blocks at
+  0xa6428 through 0xa6504, 20 bytes apart, each named by one
+  constructor. It also closes PR-418's OPENS item WHAT THE OTHER 21
+  SLOTS DO in part: they are inherited unchanged by every variant, so
+  nothing in them is variant-specific - the entire variation of this
+  family is three methods plus a 20-byte block.
+CORRECTS: PR-418's sentence that a derived class "overrides exactly three
+  methods" is confirmed, and its description of 0x73b00 as a wrapper that
+  `mov edx,0xa6428 ...; call 0x3dd60` is completed: that is only one of
+  its two arms, chosen by bit 0x4 of the second argument - and 0x3dd60 is
+  not reached from 0x73b00 at all, the call there is to the base
+  constructor thunk 0x74bc0.
+MEASURED: (a) THE CENSUS OF CLASS DATA. The base constructor thunk
+  0x74bc0 has 736 call sites and the destructor thunk 0x74be0 824; the
+  constant passed to them in edx takes 503 distinct values, all in the
+  image's data area 0x961c4-0xa6b68 and almost all at a 20-byte stride -
+  one compiled class per block. (pr421_family)
+  (b) TWELVE VARIANTS OF THIS FAMILY. The scene-object constructor
+  0x73b00 names 0xa6428; the sibling functions 0x73b4b, 0x73b8b, 0x73bcb,
+  0x73c0b, 0x73c4b, 0x73c8b, 0x73ccb, 0x73d0b, 0x73d4b, 0x73d8b and
+  0x73dcb name 0xa643c, 0xa6450 ... 0xa6504 - the same code with the
+  next block each time. Twelve variants, therefore, and PR-418's derived
+  table 0xa6518 is one of theirs.
+  (c) THE CONSTRUCTOR'S TWO ARMS. 0x73b00(obj=eax, flags=edx): `if
+  (flags & 4) { edx = 0xa6428; call 0x74bc0; call 0x74be0; return obj }`
+  - construct and destroy in place, i.e. the "just declare it" arm -
+  `else { call 0x370a0(obj, 1) /* unlink from the 0xcedf0 chain */ ; if
+  (flags & 2) call 0x5c370 /* free */ }` - the delete arm. 0x73e00 is the
+  destructor companion: it first does `sub eax,0xc` to recover the
+  enclosing object from the sub-object address, then the same two arms.
+  So construction and destruction of these objects are one function each,
+  selected by a mode bit, which is why the ctor appears as slot +0x00 and
+  the dtor as slot +0x04 of the same table.
+  (d) THE BASE INITIALISER. 0x37020 (called from 0x36dff and 0x37010
+  inside the registration function) sets [obj+0x124] = -1, [obj+0x120] =
+  5, [obj+0x128] = -1 and then iterates from [obj+0x8]. 0x73ea0 does the
+  same two: `call 0x4dcc0; [obj+0x124] = -1; [obj+0x128] = result`. So
+  the sub-object at +0x124/+0x128 is a pair of index-or-handle fields
+  initialsed to "none", and [obj+0x120] = 5 is a state or kind value;
+  PR-411 found the same field tested against 0 and 1 and PR-417 against
+  0x22 and 0x23, so it is a small enumerated state on this object.
+  (e) THE GETTER, A SIBLING FACTORY AND THE JUMP-COEFFICIENT READER.
+  0x37e40, the +0x08 override, is `return ds:0xceec8` - the same
+  accessor as 0x23700, so a variant's only data method is a global-object
+  getter. 0x37e50 allocates through 0x3ff70 and installs the pair
+  0x9f298 at [obj+0x8] and 0x9f290 at [obj+0xc] - the same two-field
+  shape as PR-418's 0x9f380/0x9f378 but a different base, also installed
+  by 0x39b23/0x39b2a and 0x39bad/0x39bb4: a second family of the same
+  kind. 0x37e70 - PR-419's `JumpCoef1000 = %d` reader - scans that
+  parameter and then returns 1 only when `[obj+0x5c] == 3`
+  (0x37e83-0x37e8b): the parameter is read for one object kind.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr421_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr421_family.txt, the census over the DB's imm table of
+  every `mov edx,0x9...` followed within three instructions by a call of
+  0x74bc0 or 0x74be0, with the stride histogram and the twelve
+  scene-object blocks listed by their constructors. 0x37b00, 0x37e00,
+  0x37020, 0x37e40 and 0x37e50 were decoded from their own entry
+  addresses.
+```
+
+- WHY. PR-418 established that this class family exists and that a
+  variant overrides three methods, but not how many variants there are or
+  what they vary. Twelve, and what they vary is a 20-byte class-data
+  block plus a getter - the behaviour is inherited wholesale. That is the
+  cheapest possible extension mechanism, and it is the opposite of what
+  the port does: the port branches on an authored object NAME (ll_level.c
+  1555-1556, `strcasecmp(leaf,"PALMA")` and `"KATAPULT"`), while the
+  engine encodes the same variety as compiled variants selected at
+  construction time. Also new: these constructors double as destructors
+  chosen by a mode bit, so "how many scene objects exist and when are
+  they freed" is a question about a flag, not about a call site - which
+  matters for anything in the port that tries to match object lifetime.

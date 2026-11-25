@@ -6133,6 +6133,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     CORRECTS PR-107's wording in ported/ll_play.c:483-518 - "absent or
     non-numeric stores -1" - only absent or empty does; the port's
     OUTCOME for x is unchanged.]
+    [PR-421 COUNTS THE VARIANTS OF THE PR-418 FAMILY: TWELVE. The base
+    ctor thunk 0x74bc0 has 736 call sites and the dtor thunk 0x74be0 824,
+    and the class-data constant passed in edx takes 503 distinct values
+    in 0x961c4-0xa6b68, overwhelmingly at a 20-byte stride - one
+    compiled class per block. This family's twelve are 0xa6428, 0xa643c
+    ... 0xa6504, named one per constructor 0x73b0b, 0x73b4b ... 0x73dcb.
+    THEIR CTORS AND DTORS ARE ONE FUNCTION EACH, SPLIT BY A MODE BIT:
+    0x73b00 does `if (edx & 4) { edx = 0xa6428; call 0x74bc0; call
+    0x74be0 } else { call 0x370a0(obj, 1) /* unlink the 0xcedf0 chain */;
+    if (edx & 2) call 0x5c370 /* free */ }`, and 0x73e00 is the dtor
+    companion, recovering the enclosing object with `sub eax,0xc` first.
+    THE BASE INITIALISER 0x37020 sets [obj+0x124] = -1, [obj+0x120] = 5
+    and [obj+0x128] = -1 - the same pair 0x73ea5/0x73eb4 write - so
+    +0x124/+0x128 are "none" handles and +0x120 is an enumerated state
+    (0, 1, 5, 0x22, 0x23 all seen). A variant's three overrides are ctor,
+    dtor and a getter `return ds:0xceec8`; nothing else varies. THE PORT
+    BRANCHES ON THE AUTHORED OBJECT NAME instead (ll_level.c:1555-1556,
+    PALMA and KATAPULT), where the engine has compiled variants chosen at
+    construction time.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
