@@ -6250,6 +6250,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     engine's own class name. CORPUS: GEN x770, MOVE x32, lock x27,
     end_level x26, goto x25, smp_loop x16; zero_v/zero_t/Wait never
     authored. Closes PR-426's line-source item.]
+    [PR-428 MAPS VERBS TO HANDLERS. Every state-body command - verb
+    or AC_ - becomes an allocated object: 29 verb strcmp branches
+    inside 0x45df0 (0x45ec1..0x46bc0) each do `mov eax,8/0xc; call
+    0x5c320`, init at 0x45770, then store [obj+0x4] = a 24-byte
+    record in 0xa0f28..0xa11e0 at a 0x18 stride; the AC_ fallback at
+    0x46b09 uses table 0xa11e0 instead. Each record: {run stub,
+    argument handler, 0x45800, 0x45870} - run stubs form one family:
+    0x46d70 rev, 0x46dd0/0x46e30/0x46e90 chdir/ldir/rdir, 0x46ef0
+    pos, 0x46f50/0x46fb0 zero/zero_v, 0x47010/0x47070/0x470d0
+    smp_unloop/smp_stop/vol family, 0x47190-0x473a0 smp family,
+    0x47400 atc_on/off, 0x47460 lock/unlock/ground_on/ground_off
+    (ONE stub - the engine unifies them behind a parameter), 0x47580
+    frame markers I/F/IC/FC, 0x475f0 MOVE/M, 0x476b0 end_level,
+    0x47710 goto family. CORRECTS PR-427's split: verbs are not
+    executed directly - both paths build objects. 37-pair table in
+    /tmp/opencode/pr428_verbtable.txt.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
