@@ -6064,8 +6064,32 @@ OI-128: what landing and leaving a surface does - the class verbs
     passes the two indices to 0x371e0, which PR-416 reads exactly: it
     SWAPS two table entries - high end into high end at 0x37202/0x37208
     and low end into low end at 0x3720f/0x37216 - then returns at once if
-    the segment count 0xcedf0 is 0. PR-413's phrase that 0x371e0 "fills"
-    high ends is replaced: its writes are swaps.]
+    the chain head 0xcedf0 is 0 - see PR-417, which names that dword.
+    PR-413's phrase that 0x371e0 "fills" high ends is replaced: its
+    writes are swaps.]
+    [PR-417 READS THE NEIGHBOURHOOD OF THE INTERVAL TABLE, AND FIXES A
+    WRONG NAME BEFORE IT SPREADS. 0xcedf0 IS NOT A SEGMENT COUNT: it is
+    the HEAD OF A SINGLY LINKED CHAIN of scene-like objects linked
+    through [obj+0x288] - 0x36de0 pushes (`[obj+0x288] = 0xcedf0;
+    0xcedf0 = obj`, after storing an object from [0xcef40]+0x74 at
+    [obj+0x12c]) and 0x370a0 walks and splices out (0x370ce-0x370fb);
+    0x370a0 is called twice from FUN_00072d50, the segment verb itself.
+    The guard `if ([0xcedf0] == 0) return` in the permute 0x371e0 means
+    "nothing registered". THE FOUR-CALL INIT 0x38a60 IS NOW ACCOUNTED FOR:
+    0x36d90 seeds the intervals then zeroes 0xcedf0, 0x36650 zeroes two
+    FLOAT GLOBALS at 0xced10/0xced14 - four and eight bytes before the
+    table - 0x37af0's loop `for eax=4; eax != 0x1c; eax += 4` clears the
+    REGISTRY at 0xcedf4..0xcedfc, and 0x37ff0 is an arithmetic helper
+    `(int)(float([obj+4]) + arg / df 0x91214)`, not an initialiser. THE
+    FLOAT PAIR IS A LEVEL-WIDE ROUND-AND-CARRY ACCUMULATOR: only objects
+    with [obj+0x5c] == 0x22 or 0x23 feed it, from [obj+0x136] and
+    [obj+0x12e] (0x36677-0x366c8), and it returns `(int)sum` while
+    subtracting it back, the same carry shape the port keeps per object
+    for the BY_X fractional pixel. THE REGISTRY: 0x37ba0 also copies
+    [obj+0x12a]/[obj+0x12e] into [obj+0x00]/[obj+0x04] and registers
+    itself at `[[obj+0x132]*4 + 0xcedf4]` - a 7-slot table indexed by a
+    slot number the object carries. Nothing about the interval table
+    itself changes.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

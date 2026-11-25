@@ -58235,3 +58235,110 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   being cut into ranges with anchor values - and the fact that the table
   is seeded once from the executable's own data, not from any level file,
   says those ranges belong to the engine, not to the content.
+
+## PR-417 - WHAT THE FOUR-PART INIT SEQUENCE ACTUALLY CLEARS, AND WHAT
+## 0xcedf0 IS: THE HEAD OF AN OBJECT CHAIN, NOT A SEGMENT COUNT
+
+```
+KIND: read
+SUBSYSTEM: the run-time half of the segment block in BSS - the four-call
+  init sequence 0x38a60 and each of its parts, the two float accumulator
+  globals beside the interval table, the registry array at 0xcedf4, and
+  the object chain whose head is at 0xcedf0
+ADDRESSES: 0x36280, 0x364e7, 0x36650, 0x36670, 0x36682, 0x366a8, 0x366b9,
+  0x366c2, 0x366d0, 0x366e2, 0x36708, 0x36719, 0x36722, 0x36d90, 0x36dd0,
+  0x36de0, 0x36df7, 0x36e04, 0x36e09, 0x36e0f, 0x370a0, 0x370c0, 0x370ce,
+  0x370db, 0x370e7, 0x370f5, 0x37103, 0x371e0, 0x37af0, 0x37af8, 0x37ba0,
+  0x37bb2, 0x37bb8, 0x37bd2, 0x37be0, 0x37d50, 0x37d7b, 0x38a60, 0x38a65,
+  0x38a6a, 0x38a6f, 0x39c23, 0x4dcc0, 0x75d96, 0x4df10, 0x4ea00, 0x9e468,
+  0x9f380, 0x9f378, 0xa6518, 0xa6520, 0xced00, 0xced04, 0xced10, 0xced14,
+  0xced18, 0xcedf0, 0xcedf4, 0xcef40, 0x00, 0x04, 0x08, 0x0c, 0x5c, 0x12a,
+  0x12c, 0x12e, 0x132, 0x136, 0x288, 0x0c, 0x04
+NAMES: object chain head, prev pointer, float accumulator globals,
+  registry array, init sequence, accumulator carry, slot registration,
+  pr417_fields.txt, OI-111, OI-127, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH SCENE-LIKE OBJECT CLASS THE CHAIN AND REGISTRY BELONG TO -
+    the ctor 0x36de0 has no recorded caller and the registry write uses
+    [obj+0x132] as a slot index, so the class is named by behaviour only;
+    WHAT THE TWO FLOAT GLOBALS SUM - they are fed only by objects whose
+    [obj+0x5c] is 0x22 or 0x23, from [obj+0x136] and [obj+0x12e], and
+    read back through the rounding helper 0x75d96, which says a fractional
+    quantity is being kept as an integer total plus a remainder; WHAT
+    0x36650, 0x37af0 and 0x37ff0 clear in the init sequence for the level
+    that follows; WHY THE SAME FOUR CALLS ARE MADE AGAIN AT 0x39c20 with
+    eax reduced by 0xc first, from a function the DB puts inside
+    FUN_00038a60; and WHAT THE CHAIN IS WALKED FOR - the only walk found
+    is the unlink search in 0x370a0.
+CLOSES: PR-416's OPENS item WHAT 0x36650 AND 0x37af0 DO in the seeding
+  sequence: 0x36650 zeroes the two float globals and 0x37af0 zeroes the
+  registry array at 0xcedf4; and it closes PR-411's and PR-416's question
+  about the dword at 0xcedf0, which is neither a segment count nor an
+  index.
+CORRECTS: PR-416's parenthetical "the segment count at 0xcedf0" and
+  PR-411's description of 0x37af0 as writing "the segment count": 0xcedf0
+  is the head of a singly linked list of scene-like objects, and
+  0x37af0's loop `for eax = 4; eax != 0x1c; eax += 4` clears
+  [eax + 0xcedf0], which is the registry at 0xcedf4..0xcedfc, not a
+  count. Nothing about the interval table at 0xced18 itself changes.
+MEASURED: (a) THE SEQUENCE AND ITS ONLY CALLER. 0x38a60 is `call 0x36650;
+  call 0x36d90; call 0x37af0; call 0x37ff0; ret`, called from one place,
+  0x4ea00 inside FUN_0004df10. Its parts: 0x36d90 seeds the interval
+  table (PR-413) and then zeroes 0xcedf0 (0x36dd0); 0x36650 zeroes
+  0xced10 and 0xced14; 0x37af0 zeroes seven dwords at 0xcedf4 through
+  0xcedfc; 0x37ff0 is an arithmetic helper (`(int)(float([eax+4]) +
+  arg/df[0x91214])`), not an initializer. The same four targets are
+  called again from 0x39c23 with `sub eax,0xc` first. (pr417_fields)
+  (b) THE ACCUMULATOR PAIR. 0xced10 and 0xced14 sit four and eight bytes
+  BEFORE the interval table at 0xced18 and are only ever touched by two
+  accumulator functions, 0x36670 and 0x366d0, each called from one place
+  (0x364e7 inside FUN_00036280 for the first). The shape at 0x36677-
+  0x366c8, for eax = the object: if `[obj+0x5c] == 0x22` then
+  `0xced10 += [obj+0x136]` as floats; if `[obj+0x5c] == 0x23` then
+  `0xced10 += [obj+0x12e]`; then `t = (int)0xced10; 0xced10 -= (float)t`
+  and t is returned - the round-and-carry-with-remainder pattern. The
+  second function is the same with [obj+0x136] and [obj+0x12e] into
+  0xced14 guarded by 0x22 and 0x23. (c) 0xcedf0 IS A LIST HEAD. The
+  registration function 0x36de0 does `eax = [0xcef40]; ... = call
+  0x4dcc0(0xcef40's +0x74 object, ecx); [obj+0x12c] = result`, then
+  0x36e04-0x36e0f: `[obj+0x288] = 0xcedf0; 0xcedf0 = obj` - a push onto
+  a chain. 0x370a0 is the matching removal: it walks `p = 0xcedf0; while
+  (p) { if (p == obj) break; prev = p; p = [p+0x288] }` (0x370ce-0x370e9)
+  and then splices obj out (0x370ef-0x370fb); it is called from 0x39c23
+  and twice from FUN_00072d50, the segment verb's own function.
+  (d) THE REGISTRY. 0x37ba0 (a class method) copies [obj+0x12a] to
+  [obj+0x00] and [obj+0x12e] to [obj+0x04] - a position pair - and then
+  `[[obj+0x132]*4 + 0xcedf4] = obj` (0x37bb8): the object registers
+  itself in a 7-entry table at a slot it carries itself. 0x37bd2 reads
+  that table back: `ebx = [[obj+0x132]*4 + 0xcedf4]`, and when the slot
+  is empty branches on `[obj+0x5c] == 3`. 0x37d50 calls 0x37ba0 at
+  0x37d7b. So the same dword at 0xcedf0 that ends the interval-table
+  seeding is the first slot of a table-like region whose meaningful
+  entries start at 0xcedf4.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr417_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr417_fields.txt, a scan of every instruction whose
+  operands name an absolute address in 0xced00-0xceeff, grouped by dword
+  field with the containing function from the DB's func table. 0x38a60,
+  0x36650, 0x36670, 0x37af0, 0x36de0, 0x370a0 and 0x37ba0 were each
+  decoded from their own entry address.
+```
+
+- WHY. This is the first row to read the neighbourhood of the interval
+  table instead of the table, and the neighbourhood is not scratch: the
+  engine keeps a chain of live scene objects at 0xcedf0/+0x288 and a
+  seven-slot registry at 0xcedf4 in the same BSS block as the 17
+  authored intervals. Two consequences worth having on the record. First,
+  a wrong name is fixed before it spreads: PR-411 and PR-416 both called
+  0xcedf0 a segment count, and it is a list head - the guard `if
+  (0xcedf0 == 0) return` in the permute function of PR-416 is simply
+  "no objects registered". Second, the round-and-carry accumulator pair
+  0xced10/0xced14 is a pattern the port already implements per object for
+  the BY_X fractional-pixel carry, but here it is one global sum over all
+  objects whose type field is 0x22 or 0x23 - a level-wide quantity the
+  port has no equivalent of.
