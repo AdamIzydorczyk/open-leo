@@ -62860,3 +62860,79 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   read jump tables from their aligned base, not from the
   instruction's last byte.
 
+
+## PR-465 - THE TWELVE MODE-SWITCH ARMS RAISE K_F1..K_F12
+## (SIGNALS 41-52); MODES 10 AND 11 COME FROM A MESSAGE-TYPE-30
+## HANDLER THAT AUTHORS THE GLOBAL CONFIG WORDS ds:0xcef5c+4k
+
+```
+KIND: read
+SUBSYSTEM: the 12 case bodies behind the jump table 0x504b0
+  (PR-176's controller getter), their merge tail, and the
+  writers of [obj+0xee] = 10/11 plus the handler that writes
+  the config-word array ds:0xcef5c.. - a message arm on type
+  30 at 0x39de3
+ADDRESSES: 0x504b0, 0x50648, 0x5065b, 0x50662, 0x50669,
+  0x50670, 0x50677, 0x5067e, 0x50685, 0x5068c, 0x50693,
+  0x5069a, 0x506a1, 0x506a8, 0x506ad, 0x506d6, 0x54910,
+  0x49580, 0x39de3, 0x39df4, 0x39e03, 0x39e0d, 0x39e37,
+  0x39e6c, 0xcef5c, 0xcef64, 0xcef68, 0xcef6c, 0xcef7c,
+  0xcef84, 0xcef88, 0x613f0, 0x6141b, 0x61446, 0x61471,
+  0xee, 0xa5, 0xa6, 0xa7, 0x1e, 0x5, 0x6, 0x8c, 0x41, 0x52
+NAMES: mode switch arms, K_F signal raise, config words author,
+  message thirty, mode ten and eleven, pr465_modes.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHO SENDS TYPE 30 - the broadcast sender's 22 sites
+    (PR-464) use 3/7/16/18/19/20/22/25/26 and dynamic values;
+    the handler's other arms and the sender of 30 are not
+    pinned; the config words are ZERO in the image (BSS), so
+    their only fill is this handler (or the writes at
+    0x1e0dc/0x2dfe9/0x3b1f2/0x50162 - single-word, unread);
+    whether any shipped level's data ever produces modes 10/11
+    (the feature looks dormant: 40 sites zero [obj+0xee]); and
+    what the mode means as a gameplay concept, still - the
+    observable effect is "signal K_F(k) is raised continuously
+    while the mode is k".
+CLOSES: PR-453's OPENS "the 12 case bodies, the config words
+  table": each arm is one `or` on the answer record's key
+  bytes - case k<7 sets byte 5 bit (1<<k) = signal 40+k, case
+  k>=7 sets byte 6 bit (1<<(k-7)) = signal 41+k - i.e. modes
+  0..11 raise EXACTLY K_F1..K_F12 (the port's enum 41-52,
+  ll_play.h:411), and the tail merges the PR-450 flag builder
+  over the mode key and copies the union to the caller's +0x8c
+  buffer (PR-176's contract, re-read verbatim). It also closes
+  the bound question: [obj+0xee] is written 1..9 by the setter
+  chain, 0 by 40 sites, and 0xa/0xb by this handler (and by
+  the PR-455 spawn-option band), so all 12 arms are reachable.
+CORRECTS: PR-176's shorthand "the 0x504b0 table sets bits
+  41+k = K_F1..K_F10" is exact only for k=0..6; for k=7..11
+  the bits are in the NEXT byte (byte 6 bits 0-4 = signals
+  48-52), which is why the table has 12 entries (modes 10/11
+  = K_F11/K_F12), not 10. PR-176's own byte-level parenthetical
+  was already correct.
+MEASURED: (a) THE BODIES. All twelve are `or BYTE
+  [esp+5|6], mask; jmp 0x506ad` (7 bytes each) - no side
+  effects. (b) THE TAIL. 0x506b1 copies the 12-byte key to
+  [esp+0x20]; 0x506d6 `call 0x54910` with eax=[obj]; 0x506ee
+  `call 0x49580` merges into [esp+0x30]; the merged set plus
+  its count byte at +0xc is copied back over the caller's
+  buffer. (c) THE CONFIG WRITER. 0x39de3: `cmp [msg+4],0x1e`;
+  `mov [ebx*4+0xcef5c], 0` with ebx=[msg+8]; `mov [...],1`
+  with ebx=[msg+0xc]; `[obj+0xee] := [msg+0xc]`; then two
+  legs that check two config words non-zero, zero them, set a
+  third (0xcef84/0xcef88) and force [obj+0xee] = 10 or 11.
+  (d) THE IMAGE STATE. ds:0xcef5c..0xcef80 are all 0 in the
+  loaded image. (e) THE PORT. Unchanged: the port parses the
+  K_F1..K_F12 names and models their bits; no leg depends on
+  the mode word.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The last unexamined bodies in the input path are one
+  instruction each, and they say plainly what the mode word IS:
+  a held virtual function key. The correction is small but the
+  kind the journal keeps hitting - an arithmetic shorthand that
+  silently fails at a byte boundary.
+

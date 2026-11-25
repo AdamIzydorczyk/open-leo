@@ -6904,6 +6904,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     from this sender. Open: the queue drain loop, the type-1
     pre-arm 0x50e58, the dynamic type sources, and virtual
     +0xc's filter value.]
+    [PR-465 READS THE TWELVE MODE-SWITCH ARMS: each is one
+    `or BYTE [esp+5|6], mask` on the answer record - mode k<7
+    sets byte 5 bit (1<<k) = signal 40+k, mode k>=7 byte 6 bit
+    (1<<(k-7)) = signal 41+k - so modes 0..11 raise EXACTLY
+    K_F1..K_F12 (port enum 41-52), and the tail ORs the PR-450
+    flag builder over that key into the caller's +0x8c buffer.
+    The mode word is a held virtual function key. Modes 10/11
+    are reachable: [obj+0xee] is written 1..9 by the setter
+    chain, 0 by 40 sites, and 0xa/0xb by a message-TYPE-30
+    handler at 0x39de3 that also AUTHORS the config words
+    ds:0xcef5c+4k (zero in the image) and forces 10/11 in two
+    pair-rewrite legs; the PR-455 spawn-option band writes
+    0xa/0xb too. Correction to PR-176: "bits 41+k" holds only
+    for k<=6 - higher cases use the next byte, which is why the
+    table has 12 entries. Open: who sends type 30, the other
+    single-word config writers (0x1e0dc/0x2dfe9/0x3b1f2/
+    0x50162), and whether any shipped data produces modes
+    10/11.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
