@@ -64269,3 +64269,91 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   through the same +0x10 verb as everything else. That makes the
   child list a message graph, not a special construction path.
 
+
+## PR-481 - THE TICK PROTOCOL: THE FRAME WALKERS GATE EVERY
+## OBJECT THROUGH VERB +0x60 (THE [obj+0x2c] GETTER) AND THEN RUN
+## 0x52b80 = DRAIN QUEUE (+0x10), UPDATE (+0x14), PUMP ([+0x0], 2)
+
+```
+KIND: read
+SUBSYSTEM: the per-object tick step 0x52b80 and its six call
+  sites (0x4ba90's pool-list and child walks, the LION
+  singleton step 0x4aed6, the child-array walkers 0x55380 and
+  0x555a0, the same step installed as class-table slot +0xa0 of
+  the child-list families); the queue drain 0x52b50, reached
+  ONLY from the tick step, never installed as a verb; the gate
+  verb at class-table slot +0x60 (0x23b80 = `mov eax,[eax+0x2c]`
+  in 129 of 158 tables) and the update verb at slot +0x14
+  (0x550a0 = clear [obj+0xe6]/[obj+0xea] then tail-call the
+  base update 0x536f0, in 68 tables)
+ADDRESSES: 0x52b50, 0x52b80, 0x52b92, 0x52ba2, 0x4ba90,
+  0x4bae4, 0x4baed, 0x4bb09, 0x4bb12, 0x4aed6, 0x4aeca,
+  0x55380, 0x55398, 0x555a0, 0x55696, 0x556af, 0x23b80,
+  0x550a0, 0x536f0, 0x5c370, 0x52c10, 0x52c40, 0x4aa68,
+  0x4aadd, 0x4df10, 0x4dcc0, 0x60, 0x10, 0x14, 0x28, 0x2c,
+  0x34, 0x38, 0x3c, 0x40, 0x44, 0x58, 0x64, 0x394, 0xe6,
+  0xea, 0xa0, 0xcc, 0x158, 0x129, 0x68, 0x24
+NAMES: tick protocol, queue drain, gate verb, update verb,
+  pump call, unlink verb, link block, pr481_queuelaw.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT ELSE WRITES [obj+0x2c] BESIDES PR-466's three
+    boolean methods - the gate is that getter, so the field
+    decides whether an object runs at all, but its authored
+    source (if any) is unproven; WHICH WALKER OWNS THE 0x4ba90
+    pool sweep - it indexes [X+0x58][esi] with a count at
+    [X+0x44], matching PR-476's emitter pools, and walks the
+    [X+0x64]/+0x34 child list, so X is the manager or the hit
+    record, unresolved; the meaning of the pump call `call
+    [[obj]+0x0] with edx=2` - PR-475 saw the same edx=2 at the
+    descriptor destroy verb, so +0x0 takes a mode byte, and the
+    values 1 and 2 are unexplained; and the singleton's own step
+    at [[mgr+0x394]+0xcc], a different update slot than +0x14.
+CLOSES: PR-468's OPENS "who reads the queue at [obj+0x10]": the
+  only reader is 0x52b50, and it has exactly one caller, the
+  tick step 0x52b80 - a queue is drained exclusively at the
+  object's own tick, never from the sender side. The drain
+  itself: while [obj+0x10] is non-null, take node=+0x10, call
+  [[obj+0x8]+0x10](node), free the node with 0x5c370, set
+  +0x10=node.next - i.e. it consumes the HEAD (PR-93's "pops
+  each node" is confirmed; the push 0x52b10 appends, so order
+  is FIFO). It also closes PR-466's gate question one level up:
+  the walkers do not test a field inline any more, they call
+  the gate verb +0x60, whose default IS the getter of [obj+0x2c]
+  (`mov eax,[eax+0x2c]; ret` in 129 of 158 tables), and only if
+  it returns non-zero do they run the tick step - so the
+  window-blind set of PR-457 is explained twice over: those
+  classes keep [obj+0x2c] at zero and never receive their
+  message queue, their update verb, or the pump. And the tick
+  order is fixed: messages first (+0x10), then the frame update
+  (+0x14, whose default 0x550a0 clears the PR-142 one-shot
+  accumulators [obj+0xe6]/[obj+0xea] before tail-calling the
+  base physics update 0x536f0), then the pump if the [obj+0x28]
+  latch of PR-479's kind-0x21 arm is set.
+CORRECTS: nothing. (PR-93's queue reading stands.)
+MEASURED: (a) THE TICK STEP verbatim: `mov ebx,eax; call
+  0x52b50; call [[ebx+0x8]+0x14]; cmp [ebx+0x28],0; je ret;
+  mov edx,2; call [[ebx+0x8]+0x0]`. (b) THE GATE PATTERN at
+  all six sites: `call [view+0x60]; test eax,eax; je <next>`
+  then `call 0x52b80`, over pool lists ([X+0x58], count
+  [X+0x44], next +0x34), child arrays ([obj+0x3c] count,
+  [obj+0x40] array), and the singleton [mgr+0x394]. (c) THE
+  SLOT CENSUS (leodb slots): +0x60 filled in 158/158 tables,
+  0x23b80 in 129; +0x14 filled in 158/158, 0x550a0 in 68,
+  0x400b0 in 44, 0x536f0 in 24. (d) THE LINK LAW: 0x52c10
+  inserts at the [obj+0x34]/[obj+0x38] link block (called at
+  0x4aa68 with edx=[obj+0x64], at 0x4aadd after building an
+  object through the 0x4df10 factory, edx=[pool]+index);
+  0x52c40 unlinks. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port ticks objects in one flat pass. The original
+  gates every object through a virtual getter first, and drains
+  its message queue before the physics update, then pumps if the
+  latch is on. That ordering is observable - a message sent in
+  frame N is consumed by the same frame's update - and the
+  [obj+0x2c] gate is why whole classes of authored objects never
+  move.
+

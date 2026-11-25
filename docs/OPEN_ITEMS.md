@@ -7222,6 +7222,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     entries (kinds 9..0x15): 0->0x50df4, 1->0x50de0 writes
     [obj+0x14]/[obj+0x18], 2->verb +0xd8, 6->verb +0xfc,
     0xc->[obj+0x116]=1, rest default.]
+    [PR-481 CLOSES PR-468's "who reads the queue at [obj+0x10]":
+    only 0x52b50, and it has exactly ONE caller, the tick step
+    0x52b80 - queues are consumed at the object's own tick, FIFO
+    (head first, nodes freed with 0x5c370). The step is the
+    protocol: drain via verb +0x10, then the frame update verb
+    +0x14 (default 0x550a0 clears the PR-142 one-shots
+    [obj+0xe6]/[obj+0xea] then tail-calls the base update
+    0x536f0; 68/158 tables), then `call [[obj+0x8]+0x0] with
+    edx=2` when the [obj+0x28] pump latch is set. Every caller
+    gates first through the VERB +0x60: 129 of 158 tables hold
+    0x23b80 = `mov eax,[eax+0x2c]; ret`, so the gate IS the
+    PR-466 [obj+0x2c] getter - window-blind classes keep it 0
+    and never get drain/update/pump at all. Call sites: the pool
+    sweep in 0x4ba90 ([X+0x58]/count [X+0x44]/next +0x34 and
+    the [X+0x64] child list), the LION singleton at 0x4aed6
+    (its own update is the different slot +0xcc), the child
+    arrays at 0x55380 (which IS class-table slot +0xa0 of the
+    child-list families) and 0x555a0. Link law: 0x52c10 inserts
+    at the [obj+0x34]/+0x38 block, 0x52c40 unlinks.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
