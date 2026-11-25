@@ -62179,3 +62179,82 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   future reads from inventing producers; and the third member
   of +0xa5 keeps the class-collision lesson in front.
 
+
+## PR-456 - THE INPUT PIPELINE'S DOOR: OBJECT VIRTUAL +0xcc IS
+## THE APPLIER (102 TABLES); THE ACTOR OVERRIDES IT WITH THE
+## FEED; THE SCENE TICK CALLS IT ON THE +0x394 LION WITH A
+## 12-BYTE RECORD
+
+```
+KIND: read
+SUBSYSTEM: who runs the PR-442 input pipeline - slot +0xcc:
+  default 0x549f0 (the applier) in 102 detected tables, 0x50340
+  (the actor feed, the same body region as the 0x502f0/
+  0x50300/0x50320 accessors of [obj+0x102]) in 14, 0x550a0 (a
+  release variant) in 7; the seven call sites; the scene-tick
+  caller that feeds the [reg+0x394] lion singleton
+ADDRESSES: 0xcc, 0x549f0, 0x50340, 0x550a0, 0x96960, 0x502f0,
+  0x50300, 0x50320, 0x502b0, 0x54c00, 0x102, 0xf2, 0x126, 0x1e,
+  0x27e1d, 0x282a1, 0x344c8, 0x4010c, 0x4110c, 0x41c01, 0x4aeca,
+  0x4ab50, 0x4abd0, 0x394, 0x1f0, 0x1e4
+NAMES: input virtual, scene tick input, feed accessor band,
+  autoscroll half-counter, pr456_slotcc.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHO FILLS [esp+0x1f0] BEFORE THE TICK - 0x4ab50 is only
+    a 12-byte copy from the caller's stack slot; the actual
+    pump (OS key state -> the 3-dword input record) is above
+    the 0x4abd0 scene-tick body, unread; the other six call
+    sites' classes (0x27e1d/0x282a1 follow their +0xcc call
+    with 0x550a0 - a call-then-release pattern; 0x4010c first
+    calls [[arg+0x2e]]+0x4 - the scene-header chain; 0x344c8/
+    0x4110c/0x41c01 pass stack records) - what events those
+    are; the [obj+0x102] band: 0x50300 sets it (30 default),
+    0x502b0 halves it with an arithmetic shift and tests the
+    remainder against [obj+0xf2], then 0x50320 calls 0x54c00 -
+    a countdown whose semantics (PR-90's LEO_PLAY_DANGER-300
+    neighbor) are not yet assigned; and the 7-table +0xcc
+    variant 0x550a0's class.
+CLOSES: PR-442's standing question of how the applier is
+  entered: it is not called directly - it is object virtual
+  +0xcc, the DEFAULT in 102 tables, while the actor classes
+  override the slot with the feed 0x50340 (table 0x96960 +
+  0xcc), whose tail 0x50369 calls the applier exactly as
+  PR-442 recorded; and the per-frame driver is the scene tick
+  0x4abd0: it copies the 12-byte input record (0x4ab50),
+  resolves [[reg+0x394]] - the TLew* singleton PR-452 named -
+  and calls +0xcc on it. PR-455's "no offset-addressed
+  producer" negative now has its positive shape too: the
+  button word arrives through the object's input virtual, one
+  record per tick.
+CORRECTS: nothing. (PR-442's "sole caller 0x50369" of the
+  applier re-verified: the slot census shows the applier IS
+  the default +0xcc, so it is also entered DIRECTLY for the
+  102 non-actor classes - which is consistent: those classes
+  take the raw record with no feed pre-processing.)
+MEASURED: (a) THE SLOT. +0xcc: default 0x549f0 / 102 tables;
+  actor override 0x50340 / 14; variant 0x550a0 / 7. (b) THE
+  TICK. 0x4abd0 tail: 0x4ab50 copies 12 bytes [esp+0x1f0] ->
+  [esp+0x1e4]; eax = [[ecx+0x394]]; edx = &copy; call
+  [+8]+0xcc. (c) THE BAND. The actor's [obj+0x102] accessor
+  pair sits 0x50 bytes before the feed in the same body
+  region: getter as bool, setter (0x1e default), a guarded
+  half-decrement (0x502b0, parity vs [obj+0xf2]) that calls
+  0x54c00 (the PR-453 mode-3 helper). (d) THE PORT. The port
+  delivers keys per step through its own step entry - same
+  shape as (b) (one record per tick to one object); the
+  [obj+0x102] band is engine-side autoscroll/charge state
+  outside the current legs. No port change.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. PR-442 read the applier and the feed but never their
+  door. The door is a virtual slot - which is why the pipeline
+  behaves per class and why the actor's feed pre-processing
+  (the [obj+0x106] zeroing, the [obj+0x11a] mirror) is an
+  OVERRIDE, not a quirk. The scene-tick call site is the place
+  where a future input-pump read starts, and the call-then-
+  0x550a0 pairs name the release edge PR-442's 0x551f0 note
+  has been circling.
+

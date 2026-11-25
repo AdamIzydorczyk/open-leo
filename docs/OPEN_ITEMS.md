@@ -6746,6 +6746,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     at 0x54be9; whether a real actor ever holds that when the
     builder tests the bits is open. PR-314's index-member and
     PR-442's button-word member both stand.]
+    [PR-456 FINDS THE DOOR: the applier 0x549f0 is object
+    virtual +0xcc, the DEFAULT in 102 tables; the actor
+    classes override the slot with the feed 0x50340 (table
+    0x96960 +0xcc), whose tail calls the applier (0x50369) -
+    so the feed's [obj+0x106] zeroing and [obj+0x11a] mirror
+    are an OVERRIDE, and non-actor classes take the raw record
+    with no pre-processing. The per-frame driver is the scene
+    tick 0x4abd0: 0x4ab50 copies a 12-byte input record from
+    the caller's stack slot, resolves [[reg+0x394]] (the TLew*
+    singleton), calls +0xcc on it - one record per tick. Six
+    other call sites exist; two (0x27e1d/0x282a1) follow the
+    call with 0x550a0 - call-then-release. The feed band also
+    holds the [obj+0x102] accessors: setter with 30 default
+    (0x50300), a halving countdown (0x502b0) whose parity
+    gates 0x54c00. Open: who fills the tick's record (the
+    pump above 0x4abd0), the six other call sites' events, the
+    [obj+0x102] countdown's meaning, and the 7-table +0xcc
+    variant 0x550a0's class.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
