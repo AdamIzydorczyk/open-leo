@@ -5483,7 +5483,11 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     field that is zero is zero because the record's constructor writes
     it zero. What stays open here: the attachment tail of the +0xb0 verb
     (0x54500-0x5453a, class slots +0xbc, +0x48, +0x50 and the table at
-    [that+0x33]); and the two views themselves - PR-293 names "the
+    [that+0x33]) - CLOSED IN FULL BY PR-399, which reads the tail to its
+    last instruction, gives its three tests as the boolean `!bit 0x02 &&
+    (held || bit 0x01)`, and identifies the table at [element+0x33] as the
+    element's own method table, the one PR-357 named; and the two views
+    themselves - PR-293 names "the
     shared table 0x98278" and PR-305 names "the view 0x98274", but those
     are the same bytes four apart, and the run reads 0x23e30, 0x23ed0,
     0x23ea0, 0x23e00 and then 0x74bac one byte PAST a dword boundary
@@ -5518,8 +5522,13 @@ OI-128: what landing and leaving a surface does - the class verbs
     measured the shipped data - 98.7% of elements carry an anchor, half
     of them spell (f4,f6) == (f0,f2) so the pair is a no-op, and for the
     lion's own ZARIA.01 standing states the step is a DOWN move of about
-    31 px. Still open: what the second anchor NAMES (OI-129), the 0x58c
-    timer posters, the block 0x546de-0x54700, and the '#' census)
+    31 px; PR-399 reads the rest of the verb band - the lock-bit pair
+    +0xc0/+0xc4, the [obj+0xb6] bit map, and the five thunks that
+    dispatch into the pair, each named once by field +0x04 of a row of
+    PR-101's node-class run. Still open: what the second anchor NAMES
+    (OI-129), the 0x58c
+    timer posters, the block 0x546de-0x54700, the '#' census, and which
+    node-class row is asked)
   origin: PR-345 (the class verb +0xAC read)
     The ground-contact verb 0x546a0 ends by telling the object about
     its surface: when the standing query's answer differs from the
@@ -5533,7 +5542,12 @@ OI-128: what landing and leaving a surface does - the class verbs
     IS the seat ask verb of PR-341, so a seat's ask belongs to
     landing, not to the tick. A second dispatcher, 0x45cb1, calls the
     same pair keyed on the surface's record count at [handle+8]
-    (0x45cc6, 0x45cd4), and nothing in the image names it.
+    (0x45cc6, 0x45cd4), and nothing in the image names it. [CORRECTED BY
+    PR-399: the dispatcher is 0x45cb0, not 0x45cb1 - the real entry, read
+    from `ret`, four padding bytes, `push ebx; push ecx` - and IT IS
+    NAMED, once, as field +0x04 of row 16 of PR-101's node-class run at
+    0xa0f28, the dword at 0xa10ac. Four of its siblings are named the same
+    way and are listed in that record.]
     The other half is a timer. 0x54766 leaves the surface whenever the
     winning record's flag byte [obj+0xe2] is 2 - a '#' record of
     PR-335 - and [obj+0xc6] has reached 0x58c, 1420. That word is one
@@ -5785,6 +5799,39 @@ OI-128: what landing and leaving a surface does - the class verbs
     "[obj+0x89] is the sample point for every asker" needs that
     qualifier. 0x23b80/0x23b90 are a setter/getter pair on [obj+0x2c],
     the clamp output of 0x23b70 (4 views at +0x68, 1 at +0x6c).
+    PR-399 READS THE OTHER HALF OF THE BAND AND THE FLAGS THE WHOLE BAND
+    SHARES. The six slots +0xb0, +0xb4, +0xb8, +0xbc, +0xc0, +0xc4 are one
+    contract, not six: the five dwords 0x544f0, 0x238b0, 0x23880, 0x23870,
+    0x54fe0 in order occur 155 times, and in every one of those tables
+    +0x44 = 0x23920, +0x48 = 0x23aa0, +0x50 = 0x53e40, +0x98 = 0x23a50,
+    +0xbc = 0x23870, +0xc0 = 0x54fe0 and +0xc4 = 0x55020; the two new
+    verbs are the LOCK-BIT pair. +0xc0 runs the sample chain and the
+    element's +0x8 verb only when bit 0x01 of [obj+0xb6] is clear, and
+    then ALWAYS `or BYTE [obj+0xb6],0x3` (0x5500e); +0xc4 runs the chain
+    and the +0x4 verb only when bits 0x01 AND 0x02 are both set, and then
+    ALWAYS `and BYTE [obj+0xb6],0xfc` (0x55057). The pair-keying dispatcher
+    this row named is one of five thunks at 0x45c00, 0x45c20, 0x45c50,
+    0x45c80, 0x45cb0 that all open with PR-101's chain walk 0x457e0 and
+    then test the surface record count at [handle+8]: 0x45cb0 chooses
+    +0xb4/+0xb8, 0x45c80 chooses +0xc0/+0xc4, 0x45c50 chooses the two
+    single-bit functions 0x54f40 and 0x54f90 (which are NOT table slots:
+    0 occurrences as a dword), 0x45c20 is the mirror of bit 0x20. Each is
+    named exactly once, by field +0x04 of a row of PR-101's run at 0xa0f28
+    - rows 25, 19, 18, 17, 16 - and nothing else in the image points
+    there, so +0xc0 and +0xc4 each have exactly ONE call site, 0x45c96 and
+    0x45ca4, both inside 0x45c80. The [obj+0xb6] bit map, every one of its
+    44 sites re-read from an aligned slice: mask 0x01 has one literal
+    setter (0x54f7b) and mask 0x03 one (0x5500e); masks 0x04 and 0x08 are
+    set only inside the control-message dispatcher 0x54560 (0x545c6,
+    0x545d2); clearing is 0xfe at 0x54fcb, 0xfc at 0x55057, 0xdf at
+    0x5266c; the only computed write is 0x45c45, bit 0x20 from (edx&1)<<5;
+    mask 0x10 is tested twice and never set by a literal. Bit 0x02 is
+    therefore never set alone but CAN stand alone, because 0x54fcb clears
+    bit 0x01 and leaves it. What stays open here: which node-class row is
+    asked, i.e. who calls a node's +0x04 verb and for which of the 30
+    rows; what the other 24 rows' +0x04 verbs do; the sixth thunk 0x45ce0;
+    why the point provider runs the element's LEAVE verb; and a setter for
+    bit 0x10.
 
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -

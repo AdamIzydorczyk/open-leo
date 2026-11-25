@@ -751,6 +751,22 @@ Pitfalls seen:
   does by slicing, gave 0. Also count carefully what a register mention
   means: `push edx`, `pop edx` and `xor edx,edx` are not uses of an
   argument.
+- A RECORD HEADING NEEDS A BLANK LINE BEFORE IT. `tools/doc_census.py`
+  counts a `## PR-nn` line as a heading only when the line before it is
+  empty; appending a record straight onto the previous record's closing
+  paragraph leaves the new heading invisible, so the previous record's
+  block swallows the new one and the template check reports the OLD number
+  with "duplicated KIND,SUBSYSTEM,...". Two things follow: leave the blank
+  line, and read which PR the failure names before believing the failure
+  is about the record you just wrote.
+- AN ENTRY ADDRESS READ OUT OF A SLICE IS A GUESS; READ THE BYTES. The
+  five thunks at 0x45c00, 0x45c20, 0x45c50, 0x45c80 and 0x45cb0 were
+  first written as 0x45c1f, 0x45c4e, 0x45c7f and 0x45caf - one byte low,
+  because a `dis` slice that starts inside a function drifts and the next
+  function's prologue decodes as `add BYTE PTR [...],dl`. The pattern
+  `ret`, padding, `53 51` is the entry (PR-399). An address one byte off
+  also produces a false "nothing in the image names this": the dword at
+  0xa10ac names 0x45cb0, and 0x45cb1 is what had been looked for.
 - peak `ll_level` RSS is ~1.1 GB (RAN.01); run one level at a time.
 
 ## 4. Architecture map

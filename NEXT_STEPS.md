@@ -55825,3 +55825,235 @@ MEASURED: (a) THE CALL-SITE SET. The three entry points have 19 call edges
   this row's own passes were wrong about a count as small as forty, each
   time because the instrument, not the engine, decided where a function
   began.
+
+## PR-399 - THE ATTACHMENT VERBS ARE ONE BAND OF SIX SLOTS THAT 155 CLASS
+## TABLES CARRY IN THE SAME ORDER; THE LOCK BITS HAVE FOUR WRITERS; AND
+## THE LAND/LEAVE DISPATCHER OI-128 CALLED UNNAMED IS FIELD +4 OF A ROW
+
+```
+KIND: read
+SUBSYSTEM: the class-verb band +0xb0..+0xc4 of the actor class tables -
+  the point provider 0x544f0 and its attachment tail (the item PR-396 left
+  open in OI-127), the land/leave pair +0xb4/+0xb8, the held-surface
+  boolean +0xbc, the two lock-bit verbs +0xc0/+0xc4 that no record had
+  read as slots; the [obj+0xb6] bit map all six share; the node-class
+  rows whose +0x04 verb dispatches into them; and the two table-shape
+  claims PR-171 and PR-362 rest on
+ADDRESSES: 0x544f0, 0x544f4, 0x544f6, 0x544fa, 0x54500, 0x54507, 0x54509,
+  0x5450e, 0x54514, 0x54516, 0x54518, 0x5451f, 0x54521, 0x54526, 0x54529,
+  0x5452b, 0x5452e, 0x54531, 0x54533, 0x54536, 0x54538, 0x5453a, 0x5453d,
+  0x23870, 0x23877, 0x23880, 0x23885, 0x2388c, 0x2388e, 0x23893, 0x23896,
+  0x23899, 0x2389c, 0x238b0, 0x238b5, 0x238bc, 0x238be, 0x238c3, 0x238c6,
+  0x238c9, 0x238cc, 0x54fe0, 0x54fe7, 0x54fee, 0x54ff5, 0x54ffd, 0x55002,
+  0x5500b, 0x5500e, 0x5501a, 0x55020, 0x55027, 0x5502e, 0x55030, 0x55037,
+  0x5503e, 0x55046, 0x5504b, 0x55054, 0x55057, 0x55063, 0x54f40, 0x54f4a,
+  0x54f50, 0x54f52, 0x54f54, 0x54f5b, 0x54f62, 0x54f6a, 0x54f6f, 0x54f78,
+  0x54f7b, 0x54f90, 0x54f9a, 0x54fa2, 0x54fa4, 0x54fab, 0x54fb2, 0x54fba,
+  0x54fbf, 0x54fc8, 0x54fcb, 0x54560, 0x545c6, 0x545d2, 0x45c00, 0x45c13,
+  0x45c19, 0x45c20, 0x45c2d, 0x45c36, 0x45c3c, 0x45c45, 0x45c50, 0x45c5b,
+  0x45c61, 0x45c63, 0x45c6b, 0x45c6d, 0x45c80, 0x45c8b, 0x45c96, 0x45ca4,
+  0x45cb0, 0x45cbb, 0x45cc6, 0x45cd4, 0x45ce0, 0x503d0, 0x5040c, 0x52660,
+  0x52665, 0x5266c, 0x457e0, 0x54200, 0x5420e, 0x54218, 0x541f0, 0x5479f,
+  0x547fa, 0x54964, 0x54bd6, 0x96874, 0xa6520, 0x96c38, 0x97cdc, 0xa1dfc,
+  0xa2498, 0xa0f28, 0xa1078, 0xa10a8, 0xa10c0, 0xa10d8, 0xa10f0, 0xa1180,
+  0xa107c, 0xa10ac, 0xa10c4, 0xa10dc, 0xa10f4, 0xa1184, 0xb0, 0xb4, 0xb8,
+  0xbc, 0xc0, 0xc4, 0x44, 0x48, 0x50, 0x54, 0x8c, 0x90, 0x98, 0x9c, 0xa8,
+  0xcc, 0xb6, 0xa9, 0x33, 0x01, 0x02, 0x03, 0x04, 0x08, 0x10, 0x20, 0xdf,
+  0xfc, 0xfe
+NAMES: attachment band, verb band, band by signature, point provider,
+  attachment tail, held-surface boolean, land verb, leave verb, lock bits,
+  mask 0x01, mask 0x02, lock2, sample chain, element method table,
+  [element+0x33], node class table, field +0x04, thunk, dead code claim,
+  linear-sweep drift, pr399_slots.py, pr399_slots.txt, pr399_bits.py,
+  pr399_bits.txt, pr399_callers.py, pr399_callers.txt, pr399_band.py,
+  pr399_band.txt, pr399_ladder.py, pr399_ladder.txt, pr399_pair99.py,
+  pr399_pair99.txt, pr399_nodeclass.py, pr399_nodeclass.txt,
+  pr399_slots_calls.txt, pr399_dead.txt, pr399_thunktable.txt, OI-127,
+  OI-128
+CODE: no: no file under ported/ or tools/ changes. One sentence of
+  OI-128's PR-345 paragraph ("nothing in the image names it") is corrected
+  in the same commit as this record, and the OI-127 open-item sentence
+  naming the attachment tail is marked answered.
+HOOKS: none - no leg, no fixture and no generated file's expectation
+  moves, so the light gate of section 2 rule 4 applies. The port models
+  neither [obj+0xb6] nor a lock bit, so nothing here contradicts a leg.
+OPENS: WHICH OF THE 30 NODE-CLASS ROWS IS ASKED - the six thunks are each
+  named exactly once, by field +0x04 of a row of PR-101's run at 0xa0f28,
+  and no call site of a node's +0x04 verb has been matched to a row; WHAT
+  THE OTHER 24 ROWS' +0x04 VERBS DO (0x45750, 0x459b0..0x45bd0, 0x45d10,
+  0x45d50, 0x45d90); the sixth thunk 0x45ce0, whose body this row read
+  only as far as `mov edx,0x1; mov eax,[ebx+0xc]` at 0x45cec-0x45cf8; why
+  the point provider runs the element's LEAVE verb (+0x8) while the
+  leave-keyed +0xb8 does the same and the attach-keyed ones differ;
+  whether mask 0x10 has a setter at all, since no literal one exists and
+  the only computed write covers bit 0x20; and what bit 0x04 and bit 0x08
+  of [obj+0xb6] mean, set only inside the control-message dispatcher at
+  0x545c6 and 0x545d2.
+CLOSES: the attachment-tail item PR-396 left in OI-127 - the tail of the
+  +0xb0 verb, 0x54500-0x5453a, its class slots +0xbc, +0x48, +0x50 and the
+  table at [that+0x33] - the tail is read to the last
+  instruction, its three tests are given as a boolean, and the table at
+  [element+0x33] is the element's own method table, which PR-357 named;
+  the part of OI-128 that asked what the +0xB4/+0xB8 pair is keyed on -
+  the same two bits +0xc0/+0xc4 are keyed on, through a thunk that IS
+  named; and the two slots OI-128's row never named, +0xc0 and +0xc4.
+CORRECTS: PR-362, PR-171 and one sentence of OI-128, in that order, and
+  each correction is a measured one.
+  (1) PR-362's MEASURED (a): "The two verbs sit in one and the same
+  class-table shape and the split is only in slot +0x54." The 155 tables
+  that hold the standing-query writer 0x55070 at +0x54 do hold the whole
+  attachment band; the 31 that hold 0x53df0 at +0x54 hold its +0x44,
+  +0x48, +0x50 and +0x98 slots identically but OVERRIDE +0xb0 through
+  +0xc4 with their own family handlers (0x1e540, 0x22df0, 0x4f6f0,
+  0x4f7c0, 0x55910, 0x232e0...). The two sets are disjoint: 0 of the 31
+  sits at +0x54 of a band table. So the split is in the band, not only in
+  +0x54, and a class that installs the ungated writer has no lion lock
+  verbs at all.
+  (2) PR-171's slot numbers, repeated in PR-173: "the 99-table pairing
+  0x54860/+0x9c=0x549f0 CONFIRMED EXACTLY 99/99 - and those 99 carry the
+  BOOLEAN 0x23870 ... at +0x8c: the slot has TWO contracts". Measured over
+  the 155 band tables: 0x54860 is at +0xa8 (exactly 99 tables, so that
+  count stands), 0x23870 is at +0xbc (all 155), 0x549f0 is at +0xcc (140
+  tables, so no 1:1 pairing with the 99), and +0x8c is the self key getter
+  0x54910 (140 tables, all 99 included). +0x9c is 0x23a40 (150 tables).
+  The three numbers PR-171 used are 0x30 low, and the "one slot, two
+  contracts" conclusion goes away with them: key getter and held-surface
+  boolean are different slots. PR-308's row already used the correct
+  numbers, so the ledger has carried two slot conventions at once; this
+  row's method is to name a slot only against a base found by content.
+  (3) OI-128's PR-345 paragraph: "A second dispatcher, 0x45cb1, calls the
+  same pair keyed on the surface's record count at [handle+8] ... and
+  nothing in the image names it." It is named: field +0x04 of row 16 of
+  PR-101's node-class run, the dword at 0xa10ac. And the address is
+  0x45cb0, not 0x45cb1 - the real entry, read from the byte pattern
+  `ret`, four zero bytes of padding, `push ebx; push ecx`.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md, HANDOFF.md and the
+  generated docs/RE_INDEX.md only - nothing under ported/, tools/, the
+  Makefile or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr399_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical at 384
+  records). The first run of the gate FAILED, and the failure was the
+  harness: the appended heading had no blank line before it, so
+  doc_census did not see it and reported PR-398 as carrying two field
+  blocks. HANDOFF section 3 now carries that pitfall and the one-byte
+  entry-address pitfall of CORRECTS (3). The image scans quoted in
+  MEASURED are the scripts named in NAMES, run against build/leo/leo.img
+  and the re DB, with their output kept beside them.
+MEASURED: (a) THE BAND, FOUND BY SIGNATURE, NOT BY A TABLE LIST. The five
+  verbs of the attachment family sit in five CONSECUTIVE slots, so the
+  five dwords 0x544f0, 0x238b0, 0x23880, 0x23870, 0x54fe0 in order are a
+  signature for the table that carries them. It occurs 155 times, at bases
+  0x96874 through 0xa6520 (pr399_band.py). In all 155: +0x44 = 0x23920,
+  +0x48 = 0x23aa0, +0x50 = 0x53e40, +0x98 = 0x23a50, +0xbc = 0x23870,
+  +0xc0 = 0x54fe0, +0xc4 = 0x55020. Two more slots split the set: +0x8c =
+  the self key getter 0x54910 in 140 and +0xcc = 0x549f0 in the same 140,
+  +0xa8 = 0x54860 in 99. The gap between consecutive bases is not one
+  number (0xe0 x21, 0xec x14, 0x110 x13, 0x1b8 x11, ...), so these tables
+  differ in length. This also says why a table list is the wrong way to
+  ask the question: attributing the same dwords to the re DB's `mtable`
+  entries and their declared lengths puts only 116 of the 155 at +0xb0,
+  because several declared regions contain more than one band
+  (pr399_slots.py). The content signature is the reliable name.
+  (b) THE SIX BODIES. Five of the six share one chain, called C below:
+  `mov edx,[obj+8]`, `call [edx+0x48]` = the current element, `mov
+  edi,[element+0x33]` = the ELEMENT'S method table (PR-357's 0xa0c08),
+  `call [edx+0x50]` = the sign, then `call [edi+0x4]` or `[edi+0x8]` with
+  eax = the element, edx = the object, ebx = the sign.
+    +0xbc 0x23870: `cmp DWORD [obj+0xa9],0; setne al` - the held-surface
+      boolean, one instruction, no chain.
+    +0xb4 0x238b0: runs C and the +0x4 verb unless mask 0x01 of
+      [obj+0xb6] is set, and passes ebx = [obj+0x6d] (0x238c9) instead of
+      the sign. Writes no flag.
+    +0xb8 0x23880: the same with the +0x8 verb (0x2389c). Writes no flag.
+    +0xc0 0x54fe0: if mask 0x01 is CLEAR, C and the +0x8 verb; then
+      ALWAYS `or BYTE [obj+0xb6],0x3` (0x5500e) - it sets both lock bits
+      even when it skipped the chain.
+    +0xc4 0x55020: if mask 0x01 is set AND mask 0x02 is set, C and the
+      +0x4 verb; then ALWAYS `and BYTE [obj+0xb6],0xfc` (0x55057).
+    +0xb0 0x544f0: PR-308's point provider. Its tail, to the instruction:
+      it copies [obj+0] and [obj+4] into the asker's buffer first and
+      unconditionally; then mask 0x02 set skips the tail (0x54500,
+      0x54507); otherwise it calls +0xbc, and the chain runs iff the
+      boolean is nonzero OR mask 0x01 is set (0x54514-0x5451f); the chain
+      it runs is C with the +0x8 verb at 0x5453a. So the gate is
+      `!bit0x02 && (held || bit0x01)` - the exact opposite polarity of
+      the aim-chain gate of 0x541f0 (PR-355's `bit0x02 || (!held &&
+      !bit0x01)`), because the provider is asked by whoever wants the
+      point and 0x541f0 is asked by whoever wants the shift.
+  The two functions that are NOT slots - 0x54f40 and 0x54f90 - are the
+  single-bit pair: 0x54f40 calls +0xbc and skips if the object holds a
+  surface or mask 0x01 is set, else runs C with the +0x4 verb, then
+  `or BYTE [obj+0xb6],0x1` (0x54f7b); 0x54f90 runs C with the +0x8 verb
+  only when the object holds NO surface and mask 0x01 IS set, then
+  `and BYTE [obj+0xb6],0xfe` (0x54fcb). Neither appears as a dword in any
+  table (pr399_slots.txt: 0 occurrences), and their only call edges are
+  through the thunks of (d).
+  (c) THE BIT MAP, EVERY SITE RE-READ FROM AN ALIGNED SLICE. 44 sites
+  mention +0xb6 outside a stack slot; all 44 are real instructions when
+  re-read from a slice that starts at the enclosing function entry
+  (pr399_bits.py). Setting, each with exactly one site: mask 0x01 at
+  0x54f7b, mask 0x03 at 0x5500e, mask 0x04 at 0x545c6, mask 0x08 at
+  0x545d2 - the last two inside the control-message dispatcher 0x54560 of
+  PR-171 and PR-343. Clearing, one site each: 0xfe at 0x54fcb, 0xfc at
+  0x55057, 0xdf at 0x5266c. The only computed write is 0x45c45,
+  `or DWORD [obj+0xb6],ebx` with ebx = (edx&1)<<5, i.e. bit 0x20 and
+  nothing else. Testing: mask 0x01 at 11 sites, mask 0x02 at 8, mask 0x10
+  at 2 (0x54964, 0x54bd6) and no literal setter for 0x10 anywhere. So
+  mask 0x02 is never SET on its own - the one instruction that sets it
+  also sets 0x01 - but it CAN stand alone, because 0x54fcb clears 0x01 and
+  leaves it; PR-355's "bits 0x03" test case and its lone-0x02 case are
+  both reachable, and this is the map that says so.
+  (d) THE THUNKS: NOT DEAD, AND THEY ARE THE ONLY LIVE WAY IN. Five thunks
+  at 0x45c00, 0x45c20, 0x45c50, 0x45c80, 0x45cb0 all open the same way -
+  `push ebx; push ecx; mov ecx,eax; mov ebx,edx; call 0x457e0` (PR-101's
+  node chain walk) - and then test `cmp DWORD [ecx+8],0`, the surface
+  record count PR-362 named:
+    0x45cb0 nonzero -> `call [class+0xb4]`, zero -> `call [class+0xb8]`;
+    0x45c80 nonzero -> `call [class+0xc0]`, zero -> `call [class+0xc4]`;
+    0x45c50 nonzero -> `call 0x54f40`, zero -> `call 0x54f90`;
+    0x45c20 clears mask 0x20 and re-writes it as (edx&1)<<5 (0x45c36,
+      0x45c45);
+    0x45c00 asks the object's class for +0x30 then +0x2c (0x45c13,
+      0x45c19).
+  Their entry addresses were first written one byte low (0x45c1f,
+  0x45c4e, 0x45c7f, 0x45caf) because a `dis` slice that starts inside a
+  function drifts; the byte pattern `ret`, padding, `53 51` puts them at
+  the addresses above (pr399_thunktable.txt). Each of the five is named
+  exactly once in the image, by field +0x04 of a row of PR-101's
+  node-class run at 0xa0f28: 0xa1184 -> 0x45c00 (row 25), 0xa10f4 ->
+  0x45c20 (row 19), 0xa10dc -> 0x45c50 (row 18), 0xa10c4 -> 0x45c80
+  (row 17), 0xa10ac -> 0x45cb0 (row 16), and a sixth, 0xa107c -> 0x45ce0
+  (row 14). No dword and no rel32 call or jmp anywhere else points into
+  0x45c00-0x45cf0 (pr399_dead.txt, pr399_nodeclass.py).
+  (e) WHAT THAT LEAVES LIVE. The slot +0xc0 has exactly one call site,
+  0x45c96, and +0xc4 exactly one, 0x45ca4, both inside 0x45c80; +0xb4 has
+  two, 0x45cc6 (in 0x45cb0) and 0x5479f (the ground-contact verb), and
+  +0xb8 two, 0x45cd4 and 0x547fa (pr399_slots_calls.txt). 0x54f40's only
+  call edge is 0x45c63 inside 0x45c50; 0x54f90's other two are live -
+  0x5040c, in the state-reset path that zeroes [obj+0x11a]/[obj+0x11e]
+  and [obj+0xb5] and writes 0x64 to [obj+0xad], and 0x52665, a teardown
+  thunk that calls 0x54f90 on [[obj]] and then clears mask 0x20 at
+  0x5266c. So of the four writers of the lock bits, two (+0xc0 and +0xc4)
+  are reachable only through node-class rows 17 and 16, and two (0x54f40
+  and 0x54f90) through row 18 and through the reset and teardown paths.
+```
+
+- WHY. Three rows of this ledger have described the same six slots as if
+  they were six separate discoveries - PR-308 read the point provider,
+  PR-353 the land/leave pair, PR-350 the boolean, and the two lock verbs
+  had never been named at all. Reading them as one band is what made the
+  last two findable in one pass, and it is also the only way to say
+  honestly how many classes carry the contract: a table list gives 116 and
+  a content signature gives 155. Two of this row's findings change what a
+  later row may assume. PR-362's "the split is only in slot +0x54" was the
+  reason the standing-query question looked like one mechanism with two
+  settings; it is not - the 31 classes with the ungated writer have no
+  attachment band at all, so any law about lock bits is a law about the
+  lion family and its 124 tables. And the pair-keyed dispatchers this row
+  started out calling dead code are the node-class rows' +0x04 verbs,
+  which OI-128 had been told were unnamed for eleven PRs: what was wrong
+  was an address one byte out of place. Both corrections are cheap to
+  carry and expensive to have missed, and both came from the same habit -
+  check the address against the bytes before believing anything about the
+  thing that owns it.
