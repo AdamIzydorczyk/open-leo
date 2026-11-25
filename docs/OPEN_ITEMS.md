@@ -7122,6 +7122,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     element ctor's string arguments are the seven "none"
     literals at 0x91d7a-0x91d9d. Open: the element's own fields
     and who reads [element+0x16].]
+    [PR-476 FOLLOWES THE PLAN INTERPRETER'S TAIL: after the
+    plan text is replayed, 0x4b05f does `mov ebx,[mgr+0x38c]
+    (the PR-452 hit-pipeline object); mov eax,ebx; call
+    0x448c0` - skipped entirely while [mgr+0x3a0] is non-null.
+    0x448c0 branches on two counters, [X+0x58] (else 0x447a0)
+    and [X+0x54] (-> 0x44810); each leg takes an element from
+    one of the pools at [X+0x74]/[X+0x78]/[X+0x7c]/[X+0x80]/
+    [X+0x84]/[X+0x88] and calls `[[element+0x33]+0x10]` with a
+    coordinate pair from the owner's fields (+0x4/+0x8,
+    +0x1c/+0x20, +0x40/+0x44, +0x34/+0x38, +0x28/+0x2c), then
+    decrements its counter - per-tick EMISSION counts. Two
+    gates are law-like: 0x44660 skips unless distance <= 100 and
+    indexes the pool by (100-d)/[X+0x70]; 0x447a0/0x44810 test
+    (n/10)%2 and (n/3)%2 to alternate pools. So the +0x10 entry
+    is a general element-operation verb, not a draw entry
+    (element answers `ret`, frame answers 0x421f0), which
+    corrects the reading of PR-474's sites without changing its
+    facts. No class table holds these six addresses; the only
+    other caller of 0x4af10 is 0x609c0 (`mov eax,ds:0xcef40;
+    call 0x4af10; ret`), and the interpreter's head can call
+    0x1cfd0 = a 0x4ee8-dword `rep stosd` clear of ds:0xcef2c.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

@@ -63837,3 +63837,91 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   `ret`) and a full set of destructor variants. That also fixes
   the language of PR-467 - the block is a type descriptor.
 
+
+## PR-476 - THE PLAN REPLAY ENDS IN AN EMITTER STEP: THREE
+## METHODS WALK VECTORS OF EFFECT OBJECTS AND ENTER THEIR TYPE
+## DESCRIPTOR AT +0x10, GATED BY COUNTERS AND DISTANCE
+
+```
+KIND: read
+SUBSYSTEM: the emitter step: the dispatcher 0x448c0 (called once,
+  from the tail 0x4b05f of the plan interpreter 0x4af10, with
+  eax = the PR-452 hit-pipeline object [ds:0xcef40+0x38c]) and
+  its three legs 0x44710, 0x447a0, 0x44810 plus the sibling
+  0x44660; the shared call shape `mov esi,[[vector[i]]+0x33];
+  mov ebx,<x>; mov edx,<y>; call [esi+0x10]`; and the descriptor
+  entry +0x10 across the three known descriptors
+ADDRESSES: 0x44660, 0x44710, 0x447a0, 0x44810, 0x448c0,
+  0x4af10, 0x4b05f, 0x4b061, 0x609c0, 0x609d5, 0x1cfd0,
+  0x1cfe5, 0xcef2c, 0x4ee8, 0x38c, 0x394, 0x3a0, 0x30, 0xee,
+  0x33, 0x10, 0x54, 0x58, 0x5c, 0x60, 0x64, 0x68, 0x6c,
+  0x70, 0x74, 0x78, 0x7c, 0x80, 0x84, 0x88, 0x8, 0x4, 0x14,
+  0x1c, 0x20, 0x28, 0x2c, 0x34, 0x38, 0x40, 0x44, 0xa94f0,
+  0xa0bd0, 0xa0c08, 0x421f0, 0x44270
+NAMES: emitter step, effect vector, emit verb, descriptor entry
+  +0x10, distance gate, alternation gate, emitter counters,
+  pr476_emitters.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT VERB +0x10 IS PER TYPE - the element descriptor
+    answers `ret` and the frame descriptor answers PR-467's draw
+    wrapper 0x421f0, so the slot means "operate on this element
+    at these coordinates", but the other eleven descriptors of
+    the 0xa0b00-0xa0d00 family are unnamed, and that is what
+    would name the three vectors; the effect-object pools at
+    [X+0x74], [X+0x78], [X+0x7c], [X+0x80], [X+0x84], [X+0x88]
+    and the meaning of the counters [X+0x58], [X+0x5c],
+    [X+0x60], [X+0x64] and of the second gate [X+0x54]; the
+    singleton path [ds:0xcef40+0x394]+0xee in 0x447a0 (a per-
+    lion indexed array, index = the hit counter / 2); and the
+    reset entry 0x609c0, which calls the interpreter with the
+    manager and then returns - plus 0x1cfd0's 0x4ee8-dword
+    clear of ds:0xcef2c.
+CLOSES: PR-474's OPENS "the five unnamed slots of the render
+  band", and PR-474's note that the +0x10 entry "is the draw
+  entry": it is a general element-operation entry, and the legs
+  are emitters, not render code. The dispatcher 0x448c0 is
+  reached exactly once, from the tail of the plan interpreter
+  0x4af10 (`mov ebx,[mgr+0x38c]; test ebx,ebx; mov eax,ebx;
+  call 0x448c0`), i.e. after the plan text has been replayed,
+  on the hit-pipeline object of PR-452. It branches on two
+  counters: [X+0x58] selects 0x44710 else 0x447a0, and
+  [X+0x54] selects 0x44810. Each leg pulls an element from one
+  of the pools at [X+0x74]/[X+0x78]/[X+0x7c]/[X+0x80]/
+  [X+0x84]/[X+0x88] and calls [[element-view+0x10]] with a
+  coordinate pair taken from the object's own fields ([+0x4]/
+  [+0x8], [+0x1c]/[+0x20], [+0x40]/[+0x44], [+0x34]/[+0x38],
+  [+0x28]/[+0x2c]) - and each leg decrements its counter when
+  done, so these are per-tick emission counts. Two gates are
+  law-like: 0x44660 skips the emission unless `ebx <= 0x50`
+  and indexes the pool by `(100 - ebx)/[X+0x70]` - a distance
+  ramp; 0x447a0 and 0x44810 test `n % 2` after dividing by 10
+  and by 3, i.e. they alternate which pool is used.
+CORRECTS: nothing. (PR-474's dispatch facts stand; only the
+  reading of the call sites moves from render to emit.)
+MEASURED: (a) THE CALLER CONTEXT, verbatim at 0x4b043: `mov
+  eax,[esi+0x3a0]; test eax,eax; jne 0x4af40; mov ebx,
+  [esi+0x38c]; test ebx,ebx; je 0x4af40; mov eax,ebx; call
+  0x448c0` - the step is skipped entirely while the field
+  [mgr+0x3a0] is non-null. (b) NO CLASS TABLE HOLDS these six
+  addresses and nothing else calls them, so they are internal
+  helpers of the interpreter's tail, not verbs. (c) THE ENTRY
+  TABLE for +0x10: 0xa0bd0 -> 0x44270 (`ret`), 0xa0bdc ->
+  0x442e0 (`ret`), 0xa0c08 -> 0x421f0 (the draw wrapper). (d)
+  THE SECOND CALLER 0x609c0 is three instructions: `mov eax,
+  ds:0xcef40; call 0x4af10; ret` - an explicit replay/reset
+  request; the interpreter's head calls 0x1cfd0 only when
+  [mgr+0x3a0] is non-null, and 0x1cfd0 is `pusha; cmp
+  eax,0xcef2c; mov ecx,0x4ee8; mov eax,0; rep stosd; popa` - a
+  5028-dword clear of the manager's own tail. (e) THE PORT.
+  Unchanged: the port models the effects its fixtures exercise.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The plan interpreter had a long tail nobody had followed.
+  It is where the engine turns the plan's hit information into
+  visible effects: counters say how many, distance says how
+  strong, and a single descriptor slot does the work for every
+  effect type.
+
