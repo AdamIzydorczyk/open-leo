@@ -6678,6 +6678,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     need the class, not just the offset. Open: that family,
     the cmp-0 readers, and what [obj+0xb1] is (copied on every
     spawn, set 0x16 at reset, /10-scaled by the input class).]
+    [PR-452 NAMES THE INPUT FAMILY - the image carries its own
+    class strings: table 0x96960 (the 0x502f0/0x50380/0x504e0/
+    0x51016 methods) is TLewZaria (string 0x9078b; siblings
+    TLewZariaB/Ena/Ena2/Kadmar1/Kadmar2/Sades/Ran/Kara at
+    0x90795-0x9112a). Its singleton is built by a guarded
+    factory 0x1fef0 (single instance via ds:[0xceba4], 0x12e
+    bytes, installs [obj+8]=0x96960), and the chain 0x4dde0
+    tries one factory per episode (0x25510/0x269a0/0x29b00/
+    0x2bfa0/0x2f0f0/0x33500, last four load TLewEna2/
+    TLewKadmar1/TLewKadmar2/TLewRan) storing the winner at
+    registry+0x394 - the slot PR-104/105 call the lion, now
+    with its type. The +0x8c override 0x504e0 gates its flag
+    build behind virtual +0xf8, which for this class (0x1e2f0)
+    is true iff [obj+0xee] is 2 or 3 - the actor only builds
+    its own flags in those two states. Open: what states 2/3
+    mean, the two unnamed factories (0x98284, 0x2f0f0's -
+    probably Sades/Kara), and why 0x20495 builds the table a
+    second time (TLewZariaB?).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

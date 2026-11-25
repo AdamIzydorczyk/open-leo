@@ -61832,3 +61832,93 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   checks coming: each one converts a "probably the same thing"
   into a checked equivalence.
 
+
+## PR-452 - THE INPUT FAMILY HAS NAMES: THE TLew* GAME-MODE
+## ACTOR CLASSES, BUILT BY A PER-EPISODE FACTORY CHAIN INTO THE
+## REGISTRY'S +0x394 SLOT; THE ACTOR'S +0xf8 GATE READS THE
+## [obj+0xee] STATE
+
+```
+KIND: read
+SUBSYSTEM: the class behind the 0x502f0 method family (the
+  PR-442 input pipeline, the PR-445 DANGER consumer, the PR-447
+  +0x1c variant, the PR-450 +0x8c variant) - table 0x96960, its
+  singleton factory 0x1fef0 and the per-episode factory chain
+  0x4dde0 that stores the winner at registry +0x394 (the slot
+  PR-104/105 call the lion); the image's own class-name
+  strings; and the +0xf8 virtual the actor's flag-build
+  override calls
+ADDRESSES: 0x96960, 0x1fef0, 0x1ff15, 0x20495, 0x5c320, 0x12e,
+  0xceba4, 0x1eabc, 0x9078b, 0x4dde0, 0x4de24, 0x4de35, 0x4de46,
+  0x4de57, 0x4de68, 0x4de79, 0x4de8a, 0x394, 0x25510, 0x269a0,
+  0x29b00, 0x2bfa0, 0x2f0f0, 0x33500, 0x98284, 0x98eb4, 0x99370,
+  0x9b4cc, 0x502f0, 0x504e0, 0x50380, 0x51016, 0x1e2f0, 0xee,
+  0xf8, 0x8c, 0xd2, 0xa5
+NAMES: TLewZaria, TLewEna2, TLewKadmar1, TLewKadmar2, TLewRan,
+  mode-actor factory, game-mode actor singleton, gameplay-state
+  gate, pr452_tlew.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT [obj+0xee] STATES 2/3 ARE (the gate returns true
+    exactly for them; PR-442 read 0xee as the input/cutscene
+    mode word - the numeric meanings are still unassigned); the
+    two factories with no names in their window (0x25510's
+    table 0x98284, 0x2f0f0's) - probably TLewSades/TLewKara,
+    whose strings sit elsewhere, unconfirmed; WHY ONE window
+    builds 0x96960 twice (0x20495's second ctor path, the
+    TLewZariaB sibling string at 0x90795 suggests a variant
+    class); and whether the port should key anything per-episode
+    class at all (today it keys scenes by name only).
+CLOSES: PR-445's OPENS "the class behind the DANGER consumer
+  0x50fe0 (the 0x502f0 family - same family as the input feed,
+  still unnamed after PR-442)" and PR-442's standing "the input
+  class is unnamed": the image carries the names - 0x9078b
+  'TLewZaria', 0x90795 'TLewZariaB', 0x908b3 'TLewEna',
+  0x908f6 'TLewEna2', 0x90aae 'TLewKadmar1', 0x90b36
+  'TLewKadmar2', 0x90d01 'TLewSades', 0x90fe6 'TLewRan',
+  0x9112a 'TLewKara'. Table 0x96960 is the Zaria one: its
+  singleton is built by 0x1fef0 (single-instance guard through
+  ds:[0xceba4], 0x12e-byte allocation, name 0x9078b), and the
+  chain 0x4dde0 tries one factory per episode and stores the
+  winner at registry +0x394 - the same slot PR-104/105 read as
+  "the lion" ([[0xcef40]+0x394]), now with its type name. The
+  DANGER test, the +0x8c flag-build override (0x504e0) and the
+  +0x1c reset variant (0x50380) are all methods of THIS class.
+  PR-450's OPENS on the +0xf8 gate too: in the lion table it
+  is 0x1e2f0 - true iff [obj+0xee] is 2 or 3 - so the actor
+  class runs its own flag build only in those two states.
+CORRECTS: nothing. (PR-104/105's "the lion at +0x394" is
+  confirmed, not corrected - lew IS the lion; what is new is
+  the class name and the factory that fills the slot.)
+MEASURED: (a) THE CLASS. Table 0x96960 (512 slots) is built
+  only at 0x1ff15/0x20495, both in the TLewZaria factory
+  window; its methods are the 0x502f0/0x50380/0x504e0/0x51016
+  family every recent PR has been reading. (b) THE FACTORY
+  CHAIN. 0x4dde0 (called from the 0x4c8a0 scene-start line):
+  call 0x1fef0, store if non-null at [reg+0x394]; then
+  0x25510, 0x269a0, 0x29b00, 0x2bfa0, 0x2f0f0, 0x33500 - the
+  last four load the strings TLewEna2, TLewKadmar1,
+  TLewKadmar2 (plus A_DEAD/A_LOOKUP/k2dead.mod), TLewRan: one
+  actor class per episode, first match wins. (c) THE GATE. The
+  actor's +0x8c override 0x504e0 calls virtual +0xf8 first;
+  the lion's +0xf8 is 0x1e2f0: `[obj+0xee]==2 || ==3` -> 1,
+  else 0; other families hold stubs. The base builder runs
+  only when the actor is in one of those two states, the
+  [obj+0xd2] control object is present and [obj+0xa5] bit 2 is
+  clear. (d) THE PORT. The port's scenes are Zaria's
+  (ZARIA.01 legs); its player model corresponds to TLewZaria's
+  methods; nothing keyed by class today needs to be - the
+  per-episode split is data-side. No port change.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. Names. Sixty PRs of "the 0x502f0 family", "the input
+  class", "the unnamed player controller" end at nine strings
+  the image carries: the game is a per-episode player class
+  (TLewZaria for the scenes this port runs), built once by a
+  first-match factory at scene start. It also puts a state
+  gate on the whole flag pipeline: the actor only builds its
+  own flags in two [obj+0xee] states - the numeric meaning of
+  those states is the next honest question.
+
