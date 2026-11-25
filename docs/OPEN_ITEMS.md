@@ -7532,6 +7532,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     ctor walk stores it at [settings+0x40] as a verb block
     (root ctor/dtor entries + print descriptors + field
     ints 0xd/0xc/0x4/0x15). What 0x97f50 is stays open.]
+    [PR-499 RUNS THE CENSUS ABOVE 158 WITH TWO NEW SCREENS.
+    Install-site scan (every code immediate pointing into
+    the data segment, kept if >=4 table-shaped slots follow)
+    = 746 targets / 588 outside mtable, and it FINDS all
+    known misses: PR-493's computed pairs, 0x97f50, the
+    code-only root 0xa0cc0. Signature scan for the
+    placeholder pair [t+4]=0x23ea0/[t+8]=0x23e00 = exactly
+    52 tables in 0x96000..0xa7000: 37 mtable rows + 15 new
+    with verified installers (0x96c38/0x96d1c ZARIA,
+    0x9aa60/0x9ab18/0x9abd4/0x9b324, 0x9d6e0/0x9dbfc/
+    0x9e294, 0x9f7b4, 0xa0780, 0xa0cb4, 0xa1f90/0xa2054
+    TRASA) - pr499_sig.txt. Miss mechanism named: root-
+    derived tables override the +4/+8 slots (0x97f50 keeps
+    the pair at +0x18). The 0x98274/0x98278 pair is a
+    STUB-VERB TEMPLATE class (0x23ed0 head) stored at 88/
+    255 sites - first-class tables, not data templates.
+    Cross-join of the three sets and the pair semantics
+    remain open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

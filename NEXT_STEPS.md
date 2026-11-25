@@ -65847,3 +65847,91 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   22-family caller list is now the authoritative enumeration
   of root-derived construction for the coverage ledger.
 
+
+## PR-499 - CLASS-TABLE CENSUS ABOVE 158: THREE DETECTORS, A
+## PLACEHOLDER-PAIR SIGNATURE, AND 15 NEW CLASS TABLES WITH
+## INSTALLER SITES
+
+```
+KIND: read
+SUBSYSTEM: the census-above-158 open item (PR-492/PR-493).
+  Three detectors run over build/leo/leo.elf + leodb: (1)
+  the shipped mtable src='ctor' census = 158 rows (store-in-
+  ctor evidence); (2) RAW INSTALL-SITE SCAN: every immediate
+  in an instruction that points into the data segment, kept
+  if its target starts >=4 consecutive code/data table
+  slots - 746 targets, 588 outside mtable - it FINDS every
+  known miss: the PR-493 computed pairs 0x96a80/0x96a88,
+  0x96b80, 0x97444, 0x976e0, PR-498's 0x97f50, and the
+  root vtable 0xa0cc0 (run=9); its noise is descriptor
+  blocks, which is why it is a screen, not a census; (3)
+  SIGNATURE SCAN for the placeholder pair [t+4]=0x23ea0 and
+  [t+8]=0x23e00, the near-universal class-table pair:
+  exactly 52 hits in 0x96000..0xa7000 - 37 already mtable
+  rows, 15 new, every new one verified installed by store
+  instructions (0x96c38 <- 0x1fc3b/0x207ef and 0x96d1c <-
+  0x1fb83/0x20996 = PR-493 ZARIA-cluster misses; 0x9aa60/
+  0x9ab18/0x9abd4 <- 0x2ba-0x2cb families; 0x9b324; 0x9d6e0/
+  0x9dbfc/0x9e294 <- 0x34d-0x35x; 0x9f7b4 <- 0x3a2c2/
+  0x3a76e; 0xa0780 <- 0x3f57d/0x3f5bd; 0xa0cb4 <- 0x456f4;
+  0xa1f90/0xa2054 <- 0x4e7-0x4f9 = the PR-493 TRASA names).
+  The signature explains the miss mechanisms: tables that
+  OVERRIDE the verb+4/+8 slots (like 0x97f50, whose +0..+0x10
+  are the root verbs 0x44e40/0x44ec0/0x44f10 - the pair
+  survives at +0x18, so it is a root-derived class) hide
+  from the signature; code-only roots (0xa0cc0) hide from
+  ctor-store logic. And the placeholder pair's own table
+  0x98278 IS a signature table (head verb 0x23ed0) stored at
+  255 immediate sites; its sibling 0x98274 (head 0x23e30)
+  at 88 - the PR-492 "list-template pair" is really the
+  engine's stub/default-verb template, installed as field
+  objects by nearly every ctor.
+ADDRESSES: 0x23ea0, 0x23e00, 0x23ed0, 0x23e30, 0x98274,
+  0x98278, 0x96c38, 0x96d1c, 0x9aa60, 0x9ab18, 0x9abd4,
+  0x9b324, 0x9d6e0, 0x9dbfc, 0x9e294, 0x9f7b4, 0xa0780,
+  0xa0cb4, 0xa1f90, 0xa2054, 0x1fc3b, 0x207ef, 0x1fb83,
+  0x20996, 0x456f4, 0x4e76d, 0x4f859, 0x4e801, 0x4f9de,
+  0x97f50, 0xa0cc0, 0x96a80, 0x96a88, 0x96b80, 0x97444,
+  0x976e0, docs/OPEN_ITEMS.md
+NAMES: placeholder pair, signature scan, install-site scan,
+  root-derived override, stub template, pr499_census.py,
+  pr499_sig.py, pr499_census.txt, pr499_sig.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: CROSS-JOIN the three sets into one attributed census
+    (which of the 15 new tables belongs to which level
+    cluster - installer ranges 0x2ba-0x2cb, 0x34d-0x35x,
+    0x3a2-0x3a7, 0x4e7-0x4f9 suggest ENA2/RAN/LION/TRASA
+    families but are unproven); whether [t+4]/[t+8] are
+    FIELD objects (0x23ea0 stores [eax]=edx,[eax+4]=ebx -
+    looks like a pair holder) not verbs - semantics open;
+    and the exact 0x97f50 owner (PR-498's 0x44e40 store).
+CLOSES: PR-493's OPENS "census above 158" first stage: the
+    computed-form pair tables are found by the raw scan, and
+    a second detector (the placeholder-pair signature) adds
+    15 fully-verified class tables with installer sites.
+    PR-492's "0x98274/0x98278 list-template pair" is now
+    characterized: stub-verb template tables installed at
+    88/255 store sites.
+CORRECTS: PR-492's characterization "list-template/
+  placeholder tables" is refined, not wrong: 0x98278 itself
+  matches the class-table signature with real stub verbs
+  (0x23ed0 head), so these are first-class tables used as
+  field/placeholder objects, not bare data templates.
+MEASURED: (a) pr499_census.py/txt: 746 install-site
+  candidates, 588 outside mtable, spot-checks pass for all
+  known misses. (b) pr499_sig.py/txt: 52 signature hits,
+  37 mtable overlap, 15 new with installer lists. (c) Raw
+  slot dumps of 0x98274/0x97f50 heads (this record). (d)
+  Store-immediate counts: 0x98274 x88, 0x98278 x255. (e)
+  THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The class-table population is now enumerable by two
+  independent screens whose intersection with the shipped
+  census is measured; a port that models classes needs the
+  placeholder-pair convention (every class table carries the
+  0x23ea0/0x23e00 pair unless it overrides those slots).
+
