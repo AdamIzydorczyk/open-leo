@@ -61021,3 +61021,109 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   two slots PR-439 left unread on the object's base surface, so
   the next PR can take the row-control keyword chain itself.
 
+
+## PR-444 - THE CH_DIR BIT HAS A CONSUMER AFTER ALL: 0x53670 TURNS
+## [obj+0x6d] WHENEVER THE x-INTENT OPPOSES FACING ON A CH_DIR ROW,
+## AND PR-410'S CENSUS MISSED IT TWICE OVER
+
+```
+KIND: read
+SUBSYSTEM: the control-flag word's only engine-side consumer found
+  so far beyond PR-410's direct-memory tests: 0x53670, the
+  row-gated facing turn PR-443 named, now tied to the CH_DIR
+  keyword through the [row+0x12] bit 0x800 test - the end of the
+  applier-tail chain PR-442 opened
+ADDRESSES: 0x53670, 0x53672, 0x5367b, 0x5367e, 0x53683, 0x53689,
+  0x54bb2, 0x54bd6, 0x54be1, 0x51cdd, 0x51b2e, 0x50,
+  0x5c, 0x12, 0x13, 0x6d, 0xb6, 0xba, 0x800, 0x54
+NAMES: CH_DIR consumer, register-form bit test, control census
+  blind spot, intent turn, pr444_chdir.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE HONEST CENSUS OF THE 24 BITS - a dis-scan for
+    register-form tests (`mov r,[obj+0x12]` then test against
+    dh/dl/di) around every field consumer, since an ops-pattern
+    query cannot state a negative (below); whether the input-
+    layer turn and the authored turn states ever race for the
+    same tick in a leg (the PR-85 pair settles facing through
+    the A_WALK_BKWD one-tick path while RAN's walk states ALSO
+    carry CH_DIR - the two paths agree on the result there, and
+    the race has not been looked for elsewhere); objects with an
+    EMPTY row array - 0x53672 dereferences [[obj+0x50]+[obj+
+    0x5c]*4] unconditionally, so every object class that can
+    hold input must also carry a built array (the PR-440 builder
+    zeroes +0x58/+0x5c, but that was measured for state-file
+    objects); and the exact [obj+0x6d] = the port's p->face
+    identity (±1 both sides, written by the type-0xd event per
+    PR-436 and turned here - a one-line check, deliberately not
+    half-claimed here).
+CLOSES: PR-443's OPENS item "WHICH control= keyword the row bit
+  0x800 is": CH_DIR - the keyword block ending at 0x51cdd ORs
+  byte [rec+0x13] bit 0x8, the word bit 11 = 0x800, exactly the
+  bit 0x5367e tests. It also closes PR-443's OPENS item "whether
+  the engine's intent-vs-facing turn has an authored consumer":
+  it does, widely - 130 of the 777 corpus .MOV texts use CH_DIR
+  on 558 control= lines, and the lion's OWN locomotion states
+  carry it (RAN.01's A_WALK_FWD/A_WALK_BKWD: `control=
+  FRAME_REV|BY_X|CHECK_ALL|CHECK_ALL_PLANE|CH_DIR|CHECK_LN`;
+  ZARIA's A_WALK, A_TURN, A_JUMP, A_FIGHT and fifteen more).
+CORRECTS: PR-410's OPENS sentence "across the whole decoded
+  image the only bit tests on these three bytes are 0x10 and
+  0x20 at 0x52158/0x52171/0x52385/0x523a0, 0x40 and 0x80 at
+  0x527db/0x52805, and 0x2 at 0x527b3, and NOTHING AT ALL
+  tests FRAME_REV's 0x08". The enumeration is not exhaustive:
+  0x5367b loads the word into a REGISTER (`mov edx,DWORD PTR
+  [edx+0x12]`) and 0x5367e tests it (`test dh,0x8`), so the
+  CH_DIR bit has a consumer, and it sits in the applier chain.
+  The claim about FRAME_REV's 0x08 is left neither confirmed nor
+  refuted - the same blind spot could hide others, and the
+  honest form is named at OPENS. PR-410's keyword-to-bit TABLE
+  is untouched: CH_DIR = byte [rec+0x13] 0x8, re-verified at
+  its block 0x51cd4-0x51cdd.
+MEASURED: (a) THE CHAIN. PR-442's applier tail computes [obj+
+  0xb6] bit 4 = ([obj+0xba] * [obj+0x6d] < 0) (0x54bb2-0x54bd4)
+  and calls 0x53670 when set (0x54be1). 0x53670 (body 0x53670-
+  0x5368e): edx = [[obj+0x50]+[obj+0x5c]*4] - the CURRENT row
+  through the PR-440 cursor - then `test BYTE PTR [edx+0x12]`'s
+  register form, `test dh,0x8` = bit 0x800; only on a hit:
+  `neg DWORD PTR [obj+0x6d]` (the only neg in the image,
+  PR-443) and `call [[obj+0x8]+0x54]` - the position
+  propagation that also refreshes the shadow pair, so the turn
+  leaves direction, live position and the published copy all
+  consistent. The whole law: on a row whose state's control=
+  names CH_DIR, an x-intent against facing turns the facing
+  toward the intent, at the input layer, with no state change.
+  (b) THE MISS, MEASURED. The ops census run for this row (in
+  pr444_chdir.txt) does not list even the LOAD 0x5367b: the
+  indexed insn rows across 0x53670-0x5368e are the drifted
+  region's (they decode as junk, suspect set) - a second, worse
+  reason than the register form why PR-410's negative failed.
+  Dis at the exact bytes remains the only authority there.
+  (c) THE DATA. 558 control= lines across 130 files name
+  CH_DIR (counts in the evidence file), including every
+  cutscene lion text and the RAN/ZARIA/KADMAR lion walk states
+  above. (d) THE PORT. The flip it needs is already shipped:
+  ll_play.c:2143 and ll_level.c:1477 gate `face = travel_dir`
+  on LL_CTRL_CH_DIR exactly as PR-81/82 modeled, and the
+  verify-play walk legs run through it ("CH_DIR flips face so
+  the pair's cross-lines settle", PR-85's note). The engine's
+  trigger is the intent word's sign against [obj+0x6d]; the
+  port's is travel direction - identical while intents come
+  from keys (PR-442), divergent only for a mode-1/4 auto-feed,
+  where the port's bounds-flip model gives the same result for
+  patrols. No port change; the open divergence question is
+  named.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. Four PRs - the flag builder's facing bit (PR-442), the
+  direction pair (PR-436), the row-gated neg (PR-443) and the
+  keyword table (PR-410) - close into one sentence here: an
+  authored CH_DIR state turns its object toward the direction it
+  is being pushed. That is the last unbound end of the input
+  pipeline, and the record's real work is the negative claim: a
+  census over a drifted index cannot say "nothing tests this
+  bit", and the corrected wording tells the next reader where
+  the truth was actually established.
+

@@ -6518,6 +6518,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x54e02's entry mode, the +0x64 slot bodies, and WHICH
     keyword is row bit 0x800 (the port names bit 11
     LL_CTRL_ANTI_SOLID - identity untested).]
+    [PR-444 CLOSES THAT IDENTITY THE OTHER WAY: the row bit 0x800
+    that 0x53670 gates on IS CH_DIR (keyword block ORs [rec+0x13]
+    0x8 at 0x51cdd), and 0x53670 is the bit's consumer - an
+    x-intent against facing on a CH_DIR row negs [obj+0x6d] and
+    re-propagates position, no state change. The authored data
+    uses CH_DIR on 558 control= lines in 130 files, the lion's
+    own walk states included (RAN.01 A_WALK_FWD/BKWD). The
+    port's face=travel_dir gates (ll_play.c:2143, ll_level.c:
+    1477) are the equivalent, so nothing moves. Corrects
+    PR-410's "the only bit tests on these three bytes are ...":
+    0x5367b/0x5367e test the word in REGISTERS and sit in a
+    drifted region the ops-census misses entirely - an ops
+    census cannot state a negative. Open: the honest dis-scan
+    over all 24 bits, the input-turn vs authored-turn race, and
+    the [obj+0x6d]=p->face identity check.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
