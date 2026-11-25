@@ -63481,3 +63481,86 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   by a name comparison" - and it gives the next read a short
   list: nine A_DEAD row tables.
 
+
+## PR-472 - THE NINE A_DEAD ROW TABLES DIFFER BY ONE THING: THE
+## STAGE DEATH MODULE THEY LOAD - deatd / looser / kadmdead /
+## k2dead / karade / tungadea - AND THE LATCH [mgr+0x394]+0x106
+
+```
+KIND: read
+SUBSYSTEM: the ten action-row tables of PR-471 read entry by
+  entry: each is one or more 14-entry method blocks; the A_DEAD
+  variants share all slots except the two module-load verbs,
+  which call 0x562c0/0x562e0 with the stage's death-module name
+  on the PR-100 module-request global 0xcf074/0xcf068; one of
+  them also writes the singleton latch [ds:0xcef40+0x394]+0x106
+ADDRESSES: 0x97c9c, 0x98e7c, 0x9a85c, 0x9a894, 0x9a8cc,
+  0x9b5f4, 0x9e254, 0x9fbfc, 0xa2e9c, 0xa2ed4, 0x4ffb0,
+  0x23f90, 0x26fd0, 0x2c360, 0x263d0, 0x2b370, 0x2dca0,
+  0x360f0, 0x33c60, 0x3ac20, 0x61200,
+  0x562c0, 0x562e0, 0x56380, 0x56300, 0x563a0, 0xcf068,
+  0xcf074, 0x394, 0x106, 0x920f3, 0x90b5d, 0x90900, 0x126,
+  0x5c, 0x50, 0x2, 0xb, 0x1e0fb, 0x240d8, 0x2713d, 0x2bffb,
+  0x33d4b, 0x39dab, 0x3b37b, 0x44
+NAMES: death module, stage death module, row table blocks,
+  module load verb, death latch, deatd.mod, k2dead.mod,
+  kadmdead.mod, karade.mod, tungadea.mod, looser.mod,
+  pr472_deadrows.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE LATCH [mgr+0x394]+0x106 = 1 DOES - it is
+    written in a dozen places (0x1ef36, 0x24632, 0x2700e...) and
+    read at 0x24d32; only two immediate-1 writes were checked
+    here, so the meaning of the field is still inferred, not
+    proven; the other per-stage verb of the A_DEAD rows (first-
+    block slot +9: 0x230c0, 0x263d0, 0x2b370, 0x2dca0, 0x360f0,
+    0x3ac20) - all unread; why the 0x97c9c guard also tests the
+    0x97c9c guard also tests the owner's +0x126 (PR-468's
+    gate) while the others do not; and the third 14-entry block
+    in the 41-entry tables (0x50040/0x50000 families) - which
+    sub-row it belongs to.
+CLOSES: PR-471's "what differs between the nine A_DEAD row
+  tables": the stage's death MODULE. Reading each table's
+  module-load verb gives the string it loads - 0x97c9c loads
+  "deatd.mod", 0x98e7c loads "looser.mod", 0x9a85c "kadmdead
+  .mod", 0x9b5f4 "k2dead.mod", 0x9e254 "karade.mod", 0x9fbfc
+  "tungadea.mod" - i.e. the authored A_DEAD word resolves to the
+  death module of the STAGE THAT ASKS FOR IT, which proves the
+  PR-176/PR-182 connection between the A_DEAD word and the
+  looser.mod/A_* death modules and explains why there are nine
+  tables for one word. Two of the variants also raise the
+  singleton latch `[ds:0xcef40+0x394]+0x106 = 1` as part of the
+  same verb. The tables' structure is now known too: an action
+  row table is one or more 14-entry method blocks (0x9a85c holds
+  three), and all blocks share the generic record verbs
+  (0x52590, 0x23c90, 0x521f0, 0x23c80, 0x52570, 0x520c0,
+  0x52470, 0x52680, 0x52790); the module load is at block slot
+  +2 in every variant - 0x4ffb0, 0x23f90, 0x26fd0, 0x2c360,
+  0x33c60, 0x61200 - calling 0x562c0 for deatd and 0x562e0 for
+  the other five.
+CORRECTS: nothing. (PR-471's "nine A_DEAD tables picked by the
+  asking class" is confirmed and given its content.)
+MEASURED: (a) THE TABLE MAP: all ten tables listed entry by
+  entry in the evidence file, with their block boundaries. (b)
+  THE LOAD VERB, verbatim at 0x2c360: read the owner's state
+  instance [obj+0x50] at index [obj+0x5c], take its frame's
+  field +4, and if it is zero and ds:0xcf074 is zero, `mov
+  edx,"k2dead.mod"; mov eax,0xcf068; call 0x562e0`; then set
+  the +0x106 latch. 0x4ffb0 is the same shape with "deatd.mod"
+  through 0x562c0, the extra guard `cmp [owner+0x126],0`, and no
+  latch write. All six load verbs sit at block slot +2.
+  (c) THE NAMES: the module strings sit in the data block beside
+  the class names (0x90900 "kadmdead.mod", 0x90b5d "k2dead.mod",
+  0x920f3 "deatd.mod"). (d) THE PORT. Unchanged: the port's
+  death legs model the behaviour, not the module load.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. PR-471 left one question - what makes nine tables for one
+  word. The answer is a game fact: each stage's death is its own
+  module, and the engine picks it by name at the moment the
+  record is built. It also gives the row tables a readable
+  structure (14-entry blocks, two slots per word), which makes
+  the rest of the action-row family tractable.
+

@@ -7043,6 +7043,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     in 21 class-name arms - the parameter block, not a class.
     Open: the nine A_DEAD row tables themselves and the other
     fields of the 96-byte record.]
+    [PR-472 READS THOSE ROW TABLES AND CLOSES THE QUESTION: they
+    are one or more 14-entry method blocks sharing the generic
+    record verbs, and the A_DEAD variants differ in TWO slots -
+    the module-load verbs that call 0x562c0/0x562e0 with the
+    STAGE's death module name: 0x97c9c loads "deatd.mod",
+    0x98e7c "looser.mod", 0x9a85c "kadmdead.mod", 0x9b5f4
+    "k2dead.mod", 0x9e254 "karade.mod", 0x9fbfc "tungadea.mod".
+    So the authored A_DEAD word resolves to the death module of
+    the stage that asks for it - the PR-176/PR-182 connection
+    proven from the code, and nine tables for one word explained.
+    Two variants also set the latch [ds:0xcef40+0x394]+0x106=1
+    (written in a dozen places, read at 0x24d32, meaning still
+    open). The load verb reads [obj+0x50] at index [obj+0x5c]
+    and its frame's +4, and 0x4ffb0 additionally guards on the
+    owner's +0x126 (PR-468's gate). Open: the other per-stage
+    verb of each A_DEAD row (first-block slot +9: 0x230c0,
+    0x263d0, 0x2b370, 0x2dca0, 0x360f0, 0x3ac20) and the third
+    block family 0x50000/0x50040.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
