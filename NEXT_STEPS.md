@@ -56916,3 +56916,134 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   uses is at +0x04 of a 0x48+-byte object), because if they are, the
   "node list" the row cursor walks is a vtable and the row index is a
   slot number.
+
+## PR-406 - THE RECORD-CLASS TABLES ARE CHOSEN BY AUTHORED STATE NAMES:
+## A RECORD IS A 0x60-BYTE OBJECT ALLOCATED RIGHT AFTER A NAME LOOKUP,
+## AND THE CLASS IS ATTACHED AT [rec+0x44] BY 27 FUNCTIONS THAT FETCH
+## A_STRING LIKE A_LOOKDOWN
+
+```
+KIND: read
+SUBSYSTEM: state-record construction - the 0x60-byte record object, the
+  27 sites that fetch an authored state name and then attach a
+  record-class table at [rec+0x44], the 16 tables that carry the
+  row-advance at +0x18, and the second sub-table those tables hold
+ADDRESSES: 0x1e0f0, 0x1e104, 0x1e119, 0x22a70, 0x23115, 0x23ea0, 0x240f6,
+  0x26110, 0x26425, 0x264e6, 0x269a0, 0x26ef5, 0x27060, 0x270fd, 0x2712c,
+  0x2715b, 0x29b30, 0x2b3c5, 0x2b425, 0x2b485, 0x2bfa0, 0x2c01d, 0x2c04c,
+  0x2c07b, 0x2db30, 0x2de30, 0x2df46, 0x31ba0, 0x31f05, 0x31ff0, 0x320b6,
+  0x33530, 0x33a95, 0x33cb0, 0x33d69, 0x33d98, 0x35cf0, 0x36145, 0x36280,
+  0x36426, 0x38a60, 0x39cd5, 0x3a4a0, 0x3b270, 0x3b399, 0x3f5a0, 0x3f5c4,
+  0x51770, 0x517e0, 0x523f0, 0x524cf, 0x524e0, 0x524e8, 0x52500, 0x52508,
+  0x52540, 0x52590, 0x51700, 0x61530, 0x61536, 0x61544, 0x61549, 0x61558,
+  0x615f6, 0x616a0, 0x75dc0, 0x76a69, 0x5c320, 0x931cf, 0x9068c, 0x97c9c,
+  0x98e7c, 0x99338, 0x9a85c, 0x9a894, 0x9a8cc, 0x9b5f4, 0x9cedc, 0x9d53c,
+  0x9e254, 0x9f460, 0x9fbfc, 0xa0774, 0xa25d4, 0xa260c, 0xa2e9c, 0xa2ed4,
+  0xa6848, 0x520c0, 0x521f0, 0x52360, 0x52470, 0x52570, 0x52660, 0x52680,
+  0x52750, 0x52790, 0x74bac, 0x2cb5000, 0x2caa000, 0x51910, 0x559c0,
+  0x97970, 0x97968, 0x18, 0x2e, 0x38, 0x44, 0x48, 0x50, 0x60, 0xa1, 0xb6,
+  0x08, 0x0c, 0x14, 0x3c
+NAMES: state record allocation, state name lookup, record-class table,
+  second sub-table, default record class, multiple inheritance,
+  pr406_obj.txt, pr406_rec2.txt, pr406_names.txt, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. OI-111 and OI-128 gain
+  the state-name link for the record classes.
+HOOKS: none - no leg and no fixture moves; the port's state records are
+  not changed by this read, only explained further.
+OPENS: WHICH TABLES 0xa2e9c AND 0xa2ed4 ARE - both hold the
+  row-advance at +0x18, so they are record classes, but no [obj+0x44]
+  site names them; WHAT THE TWO NON-RECORD TABLES 0xa0774 and 0xa6848
+  ATTACH TO - they are stored at [obj+0x44] too, but they do not hold
+  0x520c0 anywhere in their first 0x80 bytes; WHERE THE 0x60-BYTE
+  RECORD'S +0x2e FIELD IS FILLED - no code writes that offset except
+  the 141 generated-class stores of PR-404, which belong to a 0x32-byte
+  object, so on a record the field must be written by a non-immediate
+  store this row did not find; HOW BIG THE SECOND SUB-TABLE IS - it
+  starts at +0x38 of the record-class tables and 0xa25d4 repeats the
+  first sub-table's verbs there, so the true class extent is unknown;
+  and what 0x52540 does after 0x524e0 attaches 0xa25d4, since that is
+  the only record construction path that is not driven by a name fetch.
+CLOSES: PR-405's OPENS item WHAT THE 14 RECORD-CLASS TABLES KEEP AT
+  THEIR OWN +0x44: the value at table+0x44 is a slot of a SECOND
+  sub-table that begins at +0x38, and the small integers there are
+  0xbf00 and 0x12a00, i.e. constructors, with the base-constructor
+  field 0x74bac of PR-403 at +0x3c of the first sub-table. It closes
+  part of PR-405's OPENS item WHETHER THE 140 GENERATED CLASSES ARE THE
+  OBJECT THAT HOLDS THE ROWS: a record is allocated at 0x60 bytes, a
+  generated object at 0x32, so the 140 generated classes are NOT the
+  record class.
+CORRECTS: PR-405's MEASURED (d) sentence "of the 14 tables, 9 hold data
+  addresses or small integers at their +0x44 (0x23ea0, 0x12a00,
+  0xbf00, 0x2a00, 0x44b80, 0x3)". Those are not loose data: they are
+  the second sub-table of a multiply-inherited class record, and the
+  numbers at +0x44 and +0x54 are constructors. PR-405 also understated
+  the count: there are 16 tables with the row-advance at +0x18, not 14,
+  and 18 distinct tables are attached at [obj+0x44].
+MEASURED: (a) THE PATTERN. 42 sites store a class table at
+  `DWORD PTR [reg+0x44]`; 18 of the 27 enclosing functions begin by
+  fetching a string through `mov eax,IMM; call 0x76a69` and then
+  `mov eax,0x60; call 0x5c320` - 11 functions allocate 0x60, and the
+  rest allocate 0x18, 0x48, 0xee, 0x128, 0x12a, 0x132 or nothing. The
+  cleanest is 0x61530: `mov eax,0x931cf; call 0x76a69; test eax,eax;
+  jne ...; mov eax,0x60; call 0x5c320; mov edx,esi; call 0x524e0`, and
+  23 of its siblings end in `mov DWORD PTR [eax+0x44],0x9a8cc` (0x615f6
+  is that exact store). The string immediates fetched by those 27
+  functions include A_DEAD, A_LOOKDOWN, A_LOOKUP, A_SQUAT, looser.mod,
+  sadesdea.mod, TLewEna2 and TLewKadmar2 - so the authored state name
+  selects the record class. (pr406_names.txt, pr406_obj.txt)
+  (b) THE NAME TO CLASS MAP. 0xa25d4 is attached by the record
+  constructor itself - 0x524e0 is `call 0x51700; mov ecx,eax; mov
+  DWORD PTR [eax+0x44],0xa25d4; call 0x52540; mov eax,ecx; ret`, and
+  0x52500 does the same after 0x517e0 - so 0xa25d4 is the default. The
+  named ones line up: A_DEAD -> 0x97c9c (0x1e119 and 0x23115) and also
+  0x9a8cc, 0x9a894, 0x9a85c, 0x9e254, 0x9b5f4, 0x9fbfc; A_LOOKDOWN and
+  A_LOOKUP -> 0x9a8cc, 0x9a894, 0x9a85c (0x270fd, 0x2712c, 0x2715b in
+  one function); A_SQUAT -> 0x9e254 (0x33d69). 16 tables in the class
+  band hold the row-advance 0x520c0 at +0x18 - the 14 of PR-401 plus
+  0xa2e9c and 0xa2ed4 - and 14 of those 16 are the ones attached at
+  [obj+0x44]; 0xa0774 and 0xa6848 are attached but are not record
+  classes. (pr406_rec2.txt)
+  (c) THE TABLE SHAPE. Reading at aligned addresses, the first
+  sub-table of every record class is the same 14 slots: +0x00 0x52590,
+  +0x04 0x23c90, +0x0c 0x521f0 (the row step), +0x14 0x52570, +0x18
+  0x520c0 (the row-advance), +0x20 0x52660, +0x28 0x52470, +0x2c
+  0x52680, +0x30 0x52790; only +0x08 varies (0x4ffb0, 0x52750,
+  0x2c360, ...). At +0x38 a second sub-table begins, and for 9 of the
+  16 it carries the PR-403 base-constructor field: 0x9a8cc reads +0x38
+  0x2cb50, +0x3c 0x74bac, +0x40 0x2caa0, +0x44 0xbf00, +0x48 0, and
+  the same four-dword group repeats at +0x50. 0x9a8cc carries that
+  field 4 times and 0x99338 4 times, so these record classes inherit
+  from three or four bases. 0xa25d4 repeats the first sub-table's verbs
+  in its second one (0x51910, 0x23c90, 0x559c0, 0x521f0, 0x23c80,
+  0x518f0, 0x520c0, 0x52360, 0x523e0). (pr406_rec2.txt)
+  (d) THE RECORD IS 0x60 BYTES. 11 of the 27 attaching functions
+  allocate exactly 0x60 through 0x5c320 before the store, and 0x1e0a0
+  shows the same object from the other side: after `call 0x500b0` it
+  writes [obj+0x8] = 0x97970 and [obj+0xc] = 0x97968, clears bit 0x04
+  of [obj+0xb6], sets [obj+0xad] = 0x1f4 and [obj+0x12a] = 0 - the
+  [obj+0xb6] lock byte of PR-399 on the same object, so a record, the
+  game object's fields at +0xb6 and the record-class attachment belong
+  to one 0x60-byte object whose +0x2e field holds the node-list base
+  and whose +0x44 field holds its class.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr406_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). The
+  scans are pr406_obj.txt, pr406_rec2.txt and pr406_names.txt over the
+  re DB's `imm`/`insn`/`func` tables and build/leo/leo.img, with every
+  table slot read at its aligned address; each function quoted was
+  decoded from its own entry with `python3 tools/re/leodb.py dis`.
+```
+
+- WHY. This is the thread PR-400 left, ten rows back: "which authored
+  directive is each row?" turned out to be the wrong question for the
+  node classes, but the right one for the record classes - and here is
+  the answer for those: the record class is selected by the state name
+  string, and there are exactly sixteen of them, one per authored state
+  shape that carries a clause ladder. That gives the port a checkable
+  claim it never had - a state name maps to one of 16 record classes,
+  and the class determines the row step, the row-advance and the
+  clause-match verbs, which is the shape PR-111 and PR-163 modelled
+  from behaviour alone.

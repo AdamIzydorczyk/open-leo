@@ -5938,6 +5938,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     the 140 generated tables have a `call <own +0x08 slot>; ret` thunk
     at their own +0x04, so calling their +0x04 runs the method at
     +0x08 - the mirror of the node classes.]
+    [PR-406 NAMES THEM. A state record is a 0x60-byte object: 27
+    functions fetch an authored string through `mov eax,IMM; call
+    0x76a69` and then `mov eax,0x60; call 0x5c320`, and 42 sites attach
+    a class table at [rec+0x44]. The strings fetched in those functions
+    are A_DEAD, A_LOOKDOWN, A_LOOKUP, A_SQUAT, looser.mod, sadesdea.mod,
+    TLewEna2, TLewKadmar2 - so THE AUTHORED STATE NAME SELECTS THE
+    RECORD CLASS. Exactly 16 tables hold the row-advance 0x520c0 at
+    +0x18 (the 14 known plus 0xa2e9c and 0xa2ed4), and their first
+    sub-table is uniform: +0x0c 0x521f0 row step, +0x18 0x520c0, +0x28
+    0x52470, +0x30 0x52790, with only +0x08 varying. 0xa25d4 is the
+    DEFAULT, attached by the record ctor itself (0x524e0: `call 0x51700;
+    mov [eax+0x44],0xa25d4; call 0x52540`). A_DEAD -> 0x97c9c;
+    A_LOOKDOWN/A_LOOKUP -> 0x9a8cc/0x9a894/0x9a85c; A_SQUAT ->
+    0x9e254. Those tables carry a SECOND sub-table from +0x38 with the
+    PR-403 base-constructor field at +0x3c - 4 copies in 0x9a8cc, i.e.
+    multiple inheritance - and the record shares its [obj+0xb6] lock
+    byte with the game object (0x1e0a0 clears bit 0x04 and sets
+    [obj+0xad] = 0x1f4).]
     WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;
