@@ -56515,3 +56515,129 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   called!"). That is worth recording before it is mistaken for game
   semantics again - and the 0x96140 blocks show the descriptors are
   authored data, which is the thread a later row should pull.
+
+## PR-403 - THE BLOCKS AT 0x96140-0x96480 ARE NOT METHOD DESCRIPTORS:
+## THEY ARE THE ENGINE'S OWN CLASS RECORDS - 481 OF THEM CARRY THE SAME
+## BASE-CONSTRUCTOR FIELD 0x74bac - AND 0x961fc/0x96200 IS ONE CLASS'S
+## vtable PAIR, ITS +0x04 VERB A DELETING DESTRUCTOR OF THE SAME SHAPE
+## AS 0x23ed0
+
+```
+KIND: read
+SUBSYSTEM: the class-record area 0x960c0-0xa6b6c - the vtables of the
+  engine's own internal classes, the base-constructor field every record
+  carries, the deleting-destructor shape, and the 257 code sites that
+  name one of these vtables; what that settles about PR-401's and
+  PR-402's two remaining `call [reg+4]` sites
+ADDRESSES: 0x96140, 0x961c4, 0x961dc, 0x961fc, 0x96200, 0x9628a, 0x96298,
+  0x962a6, 0x962fc, 0x96310, 0x96318, 0x9632c, 0x96348, 0x96370, 0x96380,
+  0x96390, 0x963a4, 0x963c0, 0x963e8, 0x96470, 0x96489, 0xa27b8, 0xa6b6c,
+  0x98284, 0x57a00, 0x57a03, 0x57a08, 0x57a0d, 0x57a12, 0x57a1b, 0x57a22,
+  0x57a27, 0x57a2c, 0x579e0, 0x57990, 0x1034c, 0x10356, 0x1035b, 0x10360,
+  0x1036c, 0x10390, 0x1039b, 0x103a7, 0x103b0, 0x103c0, 0x103c9, 0x5e1c0,
+  0x5e1dd, 0x5e1e4, 0x5e1e9, 0x23ed0, 0x23eeb, 0x5c370, 0x74bc0, 0x74be0,
+  0x74bac, 0x74bfe, 0x74bec, 0x76c00, 0xa9ab8, 0xa9aa8, 0xa9a8c, 0xcf4f4,
+  0x5e1c8, 0x5e1ce, 0x4900, 0x04, 0x02, 0x0c, 0x08, 0x28, 0x00
+NAMES: class record, vtable pair, base constructor field, deleting
+  destructor, vptr switch, complete-object destructor, internal class,
+  current-object global, name census, pr403_descriptors.py,
+  pr403_descriptors.txt, pr403_base.txt, pr403_classrec.txt,
+  OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. OI-128 and OI-111 both
+  gain a correction to what the PR-402 block was.
+HOOKS: none - no leg and no fixture moves; these are the engine's own
+  runtime classes, not game data the port reads.
+OPENS: WHICH ENGINE CLASS EACH RECORD IS - the shape is established, the
+  names are not: 0x961fc has ctor 0x1034c and verb 0x57a00, but nothing
+  in the image calls it by name, and the two .MNU-adjacent strings found
+  near 0x92f16 belong to a different block; WHICH FIELD THE 481
+  base-constructor records sit in - the marker is always the three bytes
+  `00 ac 74` followed by 0x00, at spacings of 4, 12, 16, 20 ... bytes, so
+  the records are variable-length and the surrounding fields (0x1c480,
+  0xcde70, 0x40e00) are unexplained; why 209 of the 481 have a zero
+  dword immediately above the field and 19 have a second `00 ac 74`;
+  whether the 12-case dispatcher at 0x74b4d reads that same field or the
+  one at [vtable+0x0c] - only 0x961fc was probed here, and its +0x0c is
+  0, which selects case 0; and whether any of these engine classes is
+  reachable from authored data at all.
+CLOSES: PR-402's OPENS item "WHAT THE BLOCKS AT 0x96140-0x96480 ARE" in
+  the part that asked whether they are data: they are class records, and
+  the 98 static pointers into them are code naming its own class's
+  vtable. It closes PR-401's and PR-402's question of whether the two
+  0xcf518-indexed sites are game visits: they are not - they are the
+  base-class leg of the engine's own constructor/destructor machinery,
+  and the only node-class visit in the image remains 0x520e1.
+CORRECTS: PR-402's MEASURED (d), "the kind words 1,4,5,6,7,8 and 11
+  appear as the first word of blocks ... the kinds the dispatcher
+  branches on are data in the image": the words are not kind identifiers
+  of separate descriptor objects - they are the low bytes of vtable slots
+  read at the wrong alignment, and the blocks are class records. The
+  related claim about 0x98274 also needs restating: what PR-313 counted
+  as "206 class tables holding 0x98280 at +0x0c" and what this row
+  counted as 481 sites of 0x074bac00 are the same phenomenon seen at two
+  different alignments, and the byte pattern at 0x98284 is
+  `00 ac 74 00` - the base-constructor field, not a verb.
+MEASURED: (a) THE DELETING DESTRUCTOR. 0x57a00 is `push ebx; mov ebx,
+  eax; test dl,0x4; je +; mov edx,0xa27b8; call 0x74bc0; call 0x74be0;
+  mov eax,ebx; pop ebx; ret`, and the else-path is `mov DWORD PTR
+  [eax+0x4],0x96200; call 0x579e0; test dl,0x2; je +; mov eax,ebx; call
+  0x5c370; mov eax,ebx; pop ebx; ret` (0x57a03-0x57a36). So bit 2 of the
+  flag byte means "also free the block" (0x5c370) and bit 0x08 means
+  "run the scalar free at 0x74bc0 with the record at 0xa27b8", and the
+  non-deleting path first REPLACES the object's vtable at [obj+0x4] with
+  0x96200 - the next record in the same block - and then runs 0x579e0,
+  the base destructor. 0x23ed0, read in PR-402, is the same function for
+  the record at 0x98274. This is one shape, not two.
+  (b) A CLASS, END TO END. 0x961fc holds 0x1034c, 0x57a00, 0, 0 and
+  0x96200 holds 0x57a00, 0, 0, 0x9628a - and 0x1034c is its
+  constructor: it tests `test cl,0x4`, and for that flag calls the
+  deleting destructor with the record 0x961c4 (`mov edx,0x961c4;
+  call 0x74bc0; call 0x74be0` at 0x1035b-0x10365); otherwise it builds a
+  call block on the stack, sets `ds:0xcf4f4` to the argument at
+  [esp+0xc] (0x10390), calls 0x57a00 (0x1039b), and for `cl&2` calls
+  0x5c370 (0x103a7). 0x103c0 is the same with the record 0x96100. And a
+  hundred simple sites do `mov DWORD PTR [eax+0x4],0x96200; call 0x57990;
+  mov DWORD PTR [ebx+0x4],0x961fc` (0x5e1dd-0x5e1e9): install one
+  vtable, call one method, install the other. 0x5e1c8-0x5e1ce reads a
+  counter from ds:0xa9aa8 and indexes 0xa9a8c by it.
+  (c) THE CENSUS. 257 immediate sites in 121 functions name an address
+  in 0x960c0-0x96480 (pr403_descriptors.txt). 0x961fc alone is named by
+  about 180 of them and 0x96200 by about 70, from functions in the whole
+  range 0x1034c-0x5e200, with 0x4c8a0 naming 21 sites and 0x33530/
+  0x59750/0x55e00 several each. Every form is a constructor, a destructor
+  or a vptr store - no site passes one of these addresses to the game
+  object machinery.
+  (d) THE UNIVERSAL FIELD. The three bytes `00 ac 74` + 0x00 - the dword
+  0x074bac00, 0x74bac being the base constructor 0x74bfe's neighbour -
+  occur 481 times, from 0x961dc to 0xa6b6c, i.e. once for essentially
+  every class record in the image, at spacings of 4, 12, 16, 20, 24 ...
+  bytes. Immediately above the field, 209 records have 0 and 19 have a
+  second copy of the same field (a multiply-inherited class); the other
+  neighbours are code addresses (0x1c480, 0xcde70, 0x10424). 0x961dc is
+  inside the 0x961fc record and 0x98284 is inside the 0x98274 one, so the
+  field PR-313 saw "at +0x0c of 206 class tables" is this field.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr403_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). The
+  census is pr403_descriptors.py over the re DB's `imm` table; the byte
+  fields were read from build/leo/leo.img by the two scripts named in
+  NAMES; every function quoted was decoded from its own address with
+  `python3 tools/re/leodb.py dis`.
+```
+
+- WHY. Three rows in a row reached for a game-side meaning for the same
+  bytes. PR-401 read 0xa9ab8 as a class row, PR-402 read 0x96140 as a
+  table of call descriptors, and both were wrong in the same direction -
+  they were reading the engine's own C++ runtime. The tell is a shape
+  that appears twice with nothing in common between the two classes:
+  `test dl,0x4` -> the free pair, else swap the vtable to the base
+  record, run the base destructor, and for `dl&2` free. Once that is
+  seen, the 481-copy field, the 257 code sites and the base thunk at
+  0xcf518 all fall into place as construction and destruction of the
+  engine's own objects, and the game-side claim they were supporting
+  shrinks to the honest size: exactly ONE node-class visit, 0x520e1.
+  The lesson is cheap to carry: before naming an unknown block by the
+  game model, check whether it is the runtime's.

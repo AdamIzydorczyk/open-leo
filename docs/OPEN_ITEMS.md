@@ -4158,7 +4158,11 @@ OI-111: which row-step path the port's row clock models -
     what that slot indexes over stays open. [PR-402: it does not index
     over rows. 0xcf518 holds the static base-implementation table at
     0xa9ab8, and 0x74a98/0x74b63 are calls of a base thunk inside the
-    invoke-by-descriptor helper 0x74a4c - see OI-128's correction.]
+    invoke-by-descriptor helper 0x74a4c - see OI-128's correction.
+    PR-403 went further: that helper is the engine's C++ runtime - class
+    records carrying a universal base-constructor field (0x74bac, 481
+    copies) - so of the three sites only 0x520e1 belongs to the row
+    machinery at all.]
 
 OI-112: which authored number a row's TIME is - the engine
   scales and gates on the value it scans FIRST, the port
@@ -5878,6 +5882,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     writes 0xa9ab8 into 0xcf518 - belonging to an invoke-by-descriptor
     helper at 0x74a4c whose 12-way jump at 0x74b4d branches on a
     CALLING-CONVENTION kind word. Only 0x520e1 is a node-class visit.]
+    [PR-403 SETTLES IT. That helper is the engine's own C++ runtime, not
+    a game mechanism. 0x961fc/0x96200 is one engine class's vtable pair -
+    ctor 0x1034c and deleting destructor 0x57a00: `test dl,0x4` to the
+    free pair 0x74bc0/0x74be0 with the record 0xa27b8, else
+    `mov DWORD PTR [eax+4],0x96200` - a switch to the base vtable - then
+    `call 0x579e0` and `dl&2` to 0x5c370. That is exactly the shape of
+    0x23ed0, which PR-401 met inside the row-advance, so 0x23ed0 is a
+    deleting destructor too and not a "free-with-flags" of anything
+    game-side. The bytes `00 ac 74 00` - the base constructor 0x74bac -
+    occur 481 times from 0x961dc to 0xa6b6c, once per CLASS RECORD, and
+    that is the field PR-313 counted "at +0x0c of 206 class tables". 257
+    code sites name these vtables and every one is a ctor, a dtor or a
+    vptr store. So the 0xcf518 calls at 0x74a98/0x74b63 are base-class
+    legs of the engine's own construction, not visits of authored clause
+    nodes: 0x520e1 remains the only node-class visit in the image.]
     WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;
