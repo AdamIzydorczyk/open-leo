@@ -7636,6 +7636,20 @@ OI-128: what landing and leaving a surface does - the class verbs
     +0xa9 (0xbf-0xa9 exact). Runtime APPEND verb still
     unidentified (no direct call to 0x2dad2), the +0x14 word
     meaning, and PODMUCH's big 0x575 payload map: open.]
+    [PR-506 CENSUSES THE +0xa9 SLOT: it is a PER-CLASS
+    UNION. Light classes pass its ADDRESS (lea eax,[ecx+
+    0xa9] in draw verbs 0x2b6c0/0x2b840); every other user
+    treats it as a plain dword (ZARIA zeroing 0x1f8e9,
+    stock test verb 0x23850, msg handler 0x54560 code
+    0x1b, families 0x2c0d0/0x2c1c0/0x2f6e0/0x341e0/
+    0x381d0/0x3e980) - all consistent with the 22-byte
+    embedded base whose first dword is the pair-array ptr.
+    0x2b6c0 is the LIGHT DRAW verb: it resolves the level
+    renderer via [[mgr+0x390]] (0x57500/0x57530, plane
+    [obj+0x24]) and feeds [r+0x140]/[r+0xc8] + placeholder
+    0x98274. Runtime append STILL unfound; the +0xb9
+    getters in SOUNDSOURCE families 0x3f1c0/0x3f390 and
+    renderer [r+0x140]/[r+0xc8] meanings: open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

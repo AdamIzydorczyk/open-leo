@@ -66408,3 +66408,70 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   verbs during play.
 
 
+
+## PR-506 - THE +0xa9 SLOT IS A PER-CLASS UNION: EMBEDDED
+## LIGHT BASE IN LIGHT CLASSES, GENERIC POINTER FIELD
+## ELSEWHERE - AND THE LIGHT DRAW VERB REACHES THE RENDERER
+
+```
+KIND: read
+SUBSYSTEM: follow-up to PR-505 (light base embedded at
+  [obj+0xa9], 22 bytes). Image-wide census of +0xa9/+0xb9
+  references (pr506_proto.txt): 25 +0xa9 sites in 13
+  functions + 2 +0xb9 sites. Two consistent readings:
+  (1) LIGHT CLASSES: verbs 0x2b6c0/0x2b840 (the +0x64/+0x74
+  slots PR-501's diff showed differ per class) take the
+  ADDRESS `lea eax,[ecx+0xa9]` - the embedded base;
+  (2) EVERYWHERE ELSE: [obj+0xa9] is read/written as a
+  plain dword/pointer: ZARIA arm 0x1f8e9 zeroes it, the
+  stock verb 0x23850 tests it for 0, functions 0x2c0d0/
+  0x2c1c0/0x2f6e0/0x341e0/0x381d0/0x3e980 and the message
+  handler 0x54560 (switch on [edx+4] codes 6..0x1b, PR-30x
+  protocol family) move it around. For light objects the
+  first embedded dword IS the pair-array pointer, so both
+  readings agree on the same 22 bytes: {array ptr, count,
+  capacity, ops ptr, +0x14 word}. 0x2b6c0 is moreover the
+  LIGHT DRAW PATH: it resolves the level renderer through
+  [[mgr+0x390]] (0x57500/0x57530 with [obj+0x24] plane),
+  then feeds `lea edx,[r+0x140]` / `lea esi,[r+0xc8]`
+  context pairs plus the 0x98274 placeholder - the same
+  renderer-endpoint pair the PR-33x drawing notes expect,
+  now reached from a light class for the first time.
+ADDRESSES: 0xa9, 0xb9, 0x2b6c0, 0x2b840, 0x1f8e9, 0x23850,
+  0x2c0d0, 0x2c1c0, 0x2f6e0, 0x341e0, 0x381d0, 0x3e980,
+  0x54560, 0x5460e, 0x3f269, 0x3f439, 0x3f1c0, 0x3f390,
+  0x57500, 0x57530, 0x390, 0x140, 0xc8, 0x98274,
+  docs/OPEN_ITEMS.md
+NAMES: per-class union slot, embedded vs pointer, light
+  draw path, renderer endpoints, message-handler field,
+  pr506_proto.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE RUNTIME APPEND VERB is STILL not found (no
+    writer appends pairs to the array; the 0x54560 message
+    codes around +0xa9 are the best remaining lead); the
+    two +0xb9 getter verbs in the SOUNDSOURCE families
+    0x3f1c0/0x3f390 - sound sources reading a light base?
+    and what [r+0x140]/[r+0xc8] are on the renderer object.
+CLOSES: PR-505's OPENS "no direct call to 0x2dad2"
+  partially: the slot's USE census is now known (address-
+  passing only inside the light classes, plain-dword use
+  elsewhere) - the append is not done by any +0xa9 site, so
+  it must flow through the ops-block verbs themselves.
+CORRECTS: none. (PR-505's "+0xa9 embedded base" is
+  confirmed; the extra finding is that the same offset is a
+  generic slot in other classes - per-class union.)
+MEASURED: (a) full +0xa9/+0xb9 reference census with
+  enclosing functions (pr506_proto.txt). (b) 0x2b6c0 head
+  verbatim (renderer resolution + lea +0xa9). (c) 0x54560
+  dispatch head verbatim. (d) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port must NOT give +0xa9 a single meaning: it is
+  whatever the class says it is (light base for the four
+  KADMAR2 light classes, plain pointer elsewhere), and
+  light rendering goes through the shared level renderer,
+  not a private light drawing path.
+
