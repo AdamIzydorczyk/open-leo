@@ -1787,6 +1787,33 @@ static unsigned long long live_bits_with(const ll_player *p,
     if (k->k_f2)      m |= 1ull << LL_SIG_K_F2;
     if (k->k_f3)      m |= 1ull << LL_SIG_K_F3;
     if (k->k_f4)      m |= 1ull << LL_SIG_K_F4;
+    /* PR-441, from PR-438's re-read of the default flag builder
+     * 0x54910: the vertical-intent word [obj+0xbe] feeds K_UP
+     * (negative) and K_DOWN (positive) into the matched set
+     * (0x5499d-0x549b4: byte 4 bit 0x20 = index 37 = K_UP, bit 0x40
+     * = index 38 = K_DOWN; the enum names PR-224 fixed from the
+     * engine's own key senders, and PR-264's K_NEVER census
+     * confirms byte 4 bits 5/6 = K_UP/K_DOWN). PR-224's note "the
+     * port has no signal side of that word at all" is CLOSED here.
+     * The word is the INTENT, not the velocity register (PR-148
+     * proved [obj+0xbe] is the y-intent written by the held Up/Down
+     * keys at 0x549f0, and PR-326 feeds it to the y force at
+     * 0x542cd; the register is +0xc6, a different field): a first
+     * draft of this change tested p->vy instead and MOVED the
+     * ZARIA.01 climb leg, whose A_DRAP carries `A_LOOKDOWN(1)=
+     * K_DOWN` - at the drop the intent is zero while the model's
+     * vy is positive, and the leg re-routed through A_LOOKDOWN.
+     * The author's chain (PR-192 line: the climb goes A_DRAP ->
+     * A_FALL_DOWN on AC_ONAIR with no key) says that is WRONG: the
+     * flags follow the intent. With this port's intent sources (the
+     * keys only, PR-148) the two flag lines below are EQUIVALENT
+     * to the key flags above - no shipped leg changes - and the
+     * structure is now the engine's. What would distinguish them,
+     * a non-key intent (the contact-chain word, PR-149's kind-4
+     * arm at 0x54b16, or the ladder's), is named at OI-016; no
+     * authored clause in the 777 corpus separates the two today. */
+    if (p->vert_intent < 0) m |= 1ull << LL_SIG_K_UP;
+    if (p->vert_intent > 0) m |= 1ull << LL_SIG_K_DOWN;
     if (p->broke)     m |= 1ull << LL_SIG_AC_BREAK_NEXT;
     if (p->ac_time)   m |= 1ull << LL_SIG_AC_TIME;
     return m;
@@ -6386,6 +6413,56 @@ int ll_play_selftest(void)
             }
             free(um);
         }
+    }
+
+    /* PR-441: the vertical-intent flags of PR-438's 0x54910. The
+     * field the builder tests at 0x5499d-0x549b4 is [obj+0xbe], the
+     * INTENT word (PR-148's y-intent, PR-326's y-force input), NOT
+     * the velocity register at [obj+0xc6]. A first draft of this
+     * change tested the register's sign and MOVED the authored
+     * ZARIA.01 climb leg (verify-play): at the drop its A_DRAP
+     * carries `A_LOOKDOWN(1)=K_DOWN`, the model's vy is positive
+     * while the intent is zero, and the chain re-routed through
+     * A_LOOKDOWN instead of the authored `A_FALL_DOWN(1)=AC_ONAIR`
+     * exit - the video-verified chain (PR-192 and after) says the
+     * drop takes the AC_ONAIR line with NO Up/Down involved. The
+     * fixture below pins that negative half directly: a body whose
+     * register RISES, with no key held, matches no K_UP clause.
+     * The positive half - held Up answers K_UP - is the key-flag
+     * path above, exercised by the authored ZARIA ladder and RAN
+     * legs since PR-108; the intent word and the keys coincide in
+     * this port's model, and the non-key intents (the contact
+     * chain's word, PR-149's kind-4 arm at 0x54b16) stay named at
+     * OI-016. */
+    {
+        static const char VS_MOV[] =
+            "A\nC\n\n[A]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "C(1)=K_UP\n1,100\n2,20,I 0,-200\n3,30000\n\n"
+            "[C]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n1,30000\n";
+        static const char VS_PLT[] = "1\n1 0,100;2000,100;\n";
+        ll_mov_t vm;
+        ll_plt vp;
+        ll_player v;
+        ll_play_keys vk = { 0 };
+
+        CHECK(ll_mov_parse(VS_MOV, &vm) == 2 && vm.st[0].ntr == 1 &&
+              vm.st[0].fr[1].has_i && vm.st[0].fr[1].iy == -200);
+        CHECK(ll_plt_parse(VS_PLT, &vp) == 0);
+        ll_player_start(&v, &vm, 500, 100, 1);
+        /* t=0: the list advances to row 2, whose `I 0,-200` lifts the
+         * register (PR-253's one shot at row entry); no clause
+         * matches, because the register was ZERO when the pass ran. */
+        ll_player_step(&v, &vp, &vk, 0, 2000, LL_ITER_MS);
+        CHECK(v.fi == 1 && v.sti == 0 && ll_play_v_raw(v.vy) < 0);
+        /* t=1,2: the register is NEGATIVE at both transition passes
+         * and no key is held - under the corrected reading nothing
+         * matches, the list simply runs on. (The velocity-only
+         * reading answered K_UP here and entered C; the ZARIA climb
+         * leg rejects that half of its own accord.) */
+        ll_player_step(&v, &vp, &vk, 0, 2000, LL_ITER_MS);
+        CHECK(v.sti == 0 && v.fi == 2 && ll_play_v_raw(v.vy) < 0);
+        ll_player_step(&v, &vp, &vk, 0, 2000, LL_ITER_MS);
+        CHECK(v.sti == 0 && v.fi == 2);
     }
 
     return rc;

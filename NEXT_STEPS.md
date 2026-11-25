@@ -60695,3 +60695,111 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   switching needs no new machinery: keep the index, call the old
   row's exit and the new row's entry through one pair of slots,
   exactly as the switch arm does.
+
+## PR-441 - THE SIGNAL SIDE OF THE Y-INTENT WORD: 0x54910 RAISES
+## K_UP/K_DOWN FROM [obj+0xbe], AND THE ZARIA CLIMB LEG PINS THAT
+## IT IS THE INTENT, NOT THE VELOCITY
+
+```
+KIND: port
+SUBSYSTEM: the port's condition-match set (ll_play.c
+  live_bits_with, the composition PR-264/PR-333 run against
+  0x47e40): it now carries the vertical-intent flags PR-438 read
+  in the default builder 0x54910; the ZARIA.01 climb chain
+  (verify-play) is what pins WHICH word the builder tests
+ADDRESSES: 0x54910, 0x5499d, 0x549b4, 0x549f0, 0x54b16, 0x47e40,
+  0x49580, 0x04, 0x20, 0x30, 0x40, 0x60, 0xa5, 0xba, 0xbe, 0xc6,
+  0x1249, 0x1261
+NAMES: vertical-intent flags, y-intent word, signal side, climb
+  chain regression, live_bits_with, pr441_playst2.log,
+  pr441_gate_fix2.log, pr441_verify_nofix.log, OI-016, OI-018
+CODE: yes: ported/ll_play.c gains two flag lines in
+  live_bits_with (the intent word's sign raises K_UP/K_DOWN) and
+  one data-free fixture block in ll_play_selftest. No header, no
+  Makefile, no tool changes.
+HOOKS: no new leg. --play-selftest gains the negative fixture;
+  the authored ZARIA.01 climb chain (verify-play, Makefile:2183)
+  is the regression that discriminates the readings.
+OPENS: the NON-KEY intents - the contact chain's word (PR-149's
+    kind-4 arm at 0x54b16) and anything else that writes [obj+
+    0xbe] - are unmodelled, so today the intent flags and the key
+    flags cannot diverge in the port; no authored clause in the
+    777 texts separates them (counted through the legs); WHAT
+    [obj+0xba] IS, the counter whose nonzero state gates a
+    [obj+0xb6]-derived bit in the same builder (0x5495b-0x5499a);
+    and the [obj+0xa5] contact-word bits PR-224's note names as
+    K_FIRE/K_ALT/K_JUMP inputs - a later row, not half-done here.
+CLOSES: PR-224's row, the sentence "New and unmodelled from the
+  same read: the input-key builder 0x54910 maps ... the vertical-
+  intent word [obj+0xbe] to K_UP (negative) and K_DOWN (positive)
+  - the port has no signal side of that word at all". The port
+  has it now: live_bits_with raises LL_SIG_K_UP/LL_SIG_K_DOWN from
+  p->vert_intent exactly as 0x5499d-0x549b4 ORs byte-4 bits 0x20/
+  0x40, and those bits are indexes 37/38, the enum's K_UP/K_DOWN
+  (PR-224's sender census, PR-264's K_NEVER byte-4 mask).
+CORRECTS: PR-438's WHY paragraph, "the velocity pair at +0xc2/
+  +0xc6 (its sign bits 0x20/0x40 are the rising/falling flags
+  ll_level.c:6301 already models)": the bits 0x20/0x40 of byte 4
+  are NOT raised from the velocity pair. PR-438's own MEASURED
+  paragraph is right - it reads the test operands as [obj+0xbe] -
+  and [obj+0xbe] is PR-148's INTENT word, fed by the held Up/Down
+  keys at 0x549f0 and by the contact chain, not the register at
+  [obj+0xc6] that ll_level.c:6301's DRECT gate reads. A first
+  draft of this change implemented the wrong reading (p->vy's sign)
+  and the ZARIA.01 climb leg moved by itself: at the drop its
+  A_DRAP carries `A_LOOKDOWN(1)=K_DOWN`, so the chain re-routed
+  A_DRAP -> A_LOOKDOWN instead of the authored, video-verified
+  `A_FALL_DOWN(1)=AC_ONAIR` exit. The bytes and the leg agree:
+  the flags follow the intent.
+MEASURED: (a) THE ENGINE. 0x54910 composes the 12-byte set: `cmp
+  DWORD PTR [esi+0xbe],0x0 / jge` ORs byte-4 0x20 (0x5499d-
+  0x549a6) and `jle` ORs byte-4 0x40 (0x549ab-0x549b4); the set
+  is copied to [obj+0x60] through 0x49580 and matched by 0x47e40.
+  (b) THE PORT. live_bits_with (ll_play.c:1789 region) raises
+  LL_SIG_K_UP when p->vert_intent < 0 and LL_SIG_K_DOWN when > 0;
+  p->vert_intent is the PR-148 word, written from the keys at
+  ll_play.c:2326 AFTER the transition pass, so a match sees the
+  previous iteration's value exactly as the engine's composition
+  precedes its pass. With the keys the flags coincide; the
+  structure is now the engine's three-channel one (raised signals,
+  held keys, intent word). (c) THE FIXTURE AND THE LEG. The new
+  --play-selftest block: a BY_TIME list `1,100 / 2,20,I 0,-200 /
+  3,30000` with clause `C(1)=K_UP` and no key - the register goes
+  negative at t=0 and the clause does NOT match at t=1 or t=2
+  (the list just runs on, sti stays 0); the velocity-only reading
+  matched it and entered C. The authored chain is pinned by the
+  existing climb leg: with the intent reading its log keeps A_DRAP
+  -> A_FALL_DOWN (no A_LOOKUP, no A_LOOKDOWN) end to end.
+GATE: make 0 warnings; verify-all fixtures rc=0 111 (ok);
+GATE-FIXTURE-FREE: rc=0 15 (ok) + 22 named
+  Counts are the house verdict pattern of HANDOFF section 2 on
+  /tmp/opencode/pr441_gate_fix2.log and pr441_verify_nofix.log - the
+  pair run against THIS tree, so its verify-all carries the docs legs
+  too. The 111 verdicts and the 22 named SKIPs plus the generic
+  `verify: SKIP` are PR-396's set unchanged: this PR adds no leg,
+  only a block inside the existing --play-selftest. Build from clean,
+  -j4, 0 warnings (pr441_build.log); the standalone --play-selftest
+  of the built binary is pr441_playst2.log, rc=0. The docs legs ran
+  in the same pair and after the finished text (rc=0); docs/RE_INDEX.md
+  was regenerated from it by tools/re_index.py. The intermediate
+  state of this change - the velocity-sign reading - is kept as
+  evidence: the first fixture's CHECKs were tuned while it was in,
+  and the authored climb chain rejected it in pr441_gate_fix.log
+  (verify-play rc=2, "play ZARIA climb chain grep FAILED", the log
+  shows `A_DRAP -> A_LOOKDOWN`). The probe pair /tmp/opencode/
+  pr441_probe.c against pr441_old.c (the tree with the two flag
+  lines removed) and against the current tree records the
+  behavioural difference the fixture pins.
+```
+
+- WHY. The engine's match set has three sources - raised signals,
+  held keys, and the intent word - and the port had the first two.
+  Shipping the third is what lets a future non-key intent (the
+  contact chain, PR-149's arm) become expressible at all. The
+  regression is the honest part of this record: the first reading
+  of PR-438's builder said "velocity signs"; the ZARIA.01 climb
+  chain answered in one run, mid-draft, and the bytes re-read
+  under that correction say intent. One PR therefore moves both
+  the ledger (PR-224's row closes) and the reading (PR-438's WHY
+  is corrected) - and no authored leg moved, which is the check
+  that the corrected half is the one the original ran.

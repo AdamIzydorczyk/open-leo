@@ -6464,6 +6464,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     new row slot +0x20, cursor=edx, virtual +0xac. Open: field
     consumers, [obj+0x95]/[+0x9d], row-array filler after
     0x4457b, the [esp+0x24] candidate.]
+    [PR-441 CLOSES PR-224'S "THE PORT HAS NO SIGNAL SIDE OF THAT
+    WORD AT ALL" (0x54910 maps [obj+0xbe] to K_UP/K_DOWN). The
+    port's live_bits_with now raises LL_SIG_K_UP/K_DOWN from the
+    sign of p->vert_intent, the PR-148 word - exactly 0x5499d-
+    0x549b4's byte-4 bits 0x20/0x40 = indexes 37/38. WHICH word
+    the builder tests is settled by the ZARIA.01 climb leg: a
+    first draft tested the velocity register's sign (p->vy) and
+    the leg moved by itself - A_DRAP's authored
+    `A_LOOKDOWN(1)=K_DOWN` fired at the drop and the chain
+    re-routed away from the video-verified
+    `A_FALL_DOWN(1)=AC_ONAIR` exit. The builder tests the INTENT
+    ([obj+0xbe], PR-148/PR-149), not the register (+0xc6); this
+    corrects PR-438's WHY wording about "velocity pair ... its
+    sign bits 0x20/0x40". Open stays: the NON-KEY intents (the
+    contact chain's word, PR-149's kind-4 arm at 0x54b16),
+    [obj+0xba], and the [obj+0xa5] contact bits as key inputs.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
