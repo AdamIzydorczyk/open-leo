@@ -5956,6 +5956,20 @@ OI-128: what landing and leaving a surface does - the class verbs
     multiple inheritance - and the record shares its [obj+0xb6] lock
     byte with the game object (0x1e0a0 clears bit 0x04 and sets
     [obj+0xad] = 0x1f4).]
+    [PR-407 FOUND THE CURSOR ITSELF. The row index that 0x520d2 reads at
+    [rec+0x04] is set once, at state entry: the verb at class slot +0x1c
+    (0x52360 for the four unnamed record classes, the per-state 0x4fef0
+    for A_DEAD's 0x97c9c) ends with `lea eax,[ebx+0x2e]; mov eax,[eax+8];
+    sub eax,edx; dec eax; mov [ebx+0x04],eax` at 0x523bc-0x523c5 - the
+    cursor starts at the COUNT at [rec+0x36] minus the argument minus
+    ONE, so authored clause rows are indexed from the last row downward.
+    [rec+0x36] is that count, and 0x73090 fills it (with [obj+0x32])
+    from `DWORD [k*12+0xced1c]` where k = [obj+0x3a] is a kind - a
+    12-byte-stride table in BSS, zero in the image. Also: a record class
+    differs from another only at +0x08 (six values) and +0x1c (two), and
+    0x523f0 shows the call-in `mov esi,[eax+0x44]; call [esi+0x08];
+    call [esi+0x0c]`. THE PORT WALKS ITS LADDER FORWARD - this is a
+    checkable difference.]
     WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;

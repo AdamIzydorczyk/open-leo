@@ -57047,3 +57047,111 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   and the class determines the row step, the row-advance and the
   clause-match verbs, which is the shape PR-111 and PR-163 modelled
   from behaviour alone.
+
+## PR-407 - THE ROW CURSOR IS INITIALISED FROM A COUNT AND COUNTS DOWN:
+## [rec+0x04] = [[rec+0x36]] - edx - 1 IN THE STATE-ENTRY VERB AT
+## CLASS SLOT +0x1c, AND ONLY TWO SLOTS OF A RECORD CLASS ARE PER STATE
+
+```
+KIND: read
+SUBSYSTEM: the record's row cursor - the state-entry verbs at class
+  slot +0x1c (0x52360 and the per-state 0x4fef0), the count field at
+  [rec+0x36], the cursor at [rec+0x04] that PR-401's row-advance indexes
+  with, and the per-state field slots of a record class
+ADDRESSES: 0x52360, 0x52364, 0x5236b, 0x52377, 0x523bc, 0x523bf, 0x523c5,
+  0x523cb, 0x523ce, 0x523f0, 0x523fd, 0x52402, 0x52405, 0x5240c, 0x524e0,
+  0x52540, 0x52541, 0x52556, 0x52070, 0x52077, 0x520c0, 0x520d2, 0x521f0,
+  0x52750, 0x4fef0, 0x4fef8, 0x4ff08, 0x4ffb0, 0x4ffc0, 0x23f90, 0x26470,
+  0x26fd0, 0x2c360, 0x2ded0, 0x31fa0, 0x33c60, 0x361c0, 0x61200, 0x559c0,
+  0x73090, 0x73093, 0x730a1, 0x730ab, 0x730b7, 0x730be, 0x72d50, 0x74400,
+  0x65090, 0x650f0, 0x65105, 0xced18, 0xced1c, 0x97c9c, 0x9a8cc, 0xa25d4,
+  0xa260c, 0xa2e9c, 0xa2ed4, 0xcef40, 0x5c320, 0x96c53, 0x04, 0x18, 0x1c,
+  0x08, 0x0c, 0x26, 0x2e, 0x32, 0x36, 0x3a, 0x44, 0x4c, 0x54, 0x5c, 0x99,
+  0x9d, 0xa1, 0xe4, 0x394, 0x12, 0x10, 0x11
+NAMES: row cursor, row count, state-entry verb, downward iteration,
+  per-state slot, count table, pr407_fields.txt, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. OI-111 gains the
+  cursor-initialisation claim, which the port should be checked against.
+HOOKS: none - no leg and no fixture moves; no port code is changed here,
+  but the port's row-cursor model is now in reach of a fixture.
+OPENS: WHICH OBJECT 0x73090 FILLS - it writes +0x32 and +0x36 through
+  ecx and reads a kind at [ecx+0x3a], and if that is the record then
+  the row count is a per-kind constant from a 12-byte-stride table at
+  0xced18 that is zero in the image and filled at run time; WHICH OF
+  THE SIXTEEN RECORD CLASSES USES THE GENERIC 0x52360 AND WHICH THE
+  PER-STATE VERB - only 0xa25d4, 0xa2e9c, 0xa260c and 0xa2ed4 name
+  0x52360 at +0x1c, so the twelve named ones all have their own; WHAT
+  ARGUMENT edx MEANS at 0x52360 and 0x523cb, since one caller path sets
+  the cursor to edx unchanged; WHY NOTHING WRITES THE RECORD'S +0x2e
+  FIELD - after PR-406 the field is part of a 0x60-byte record built by
+  `mov eax,0x60; call 0x5c320`, and 0x5c320 does not zero it, so the
+  row-array base must arrive through a mechanism no row of this line has
+  found; and what the count is for [rec+0x11] and [rec+0x12]'s flag
+  bytes, tested at 0x52385 and 0x523a0 with masks 0x10 and 0x20.
+CLOSES: PR-406's OPENS item WHERE THE 0x60-BYTE RECORD'S +0x2e FIELD IS
+  FILLED, only in the negative part: a complete scan of the instruction
+  stream finds 142 writes to that displacement and exactly one of them
+  is not a compile-time class-table store, and that one is a mis-decoded
+  byte at 0x96c53 inside data. So no code writes a record's +0x2e and
+  the question is still open, now as a hard fact rather than a gap in
+  the scan.
+CORRECTS: PR-404's field census, which reported writes to [reg+0x36] and
+  [reg+0x32] only in two functions: its regex took the first comma
+  split of the operand text and so silently ignored every write whose
+  value came from a register. A corrected scan finds 12 writes to +0x36
+  and 12 to +0x32, in four and seven functions, all but two from
+  registers - 0x72d50, 0x74400, 0x65090, 0x65240 and 0x73090 among them.
+MEASURED: (a) THE CURSOR START. 0x52360 is `push ebx; push ecx; mov
+  ebx,eax; call 0x52070; mov eax,[ebx]; mov DWORD PTR [eax+0xa1],0; mov
+  eax,[ebx]; mov DWORD PTR [eax+0x99],1; test edx,edx; jl +; test BYTE
+  PTR [ebx+0x12],0x10; ...` and its tail is the point: `lea eax,[ebx+0x2e];
+  mov eax,DWORD PTR [eax+0x8]; sub eax,edx; dec eax; mov DWORD PTR
+  [ebx+0x04],eax` at 0x523bc-0x523c5, with the alternative path at
+  0x523cb writing `mov [ebx+0x04],edx` unchanged. So the field
+  0x520d2 reads as the row index is set to the count at [rec+0x36]
+  minus the argument minus one: the row cursor counts DOWN from the last
+  row, and [rec+0x36] is the row count. 0x52070, which it calls first,
+  clears [owner+0x9d] and reads two WORDs at [rec+0x8] and [rec+0xa]
+  and passes their difference to 0x76bcc. (b) THE PER-STATE SLOTS.
+  0x52360 sits at +0x1c of the four unnamed record classes 0xa25d4,
+  0xa2e9c, 0xa260c and 0xa2ed4; the twelve state-named classes of
+  PR-406 hold their own verb there instead - A_DEAD's 0x97c9c has
+  0x4fef0, which opens `mov eax,ds:0xcef40; mov eax,[eax+0x394]; mov
+  ebx,[eax+0x8]; call DWORD PTR [ebx+0xe4]`. Across all sixteen tables
+  the +0x08 slot takes exactly six values (0x4ffb0, 0x52750, 0x23f90,
+  0x2c360, 0x61200, ...) and the +0x1c slot the two above: the other
+  twelve slots of a record class are identical between states. (c) THE
+  CALLER. 0x523f0 is the smallest view of a record's own machinery:
+  `mov esi,[eax+0x44]; call DWORD PTR [esi+0x08]; mov esi,[ebx+0x44];
+  call DWORD PTR [esi+0x0c]` at 0x523fd-0x5240c - the class's +0x08
+  getter and then PR-111's row step. (d) THE COUNT IS A TABLE LOOKUP
+  ELSEWHERE. 0x73090 reads a kind at [ecx+0x3a], and for any kind but
+  0x11 sets `mov DWORD PTR [ecx+0x32], DWORD [k*12+0xced18]` and
+  `mov DWORD PTR [ecx+0x36], DWORD [k*12+0xced1c]` (the *12 built as
+  `lea eax,[ebp*4]; sub eax,ebp`); 0xced18 and 0xced1c are BSS-zero in
+  the image. Other writers of those two fields are 0x72d50, 0x74400,
+  0x65090 and 0x65240. 0x52540, called right after PR-406's record
+  constructor attaches the class, zeroes [rec+0x4c], [rec+0x54] and
+  [rec+0x5c] and mirrors them into +0x48, +0x50, +0x58. (pr407_fields.txt)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr407_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). The
+  field-write census is pr407_fields.txt over the re DB's `insn` table,
+  with the operand split corrected; the class-slot table was read at
+  aligned addresses from build/leo/leo.img, and each function quoted was
+  decoded from its own entry with `python3 tools/re/leodb.py dis`.
+```
+
+- WHY. Eleven rows have described the row-advance from the outside; this
+  is the first that says what the cursor IS. It is set once, at state
+  entry, to count-minus-one, and the row-advance then walks it - so
+  authored clause rows run last-to-first unless something else resets
+  it, and that single sentence is testable against the port, which
+  walks its ladder forward. The second useful fact is cheaper: a record
+  class differs from another record class in exactly two slots, +0x08
+  and +0x1c, so the port's "state" object and the engine's are much
+  closer than the sixteen tables suggested - the state is a pair of
+  hooks plus a name, not a subclass of anything large.
