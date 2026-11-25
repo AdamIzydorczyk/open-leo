@@ -6266,6 +6266,23 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x47710 goto family. CORRECTS PR-427's split: verbs are not
     executed directly - both paths build objects. 37-pair table in
     /tmp/opencode/pr428_verbtable.txt.]
+    [PR-429 CORRECTS PR-428: THE COMMANDS ARE ADAPTERS, NOT VERB
+    ROUTINES. Record slot +0x00 is a PR-421-style construct/delete
+    thunk naming the verb class's own descriptor (0xa0d0c rev,
+    0xa0e74 lock family size 0xc, 0xa0ec4 MOVE size 0x10, 0xa0eec
+    end_level, 0xa0f00 goto family) - those sizes are exactly what
+    the branches allocate; slot +0x14 is a CLONE (`alloc; 0x45780;
+    copy [src+0x8], and +0x0c for the 0x10/0x11 classes; reinstall
+    the record`) at 0x47800/0x47830/0x47890/0x47960; and slots
+    +0x08/+0x0c/+0x10 are the shared trampolines 0x45800/0x45870/
+    0x458e0: read [cmd+0x00] = subject, [subject+0x04] = table,
+    tail-call table+0x08/+0x0c/+0x10 (0x458e0 sign-extends dl).
+    Only goto (0x45d90) and the frame markers (0x45d50) replace the
+    +0x10 forwarder. So verbs fix argument shape only; behaviour
+    lives in three fixed methods of the subject - the engine's
+    command pattern, and the port needs one command object, not 34
+    verb functions. Where lock vs unlock vs ground_* differ is open;
+    so is who calls the record slots.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

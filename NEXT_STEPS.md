@@ -59470,3 +59470,98 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   0x4640b, 0x46739 and 0x46bc0 were decoded from their own
   addresses.
 ```
+
+## PR-429 - THE STATE-BODY COMMANDS ARE AN ADAPTER PATTERN: A COMMAND
+## OBJECT IS A PER-VERB CLASS WHOSE TABLE SLOTS FORWARD TO THREE
+## METHODS OF ITS SUBJECT, AND THE RECORDS CARRY CLASS THUNKS AND
+## CLONES, NOT RUN STUBS
+
+```
+KIND: read
+SUBSYSTEM: the true shape of the PR-428 "handler records" - per-verb
+  command classes with their own PR-422 descriptors, the three
+  forwarding trampolines shared by every verb, the per-verb clone
+  functions that copy argument fields, and the re-read slot map of the
+  records 0xa0d0c-0xa11e0
+ADDRESSES: 0xa0d0c, 0xa0e74, 0xa0ec4, 0xa0eec, 0xa0f00, 0xa0f28,
+  0xa1030, 0xa1048, 0xa1078, 0xa1090, 0xa10d8, 0x46d70, 0x47460,
+  0x475f0, 0x476b0, 0x47710, 0x47800, 0x47830, 0x47890, 0x478c0,
+  0x47960, 0x45780, 0x457b0, 0x45800, 0x45870, 0x458e0, 0x45d50,
+  0x45d90, 0x74bc0, 0x74be0, 0x5c320, 0x00, 0x04, 0x08, 0x0c,
+  0x10, 0x14, 0x0c, 0x10, 0x11
+NAMES: adapter pattern, command class, forwarding trampoline, clone,
+  subject object, class thunk, command descriptor,
+  pr429_cmdclasses.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE SUBJECT METHODS AT ITS TABLE +0x08/+0x0c/+0x10 ARE -
+    every verb forwards to the same three indices, so the verb
+    itself cannot select behaviour; what selects behaviour must be
+    the subject, so WHICH SUBJECT IS IN [obj+0x0] AT RUN TIME for
+    each verb family - the state record, the owner object, or a
+    per-command parameter object; WHO INVOKES the record slots -
+    presumably the row walker, which slot on which event; why goto
+    (0x45d90) and the frame markers (0x45d50) replace the +0x10
+    forwarder with custom code while every other verb shares it; and
+    the descriptor set 0xa0d0c..0xa0f00 has more members than the
+    verbs mapped so far - which other command classes live there.
+CLOSES: PR-428's OPENS item WHAT EACH RUN STUB DOES, in its
+  corrected form: they are not run stubs - slot +0x00 is each verb
+  class's construct/delete thunk, slot +0x14 is a clone, and the
+  three shared slots forward, so no per-verb behaviour exists at all
+  in these records.
+CORRECTS: PR-428's slot naming: (1) "run stub" for record +0x00 -
+  0x46d70/0x47460/0x475f0/0x476b0/0x47710 are PR-421-shaped
+  construct/delete thunks naming command-class descriptors
+  (0xa0d0c for rev, 0xa0e74 lock, 0xa0ec4 MOVE, 0xa0eec end_level,
+  0xa0f00 goto), whose size slots read 0xc, 0xc, 0x10, 0xc bytes -
+  command objects are allocated at exactly those sizes; (2) "run
+  stubs" for the 0x47800-0x47c90 family, which PR-428's extraction
+  placed last - 0x47800/0x47830/0x47890/0x47960 are clone
+  functions: `alloc; call 0x45780; copy [src+0x8] (and +0x0c for
+  the 0x10/0x11-size classes); install the same record`; (3) the
+  claim that argument handlers 0x457e0-0x45ce0 are per-verb
+  behaviour - several verbs share 0x457e0, matching that the records
+  carry no verb behaviour.
+MEASURED: (a) THE TRAMPOLINES. 0x45800, 0x45870 and 0x458e0 are
+  three-byte-shaped forwarders: they read the command's field
+  [obj+0x00], take its method table at [subject+0x04], and tail-call
+  that table's +0x08, +0x0c and +0x10 (0x458e0 sign-extends dl
+  first - a small int argument). They appear at record slots +0x08,
+  +0x0c and +0x10 of every mapped verb except goto and the frame
+  markers, which substitute 0x45d90 and 0x45d50. (pr429_cmdclasses)
+  (b) THE COMMAND CLASSES. The thunks name descriptors in PR-422's
+  format inside the same data range: 0xa0d0c rev, 0xa0e74 lock
+  family (size 0xc), 0xa0ec4 MOVE/M (0x10), 0xa0eec end_level
+  (0xc), 0xa0f00 goto family (0xc); the clone bodies allocate the
+  same sizes and copy the +0x08 word - and MOVE's clone at 0x47890
+  also copies +0x0c, and the frame-marker clone allocates 0x11.
+  (c) THE OBJECT LAYOUT, now in agreement with PR-428's allocator
+  sites: [cmd+0x00] subject, [cmd+0x04] this record, [cmd+0x08] and
+  [cmd+0x0c] parsed arguments. The record is the class's method
+  table, the same two-view family shape as PR-423's tables.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr429_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr429_cmdclasses.txt: the command-class descriptors
+  and records re-read as dwords from build/leo/leo.img. 0x46d70,
+  0x47460, 0x475f0, 0x476b0, 0x47710, 0x47800, 0x47830, 0x47890,
+  0x47960, 0x45800, 0x45870 and 0x458e0 were decoded from their own
+  entry addresses.
+```
+
+- WHY. PR-428 mapped names to handlers and expected one behaviour
+  per verb; the real structure is smaller and stranger - the verbs
+  are argument-marshalling classes, and the behaviour always lives
+  in three fixed methods of whatever object the command points at.
+  That is the engine's command pattern, and it says the port should
+  not implement 34 verb functions either: it needs one command
+  object with three message calls, plus per-verb argument parsing
+  and cloning. It also explains the shared records PR-428 flagged:
+  lock/unlock/ground_on/ground_off share a record because the record
+  only fixes the argument shape - the distinction must be carried
+  elsewhere, and finding that carrier (most likely the subject or a
+  parameter word) is the next concrete question on this path.
