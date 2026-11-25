@@ -6444,6 +6444,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     via virtual +0x48 - closes PR-433's +0x48 item and PR-438's
     +0x98/+0xb0 item. [obj+0x89] = screen pair (getter 0x23a10).
     Open: [obj+0x20], ds:[0xcef40]+0x394, +0x68, 0x52d30, +0x34.]
+    [PR-440 JOINS THE AUTHORED ROW LANGUAGE TO ROW OBJECTS. Row
+    ctor 0x52590 dispatches on argv[0]: "F" scanf "%i,%i" into
+    [row+0x50]/[+0x54]; "T" "%[^,], %[^,],%d,%d" into
+    [row+0x48]/[+0x4c]; "G" "%i,%i" into [row+0x58]/[+0x5c]
+    capped 0x82=130; DEFAULT arm calls the state-header parser
+    0x51913 - why PR-410's header keywords parse inside row
+    construction. Wrapper 0x524a0 zeroes +0x48..+0x5c and installs
+    descriptor 0xa25d4. State-file object builder 0x443b0: name
+    scan "%[^ ,
+	] , " (0x917c4) via 0x57a40, factory lookup
+    ds:[0xcef40]+0x398, then zeroes +0x58/+0x5c and sets count
+    [obj+0x58]=100 (0x4457b). ROW CURSOR closed: writers
+    0x524c8, 0x44582 and 0x53ed inside the tick switch arm
+    0x535a0 - an INTERNAL arm of FUN_00053520 (its only xref is
+    0x5374b), correcting PR-437's two-handler wording and its
+    0x1583c cursor-writer note (drifted region). Switch: old row
+    slot +0x1c clone, [obj+0x9d]=0 [obj+0x95]=1, virtual +0xa4,
+    new row slot +0x20, cursor=edx, virtual +0xac. Open: field
+    consumers, [obj+0x95]/[+0x9d], row-array filler after
+    0x4457b, the [esp+0x24] candidate.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
