@@ -7278,6 +7278,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     at the top of the next iteration then cleared (0x4ac84).
     PR-483 corrects PR-476: [mgr+0x3a0] is not an emitter
     switch - the emitter test is a redundant inner copy.]
+    [PR-484 CLOSES PR-481's "which walker owns the 0x4ba90
+    sweep": the swept object is the LEVEL object (passed at
+    0x4aeb5). Shape: four group slots in a table at the
+    object's head ([[X]+4*i], i<4), each group with COUNT at
+    +0x44 and a head-pointer ARRAY at +0x58, members threaded
+    through +0x34, each gated by verb +0x60 then ticked by
+    0x52b80; then the same walk over the list at [mgr+0x64]
+    (the 0x52c10 insert target). The level CLEANUP 0x4a4c0
+    walks exactly those groups: zeroes [X+0x44], frees the
+    arrays via 0x74be0, and calls `[[member]+0x0] with edx=2`
+    per member - now the engine's uniform teardown call (same
+    verb+mode as PR-475's destroy and PR-481's pump branch).
+    PR-484 corrects PR-191: 0x4a4c0 is not a level ctor but the
+    level cleanup - it also frees [X+0x3b4], destroys the hit
+    record [X+0x38c] via [[obj]+0x4] edx=2, and zeroes the run
+    flag.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

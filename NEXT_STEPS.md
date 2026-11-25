@@ -64544,3 +64544,97 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   quit path portable and it retires a wrong reading of
   [mgr+0x3a0] as an effect switch.
 
+
+## PR-484 - THE FRAME'S THINK PASS AND THE LEVEL CLEANUP WALK
+## THE SAME THING: FOUR POOL GROUPS AT [X+0x4]/+0x44/+0x58,
+## MEMBERS LINKED AT +0x34, DESTROYED THROUGH VERB +0x0 EDX=2
+
+```
+KIND: read
+SUBSYSTEM: the think pass 0x4ba90 (called from the frame loop
+  at 0x4aeb5 with eax = the level object at ds:0xcef40): its
+  four group slots [[X+0]+4*i], each a pool block with a COUNT
+  at +0x44 and a POINTER ARRAY at +0x58 whose entries head
+  lists threaded through +0x34, every member gated by verb
+  +0x60 then ticked by 0x52b80 (PR-481), plus the extra walk
+  of the list headed at [mgr+0x64]; and the level cleanup
+  0x4a4c0 (PR-191's "level ctor", first call of every mode
+  entry 0x5d233 and part of the frame-loop exit path): it
+  clears each group's count, frees the arrays with 0x74be0 and
+  calls [[member]+0x0] with edx=2 per member
+ADDRESSES: 0x4ba90, 0x4baa9, 0x4bac4, 0x4bacc, 0x4bad8,
+  0x4bae4, 0x4baf4, 0x4bb09, 0x4ba9b, 0x4a4c0, 0x4a716,
+  0x4a73a, 0x4a74b, 0x4a74e, 0x4a78d, 0x4a790, 0x4a7aa,
+  0x4a7c2, 0x4a7c6, 0x4a711, 0x4a72b, 0x74be0, 0x5c370,
+  0x961fc, 0x96200, 0x98274, 0x52540, 0x52559, 0x5d233,
+  0x4aeb5, 0x4aee2, 0x4aee7, 0x3b4, 0x38c, 0x398, 0x39c,
+  0x44, 0x58, 0x64, 0x34, 0x8, 0x0, 0x2, 0x60, 0x14,
+  0x3e6, 0x4c, 0x50, 0x54, 0x5c, 0xa25d4, 0x52500
+NAMES: think pass, pool group, pool count, pool array, member
+  link, level cleanup, destroy call edx=2, pr484_pools.txt,
+  pr484_ctor.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE FOUR GROUPS ARE - no authoring name distinguishes
+    them; PR-476's emitter legs index an object's +0x74..+0x88
+    pools, a different offset set, so the level's four groups
+    and the emitter's pools are not the same block; WHO FILLS
+    the count at [group+0x44] and the array at [group+0x58] -
+    only the cleanup clears them (0x4a790, 0x4a74e); the same
+    offsets mean other things in the record class (PR-471's
+    method table at +0x44; the copier 0x52500 and helper
+    0x52540 move fields +0x4c..+0x5c), so the writer is a
+    third class, unlocated; and [X+0x3b4]'s small-record free
+    (fields at +0x2/+0x6 via 0x75302) - an authored blob the
+    cleanup releases, unexamined.
+CLOSES: PR-481's OPENS "which walker owns the 0x4ba90 pool
+  sweep": the swept object is the LEVEL object - the frame loop
+  passes it at 0x4aeb5 (`mov eax,ecx` with ecx = the ds:0xcef40
+  level object, the same ecx the loop keeps) - and the sweep's
+  group slots come from a four-entry array at the object's very
+  head ([[X]+4*i], i<3 in the group-index loop at 0x4baa9,
+  bounded by `cmp ebx,0xc`), each group read at +0x44 (count)
+  and +0x58 (head array). The second half of the pass is the
+  [mgr+0x64] list - the same field 0x4aa68 inserts objects
+  into through 0x52c10 (PR-481's link law). It also completes
+  the destroy law: the level cleanup 0x4a4c0 walks the very
+  same groups ([[X]+4*i] loop at 0x4a773, count at +0x44,
+  array at +0x58), zeroes the count, frees each array via
+  0x74be0 and calls `[[member]+0x0] with edx=2` per member
+  (0x4a7ba-0x4a7c2) - the same verb+mode pair as PR-475's
+  descriptor destroy and PR-481's pump branch, which is now the
+  engine's uniform teardown call for pooled objects. And it
+  re-identifies 0x4a4c0: it is not a constructor - it runs at
+  mode entry (0x5d233) and inside the frame loop's exit path,
+  destroys the pools, frees [X+0x3b4] and the object at
+  [X+0x38c] through [[obj]+0x4] edx=2, zeroes the run flag
+  [X+0x3a0] (PR-483) and clears the hit record slot +0x38c.
+CORRECTS: PR-191's "the level object's own ctor 0x4a4c0": the
+  routine is the level CLEANUP - it frees objects rather than
+  allocating them, and it runs when a level ends, not when one
+  starts.
+MEASURED: (a) THE SWEEP, verbatim 0x4baa0-0x4bb19: `for (i=0;
+  i<4; i++) { X = [[ebp]+4*i]; for (j=0; j<[X+0x44]; j++) for
+  (o=[X+0x58][j]; o; o=[o+0x34]) if ([[o+0x8]+0x60]())
+  0x52b80(o); }` then `for (o=[ebp+0x64]; o; o=[o+0x34]) if
+  (...) 0x52b80(o)`. (b) THE CLEANUP, verbatim 0x4a773-0x4a7c4:
+  same nesting; per group `mov eax,[X+0x44]; mov [X+0x44],0;`
+  per array entry `call 0x74be0`; per member `mov ebx,[o+0x8];
+  mov edx,2; call [ebx]`. (c) THE TAGS: the cleanup stamps
+  pairs with 0x961fc/0x96200 (the string-pair descriptors of
+  PR-190) and clears [X+0x38c] at 0x4a559. (d) CENSUS: within
+  0x1e000-0x62000 the pattern `[R+0x44]` as a count appears
+  only in 0x4ba90 and 0x4a4c0; every other +0x44 is a class
+  table store (PR-471 family) or stack. (e) THE PORT.
+  Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port keeps one flat object list. The original keeps
+  four level-scoped pools plus a manager list, gates every
+  member through the same +0x60 predicate, and - crucially -
+  destroys members through the same verb+mode pair the pump
+  uses. Fixing the "level ctor" as a cleanup also removes a
+  long-standing upside-down reading of the level lifecycle.
+
