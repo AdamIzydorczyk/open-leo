@@ -63396,3 +63396,88 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   hold an animation window are ropes, columns, bottles,
   propellers and spiders.
 
+
+## PR-471 - THE AUTHORED ACTION WORDS BUILD 96-BYTE STATE
+## RECORDS: `call 0x524e0` THEN `mov [rec+0x44],<row table>` -
+## ONE CLASS, AND THE BEHAVIOUR IS THE ROW TABLE
+
+```
+KIND: read
+SUBSYSTEM: the A_* action-row arms of the factory clusters
+  (A_DEAD, A_LOOKUP, A_LOOKDOWN, A_SQUAT, A_JUMP, A_JUMP_S,
+  A_JUMP_DOWN, A_FALL_DOWN): each allocates 96 bytes, calls the
+  state-record constructor 0x524e0, and installs a row table at
+  [rec+0x44]; the same idiom in the control-word arms at
+  0x45e85 (small records, method table installed at [rec+4]);
+  and the parameter-block install `mov [obj+0x10],0x98274`
+  found in the arms of 21 authored class names
+ADDRESSES: 0x524e0, 0x51700, 0x517e0, 0x5c320, 0x76a69,
+  0x9a85c, 0x9a894, 0x9a8cc, 0x97c9c, 0x98e7c, 0x9b5f4,
+  0x9e254, 0x9fbfc, 0xa2e9c, 0xa2ed4, 0x44, 0x98274, 0x10,
+  0x1e0fb, 0x240d8, 0x270db, 0x2710e, 0x2713d, 0x2bffb,
+  0x2c02e, 0x2c05d, 0x33d4b, 0x33d7a, 0x39dab, 0x3b37b,
+  0x6153b, 0x6156e, 0x615a1, 0x615d4, 0x61607, 0x46375,
+  0x46412, 0x4655a, 0xa10d8, 0xa10f0, 0x2bfa6, 0x334c6,
+  0x33506, 0xa25d4, 0x60, 0x4
+NAMES: action row, state record row, one record class, row
+  table install, parameter block install, A_DEAD rows,
+  pr471_actionrows.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE NINE A_DEAD ROW TABLES (0x97c9c, 0x98e7c, 0x9a85c,
+    0x9b5f4, 0x9e254, 0x9fbfc and the two shared with A_LOOKUP/
+    A_LOOKDOWN) - what differs between them: they are chosen by
+    the ASKING class, so the death behaviour is per-class, but
+    their bodies are unread; the 96-byte record's other fields
+    (only +0x44 is installed here, so parameters must be filled
+    by the caller); and the 21 class names that take the
+    parameter block at [obj+0x10] - which classes can carry
+    authored parameters, and whether the ones without it are the
+    ones with no parameters at all.
+CLOSES: PR-470's "why A_DEAD arms in six clusters store row
+  tables at [obj+0x44]": because those arms do not create
+  objects at all - they create PR-100's state records. Every A_*
+  arm is exactly `mov eax,0x60; call 0x5c320; call 0x524e0;
+  mov [rec+0x44],TABLE`: 0x524e0 is the state-record
+  constructor (it runs 0x51700 and installs the DEFAULT method
+  table 0xa25d4 at [rec+0x44]), and the arm then OVERWRITES that
+  field with a per-word row table. So there is one record class
+  and the authored action word is selected purely by its method
+  table - which is the mechanism the journal already relied on
+  for PR-166's control-word verbs, now shown for the A_* words.
+  It also settles the sharing question raised in PR-470: sharing
+  a table is normal and means "the same behaviour" - A_LOOKDOWN
+  and A_SQUAT both take 0x9a894; A_JUMP and A_JUMP_S both take
+  0xa2ed4; and PR-135's atc_on/atc_off both take 0xa10f0, with
+  lock/lock2/unlock/unlock2/ground_on/ground_off all taking
+  0xa10d8. And TLewKadmar2's class arm builds an EXTRA record
+  through the same 0x524e0 with the row table 0x9b5f4 - the
+  lion's own death-row - while BAL_RAN and TLewRan share
+  0x9d590 at field +0x26.
+CORRECTS: nothing. (PR-176's "looser.mod/A_DEAD -> 0x988ec"
+  reading is not contradicted: A_DEAD has nine different row
+  tables selected by context, which is consistent with several
+  death modules.)
+MEASURED: (a) THE SCAN: 71 (name, installed table) pairs over
+  all 379 strcmp sites; the A_* set is 13 sites, all with size
+  0x60 and ctor 0x524e0 and field +0x44 - the only group with a
+  non-None ctor. (b) VERBATIM at 0x270db: `mov eax,0x9090d;
+  call 0x76a69; jne next; mov eax,0x60; call 0x5c320; mov
+  edx,esi; call 0x524e0; mov [eax+0x44],0x9a8cc` - the source
+  string 0x9090d is "A_LOOKUP". (c) THE CONTROL-WORD GROUP: 15
+  arms at 0x45e85-0x46bc7 install 8-21-byte records' method
+  tables at [rec+4] (PR-166's row class), no ctor call. (d)
+  THE PORT. Unchanged: the port implements the A_* behaviours
+  for the legs its fixtures exercise.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The action words looked like a second class vocabulary.
+  They are not: they are rows of one record class, differing
+  only in the method table written into the same field. That
+  makes the engine's authoring model uniform - classes, plan
+  rows and action rows are all "a record plus a table installed
+  by a name comparison" - and it gives the next read a short
+  list: nine A_DEAD row tables.
+

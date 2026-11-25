@@ -7023,6 +7023,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x9d2ac, 0x9f0e4, 0xa2498, 0xa2550, the child-list owner
     0x97bc0, and why A_DEAD arms in six clusters store row
     tables at [obj+0x44].]
+    [PR-471 CLOSES THE A_DEAD QUESTION: the A_* arms do not
+    create objects, they create PR-100's STATE RECORDS - every
+    one is `mov eax,0x60; call 0x5c320; call 0x524e0; mov
+    [rec+0x44],TABLE`. 0x524e0 installs the default record
+    method table 0xa25d4 at +0x44 and the arm overwrites it
+    with a per-word row table, so there is ONE record class and
+    the action word is its method table: A_LOOKUP 0x9a8cc,
+    A_LOOKDOWN and A_SQUAT both 0x9a894, A_JUMP and A_JUMP_S
+    both 0xa2ed4, A_JUMP_DOWN 0xa2e9c, and NINE different
+    A_DEAD tables picked by the asking class (0x97c9c, 0x98e7c,
+    0x9a85c, 0x9b5f4, 0x9e254, 0x9fbfc, ...). Sharing a table
+    is the normal way to share behaviour - the same pattern
+    holds for PR-135's atc_on/atc_off (0xa10f0) and for
+    lock/unlock/ground_on/ground_off (0xa10d8). TLewKadmar2's
+    class arm also builds one of these records with its own
+    death row 0x9b5f4, and BAL_RAN/TLewRan share 0x9d590 at
+    +0x26. A related install, `mov [obj+0x10],0x98274`, appears
+    in 21 class-name arms - the parameter block, not a class.
+    Open: the nine A_DEAD row tables themselves and the other
+    fields of the 96-byte record.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
