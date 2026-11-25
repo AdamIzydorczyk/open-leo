@@ -7061,6 +7061,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     verb of each A_DEAD row (first-block slot +9: 0x230c0,
     0x263d0, 0x2b370, 0x2dca0, 0x360f0, 0x3ac20) and the third
     block family 0x50000/0x50040.]
+    [PR-473 NAMES PR-468's MYSTERY FIELD: [obj+0x126] is not an
+    id - it is the upper bound of the authored ` bounds = %d,
+    %d ` pair with +0x122. The dump method 0x3b500 prints both
+    with the format string at 0x913dc, and its other half
+    0x3b530 compares [obj+0x00] against +0x122 (then verb +0x70
+    must answer 1) and against +0x126 (verb +0x70 must answer
+    -1) - a two-ended range test on the object's own value. The
+    authoring read 0x27d10 (KOLUMNA's verb +0x714) parses the
+    pair through the token parser 0x3dd60; the default 0x27f00
+    (SCHODY4's +0x1d8) installs 0x8ca = 2250; 0x37a0c snapshots
+    [obj+0]/[obj+4] into the slots after the verb +0xe8; and
+    0x5013d clears them. So PR-468's type-1 consume fires only
+    for objects WITH authored bounds, and PR-472's deatd guard
+    means "bounds unset". Caution: the same slots hold a DOUBLE
+    in another class (x87 QWORD [x+0x12a]/[x+0x122] at
+    0x27918-0x27cd3) - offsets belong to classes. Open: what
+    the tested field +0 is, the class map of the field, and
+    " v_bounds = %d, %d " at 0x913ee.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

@@ -63564,3 +63564,93 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   structure (14-entry blocks, two slots per word), which makes
   the rest of the action-row family tractable.
 
+
+## PR-473 - [obj+0x126] IS THE UPPER END OF THE AUTHORED
+## ` bounds = %d, %d ` PAIR WITH +0x122: THE ENGINE TESTS THE
+## OBJECT'S FIELD +0 AGAINST IT AND IT GATES PR-468's CONSUME
+
+```
+KIND: read
+SUBSYSTEM: the authored bounds pair [+0x122]/[+0x126]: the
+  authoring read at 0x27d10 and 0x3b500-0x3b529 with the format
+  string " bounds = %d, %d " at 0x913dc; the range test at
+  0x3b530-0x3b566 against [obj+0x00] through verb +0x70; the
+  default install 0x27f00; the snapshot copy 0x37a0c/0x37a15;
+  the zeroing 0x5013d; the guards 0x4ffbb, 0x50323, 0x50abc,
+  0x50d6e (PR-468's consume), 0x50ef7; and the id read sent as
+  a kind-2 message at 0x1f3b6-0x1f3ce
+ADDRESSES: 0x913dc, 0x913ee, 0x91402, 0x91412, 0x91687,
+  0x3b500, 0x3b50b, 0x3b512, 0x3b519, 0x3b530, 0x3b53a,
+  0x3b551, 0x3b547, 0x3b67a, 0x3b698, 0x3b727, 0x27d10,
+  0x27d34, 0x27d3a, 0x27d4a, 0x27f00, 0x27f03, 0x27f1b,
+  0x3dd60, 0x379b0, 0x37a0c, 0x37a15, 0x37a1b, 0x5013d,
+  0x4ffbb, 0x50323, 0x50abc, 0x50d6e, 0x50ef7, 0x1f3b6,
+  0x1f3c0, 0x1f3ce, 0x1f3ac, 0x52b10, 0x9a07c, 0x99668,
+  0x122, 0x126, 0x12a, 0x112, 0x714, 0x1d8, 0x70, 0xe8,
+  0x8ca, 0x5af
+NAMES: authored bounds, bounds format string, bounds parse verb,
+  range test verb, bounds snapshot, bounds consume gate,
+  pr473_idfield.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE TESTED QUANTITY [obj+0x00] IS - every range
+    test compares field +0 against the bounds, and 0x37a0c
+    copies +0 and +4 into the bound slots after the verb +0xe8
+    advance, so the bounds look like limits on a counter or
+    phase, unproven; WHICH CLASSES OWN THE FIELD - the bounds
+    parse verb 0x27d10 is installed only at KOLUMNA's slot
+    +0x714 and the default-id ctor 0x27f00 only at SCHODY4's
+    +0x1d8, yet the dispatcher families read [obj+0x126] at
+    0x50d6e, so the field belongs to several classes and the
+    per-class map is unmapped; and the SAME SLOTS hold a DOUBLE
+    in another class - x87 `fstp/fld/fadd QWORD PTR [x+0x12a]`
+    and `[x+0x122]` at 0x27918-0x27cd3 - so +0x126 is also the
+    high word of an 8-byte value there, the journal's
+    offsets-belong-to-classes rule again. Also open: why 2250
+    (0x8ca) is the default, and the second bounds line
+    " v_bounds = %d, %d " at 0x913ee.
+CLOSES: PR-468's OPENS "WHAT [obj+0x126] IS" and PR-472's use
+  of the same guard: it is not an id. The dump method 0x3b500
+  prints it as `push [obj+0x126]; push [obj+0x122]; push
+  " bounds = %d, %d "; call 0x49920`, and 0x3b530 is the other
+  half of the same method: compare [obj+0x00] with [obj+0x122],
+  if below call verb +0x70 and test for 1, else compare with
+  [obj+0x126], if above call verb +0x70 and test for -1 - a
+  two-ended range test on the object's own value. The authoring
+  read is a pair too: 0x27d10 calls the token parser 0x3dd60
+  (ds:0x98278 method +4, 100 items, 1455 tokens) twice and
+  stores into +0x126 and +0x12a. So PR-468's type-1 consume
+  fires exactly when the receiver carries authored bounds, and
+  PR-472's deatd-module guard `cmp [owner+0x126],0` means
+  "only when its bounds are unset". The companion half of the
+  pair is also documented: 0x1f39f tests the state instance's
+  frame +4 against [obj+0x12a] before the send, and 0x1f3c0
+  reads the field as the payload of a kind-2 message through
+  PR-464's push 0x52b10.
+CORRECTS: nothing. (PR-468 called the field "an object/record
+  id, unproven" - it was listed as open, and this record is its
+  answer; the same id reading is now replaced by the bounds
+  reading wherever it was assumed.)
+MEASURED: (a) ALL 46 SITES of [obj+0x126] and 29 of [obj+0x122]
+  in the evidence file, grouped: 9 stores, 5 zero-compare
+  guards, 1 zero store (0x5013d), the rest reads and compares.
+  (b) THE DUMP, verbatim at 0x3b50b: `lea eax,[obj+0x126];
+  push eax; add ebx,0x122; push ebx; push 0x913dc; push ecx;
+  call 0x49920` - 0x913dc is " bounds = %d, %d ", inside the
+  authored-name block, next to " v_bounds = %d, %d " and
+  " number = %d ". (c) THE DEFAULT: 0x27f00 sets [obj+0x126] =
+  0x8ca = 2250 and adds 0x32 to a size counter at [obj+0x14];
+  its only caller is the parse method 0x27d10. (d) THE SNAPSHOT:
+  0x37a04 calls verb +0xe8, then copies [obj+0x00] into
+  [obj+0x122] and [obj+0x04] into [obj+0x126] and sets a flag
+  bit 0x80. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. Two earlier records had gated behaviour on a field nobody
+  could name, and the natural guess - an object id - was wrong.
+  The dump method gave it a name in one line, and the name turns
+  PR-468's "consume" from a mystery into a rule: an object with
+  authored bounds swallows the message kind that would move it.
+
