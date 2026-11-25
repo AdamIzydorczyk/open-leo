@@ -59653,3 +59653,127 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   compiled commands, is now the single sharpest open question here,
   and the predicate pair 0x495b0/0x47e40 is where the row-condition
   semantics of PR-412 will actually live.
+
+## PR-431 - STATE FILES CARRY A SCRIPT KEY `s,` WHOSE LINES COMPILE
+## INTO SCRIPT OBJECTS OF A COMMAND-CLASS SUBTYPE, AND THE ITEM
+## DRIVER 0x520c0 SELECTS AND RUNS ONE SUCH SCRIPT PER CALL
+
+```
+KIND: read
+SUBSYSTEM: the consumer of the PR-427/428 command compiler found
+  inside PR-410's state-file parser - the `s,` key branch, the 0x18
+  byte script class (descriptor 0xa234c, record 0xa2638), the chain
+  it compiles, and the item selection and calling sequence in
+  FUN_000520c0 and its sibling 0x51eb0
+ADDRESSES: 0x51913, 0x5192c, 0x5196d, 0x519ab, 0x519e9, 0x51a6a,
+  0x51a9b, 0x51aa9, 0x51ac1, 0x51ac9, 0x51eb0, 0x51f48, 0x51f58,
+  0x515e0, 0x51620, 0x51660, 0x51671, 0x516d5, 0x516e2, 0x520c0,
+  0x520cf, 0x520d7, 0x520e1, 0x520f6, 0x52235, 0x5223c, 0x52303,
+  0x45df0, 0x45800, 0x4581d, 0x49920, 0x491cc, 0x495b0, 0x5c320,
+  0x749a0, 0xa234c, 0xa2638, 0xa1000, 0x55820, 0x92115, 0x92156,
+  0x98278, 0x92100, 0x920fd, 0x9292d, 0x2e, 0x04, 0x08, 0x10,
+  0x14, 0x18, 0x3e8
+NAMES: script key, script object, script class, item driver, default
+  result object, menu script files, .MNU, pr431_scriptobj.txt,
+  OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH PER-VERB ENTRY THE RECORD SLOT +0x04 IS AND WHAT THE
+    VERB-SPECIFIC ONES DO - the driver calls [record+0x04] with the
+    owner object as edx, and records carry 0x457e0 (base) or
+    0x459b0-0x45ce0 (per verb) there, matching PR-428's
+    "argument handler" column; none has been read; WHO CALLS
+    FUN_000520c0 (no xref entries - likely virtual or via a thunk);
+    WHY IT CALLS THE ROOT TABLE 0x98278 SLOT +0x04 with ecx pinned
+    to the table itself (0x520e6-0x520f6); WHAT 0x44110 RETURNS for
+    [script+0x08] (it reads a pointer at ds:[0xcef40]+0x398, a
+    manager singleton); what the +0x0c byte of the default result
+    object means - PR-426's trailing '!' test also wrote [obj+0xc];
+    WHO LOADS THE .MNU MENU SCRIPTS whose name strings sit at
+    0x920fd-0x92f85 and feed the same 0x515e0 constructor; and the
+    meaning of the [script+0x10] number parsed with `%hi` and
+    divided by the passed 1000.
+CLOSES: PR-430's OPENS items WHERE IS THE COMMAND LIST STORED and
+  WHETHER THE WALKED ITEMS ARE THE COMPILED COMMANDS: the compiler's
+  output is prepended by 0x51660 into a chain at [script+0x00], and
+  the script object that owns the chain is what the parser appends
+  to the state record's vector at [rec+0x2e] and what the driver
+  indexes - the commands themselves are reached through the chain.
+CORRECTS: PR-430's reading of 0x52221-0x52235 as a loop "with a
+  table pointer at [ebp+0x2e]": the clean entry decode of
+  FUN_000520c0 (0x520c0) shows one indexed selection from an object
+  FIELD, `edi = [[esi+0x2e] + [esi+0x4]*4]`, not a frame slot and
+  not a loop; and the first slot called is record +0x04 (0x520e1),
+  before the +0x08/+0x0c pair. PR-429's claim that the records
+  carry no verb behaviour stands for slots +0x08/+0x0c/+0x10, but
+  the per-verb column is +0x04, not a parse-time artifact.
+MEASURED: (a) THE `s,` BRANCH. FUN_00051913 (PR-410's state-file
+  parser) matches the keys time `%hi`, sample `%d`, time_scale `%d`,
+  seq `%s`, control (the PR-410 keyword table at 0x51b0d-0x51d91) -
+  and at 0x51a6a a token grammar ` %[^ ,]%*[ ,]` followed at
+  0x51a9b by sscanf `%d,` (0x92156) via the format engine 0x49920;
+  then 0x51aa9 allocates 0x18 bytes and 0x51ac1 calls the
+  constructor FUN_000515e0 passing the text and the constant 1000
+  (0x3e8). 0x51ac9 appends the result to a vector addressed
+  [esi+0x2e] (+0x08/+0xc = its two pointers). CORPUS: the keys
+  occur control x2266, seq x2196, sample x489, time x214,
+  time_scale x120 in the 777 unpacked .MOV files; the script key is
+  one single line, `s,uj24a 1,0` at LONA.05_LEW.LON_LEW.MOV:984.
+  (pr431_scriptobj)
+  (b) THE SCRIPT CLASS. FUN_000515e0 installs record [obj+0x4] =
+  0xa2638 and zeroes +0x8/+0xc/+0x14 with +0x10 = 1; 0xa2638 =
+  {0x55820, 0x457e0, 0x45800, 0x45870, 0x458e0, 0x51620} - slots
+  +0x04..+0x10 identical to the base command record 0xa1000: the
+  script object is a first-class member of the command hierarchy.
+  Its construct/delete thunk 0x55820 names the PR-422-format class
+  descriptor 0xa234c (five dwords, size slot 0x18<<8 = the 0x18
+  allocated). The clone 0x51620 body at 0x51622 allocates 0x18,
+  calls the PR-430 deep-copy 0x45780, copies +0x8/+0xc/+0x10 and
+  links +0x14 - script objects themselves chain at +0x14.
+  FUN_00051660 parses one `%hi` number scaled by the passed 1000
+  into [obj+0x10], then calls the command compiler 0x45df0 per line
+  and PREPENDS each returned item: head at [obj+0x00], next at
+  [item+0x00] (0x516e2-0x516e6) - so a script object's subject IS
+  its command chain.
+  (c) THE FORWARDER'S OTHER ARM. 0x45800 with a null subject
+  (0x4581d) builds a 12-byte default result via the 0x749a0 item
+  helper, then copies it - including the byte at +0xc - into the
+  caller's scratch buffer (0x45843 rep movs). Chains end by
+  producing that default.
+  (d) THE DRIVER. FUN_000520c0 (no xrefs): esi = owner object;
+  select item = [[esi+0x2e]+[esi+0x4]*4] (0x520cf-0x520d7); call
+  [item record+0x04] with edx = owner (0x520e1); call the root
+  table 0x98278's +0x04 (0x520f6); then the PR-430 pair: record
+  +0x08 with scratch, result tested through 0x495b0 (0x52235-
+  0x5223c), and record +0x0c (0x52303). Its sibling FUN_00051eb0
+  loops items calling record+0x0c (0x51f4f) and then 0x491cc - an
+  address inside the AC_ built-in body region of FUN_00048000
+  (PR-426).
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr431_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr431_scriptobj.txt: the parser key strings, the
+  corpus key counts and the single `s,` line, the descriptor 0xa234c
+  and records 0xa2638/0xa1000 dwords, and the clean decodings of
+  0x515e0, 0x51660, 0x51aa9, 0x520c0, 0x51f48 and 0x45800 taken
+  from their own entry or call-site addresses.
+```
+
+- WHY. This connects PR-426/427/428/429/430 into one load-to-run
+  path for the first time inside a real file format: a state file
+  key compiles to a script object, its commands chain at +0x00, the
+  state record vectors them at +0x2e, and a driver selects one by
+  index and drives the exact record slots PR-429 mapped. The author
+  evidence matters most: the engine ships names for menu scripts -
+  main/pause/options/continue/calibrate plus at%02d and cheat%02d -
+  all in the same language, while the shipped CD has no .mnu files
+  at all, which is exactly the hole original/ll_menu.c line 233
+  already recorded as "a CD hole": the menu system's real driver
+  was authored as data and we now have the parser and executor for
+  it. The next concrete step is the +0x04 column - read 0x457e0 and
+  one per-verb handler (0x459b0 rev, 0x45a50 zero) to find where
+  verb behaviour actually lives - and then 0x520c0's callers, which
+  will say what selects script index [rec+0x4] per state.

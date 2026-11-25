@@ -6294,6 +6294,31 @@ OI-128: what landing and leaving a surface does - the class verbs
     +0x0c (0x52303) with a scratch buffer, gated by predicates
     0x495b0/0x47e40. Whether those items are the 0x45df0-compiled
     commands is the open link; so are the leaf subjects.]
+    [PR-431 FINDS THE SCRIPT KEY AND THE ITEM DRIVER. PR-410's
+    state-file parser also matches a key `s,` (token grammar
+    ` %[^ ,]%*[ ,]` 0x51a6a, operand `%d,`): 0x51aa9 allocates 0x18
+    and the constructor 0x515e0 (class descriptor 0xa234c, record
+    0xa2638, size slot 0x18) compiles the remaining text lines
+    through the command compiler 0x45df0, PREPENDING the items into
+    a chain at [obj+0x00]; the parser appends the object to a
+    vector at [state+0x2e]. Record 0xa2638's slots +0x04..+0x10 are
+    identical to the base command record 0xa1000 - scripts ARE
+    command nodes, their subject is their command chain; clone
+    0x51620 deep-copies and chains scripts at +0x14. DRIVER
+    FUN_000520c0 (clean entry): item = [[esi+0x2e]+[esi+0x4]*4],
+    call [record+0x04] with owner as edx (0x520e1), root table
+    0x98278 +0x04 (0x520f6), then record +0x08 predicate tested via
+    0x495b0 and +0x0c (0x52235/0x52303); sibling FUN_00051eb0
+    calls record+0x0c then 0x491cc inside the AC_ body region. The
+    forwarder 0x45800's null arm builds a 12-byte default result
+    (0x749a0) and copies it incl. byte +0xc into the scratch.
+    CORPUS: `s,` occurs once (LONA.05:984 `s,uj24a 1,0`); .MNU
+    script names (main/pause/options/calibrate/continue, at%02d,
+    cheat%02d) at 0x920fd-0x92f85 - no .mnu in the CD, the known
+    ll_menu CD hole. CORRECTS PR-430: not a loop and not a frame
+    slot - one indexed selection from object field +0x2e; and the
+    first slot called is +0x04. Closes PR-430's command-list
+    storage item.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
