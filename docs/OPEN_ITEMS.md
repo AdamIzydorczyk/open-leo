@@ -5271,6 +5271,36 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     envelopes and the 53..306 px gaps between their top bands are
     identical under either reading, and the standing query is still not a
     carrier of the authored chain.
+    PR-514 MEASURES THE CARRIER AND NARROWS IT TO A WORD.
+    (a) Port run (`1:FWD 132:JUMP`, 600 ticks,
+    /tmp/opencode/pr514_run1.log): every A_JUMP flight is
+    x-frozen - x in {215,216,217} over 133-166 and
+    {230,231,232} over 213-260 (the +/-1 is the POCISK
+    push-outs); no x >= 408 is ever produced. (b) DATA:
+    every ZARIA.01 jump state (A_JUMP, A_JUMP_S, A_PRE_-
+    JUMP, LEW.MOV and LEWPL.MOV) authors `F=180,0` - a
+    SUSTAINED x force - and none has a K_FWD/K_BKWD exit,
+    so held arrows keep the flight: the author's running
+    jump is the state plus its own F word. ZARIA_A.PLT
+    line `5 20,376;70,380;149,395;274,419;358,389;403,
+    386;` ends 5 units WEST of the west lip 408 (PR-205):
+    a takeoff 221 units from the east line's 624.
+    (c) CLOSED FORM under the port's own law: s=10 gives a
+    ~130-unit range over the measured 34-iter flight,
+    s=20 gives ~260, s=0 gives 0-2. The intent gate, not
+    the jump law, is the whole gap. (d) LIVE: the running
+    game's lion [obj+0xba] alternates 0/+20 in step with
+    held/sampled right-arrow, [obj+0xbe] stays 0 - the
+    keyboard's +/-20 reaches the x force 0x542ab, the
+    0x50340 `[obj+0x106]==0` zero-gate is OPEN for the
+    player. Open: why the video-fitted walk rate closes
+    at s=10 (a high-rate walk pass decides), contact-chain
+    rewrites mid-jump, the [obj+0x11a]==5 word0 negation.
+    (e) Census: all 22 shipped lock2/unlock2 are KADMAR.
+    07 + LONA.05 - ZERO in ZARIA.01 (lock 19/unlock 11
+    there, the PR-321 family): that pair is NOT a ZARIA
+    blocker (pr514_lock2.txt). The carrier is the running
+    jump, pending PR-515's port leg and a measured arc.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that

@@ -93,6 +93,13 @@ FIELDS = [                # name -> offset in the object, per the ledger
     # writes the clamp delta at [obj+0xca]/[obj+0xce].
     ('answer_flag', 0xe2), ('answer_surface', 0xe6), ('answer_gap', 0xea),
     ('clamp_dx', 0xca), ('clamp_dy', 0xce),
+    # PR-514: the two intent words. 0x549f9/0x54a08 store the caller's
+    # input-block words 0/1 into them EVERY iteration, unconditional on
+    # the object's state (PR-147 F3, PR-188 F1); the kind-1/4 contact
+    # chain may then overwrite them with +/-10. This is the x-force's
+    # s factor (0x542ab) - the field the port only ever seeds for
+    # BY_X states.
+    ('intent_x', 0xba), ('intent_y', 0xbe),
 ]
 WIN = 0x140               # sampled window: covers every FIELDS offset
 MENU_AT = (640, 400)      # the chapter map menu's CRTC geometry (PLAN S6)
@@ -538,6 +545,14 @@ def main():
                          'map); missing file just means unnamed output')
     ap.add_argument('--max-seconds', type=int, default=900,
                     help='stop if no playable level was found by then')
+    ap.add_argument('--require-class', action='store_true',
+                    help='do not start the trace on a scene that lacks '
+                         'class-va: a chapter flyover is a live scene with '
+                         'KAMIEN/RYBA objects but no player (measured '
+                         '2026-11-25); keep waiting until the player class '
+                         'appears in the census instead of tracing the '
+                         'flyover. Use with --class-va for the level '
+                         "you're measuring.")
     ap.add_argument('--trace-seconds', type=int, default=90)
     ap.add_argument('--sample-hz', type=float, default=4.0)
     ap.add_argument('--census-every', type=float, default=None,
@@ -855,6 +870,17 @@ def main():
             if player:
                 new = player + [(x, c) for x, c in new if c != class_va]
             inv = collections.Counter(c for _, c in new)
+            if a.require_class and inv and not inv.get(class_va):
+                # PR-514: a chapter flyover/cinematic is itself a live
+                # scene (KAMIEN boulders, RYBA fish at plane 0) and the
+                # old first-world break traced exactly those. The player
+                # class is the level boundary; wait for it.
+                note('scene without the player class - still waiting',
+                     classes=[(names.get(cv, '?'), hex(cv), n)
+                              for cv, n in inv.most_common(6)],
+                     want=names.get(class_va, '?'), want_va=hex(class_va))
+                time.sleep(2)
+                continue
             if inv:
                 note('new objects in RAM (level start)', total=len(new),
                      classes=len(inv),

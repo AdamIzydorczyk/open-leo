@@ -66981,3 +66981,112 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   `lock` semantics and the chasm carrier - the two things
   the level actually uses.
 
+
+## PR-514 - THE LIVE ORIGINAL FEEDS THE x-INTENT WORD +/-20
+## FROM HELD ARROWS IN EVERY STATE; ZARIA.01'S JUMP BLOCKS ALL
+## AUTHOR F=180,0, AND THE PLT BUILDS A TAKEOFF LEDGE ENDING
+## AT x=403, FIVE UNITS WEST OF THE FIRST CHASM
+
+```
+KIND: read
+SUBSYSTEM: OI-124's carrier question (T5 F6). Three closed
+  facts plus one live measurement. (1) PORT RUN: the port's
+  own ZARIA.01 runtime with `1:FWD 132:JUMP` over 600 ticks
+  is x-frozen in every A_JUMP flight (x in {215,216,217}
+  over ticks 133-166, {230,231,232} over 213-260; the +/-1
+  is the POCISK push-outs); no x >= 408 is ever produced.
+  (2) DATA: every ZARIA.01 jump state - A_JUMP, A_JUMP_S,
+  A_PRE_JUMP, in LEW.MOV and LEWPL.MOV alike - authors
+  `F=180,0`, a SUSTAINED x force; and no jump state has a
+  K_FWD/K_BKWD exit, so held arrows keep the FLIGHT running
+  (its exits are AC_* only): the authored running jump is
+  the flight state plus its own F word. ZARIA_A.PLT also
+  carries the line `5 20,376;70,380;149,395;274,419;358,
+  389;403,386;` - a walkable line whose last point is x=
+  403, 5 units WEST of the west lip at 408 (PR-205); the
+  jump that line asks for spans 624-403 = 221 units.
+  (3) LAW GAP, closed form: the port adds the header force
+  as st->fx * s / 20 with s the [obj+0xba] intent, and its
+  s is gated on BY_X states (ll_player_step, PR-83's gate,
+  ll_play.c:2282); the engine seeds [obj+0xba]/[obj+0xbe]
+  UNCONDITIONALLY from the caller's input block at 0x549f9/
+  0x54a08 (PR-147 F3, PR-188 F1) and reads the x side at
+  the force 0x542ab with no state gate. With the port's own
+  law and a live s: v settles at 5*180*s/20 per iteration -
+  4.5 px/iter at s=10, 9 px/iter at s=20 - and over the
+  port-measured 34-iteration air time the range is ~130
+  units at s=10 and ~260 at s=20, against the 221 needed:
+  crossable only at the keyboard's own scale. With s=0 it is
+  0-2. The intent gate is the whole
+  gap. (4) LIVE MEASUREMENT (golden_level_trace.py, new
+  intent_x/intent_y fields, class TLewZaria 0x96960): in
+  the running game the lion's [obj+0xba] alternates 0/+20
+  in step with the tool's repeated sendkey `right`, while
+  [obj+0xbe] stays 0 with no Up/Down - word0 carries the
+  keyboard's own +/-20 (PR-147's capture reading), NOT the
+  contact chain's +/-10; the 0x50340 `[obj+0x106]==0` zero
+  gate is therefore OPEN for the player and the words reach
+  0x542ab live. Also NEW, from the same trace: the chapter
+  activates on ret at the map (down did not, twice), and
+  the level's own objects (KAMIEN, PALMA, RYBA, BAL,
+  STRUMIEN) allocate BEFORE the lion - 18 of the base LION
+  class 0x96874 sit in RAM uninvited while the PLAYABLE
+  lion is TLewZaria. A new --require-class wait flag keeps
+  the tracer off those scenes until class-va appears.
+ADDRESSES: 0x549f9, 0x54a08, 0x542ab, 0x54170, 0x54340,
+  0x50340, 0x58690, 0xba, 0xbe, 0x106, 0x96874, 0x96960,
+  docs/OPEN_ITEMS.md
+NAMES: running-jump carry, intent word seed, 403 takeoff
+  ledge, F=180 jump family, require-class, live-intent-20,
+  pr514_run1.log, pr514_intents.txt, pr514_evidence.md,
+  pr514_lock2.txt
+CODE: yes: tools/golden_level_trace.py only - the live
+  intent_x/intent_y fields (0xba/0xbe) and the
+  --require-class level-boundary guard. Nothing under
+  ported/ changes; no leg, no fixture, no pin moves.
+HOOKS: none - the trace tool is not a fixture; the verify-
+  golden rig legs run the same capture path unchanged.
+OPENS: WHY the walk's video-validated rate closes at s=10
+    while the live word is +20 (the halving is between the
+    block and the multiplier: the [obj+0xba] read at 0x54108
+    feeds an L1-normalizer, and the live walk velocity was
+    NOT sampled at or above the game's iteration rate - the
+    8 Hz trace undersamples it; a high-rate --trace-object
+    pass over a clean walk decides); whether the kind-1
+    contact chain ever rewrites the words mid-jump; the
+    player's mirror mode [obj+0x11a]==5 that NEGATES word0
+    (0x50340, PR-188 F1), and its field's owner in the
+    0x3ddf0 family; and which of the 18 LION 0x96874
+    objects the level actually runs (PR-390 measured one
+    landing while class-va was the base LION).
+CLOSES: none. Narrows OI-124: the carrier question is now
+  the intent seed, not the geometry; and removes the lock2
+  pair from the ZARIA.01 path by census (all 22 shipped
+  lock2/unlock2 tokens are KADMAR.07 and LONA.05; ZARIA.01
+  carries base lock 19 / unlock 11 only - pr514_lock2.txt).
+CORRECTS: none.
+MEASURED: (a) port run 600 ticks: per-tick state+pos trace,
+  the two frozen x windows above (pr514_run1.log,
+  pr514_trace.txt). (b) jump-block F/transition census in
+  both ZARIA.01 LEW scripts (pr514_jump.txt). (c) the 403
+  ledge line verbatim + the 221-unit span (pr514_evidence.
+  md section 4). (d) LIVE: lion 0x524400 at (50,640) ->
+  (55,680), intent_x 0/+20 in step with sendkey right,
+  intent_y 0 throughout; class inventory at level start
+  (pr514_intents.txt, pr514i.jsonl). (e) lock2 census
+  (pr514_lock2.txt). (f) THE PORT: unchanged.
+```
+
+- WHY. The chasm crossing of T5 F6 had four candidate
+  carriers and three were closed negative. This record makes
+  the fourth measurable: the authored jump carries its own x
+  force, the data builds the takeoff ledge for it, the
+  original keeps the intent word live from held arrows in
+  every state at +/-20, and the port's BY_X gate is what
+  silences it. The scale question (20 vs the video-fitted
+  10) is named, not guessed; the port step (PR-515) is a
+  one-expression change plus re-pins.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 65 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+
