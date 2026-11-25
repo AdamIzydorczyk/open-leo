@@ -7414,6 +7414,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     at 0x2bbcf); LEW_SWT = 0x9ab18/0x9ab10 (computed store
     0x2bb2e). Duplicates SCHODY/TGA_OBJ/POCISK exist in two
     clusters (first match wins). Full list: pr491_vocab.txt.]
+    [PR-492 RE-AUDITS THE FACTORY CHAIN against the 158-row
+    mtable census: the 0x4e96f-0x4e9ec tail calls ELEVEN
+    cluster ctors (0x1f870 ZARIA, 0x24f60 ENA, 0x26860 ENA2
+    before the eight of PR-490/491 - PR-104's chain), plus
+    the nested 0x616a0 under ZTABL (PR-90's AI factory).
+    Resolving the 48 arms with no direct [eax+8] store via
+    their sub-ctors (mini ctors: 0x65aa0 = NINJA 0xa3cfc,
+    0x66cb0 = WAZ 0xa3f70 - new names; 0x61890 = LICHA
+    0xa2f78 re-confirms PR-90): 213 sites, 201 distinct
+    names, 141/158 tables factory-named. The 17 unnamed are
+    the journal's internals (TLew x9, lion bases 0xa2218/
+    0x97970, base-object 0xa2550, BAL 0xa17dc, DRABINKA
+    0xa2498); only 0x9d220, 0x9f170, 0x983a4 stay nameless.
+    ZARIA's 11 no-store arms (POKAZ PIANA KAMIEN KATAPULT
+    KILOF_PL PALMA PLANT BRANCH TREE JBRANCH JROPE) only
+    call base ctors or 0x1f2b0/0x1f5f0 - candidate 0x54030
+    template-copy build. PR-492 corrects PR-490 (eight
+    fallbacks -> eleven) and PR-491 (nine clusters/161 sites/
+    152 names -> 13/213/201; 65 named tables -> 141).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

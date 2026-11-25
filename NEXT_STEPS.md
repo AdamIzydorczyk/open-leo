@@ -65268,3 +65268,94 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   are engine-internal controllers, and any future "what is
   this table" question gets a name lookup first.
 
+
+## PR-492 - THE FULL FACTORY CHAIN RE-AUDITED: ELEVEN FALLBACK
+## CLUSTERS, THIRTEEN CLUSTER CTORS, 213 SITES, 201 NAMES, AND
+## THE FINAL 158-TABLE COVERAGE LEDGER
+
+```
+KIND: read
+SUBSYSTEM: a complete re-audit of the class-name factory against
+  the mtable census (the DB's src='ctor' rows are exactly 158).
+  The comparison tail of 0x4df10 (0x4e96f-0x4e9ec) chains
+  ELEVEN cluster ctors, not the eight PR-490/491 read: first
+  0x1f870 (ZARIA), 0x24f60 (ENA), 0x26860 (ENA2), then
+  0x29090...0x383c0 - the exact chain PR-104 recorded. Under
+  ZARIA's ZTABL arm (0x1fee5) sits a nested cluster 0x616a0
+  (PARROT/SNAKE/LICHA/PAJAK/NOSOROG/PAPUGA - the AI classes
+  PR-90 read as 0x616d0). Resolving the arms that do NOT
+  store a table themselves (48 sites) through the sub-ctor
+  they call closes the vocabulary: 141 of 158 class tables
+  have a factory name; the other 17 have none and all are
+  journal-known internal classes.
+ADDRESSES: 0x4e96f, 0x4e971, 0x4e980, 0x4e98f, 0x1f870,
+  0x24f60, 0x26860, 0x616a0, 0x1fee5, 0x1feb6, 0x65aa0,
+  0xa3cfc, 0xa3cf4, 0x66cb0, 0xa3f70, 0xa3f68, 0x61890,
+  0xa2f78, 0x61fb0, 0xa3130, 0x29796, 0x90a6c, 0x9d220,
+  0x9f170, 0x983a4, 0x98078, 0x9755c, 0x62e40, 0x6e700,
+  0xa577c, 0x1f2b0, 0x1f5f0, docs/OPEN_ITEMS.md, 213, 158
+NAMES: coverage ledger, sub-ctor closure, chain head, mini
+  ctor, zoo table, WAZ table, pr492_vocab.txt, pr492_ev2.py,
+  pr492_unnamed.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE 11 ZARIA ARMS WITH NO TABLE STORE ANYWHERE IN THE
+    WINDOW (POKAZ PIANA KAMIEN KATAPULT KILOF_PL PALMA PLANT
+    BRANCH TREE JBRANCH JROPE): the window only calls a base
+    ctor (0x531f0/0x53ff0) or 0x1f2b0/0x1f5f0 - candidate
+    mechanism: the 0x54030 template-copy path; THE FIVE
+    BINARY-OPERAND ARMS (0x29099/0x29796/0x2bed0/0x386d0/
+    0x388be): their operand pointers (0x909ff, 0x90a6c, ...)
+    sit on dword data, yet PR-104 names the 0x29796 arm WAZ -
+    read why the operand decodes as data; the lion-region
+    tables 0x9d220 and 0x9f170 still carry no name; 0x983a4
+    (the view pair of 51566) is in mtable as a class table;
+    and the 0x4e922 arm stores TWO [eax+8] pairs in sequence
+    (0x9815c then 0xa20f4 - which wins?).
+CLOSES: PR-491's OPENS "the ~30 arms whose class table is
+  not a direct [eax+8] store": 48 such sites resolve through
+  the sub-ctor the arm calls - each mini ctor is a 4-6 insn
+  body storing exactly one class-table pair (0x65aa0 verbatim
+  below); NINJA = 0xa3cfc, WAZ = 0xa3f70 (new names), and
+  PR-90's LICHA = 0xa2f78 re-confirmed independently. PR-491
+  OPENS "do the 152 names account for ALL 158 class tables":
+  no - 141 by factory name (direct or via a sub-ctor), and
+  the remaining 17 are exactly the journal's internal set:
+  the nine TLew/lion tables (0x96960 0x97970 0x97a98 0x98f34
+  0x9a54c 0x9b4d4 0x9c958 0x9d338 0xa0624 - PR-104), the two
+  lion bases 0xa2218/0x97970 (PR-104), the base-object class
+  0xa2550, BAL's 0xa17dc, DRABINKA's kind 0xa2498 (PR-233),
+  0xa3f70 now named WAZ, and the three still nameless
+  0x9d220 0x9f170 0x983a4. The standing pool entry
+  "POKAZ/PIANA/PALMA/PLANT/JBRANCH/JROPE arms" closes as
+  ZARIA-cluster arms of 0x1f870 (their behavior stays open).
+CORRECTS: PR-490's "EIGHT fallback constructors in sequence":
+  the tail calls ELEVEN (0x1f870, 0x24f60, 0x26860 first -
+  the chain PR-104 already documented). PR-491's "complete
+  class-name vocabulary: NINE cluster ctors, 161 sites, 152
+  distinct names": not complete - with the three chain heads
+  and the nested 0x616a0 the census is 13 cluster ctors,
+  213 comparison sites, 201 distinct names, and 141 named
+  tables, not 65.
+MEASURED: (a) THE CHAIN verbatim 0x4e96f-0x4e9ec: eleven
+  `mov eax,ebx; call <ctor>; test eax,eax; jne ret` blocks.
+  (b) THE MINI CTORS verbatim: 0x65aa0 = `mov [eax+8],
+  0xa3cfc; mov [eax+0xc],0xa3cf4; ret` (NINJA); 0x66cb0 =
+  `call 0x3ff70; mov [eax+8],0xa3f70; mov [eax+0xc],
+  0xa3f68; ret` (WAZ, from the binary-operand arm 0x29796).
+  (c) LEDGER: per-cluster sites 31/21/21/3/26/14/29/6/19/
+  5+2/11/20/7 = 213; 201 distinct names; 141/158 tables
+  factory-named (full list pr492_vocab.txt). (d) SHARING
+  seen: 0x98078 installed by ENA's PERLOPL arm AND by
+  PAPUGA inside 0x616a0; ZTABL stores 0x9755c then dispatches
+  the animal ctor. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port and every future "what is this table" answer
+  need one authoritative name ledger; the two most recent
+  records had drifted from PR-104's (better) notes, and this
+  restores the true counts and pins the last unattributed
+  class tables.
+
