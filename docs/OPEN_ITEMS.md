@@ -6011,6 +6011,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     operands on `>= 0`, in the row-advance on `== -1`; and [obj+0x99] is
     written 1 by 0x52377 and 0x53883 but only ever tested against -1, so
     the third operand has no known producer.]
+    [PR-414 READS THE STATE-CLASS TABLES THEMSELVES. The 140 tables
+    stored at [obj+0x2e] are 7 dwords each, not an opaque block: slot
+    +0x08 is 0x3fcc0, +0x10 is 0x3fbb0 and +0x14 is 0x3fc20 IN ALL 140,
+    while slots +0x00, +0x04, +0x0c and +0x18 differ in all 140. The
+    shared trio is base-class plumbing over the child index at
+    [obj+0x16] - 0x3fcc0 is `if ([obj+0x16] != -1) call
+    [[[[obj]] + [obj+0x16]*4]+8 +0x08]`, i.e. delegate to the child -
+    so a generated state class contributes exactly four functions. The
+    tables are 28-byte objects in 34 runs (biggest 12 at 0xa44ac, 11 at
+    0xa6600, 10 at 0xa3dd8), and a ctor may install TWO overlapping
+    views of one table at other fields (0x727a7/0x727ae store 0xa6520 at
+    [obj+0x8] and 0xa6518 at [obj+0xc], which are the same table at
+    entry 2 and entry 0). THE SEGMENT MACHINERY OF PR-411 RUNS AS THE
+    +0x0c VERB: 0x72d50 is at 0xa66a8+0x0c, with siblings 0x72cb0
+    (0xa66c4) and 0x72330 (0xa640c).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

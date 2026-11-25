@@ -57902,3 +57902,96 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   question becomes the honest one: whose coordinates are those, and why
   the anchors step by 96. That is a question the shipped level files can
   answer, not more disassembly.
+
+## PR-414 - THE 140 GENERATED STATE-CLASS TABLES AT [obj+0x2e] ARE SEVEN
+## SLOTS WIDE: THREE ARE THE SAME FUNCTIONS IN ALL 140 AND FOUR ARE
+## UNIQUE PER STATE
+
+```
+KIND: read
+SUBSYSTEM: the generated state-class tables installed at [obj+0x2e] -
+  their size and slot layout, the three base-class verbs every one of
+  them shares, how they are laid out in the image, and which slot the
+  segment / row verbs of PR-411 to PR-413 sit in
+ADDRESSES: 0x3fbb0, 0x3fbb9, 0x3fc20, 0x3fcc0, 0x3fcc1, 0x3fcc4, 0x3fcc9,
+  0x3fccb, 0x3fcce, 0x3fcd1, 0x3fb80, 0x3fb30, 0x72d50, 0x72cb0, 0x72330,
+  0x72780, 0x72799, 0x727a0, 0x727a7, 0x727ae, 0x7283c, 0x72944, 0xa3dd8,
+  0xa44ac, 0xa5650, 0xa640c, 0xa6518, 0xa6520, 0xa66a8, 0xa66b4, 0xa66c4,
+  0xa67d8, 0x2e, 0x00, 0x04, 0x08, 0x0c, 0x10, 0x14, 0x16, 0x18, 0x1c
+NAMES: state-class table shape, seven slots, shared base verbs, child
+  delegation, table runs, per-state verbs, pr414_tables.txt, OI-111,
+  OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE CHILD FIELD [obj+0x16] IS - 0x3fcc0 skips its work when
+  it is -1 and otherwise indexes an array at [[obj+0x00]] with it, so it
+  is an index into the object's own child list, but which list; WHY the
+  140 tables are emitted in runs of 1 to 12 rather than one contiguous
+  block - the run lengths (1, 4, 4, 4, 4, 4, 4, 2, 1, 10, 5, 5, 12, ...)
+  look like groups per authored object type; which slot is the ENTER verb
+  of the 4 per-state slots (PR-406 found the record classes' entry verb at
+  table +0x1c, a different table family); and whether the per-state verbs
+  at +0x00 and +0x04 are the ctor and dtor of the state class, as their
+  position suggests.
+CLOSES: PR-404's OPENS item about the shape of the generated state-class
+  tables installed at [obj+0x2e] - they are 7 entries (28 bytes), not the
+  140-entry single block the earlier census implied, and 3 of the 7 slots
+  are the same three functions in all 140.
+CORRECTS: PR-404's statement that the tables span 0xa09f0-0xa67d8 as one
+  family: that range is correct as a span but the tables inside it are
+  28-byte objects separated by gaps, in 34 runs, and only 140 of the
+  addresses in that range are table starts.
+MEASURED: (a) THE CENSUS. The 140 immediate stores of the form `mov
+  DWORD PTR [reg+0x2e],0xa6...` name 140 table addresses. Reading 7
+  dwords at each: slot +0x08 is 0x3fcc0 in all 140, slot +0x10 is
+  0x3fbb0 in all 140, slot +0x14 is 0x3fc20 in all 140; slots +0x00,
+  +0x04, +0x0c and +0x18 have 140 distinct values each. (pr414_tables)
+  (b) THE LAYOUT. The 140 starts fall in 34 contiguous runs of 28-byte
+  tables (largest: 0xa44ac with 12, 0xa3dd8 with 10, 0xa5650 with 9,
+  0xa6600 with 11), with unrelated bytes between runs. Example, the
+  series near 0xa66a8: 0xa66a8 = 0x73c40, 0x73a90, 0x3fcc0, 0x72d50,
+  0x3fbb0, 0x3fc20, 0x73570 and 0xa66c4 = 0x73c00, 0x73a80, 0x3fcc0,
+  0x72cb0, 0x3fbb0, 0x3fc20, 0x733c0 - identical shape, different
+  per-state verbs. The ctors that install them do so in pairs of
+  assignment sites, e.g. 0x72944 stores 0xa66a8 at [eax+0x2e], and
+  0x727a7/0x727ae store 0xa6520 at [eax+0x8] and 0xa6518 at [eax+0xc] -
+  two OVERLAPPING views of one table (0xa6520 = 0xa6518 + 8), a third
+  dispatch field pair beside the +0x2e one.
+  (c) THE THREE SHARED VERBS. 0x3fcc0: `ecx = [obj+0x16]; if (ecx ==
+  -1) return; eax = [[obj+0x00] + ecx*4]; call [[[eax+8]] + 0x08]` - it
+  forwards the call to a child record and does nothing when there is no
+  child. 0x3fbb0 zeroes [obj+0x16] when edx is non-zero (0x3fbb9).
+  0x3fc20 reads [obj+0x16] and iterates from 1. So the shared trio is
+  base-class plumbing over the child index at [obj+0x16], and the
+  per-state part of a state class is exactly four functions.
+  (d) WHERE THE PR-411 TO PR-413 CODE SITS. 0x72d50 - the function
+  holding the segment lookup and the row-cursor stores of PR-411 - is
+  slot +0x0c of the table at 0xa66a8 (0xa66b4 = 0xa66a8 + 0x0c), so the
+  segment machinery runs as the +0x0c verb of a generated state class;
+  the other two sites PR-411 named are in the same function, and the
+  sibling variants at the same slot are 0x72cb0 (0xa66c4) and 0x72330
+  (0xa640c).
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr414_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr414_tables.txt, which is a census over the DB's imm
+  table (the 140 `[reg+0x2e]` stores) and the image dwords at those
+  addresses, plus the run-length grouping. The three shared verbs were
+  decoded from their own entry addresses with `python3 tools/re/leodb.py
+  dis`.
+```
+
+- WHY. Four rows in a row used these tables as if their shape were known
+  (PR-404 counted 140 of them; PR-411 to PR-413 called a verb out of
+  one) and nobody had read one. The shape is small and decisive: a state
+  class is four authored-shaped verbs plus three identical base
+  functions, and the base functions all revolve around one child index at
+  [obj+0x16]. For the port that is the boundary between what a state
+  class can do and what the engine does for every state: anything the
+  port models per state belongs to those four slots, and the shared trio
+  means the engine's per-state behaviour is normally a delegation to the
+  object's child, which is the thing the port's state records have no
+  equivalent of.
