@@ -62483,3 +62483,86 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   reading arithmetic rather than hopeful, and the port already
   models the receiving half.
 
+
+## PR-460 - THE LAYER VERB: VIRTUAL +0x5c IS FULLY OCCUPIED, ITS
+## DEFAULT IS PR-166's SETTER, AND ITS TEN CALL SITES ARE
+## COPY-THEN-PROPAGATE IDIOMS PLUS ONE PLAN-TEXT BROADCAST LOOP
+
+```
+KIND: read
+SUBSYSTEM: object virtual slot +0x5c: census (0x23b90 in 150
+  of 158 detected tables, 0x1ecb0/0x554f0/0x23bc0/0x332f0 in
+  the rest), the ten call sites, the copy-then-propagate
+  variants (0x1ecb0 -> [obj+0x120], 0x332f0 -> [obj+0xee]),
+  the inline sites behind the 0x4dcc0 creator, and the
+  broadcast loop at 0x4b27c inside the plan-text occurrence
+  counter 0x4b1d0
+ADDRESSES: 0x5c, 0x23b90, 0x1ecb0, 0x332f0, 0x554f0, 0x23bc0,
+  0x24, 0x24018, 0x2402b, 0x33cf8, 0x33d0f, 0x362b6, 0x362c7,
+  0x4b1d0, 0x4b241, 0x4b27c, 0x4b286, 0x4dcc0, 0x4df10,
+  0x531b0, 0x531c1, 0x91f2a, 0x91f10, 0xee, 0x120, 0x58, 0x34,
+  0x112, 0x12a, 0x96fd8, 0x96960
+NAMES: layer verb, copy-then-propagate, plan broadcast loop,
+  occurrence counter, owner attachment, pr460_layerven.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT 0x4dcc0 CREATES - it resolves a token (scanf format
+    ' %[^,]' at 0x91f2a, the literal 'none' at 0x91f10) through
+    0x57a40 and calls 0x4df10; the three attachment flows read
+    its result as an owner ([+0x112]/[+0x12a]) but the created
+    thing itself is unread; the [obj+0x120] and [obj+0xee]
+    delegate fields as a general pair (ee is a MODE WORD in the
+    actor classes, PR-453, and a sub-object here - the class
+    collision again); the +0x5c variants 0x554f0 (3 tables)
+    and 0x23bc0 (1) bodies; and which plan-text leg supplies
+    the edx layer to 0x4b1d0's broadcast (the caller of that
+    method is not read here).
+CLOSES: PR-166's "how a class declares its plane" from the
+  other side. The slot census shows +0x5c occupied in 158/158
+  detected tables and its ten call sites are all layer
+  propagation: (a) copy-then-propagate methods - 0x1ecb0
+  stores [obj+0x24] = edx then calls +0x5c on the delegate at
+  [obj+0x120]; 0x332f0 the same through [obj+0xee] (so a
+  parent's layer write cascades to its sub-objects); (b) the
+  owner-attachment flows 0x2402b/0x33d0f/0x362c7, which call
+  the creator 0x4dcc0, store it as the owner ([+0x112] or
+  [+0x12a]) and then call +0x5c ON THE OWNER with edx = the
+  child's own [obj+0x24] - a new attachment adopts the child's
+  layer; (c) the broadcast 0x4b27c inside the plan-text 'A'/
+  '|' occurrence counter: for the authored-vector array
+  [hdr+0x58]+idx and each node's [node+0x34] chain, call
+  +0x5c with one caller-supplied layer - a plan leg setting
+  the layer of every object it owns.
+CORRECTS: PR-166's phrasing "verb +0x04 of 211 class tables"
+  is measurement-complementary, not wrong: the raw 4-byte scan
+  counts slot positions per TABLE, while the virtual call sites
+  address a FIXED slot per CALLER (here +0x5c); the same stub
+  0x23b90 is installed at different offsets per class (in
+  0x96960 it sits at several slots). Say "the caller's slot is
+  fixed, the class's install offset varies".
+MEASURED: (a) THE CENSUS. +0x5c: 0x23b90 in 150 tables,
+  0x1ecb0/0x554f0 in 3 each, 0x23bc0/0x332f0 in 1 each.
+  (b) THE CALL SITES (sql over ops like '%+0x5c]%' and
+  mnem=call): 0x1ecbd, 0x2402b, 0x332fd, 0x33d0f, 0x362c7,
+  0x362f2, 0x4b286, 0x4d68b, 0x531c1, 0x55513 - ten.
+  (c) THE LOOP. 0x4b270-0x4b28e: `mov edx,[esp+0xc]` (the
+  layer argument), `eax = [[eax+0x58]+edx]`, walk
+  `[ebx+0x34]` while non-null, per node `call [ebx.vt+0x5c]`;
+  preceded at 0x4b241-0x4b26a by the 'A' and '|' byte counter
+  PR-191 named. (d) THE PORT. Unchanged: the port carries the
+  layer per object (o->layer, PR-139/PR-166) and its plans set
+  it at placement; the engine's runtime cascade and the
+  attachment adoption are not modelled and no current leg
+  needs them.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The field PR-139/PR-166 pinned as the parallax/collision
+  plane turns out to have a full propagation machine behind
+  it: parents cascade layer writes to sub-objects, attachments
+  adopt the child's layer, and a plan leg can set the layer of
+  everything it names. That is the engine's answer to "what
+  happens to a drawn object when the scene's layer changes",
+  and it is stated by ten call sites and one loop.
+

@@ -6815,6 +6815,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     The port already models the receiving half (v += F= * s /
     20, ll_play.c:2253/2303); only the internal feeders are
     absent.]
+    [PR-460 READS THE LAYER VERB +0x5c: occupied in 158/158
+    detected tables, default = PR-166's setter 0x23b90 (150),
+    and its TEN call sites are all layer propagation. Two
+    methods copy-then-propagate: 0x1ecb0 stores [obj+0x24] =
+    edx then calls the verb on the delegate at [obj+0x120];
+    0x332f0 does the same through [obj+0xee] (which is a mode
+    WORD in the actor classes, PR-453, and a sub-object here -
+    the class-collision lesson again). Three attachment flows
+    (0x2402b/0x33d0f/0x362c7) call the creator 0x4dcc0, store
+    it as the owner ([+0x112]/[+0x12a]) and then call the verb
+    ON THE OWNER with the child's own layer - attachments
+    adopt. And 0x4b27c, inside the plan-text 'A'/|' occurrence
+    counter 0x4b1d0, broadcasts one caller-supplied layer over
+    the authored-vector array [hdr+0x58] and every [node+0x34]
+    chain node. Phrasing fix to PR-166: the caller's slot is
+    fixed, the class's install offset varies. Open: what
+    0x4dcc0 creates (token path ' %[^,]' at 0x91f2a, 'none' at
+    0x91f10 -> 0x57a40 -> 0x4df10), the 0x554f0/0x23bc0
+    variants, and which plan leg supplies the broadcast's
+    layer.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
