@@ -60301,3 +60301,107 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   the MOVE arm shows authored motion is DELTA-based through the
   same position words the pos verb sets, which is what the port's
   step loop must consume.
+
+## PR-437 - THE SHARED TICK PIPELINE: MERGE FLAGS, PICK A ROW,
+## READ ITS PARAMETERS, MOVE, DRAW
+
+```
+KIND: read
+SUBSYSTEM: the shared tick core 0x536f0 (PR-435's table +0x14
+  default body) end to end: the flag-vector merges through 0x49580,
+  the row selection 0x523f0, the row parameter handlers 0x53520 and
+  0x535a0, the sequence-condition scanner 0x52000, and the row
+  class method table family installed at [row+0x44]
+ADDRESSES: 0x536f0, 0x53705, 0x53711, 0x5371c, 0x53733, 0x5373c,
+  0x5374b, 0x53755, 0x5375d, 0x49580, 0x523f0, 0x52000, 0x52033,
+  0x53520, 0x5356b, 0x535a0, 0x52472, 0x52500, 0x52570, 0x52590,
+  0x520c0, 0x47e40, 0x97c9c, 0x98e7c, 0x99338, 0x9a8cc, 0x9a894,
+  0xa25d4, 0x92281, 0x1a, 0x24, 0x28, 0x44, 0x48, 0x54, 0x60,
+  0x8c, 0xa8, 0xac, 0x15, 0x0c
+NAMES: tick pipeline, flag vector, row selection, sequence
+  condition scan, row class table, row ctor, row clone, frame draw
+  slot, pr437_tick.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE VIRTUAL +0x8c RETURNS - it is the object's own
+    flag source, merged into [obj+0x60] before selection, and no
+    implementation was read; WHAT THE ROW DESCRIPTOR AT [obj+
+    0x24] IS, written by the +0x54 call and passed to the next
+    one; WHAT THE +0x28 VIRTUAL DOES (the last call in the core,
+    the PR-435 census left the +0x28 column unread); THE REST OF
+    THE 21-BYTE CONDITION ENTRIES - words at entry+0x0d and +0x11
+    are targets and 0x47e40 decides the test; the meaning of the
+    +0xa8/+0xac table slots and the [row+0x00]/[row+0x04] link
+    pair; and WHO MAINTAINS THE ROW CURSOR [obj+0x5c] outside the
+    core - writers at 0x44582 and 0x524c8 zero it and 0x1583c
+    adds to it.
+CLOSES: PR-435's OPENS item WHAT THE SHARED CORE 0x536f0 FINISHES,
+  and the PR-433 open question of how the row array is consumed:
+  every tick selects row = [[obj+0x50] + [obj+0x5c]*4] and tests
+  it against the flag vector. Also closes the PR-431 observation
+  that the row family carries the PR-431 driver: the row descriptor
+  0xa25d4 slot +0x18 IS 0x520c0, the same driver, and the row
+  table +0x18 slot is 0x520c0 in all five tables read.
+CORRECTS: PR-435's partial reading of 0x536f0 ("virtual +0x8c,
+  0x49580 with [obj+0x60], row array into 0x523f0") stops at the
+  middle: the core continues into parameters, motion and draw; and
+  its "compare via 0x49580" wording is also imprecise - 0x49580
+  is an in-place OR merge of three dwords (loop 0x49589-0x4959a,
+  dst[i] |= src[i]), confirmed here at four call sites. PR-410's row model
+  gains the descriptor layout: rows are 0x60-byte objects whose
+  class table sits at [row+0x44]; row ctor 0x52590 parses the
+  row-type letters F, T and G from image strings at 0x92281.
+MEASURED: (a) THE CORE. 0x536f0 (eax = object): scratch 0x28 at
+  esp; virtual [table+0x8c] with edx = esp+0x10, result eax; 0x49580
+  with eax = [obj+0x60] edx = eax - merge the object's own flags
+  into the 12-byte flag vector; eax = [[obj+0x50]+[obj+0x5c]*4]
+  (the current row) and 0x523f0 with edx = esp; its result merged
+  into [obj+0x60] again; virtual [table+0x54] with edx = esp+0x24
+  ebx = esp+0x2c; 0x53520 with edx = esp+0x20; then [esp+0x24]
+  into eax, [esp+0x20] into edx and virtual [table+0x54] again;
+  virtual [table+0x28]. (pr437_tick)
+  (b) THE SELECTOR AND THE SCANNER. 0x523f0 (eax = row, edx =
+  flags): through the row descriptor [row+0x44] calls slot +0x08
+  then +0x0c (PR-410's test and match arms); virtual [row+0x00]'s
+  +0xac and +0xa8 with the flags; slot +0x10 with ecx = 0xc;
+  copies a 12-byte result descriptor, byte +0xc taken from the
+  flags buffer byte +0xc. 0x52000: esi = row+0x1a - a condition
+  array of [row+0x18] entries of 0x15 bytes; for each entry call
+  0x47e40 on it (edx = caller flags); on true, entry+0x0d goes to
+  out[0] and entry+0x11 to out2[0]; finally virtual row slot
+  +0x04 with the output pair. (pr437_tick)
+  (c) THE ROW CLASS FAMILY. Tables 0x97c9c, 0x98e7c, 0x99338,
+  0x9a8cc, 0x9a894 (installed at [row+0x44] by ctors at 0x1e119,
+  0x240f6, 0x26425, 0x26ef5, 0x270fd): +0x00 ctor 0x52590, +0x04
+  0x23c90, +0x0c arm 0x521f0, +0x10 0x23c80, +0x14 0x52570, +0x18
+  driver 0x520c0 - identical across tables; only +0x08 and the +0x1c
+  pair vary. 0x52570 clones: allocates 0x60 bytes via 0x5c320 and
+  0x52500 copies the source row, installing the base descriptor
+  0xa25d4 and copying fields +0x48..+0x5c. 0x52590 matches the
+  first word against image literals at 0x92281 - F, T and G each
+  with a "%i,%i" format - the authored row types. (pr437_tick)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr437_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr437_tick.txt: disassemblies of 0x536f0, 0x53520,
+  0x535a0, 0x523f0, 0x52472, 0x52000, 0x52570, 0x52590 and
+  0x52500 from their entry addresses, plus the five row-table slot
+  dumps and the 0x92281 and 0xa25d4 bytes read from build/leo/leo
+  .img.
+```
+
+- WHY. This is the engine's per-frame contract in one line of
+  code, and it is exactly what ported/ll_play.c has been
+  approximating: fold the object's own flags and the current row's
+  conditions into one 12-byte flag vector at [obj+0x60], select
+  parameters from the row chosen by the cursor, apply motion
+  through the +0x54 pair of calls, then the draw slot +0x28. The
+  21-byte sequence-condition entries with target words at +0x0d
+  and +0x11 match the authored row language the port already
+  parses, so the port's row structs and the engine's row objects
+  can now be aligned field by field. The F/T/G row-type letters
+  from 0x92281 also name the row classes the parser at 0x52590
+  builds - direct input for naming the port's row kinds.

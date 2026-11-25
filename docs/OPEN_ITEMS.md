@@ -6399,6 +6399,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     [obj+0x28]=1 - closes PR-434's delete-flag item; 0x10 sets
     [obj+0x30]. Open: +0xc2/+0xc6 readers, +0x71, +0xa9 classes,
     +0xb6 bits 4/8, virtual +0x54, type 0x19.]
+    [PR-437 READS THE TICK PIPELINE. Core 0x536f0: virtual
+    table+0x8c (object's own flags) merged via 0x49580 - an OR of
+    3 dwords - into the 12-byte flag vector [obj+0x60]; row =
+    [[obj+0x50]+[obj+0x5c]*4] runs through selector 0x523f0 (row
+    slots +0x08/+0x0c, then +0x10, returns a 12-byte descriptor),
+    merged again; virtual +0x54 twice around parameter handlers
+    0x53520 (copies flags, scans the row's condition array at
+    row+0x1a: count [row+0x18], 0x15-byte entries, 0x47e40 tests,
+    true entry words +0x0d/+0x11 are targets) and 0x535a0, then
+    virtual +0x28 = draw. Rows are 0x60-byte objects, class table
+    at [row+0x44] (family 0x97c9c...: ctor 0x52590 parses row
+    letters F/T/G with "%i,%i" from 0x92281; clone +0x14 = 0x52570
+    via 0x52500; +0x18 slot IS the PR-431 driver 0x520c0). Row
+    descriptor 0xa25d4. Closes PR-435's 0x536f0 item and the
+    PR-433 row-array consumer. Open: +0x8c bodies, [obj+0x24]
+    descriptor, +0x28, cursor writers 0x44582/0x524c8/0x1583c.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
