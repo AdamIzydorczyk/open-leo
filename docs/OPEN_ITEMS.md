@@ -6554,6 +6554,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x4b600/0x4b430 bodies, the +0xa8 arg-record chain, whether
     to model the bounce (3 states, no leg touches them), and
     the dis-scan that could settle CHECK_LN.]
+    [PR-446 RUNS THE +0xac BODY TO THE END AND FIXES THAT: the
+    second gate at 0x54706 IS CHECK_LN (test ah,0x1) - so every
+    keyword in the PR-410 table has a consumer. Both gates run
+    the same trio: 0x4b600 (point query at 0x541f0's support-
+    aware position PLUS the step words +0xca/+0xce - a
+    look-ahead point - over registry list [reg+0x74]/[+0x80],
+    entries answer via their +0x1c virtual), 0x4b430 (box over
+    the +0x68 published pair via 0x534e0 + steps, list
+    [reg+0x70]/[+0x7c] via filter 0x45620, answer = AC_BLOK at
+    0x4b4ec), 0x4b7f0 (list [reg+0x78]/[+0x84], [entry+0x10]
+    +0x4 on the object). Answers merge through 0x49580. The
+    method's tail is PR-331's surface link with its engine
+    bytes: candidate [obj+0xe6] state [obj+0xe2], attach via
+    candidate +0x0 -> [obj+0xa9] + virtual +0xb4 raising
+    AC_DUP (byte0 0x10), AC_DUP_CD (byte1 0x20) while the
+    state is nonzero, detach via +0x4 + [obj+0xa9]=0 + virtual
+    +0xb8 raising AC_ONAIR (byte2 0x04); skipped while vy >=
+    0x58c. PR-438's old "unread scene queries" item is closed.
+    Open: who writes [obj+0xe6]/[obj+0xe2], the answering entry
+    classes (the port's contact-table objects), the query mode
+    arg 0/2, 0x4b500/ds:[0xa94e8], and virtuals +0xb4/+0xb8.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

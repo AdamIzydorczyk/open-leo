@@ -61250,3 +61250,118 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   this row says that is not an accident). The two PR-410
   negatives that were too strong are fixed where they were said.
 
+
+## PR-446 - THE +0xac PIPELINE END TO END: SCENE QUERIES AT THE
+## LOOK-AHEAD POSITION UNDER THE CHECK_LN/CHECK_BASE_LN GATE, AND THE
+## ATTACH TAIL THAT RAISES AC_DUP, AC_DUP_CD AND AC_ONAIR BY NAME
+
+```
+KIND: read
+SUBSYSTEM: the default +0xac method 0x546a0 in full - the
+  CHECK_BASE_LN arm and the CHECK_LN arm (PR-445 saw only the
+  first gate), the three scene queries they run (0x4b600 point
+  at the look-ahead position, 0x4b430 box, 0x4b7f0 list scan),
+  the position helpers 0x541f0/0x534e0 that make those
+  positions support-aware, and the [obj+0xe6]/[obj+0xe2]
+  attach machine that closes the method with the surface-link
+  flags PR-331 modeled from behavior
+ADDRESSES: 0x546a0, 0x546b9, 0x546c5, 0x546c8, 0x54706, 0x54759,
+  0x5476f, 0x54785, 0x5478e, 0x54798, 0x547b3, 0x547d1, 0x547fa,
+  0x54800, 0x4b600, 0x4b638, 0x4b64f, 0x4b670, 0x4b697, 0x4b6ba,
+  0x4b430, 0x4b45d, 0x4b479, 0x4b4aa, 0x4b4d6, 0x4b4ec, 0x4b7f0,
+  0x4b500, 0xa94e8, 0x541f0, 0x54226, 0x534e0, 0x45620, 0x49580,
+  0x749a0, 0xcef40, 0x58c, 0x68, 0x70, 0x74, 0x78, 0x7c, 0x80,
+  0x84, 0xa9, 0xca, 0xce, 0xc6, 0xe2, 0xe6, 0x1c, 0x60
+NAMES: look-ahead query position, point query, box query, list
+  scan, registry lists, support candidate, AC_BLOK answer, AC_DUP
+  raise, AC_ONAIR raise, 0x58c fall gate, pr446_queries.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHO WRITES [obj+0xe6] (the support candidate) and
+    [obj+0xe2] (its state counter) - the queries' answers are
+    the candidates, but the store sites are unread; the entry
+    methods that answer the queries (the +0x1c virtual of the
+    +0x74-list entries, 0x45620's filter on the +0x70 list, the
+    [entry+0x10]+0x4 call on the +0x78 list) - the answering
+    classes are exactly the port's contact-table objects
+    (PR-338), so this is the map to read next; what the query
+    MODE argument means (ecx=0 on the CHECK_BASE_LN arm, ecx=2
+    on the CHECK_LN arm, and 2 again at 0x4b659); the 4-dword
+    query record 0x4b430 builds (both corners get the step
+    words added - shape literal, sense unread); 0x4b500's body
+    and what ds:[0xa94e8] is; the [obj+0xc6] threshold 0x58c =
+    1420 register-units (a fall-speed cutoff before attach);
+    and the virtuals +0xb4/+0xb8 fired on attach/detach.
+CLOSES: PR-438's long-open "the 0x4b600/0x4b430 scene queries
+  merged into [obj+0x60]" - both are read: 0x4b600 queries the
+  registry +0x74 list at the SUPPORT-AWARE world position
+  (0x541f0) plus the STEP WORDS [obj+0xca]/[obj+0xce] - a
+  look-ahead point - letting the current attach target adjust
+  it first, and merges the 13-byte answer through 0x49580;
+  0x4b430 boxes the +0x68 published pair (via 0x534e0, the
+  PR-443 getter) the same look-ahead way and answers signal
+  index 0 = AC_BLOK on a hit (0x4b4ec). PR-443's position
+  model gains the two readers it predicted. It also puts exact
+  indices on PR-331's behavioral model: the attach tail ORs
+  byte0 bit 4 = index 4 = AC_DUP (first attach), byte1 bit 5 =
+  index 13 = AC_DUP_CD ([obj+0xe2] nonzero), byte2 bit 2 =
+  index 18 = AC_ONAIR (no candidate while detached) - the same
+  three names the port's enum carries, in the same field
+  layout, and the vy test cmp [obj+0xc6],0x58c gates them
+  while falling fast.
+CORRECTS: PR-445's claim, in its headline and twice in its
+  body, that CHECK_LN is "the one bit nobody turns out to
+  test" and that "NO test of it was found in the image". The
+  test is at 0x54706 (`test ah,0x1` = word bit 8 = CHECK_LN),
+  40 bytes below the CHECK_BASE_LN test the same row named -
+  the dis window was simply cut at 0x546c5-0x54706 and the
+  second gate never entered. So the corrected census stands:
+  EVERY named keyword in PR-410's table has a consumer -
+  CHECK_LN's is the same contact-pipeline gate, the second of
+  the two arms. PR-445's other sentences (the consumers it
+  named, the row-copy at 0x5181a) stand unchanged.
+MEASURED: (a) THE GATE PAIR. 0x546a0 bails at once if [obj+
+  0xb6] bit 2 (attached class); it then reads the CURRENT ROW's
+  control word (cursor, 0x546c2) twice: bit 14 CHECK_BASE_LN
+  (0x546c5) and bit 8 CHECK_LN (0x54706); each arm runs the
+  trio 0x4b600 + 0x4b430 + 0x4b7f0 with its own 0x10-spaced
+  scratch vectors and a different mode argument (0 / 2), ORing
+  every answer into the method's local vector via 0x49580 -
+  the same merge chain as the flag builder. (b) THE QUERIES.
+  Point: 0x541f0 (copies [obj+0x00]/[+0x04], support-adjusted
+  through +0x48 and [support+0x33]) then +0xca/+0xce; box:
+  0x534e0 (calls virtual +0x68 twice = the published +0xd6
+  pair, PR-443) then the same step words into a 4-dword record;
+  third: 0x4b7f0 walks registry list +0x78/+0x84 calling
+  [entry+0x10]'s +0x4 on the object itself. The registry
+  ds:[0xcef40] thus holds at least three lists (+0x70/+0x7c
+  stride 0x14, +0x74/+0x80 stride 0xc, +0x78/+0x84 stride
+  0x14) next to the factory slot +0x398 (PR-440) and the
+  screen anchor +0x394 (PR-439). (c) THE ATTACH TAIL. 0x54759:
+  [obj+0xe6] is the candidate, [obj+0xe2] its state; if state
+  2 and [obj+0xc6] >= 0x58c the tail is skipped (too fast to
+  stick); first attach calls the candidate's method +0x0 with
+  the object, stores it into [obj+0xa9] (the PR-436 field that
+  0x4b600 also reads back), fires virtual +0xb4, and raises
+  AC_DUP; a swapped candidate gets the old one's +0x4 (detach)
+  first; losing the candidate detaches (+0x4, [obj+0xa9]=0,
+  virtual +0xb8) and raises AC_ONAIR - exactly PR-331's
+  surface-link tail, now with its field names, indices and
+  threshold. (d) THE PORT. This is the engine's other half of
+  what ll_level.c's contact table and the AC_ONAIR raise of
+  PR-331 model; no behavior changes here - the answering
+  classes (OPENS) are the bridge to checking the port's table
+  entry by entry.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The last "unread machinery" note in the physics line of
+  this journal - PR-438's scene queries - is now a named
+  pipeline with an authored gate, and PR-331's flag raises have
+  their engine bytes. Two rows of the journal also self-correct
+  cleanly: PR-445's census missed one gate 40 bytes down its
+  own dis window, and the honest lesson (read the full method,
+  not a window) is the same one PR-444 learned about index
+  censuses.
+
