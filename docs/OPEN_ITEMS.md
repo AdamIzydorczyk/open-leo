@@ -1730,7 +1730,9 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     state step (0x52217) and set only by the row-admission
     tail (0x5234a), so an `I`/`F` pull is a ONE-SHOT at
     row entry, and the sums are of the current row (the
-    chain head table is at [rec+0x2e] indexed by the row
+    chain head table is at [rec+0x2e] indexed by the row [CORRECTED BY
+    PR-404: every code site that writes [x+0x2e] writes a CLASS TABLE,
+    so this indexing rests on the instruction text alone] indexed by the row
     cursor [rec+4], 0x5268e/0x52221 - PR-98's inference
     now fact). PR-251 CORRECTS the arc numbers PR-250
     printed: run right, one-shot, the authored A_JUMP arc
@@ -5897,6 +5899,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     vptr store. So the 0xcf518 calls at 0x74a98/0x74b63 are base-class
     legs of the engine's own construction, not visits of authored clause
     nodes: 0x520e1 remains the only node-class visit in the image.]
+    [PR-404 QUESTIONS THE OPERAND ITSELF. The visit at 0x520e1 is still
+    real, but `[rec+0x2e]` as a node array is no longer settled. 141
+    instruction sites write DWORD PTR [reg+0x2e] and 140 of them are
+    `mov [eax+0x2e], T` with T one of 140 DISTINCT class tables from
+    0xa09f0 to 0xa67d8, emitted by 35 generated constructor functions in
+    0x618b0-0x7412c that each end in `call 0x3fb30` - a base constructor
+    that allocates through 0x216c0, sets a cursor at +0x16 to -1 and runs
+    the PR-403 engine-class pair 0x96200/0x961fc with 0x57990. All 140
+    tables share three verbs (+0x08 = 0x3fcc0, +0x10 = 0x3fbb0, +0x14 =
+    0x3fc20): index an element array by the cursor, read the element's
+    class at [element+8], call its +0x08/+0x0c/+0x10. So the field the
+    row-advance indexes as data is written as a class table everywhere it
+    is written in code, and neither reading is proven. Also note the 16
+    record classes that hold 0x520c0 at +0x18 are NOT what those 140
+    constructors build.]
     WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;

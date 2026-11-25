@@ -56641,3 +56641,130 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   shrinks to the honest size: exactly ONE node-class visit, 0x520e1.
   The lesson is cheap to carry: before naming an unknown block by the
   game model, check whether it is the runtime's.
+
+## PR-404 - 140 CLASS TABLES ARE EMITTED BY 35 GENERATED CONSTRUCTOR
+## FUNCTIONS THAT ALL END IN THE SAME BASE CALL, ALL 140 SHARE THREE
+## VERB SLOTS, AND ALL 140 ARE STORED AT [x+0x2e] - THE FIELD PR-401
+## READS AS A NODE ARRAY
+
+```
+KIND: read
+SUBSYSTEM: the generated per-state record class family at
+  0xa09f0-0xa67d8, its base constructor 0x3fb30, the three verb slots
+  every one of them carries at +0x08/+0x10/+0x14, and what that says
+  about the field [x+0x2e] used by the row-advance 0x520c0
+ADDRESSES: 0x3fb30, 0x3fb36, 0x3fb3d, 0x3fb42, 0x3fb45, 0x3fb56, 0x3fb5d,
+  0x3fb62, 0x3fb65, 0x3fb80, 0x3fbb0, 0x3fbc5, 0x3fbd5, 0x3fc20, 0x3fc3b,
+  0x3fc43, 0x3fcc0, 0x3fcc1, 0x3fcc9, 0x3fccb, 0x3fcce, 0x3fcd1, 0x3fce0,
+  0x3fce3, 0x3fced, 0x3fcf2, 0x3fcf7, 0x3fd00, 0x3fd70, 0x3fdf0, 0x3fe01,
+  0x216c0, 0x57990, 0x579e0, 0x5c320, 0x76a64, 0x618b0, 0x618d7, 0x6192c,
+  0x61fd0, 0x626e0, 0x62e90, 0x64cc0, 0x65090, 0x65105, 0x6d860, 0x72260,
+  0x727c0, 0x72d50, 0x72d59, 0x72d70, 0x72d75, 0x73090, 0x730a1, 0x730ab,
+  0x730b7, 0x730be, 0x74000, 0x74027, 0xced18, 0xced1c, 0xa09f0, 0xa3054,
+  0xa3070, 0xa308c, 0xa30a8, 0xa67d8, 0xa67bc, 0xa67a0, 0xa6784, 0xa2638,
+  0x97c9c, 0x520c0, 0x520cf, 0x520d2, 0x520d5, 0x520d7, 0x961fc, 0x96200,
+  0x61e40, 0x61f00, 0x61270, 0x16, 0x1e, 0x22, 0x04, 0x08, 0x0c, 0x10,
+  0x2e, 0x32, 0x36, 0x3a, 0x2a, 0x18
+NAMES: generated class family, base constructor, shared verb slot,
+  cursor walk, current element, list length table, state handler field,
+  element list, pr404_lists.py, pr404_lists.txt, pr404_states.txt,
+  OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. OI-111 gains the
+  census and a correction to PR-401's reading of the visited operand.
+HOOKS: none - no leg and no fixture moves; the port's row pass is not
+  changed by this read.
+OPENS: WHICH OBJECT OWNS THE 140 TABLES STORED AT FIELD +0x2e - the 16 record
+  classes that hold 0x520c0 at +0x18 are NOT among the objects these
+  constructors build (their own tables at +0x04 hold 0x23c90 in 15 of 16
+  cases), so the 140 constructors build a different owner whose
+  relationship to the row-advance is not established; WHAT THE 35
+  GENERATOR FUNCTIONS CORRESPOND TO IN AUTHORED DATA - they are laid out
+  in 35 blocks of 2 to 14 similar functions with 85-byte spacing, which
+  smells like a per-state code generator, but no state name is attached;
+  why 107 of the 140 tables repeat the three shared verbs at +0x24/+0x2c/
+  +0x30 while 31 do not; the two tables written by 0x72d50, which
+  allocates 0x18 bytes with new and never installs a class table; whether
+  [x+0x36] is a length or a stride-derived bound, given that it is loaded
+  from the table at 0xced1c indexed by [x+0x3a] times 3 minus itself; and
+  what the record-class field at +0x22, set to -1 by 0x3fb45, is for.
+CLOSES: nothing in the open-items register. It retires the reading that
+  PR-401's visited operand is simply "the node at the current row", which
+  is the half of that row's OPENS line this row was asked to answer.
+CORRECTS: PR-401's MEASURED (a), "the visited object is
+  `[[rec+0x2e] + [rec+4]*4]` - the node at the record's CURRENT ROW
+  INDEX". The address is right; the reading of `[rec+0x2e]` is not
+  settled: the only 141 code sites that write that field are constructor
+  actions that store a CLASS TABLE POINTER there (140 distinct tables,
+  0xa09f0 to 0xa67d8), and none of those 140 tables has a +0x04 verb
+  from the visit family - their +0x04 verbs are 140 distinct functions of
+  their own. So `[rec+0x2e]` is a class-table field in the code that
+  builds these objects, and the array indexing at 0x520d5-0x520d7 reads
+  it as a data array; one of the two readings is wrong, and this row
+  does not have the evidence to choose. Until it is settled, the claim
+  that the row-advance visits a node of an authored clause list rests on
+  0x520c0's own text alone.
+MEASURED: (a) THE FIELD. 141 instruction sites write DWORD PTR [reg+0x2e]
+  and 140 of them are `mov [eax+0x2e], T` with T a pointer into the class
+  band: 140 distinct tables, from 0xa09f0 and 0xa3054 up to 0xa67d8,
+  laid out in runs of 2 to 14 tables 18 bytes apart (pr404_lists.txt,
+  pr404_states.txt). They are written from 35 functions in the range
+  0x618b0-0x7412c; each function writes several of them in sequence, e.g.
+  0x618b0 writes 0xa30a8 at 0x618d7, 0xa308c at 0x6192c, 0xa3070 at
+  0x61984, 0xa3054 at 0x619dc, with 85 bytes of code between.
+  (b) THE GENERATOR SHAPE. Every one of those call sites is followed by
+  `call 0x3fb30` - 0x618d2, 0x61927, 0x6197f, ... (140 of them). 0x3fb30
+  is the base constructor: `push ecx; push esi; mov esi,edx; mov ecx,ebx;
+  mov ebx,1; mov edx,ebx; call 0x216c0; lea ebx,[eax+0x1e]; mov DWORD
+  PTR [eax+0x16],0xffffffff; mov edx,ecx; mov [ebx],0; mov [ebx+4],
+  0x96200; call 0x57990; lea eax,[ebx-0x1e]; mov [ebx+4],0x961fc; ...`
+  - it allocates through 0x216c0, sets a cursor field to -1, runs the
+  engine-class sub-object constructor and destructor pair found in
+  PR-403 (0x96200/0x961fc with 0x57990), and hands back the base.
+  (c) THE THREE SHARED VERBS. All 140 tables hold the same three
+  addresses: +0x08 = 0x3fcc0, +0x10 = 0x3fbb0, +0x14 = 0x3fc20, and 107
+  of them repeat the same three at +0x24/+0x2c/+0x30. Those three are
+  cursor walkers over an element array: 0x3fcc0 is `mov ecx,[eax+0x16];
+  cmp ecx,-1; je ret; mov eax,[eax]; mov eax,[eax+ecx*4]; mov ecx,
+  [eax+8]; call [ecx+8]`; 0x3fc20 is the same with `call [ebx+0xc]` and
+  a truth value; 0x3fdf0 (the +0x04 verb of the first table, 0xa09f0) is
+  the same with `call [ebx+0x10]`. So this family's verbs are: take the
+  element at the cursor, read ITS class from [element+8], and call that
+  class's +0x08 / +0x0c / +0x10 - the same slot numbers PR-100 used for
+  the row object. The cursor itself is at the owner's +0x16 and -1 means
+  empty; 0x3fbb0 resets it to 0 and walks with 0x3fd00, and 0x3fce0
+  writes [edx+0x2a] from `lea eax,[ecx*8]; call 0x76a64`.
+  (d) THE FIELD IS NOT ONLY A CLASS TABLE. Two other functions write the
+  neighbouring fields as data: 0x72d50 allocates 0x18 bytes with new
+  (`mov eax,0x18; call 0x5c320`) and initialises through 0x3fa20, and
+  0x73090-0x730be sets `[ecx+0x32] = table0xed18[k*3]` and
+  `[ecx+0x36] = table0xed1c[k*3]` with k = [ecx+0x3a] (the `*3` built by
+  `lea eax,[ebp*4]; sub eax,ebp`). 0x65105 also writes [ebx+0x36]. So the
+  same structure carries the class-table field at +0x2e, a cursor-like
+  word at +0x32 and a count-like word at +0x36 filled from a 12-entry
+  table indexed by a kind at +0x3a.
+```
+
+- WHY. PR-400 and PR-401 built a clean story - the row-advance visits the
+  node at the current row - and it rested on one instruction sequence
+  read once. This row went to the other side of the same field, found
+  141 sites that write it, and they all write a CLASS TABLE from a
+  generated family whose three shared verbs do exactly the thing the
+  story needed done: index an element array by a cursor and call through
+  the element's class. Either those 140 tables are the element classes
+  and the array reading is wrong, or the field is overloaded and the
+  code-generation family belongs to a different owner. Both options are
+  interesting and neither is established, so the honest output is the
+  correction plus the census - and a much better next question: the 140
+  generated tables are the largest single family of class tables in the
+  image, 4.5 times the size of the node-class run PR-101 counted, and
+  nobody has said what they are for.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr404_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). The
+  field-write census is pr404_lists.py over the re DB's `insn` table and
+  the table census is pr404_states.txt; every function quoted was decoded
+  from its own address with `python3 tools/re/leodb.py dis`.
+```
