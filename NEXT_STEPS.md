@@ -57383,3 +57383,147 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   dispatch, and it is worth a census of the shipped `control=` lines
   (which the tools can answer without any further decoding) before any
   port work touches the vertical feed.
+
+## PR-410 - THE COMPLETE control= TABLE: THE FLAGS SPILL INTO THREE
+## RECORD BYTES, BY_X IS THE ONE KEYWORD THAT SETS NOTHING, AND THE
+## MODE FIELD IS CLEAN - MY LAST TWO ROWS WERE BOTH WRONG
+
+```
+KIND: read
+SUBSYSTEM: the state-record control fields at [rec+0x12]/[rec+0x13]/
+  [rec+0x14] - the full keyword-to-mask table of the parser at 0x51913,
+  how its compare chain pairs, which bits any code reads back, and what
+  the shipped control= lines actually select
+ADDRESSES: 0x51913, 0x51b0d, 0x51b19, 0x51b2e, 0x51b38, 0x51b44, 0x51b49,
+  0x51b51, 0x51b56, 0x51b58, 0x51b5e, 0x51b6d, 0x51b6f, 0x51b78, 0x51b89,
+  0x51b92, 0x51ba3, 0x51bbd, 0x51bd7, 0x51bf1, 0x51c0b, 0x51c14, 0x51c23,
+  0x51c25, 0x51c2e, 0x51c3d, 0x51c3f, 0x51c48, 0x51c57, 0x51c59, 0x51c62,
+  0x51c73, 0x51c8f, 0x51ca9, 0x51cc3, 0x51cdd, 0x51cf7, 0x51d11, 0x51d2b,
+  0x51d34, 0x51d45, 0x51d4e, 0x51d5f, 0x51d68, 0x51d79, 0x51d82, 0x51d91,
+  0x51d93, 0x51d99, 0x51dbe, 0x51dc3, 0x51dd8, 0x51ddd, 0x51de2, 0x51de9,
+  0x51df3, 0x52158, 0x52171, 0x52385, 0x523a0, 0x527b3, 0x527db, 0x52805,
+  0x543a2, 0x543af, 0x543b2, 0x543b5, 0x543be, 0x54380, 0x543c6, 0x543dc,
+  0x543f2, 0x543fb, 0x5441b, 0x57d30, 0x76a69, 0x76a92, 0x76aa9, 0x9215a,
+  0x92162, 0x9216e, 0x92173, 0x92178, 0x92180, 0x92186, 0x9218c, 0x92196,
+  0x921a0, 0x921aa, 0x921b3, 0x921bd, 0x921c6, 0x921d0, 0x921da, 0x921e8,
+  0x921ee, 0x921f5, 0x921fb, 0x92202, 0x92212, 0x9221d, 0x92224, 0x9222f,
+  0x9223b, 0x92259, 0xa92d4, 0x12, 0x13, 0x14, 0x01, 0x02, 0x03, 0x04,
+  0x08, 0x10, 0x20, 0x40, 0x80, 0x1c0, 0x20400, 0x40400, 0xf9
+NAMES: control keyword table, three flag bytes, sets-nothing keyword,
+  mode overlap, CHECK_ALL macro, unknown control message, compare-chain
+  pairing rule, pr410_census.txt, pr410_kw.txt, OI-016, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. The tool fixes this
+  row identifies are listed in OPENS and are separate gated steps.
+HOOKS: none - no leg and no fixture moves; it does change what the next
+  row about the row cursor should say.
+OPENS: WHICH KEYWORD SETS THE BIT [rec+0x12] & 0x8000 that the record
+  class verb 0x52790 passes to 0x4bd30 and 0x4b890 - no keyword in this
+  table writes bit 15 of [rec+0x12], and SOLID2 / SEMI_SOLID do not
+  either, so it is set somewhere other than the control= parser; WHAT
+  THE OTHER 22 BITS DO - across the whole decoded image the only bit
+  tests on these three bytes are 0x10 and 0x20 at 0x52158/0x52171/
+  0x52385/0x523a0, 0x40 and 0x80 at 0x527db/0x52805, and 0x2 at
+  0x527b3, and NOTHING AT ALL tests FRAME_REV's 0x08, so CHECK_LN,
+  SOLID, CH_DIR, DANGER and the rest must be read through whole-word
+  compares or through some other copy of the record; WHERE THE REAL
+  TOOL BUG IS - this row found no mask error in tools/re/mov_channels.py
+  (its ENGINE_CTRL is correct bit for bit, CHECK_BASE_LN 0x4000 included,
+  since that is the same bit as byte [rec+0x13] bit 6), but it did find
+  that the tool splits control= lines on `|` only while the engine also
+  accepts commas; and whether the port should carry the engine's
+  three-byte layout at all.
+CLOSES: PR-409's OPENS item about whether any shipped control= line
+  collides in the mode field - none does: over 2,256 lines not one
+  produces a word whose low three bits exceed 4, and no line names two
+  BY_* tokens. It also closes PR-408's OPENS item about which keywords
+  set the bits tested at 0x52385 and 0x523a0: they are SEQ_REV_X
+  (0x10) and SEQ_REV_Y (0x20), not the pair PR-408 named.
+CORRECTS: PR-408's keyword-to-mask table, whose BY_* rows and the
+  FRAME_REV / SEQ_REV_X rows are each one keyword too high: its
+  BY_X 0x01, BY_Y 0x02, BY_TIME 0x03, BY_TX 0x04, BY_TY 0x08,
+  FRAME_REV 0x10, SEQ_REV_X 0x20 must read BY_X sets nothing, BY_Y
+  0x01, BY_TIME 0x02, BY_TX 0x03, BY_TY 0x04, FRAME_REV 0x08,
+  SEQ_REV_X 0x10, SEQ_REV_Y 0x20. THE CONSEQUENCE: the row-cursor
+  mirror of PR-407 is selected by SEQ_REV_X XOR SEQ_REV_Y, not by
+  FRAME_REV XOR SEQ_REV_X - which is also the only reading of those two
+  names that fits what the code does. PR-408's claim that
+  tools/re/mov_channels.py was wrong is WITHDRAWN, and so is PR-409's
+  correction of it: that tool's ENGINE_CTRL matches the engine bit for
+  bit, including CHECK_ANI 0x40 and CHECK_ZW 0x80 and BY_X 0x0. PR-409
+  swapped CHECK_ZW and CHECK_ANI and its headline claim that the mode
+  field is written only by the BY_* keywords happens to be right, but
+  for the wrong reason.
+MEASURED: (a) THE PAIRING RULE, SETTLED. The chain is `mov edx,
+  <keyword>; mov eax,[ebp-0x20]; call 0x76a69; test eax,eax;` then
+  either `je`/`jne`. 0x76a69 upper-cases both operands and returns
+  `[a]-[b]` of the first differing byte (0x76a92-0x76aa9), so ZERO
+  means equal and the branch to the OR is the MATCH arm; the keyword
+  that matches is the literal loaded at the TOP of that block. The one
+  exception is BY_X: its compare at 0x51b49 uses `je 0x51dc3` (0x51b58,
+  the only wide je in the chain) and its match arm performs NO write -
+  BY_X is the value the word already has, because 0x51b2e zeroes
+  [rec+0x12] first. (b) THE FULL TABLE. [rec+0x12] byte: BY_Y 0x01
+  (0x51b6f), BY_TIME 0x02 (0x51b89), BY_TX 0x03 (0x51ba3), BY_TY 0x04
+  (0x51bbd), FRAME_REV 0x08 (0x51bd7), SEQ_REV_X 0x10 (0x51bf1),
+  SEQ_REV_Y 0x20 (0x51c0b), CHECK_ANI 0x40 (0x51c3f), CHECK_ZW 0x80
+  (0x51c25). [rec+0x13] byte: CHECK_LN 0x01 (0x51c59), CHECK_LEW 0x02
+  (0x51c8f), SOLID 0x04 (0x51cc3), CH_DIR 0x08 (0x51cdd), INV_V 0x10
+  (0x51cf7), DANGER 0x20 (0x51d11), CHECK_ALL_PLANE 0x80 (0x51d2b).
+  [rec+0x14] byte: ANTI_SOLID 0x01 (0x51d45), ANTI_POCISK 0x08
+  (0x51d93). WORD/DWORD macros: CHECK_ALL ORs the WORD 0x1c0 (0x51c73)
+  = CHECK_ANI | CHECK_ZW | CHECK_LN; SOLID2 ORs the DWORD 0x20400
+  (0x51d5f) = SOLID | CHECK_ZW | bit 17; SEMI_SOLID 0x40400 (0x51d79)
+  = SOLID | CHECK_ZW | bit 14. The separators are `,` OR `|` (0x51dd8
+  tests 0x2c, 0x51ddd tests 0x7c, loop at 0x51df3), and an unmatched
+  token prints the engine's own message `Bledny control %s w pliku %s.`
+  (0x9223b, used at 0x51dac) when the log pointer 0xa92d4 is set. (c)
+  THE MODE FIELD IS CLEAN, AND THE CENSUS PROVES IT. With
+   BY_TY = 0x04 the modes are 1, 2, 3, 4 and no flag keyword writes
+   bits 0..2: CHECK_ANI 0x40 and up all start at bit 6, and CHECK_ALL's
+   0x1c0 has bit 3 but bits 0..2 clear. Recomputing the PR-99/PR-100
+   census with the engine's own masks over 777 files and 2,256
+   control= lines reproduces the published numbers exactly - mode 2
+   BY_TIME 2121, mode 0 110 (105 lines naming BY_X plus 5 naming only
+   SOLID), mode 1 BY_Y 13, mode 4 BY_TY 12, mode 3 BY_TX none - and
+   not one line produces a word whose bits 0..2 fall outside 0..4.
+   (pr410_census) That set is 1,378 pipe lines, 858 single-token lines
+   and 20 comma lines, and every token in it matches a keyword, so the
+   engine's error path never fires on shipped data.
+   (d) WHO READS THE BITS BACK. Over the whole decoded image the only
+   bit tests against these three bytes are: 0x10 and 0x20 at 0x52158,
+   0x52171, 0x52385, 0x523a0 (the row cursor and row advance, PR-407);
+   0x40 at 0x527db and 0x80 at 0x52805 (the record class's +0x30 verb
+   0x52790, PR-408); and 0x02 at 0x527b3, i.e. CHECK_LEW, in the same
+   method. No code in the image tests 0x08, so FRAME_REV is never read
+   anywhere this row looked - it must be read through a whole-word
+   compare or through a copy of the record.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr410_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical), plus
+  /tmp/opencode/pr410_kw.txt (the keyword-literal-to-OR pairing printed
+  by a block-boundary walk of 0x51b0d-0x51d99) and
+  /tmp/opencode/pr410_census.txt and /tmp/opencode/pr410_bits.txt.
+  Every instruction quoted was decoded from its own aligned address with
+  `python3 tools/re/leodb.py dis`; the keyword strings and the jump
+  table 0x54380 were read at aligned addresses from build/leo/leo.img.
+```
+
+- WHY. Three rows of me reading one compare chain produced three
+  different tables, and this row settles it by reading the comparison
+  helper itself rather than guessing the branch convention. That removes
+  the finding I announced last row - there is no keyword-versus-dispatch
+  crossing, the author's BY_TX and BY_TY do line up with the
+  [obj+0xba]/[obj+0xbe] guarded arms - and leaves two things worth
+  keeping. First, the row-cursor mirror of PR-407 is switched by
+  SEQ_REV_X against SEQ_REV_Y, which is the reading of those names that
+  matches what the code does, and both are rare on shipped data (7 and
+  22 states). Second, the control fields are three bytes wide, not one,
+  and nine keywords write the second and third of them; the port's
+  single LL_CTRL_* word cannot represent ANTI_SOLID, ANTI_POCISK,
+  CHECK_BASE_LN or CHECK_ALL_PLANE the way the engine does. The honest
+  output of this row is mostly a retraction, and the journal needs it
+  there, because the wrong tables are already in OI-111 and in two
+  commit messages.

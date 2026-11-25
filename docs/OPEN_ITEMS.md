@@ -244,7 +244,11 @@ OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
   notes: the same constant 100 behind a `cmp [obj+0xbe],0` gate;
     shipped as LL_CTRL_BY_TY/vert_intent; no port gap. The climb
-    BEHAVIOR remainder is OI-078.
+    BEHAVIOR remainder is OI-078. [PR-410 CONFIRMS THE READING FROM THE
+    OTHER SIDE: BY_TY's keyword mask is 0x04, the mode field is bits
+    0..2, and the dispatcher arm for 4 is 0x5441b, which is exactly the
+    `cmp [obj+0xbe],0` guard before adding the constant; 12 shipped
+    states use it and none uses BY_TX.]
 
 === engine RE: signals, conditions, event system ===================
 
@@ -5970,38 +5974,40 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x523f0 shows the call-in `mov esi,[eax+0x44]; call [esi+0x08];
     call [esi+0x0c]`. THE PORT WALKS ITS LADDER FORWARD - this is a
     checkable difference.]
-    [PR-408 NAMES THE SWITCH. The state-header parser 0x51913 reads
-    `time`, `sample`, `time_scale`, `seq` and `control`, zeroes
-    [rec+0x12], and OR-s each authored keyword into it: BY_X 0x01,
-    BY_Y 0x02, BY_TIME 0x03, BY_TX 0x04, BY_TY 0x08, FRAME_REV 0x10,
-    SEQ_REV_X 0x20, SEQ_REV_Y 0x40, CHECK_ZW 0x40 (compared first, at
-    0x51c14) and CHECK_ANI 0x80 (compared at 0x51c2e) - PR-409 corrects
-    the swap in the first draft of this note - while CHECK_ALL is the
-    macro `or WORD PTR [rec+0x12],0x1c0` at 0x51c73, SOLID2 is 0x20400
-    at 0x51d5f and SEMI_SOLID 0x40400 at 0x51d79. THE MODE FIELD IS
-    BITS 0..2 AND ONLY THE BY_* KEYWORDS WRITE IT: the dispatcher
-    0x543a2 does `mov eax,[rec+0x12]; and eax,7; cmp eax,4; ja;
-    jmp [eax*4+0x54380]` with the table 0x543c6, 0x543dc, 0x543fb,
-    0x543f2, 0x5441b, so BY_X=1, BY_Y=2, BY_TIME=3, BY_TX=4 - and
-    BY_TY's 0x08 is bit 3, OUTSIDE the mask: a lone `control=BY_TY`
-    masks to mode 0 and runs the BY_X arm.
-    THE ROW-CURSOR MIRROR IS SELECTED BY FRAME_REV XOR SEQ_REV_X:
-    0x52360 tests 0x10 at 0x52385 and 0x20 at 0x523a0, XORs them at
-    0x523b8, and only when they differ uses `count - edx - 1`; the
-    row-advance repeats the pair at 0x52158 and 0x52171. On shipped
-    data that branch is rare - SEQ_REV_X appears in 7 states and
-    SEQ_REV_Y in 22, while `control=BY_TIME|FRAME_REV|...` is common.
-    The same function parses the ` ( N ) ` transition format (0x9225c),
-    so header, control word and start row are one parser. The record
-    class's +0x30 verb 0x52790 is the collision-check method: it tests
-    CHECK_ANI 0x40 and CHECK_ZW 0x80 and passes [rec+0x12]&0x8000 to
-    0x4bd30/0x4b890. CORRECTION TO CARRY: tools/re/mov_channels.py's
-    ENGINE_CTRL lists BY_X 0x0, BY_Y 0x1, BY_TIME 0x2, BY_TX 0x3,
-    BY_TY 0x4, FRAME_REV 0x8, SEQ_REV_X 0x10, SEQ_REV_Y 0x20 - those
-    are mode INDICES, not the word's bits, and the tool's
-    `word |= ENGINE_NAMES[t]` plus `MODES[word&7]` therefore
-    mis-sorts modes (a lone BY_TIME computes 2 = BY_Y). Fixing the tool
-    is a separate gated step, still owed as of PR-409.]
+    [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
+    state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
+    `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
+    `mov edx,<keyword>; call 0x76a69; test eax,eax; jne <next>` - and
+    0x76a69 upper-cases both strings and returns the byte difference
+    (0x76a92-0x76aa9), so ZERO IS EQUAL and the OR after the jne is the
+    MATCH ARM of the keyword literal loaded at the top of that block.
+    The complete table, by the record byte the engine writes:
+    [rec+0x12] BY_X sets NOTHING (its match arm is `je 0x51dc3` at
+    0x51b58, mode 0 is the zeroed default), BY_Y 0x01 (0x51b6f),
+    BY_TIME 0x02 (0x51b89), BY_TX 0x03 (0x51ba3), BY_TY 0x04 (0x51bbd),
+    FRAME_REV 0x08 (0x51bd7), SEQ_REV_X 0x10 (0x51bf1), SEQ_REV_Y 0x20
+    (0x51c0b), CHECK_ANI 0x40 (0x51c3f), CHECK_ZW 0x80 (0x51c25);
+    [rec+0x13] CHECK_LN 0x01 (0x51c59), CHECK_LEW 0x02 (0x51c8f),
+    SOLID 0x04 (0x51cc3), CH_DIR 0x08 (0x51cdd), INV_V 0x10 (0x51cf7),
+    DANGER 0x20 (0x51d11), CHECK_ALL_PLANE 0x80 (0x51d2b);
+    [rec+0x14] ANTI_SOLID 0x01 (0x51d45), ANTI_POCISK 0x08 (0x51d93);
+    macros CHECK_ALL = WORD 0x1c0 (0x51c73), SOLID2 = DWORD 0x20400
+    (0x51d5f), SEMI_SOLID = DWORD 0x40400 (0x51d79). The separator is
+    `,` OR `|` (0x51dd8 tests 0x2c, 0x51ddd tests 0x7c) and an unknown
+    token prints `Bledny control %s w pliku %s.` (0x9223b at 0x51dac).
+    THIS IS WHAT PR-99 AND PR-100 AND tools/re/mov_channels.py ALREADY
+    HAD: the tool's ENGINE_CTRL is correct bit for bit, and the mode
+    field is clean - recomputing the census from these masks reproduces
+    the published 2121 BY_TIME / 110 mode-0 / 13 BY_Y / 12 BY_TY / 0
+    BY_TX, and no shipped line reaches a mode outside 0..4. THE
+    ROW-CURSOR MIRROR IS SELECTED BY SEQ_REV_X XOR SEQ_REV_Y (0x10 at
+    0x52385, 0x20 at 0x523a0, XOR at 0x523b8; repeated at 0x52158 and
+    0x52171) - NOT by FRAME_REV, whose 0x08 no code in the image tests
+    at all. Rare on shipped data: SEQ_REV_X 7 states, SEQ_REV_Y 22. The
+    only bit tests anywhere on these three bytes are 0x10, 0x20 (row
+    path), 0x40, 0x80 and 0x02 at 0x527db/0x52805/0x527b3 in the record
+    class's +0x30 collision-check method 0x52790; what sets
+    [rec+0x12]&0x8000 and the other 22 bits is still open.]
     WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;
