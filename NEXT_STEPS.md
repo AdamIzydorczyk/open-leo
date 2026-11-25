@@ -61365,3 +61365,106 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   not a window) is the same one PR-444 learned about index
   censuses.
 
+
+## PR-447 - THE +0xac PIPELINE'S ANSWER SIDE: THE REGISTRY SWEEP
+## CALLS VIRTUAL +0x1c (WHOSE 100-TABLE BODY IS THE PR-443 RESET),
+## AND THE NEAREST-SEGMENT PICK THAT WRITES THE PR-121/122 SNAP
+## CHAIN IS THE SCENE QUERY'S ENTRY CALLBACK
+
+```
+KIND: read
+SUBSYSTEM: who answers the PR-446 scene queries - the entry loop
+  inside 0x4b600 (0x4b670) and its virtual +0x1c; the slot's
+  three bodies 0x52c70 (41 tables), 0x54e00 (100 tables, the
+  field-refresh virtual PR-443 read without its slot name) and
+  0x50380 (13 tables, the input family); and the callback
+  0x45400 - the nearest-segment pick over the candidate's own
+  surface-segment list (0x45380 bracket of PR-275, the +0x6c
+  list, the 0xd-stride walk, the 0x455a0 y-gap of PR-122) that
+  is the writer of the [obj+0xe6]/[obj+0xea]/[obj+0xe2] chain
+ADDRESSES: 0x4b670, 0x4b682, 0x4b68f, 0x4b693, 0x4b697, 0x4b6a5,
+  0x52c70, 0x28, 0x2c, 0x54e00, 0x54e0a, 0x54e1a, 0x54e7e,
+  0x54e88, 0x54e98, 0x54ea5, 0x50380, 0x50392, 0x503b6, 0x45400,
+  0x45412, 0x45417, 0x45423, 0x45439, 0x4543c, 0x45471, 0x4549a,
+  0x454a2, 0x454a8, 0x454ba, 0x45380, 0x455a0, 0x96c30, 0x96d14,
+  0x96874, 0x96960, 0x4a61a, 0x4a63f, 0x550a0, 0x1c, 0x6c, 0xaa,
+  0xd6, 0xe2, 0xe6, 0xea, 0xb1, 0xad, 0xd2, 0x74, 0x80, 0x3bc
+NAMES: registry-entry sweep, field-refresh virtual, nearest-segment
+  pick, segment state byte, snap-chain writer, mode gate,
+  pr447_answers.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHO PUTS ENTRIES ON THE [reg+0x74] LIST - only the
+    registry ctor's zeroing (0x4a63f) and the reads were found;
+    the +0x1c calls in the 0x41d5c cluster (a second consumer of
+    the same virtual, scene/furniture code, unread); what the
+    fields the base body zeros ([obj+0x28]/[obj+0x2c]) are; the
+    semantics of [obj+0xb1] (reset writes 0x16, the input
+    variant overwrites it with a /10 scale and sets [obj+0xad]
+    = 0x64); the answering entries of the OTHER two lists
+    (+0x70/+0x78 - only the +0x74 answer is mapped); and whether
+    the port's contact table should be checked entry-by-entry
+    against the segment state bytes the mode gate admits.
+CLOSES: PR-446's OPENS "WHO WRITES [obj+0xe6] AND [obj+0xe2]" -
+  in 0x40000-0x56000 the only non-reset writer is 0x454a2/
+  0x454ba inside the entry callback 0x45400 (resets zero them
+  at 0x54e1a/0x54e98 and 0x550a0), and that callback is reached
+  from the +0xac method's own query trio - the pipeline drives
+  the chain every step. PR-446's "the answering classes" for
+  the +0x74 list: the entry call is `call [entry+0x1c]` (edx =
+  the requester, ebx = the answer block, ecx+stack = a mode
+  argument), and the pick 0x45400 sits in the player-family and
+  input-class tables (0x96c30 = +0x3bc of 0x96874, 0x96d14 =
+  +0x3b4 of 0x96960). PR-446's mode-argument open: ecx is the
+  arm (0 for the CHECK_BASE_LN gate, 2 for the CHECK_LN gate at
+  the 0x4b659 call) and it gates the SEGMENT STATE BYTE at
+  0x45417 - the same state byte the attach tail tests against
+  2 at 0x54766. It also grounds PR-331/PR-122 from the other
+  side: the candidate is a surface segment of the surface-table
+  layer PR-275 decoded (x-bracket 0x45380, 0xd-byte records,
+  +0xc state byte) and the gap is the y-difference to the
+  segment line, PR-122's 0x455a0, verbatim.
+CORRECTS: PR-443's name for 0x54e02: it is not a "pointer-less"
+  routine - 0x54e00 is the virtual +0x1c of 100 class tables
+  (the common field-refresh/respawn body: copies the live pair
+  to the shadow, zeroes the attach fields and the control
+  object, sets [obj+0xb1] = 0x16, clears [obj+0xb6] bits 6-7)
+  and PR-446's registry sweep is one of its callers. Nothing in
+  PR-443's byte reading changes; only the name was wrong.
+MEASURED: (a) THE SWEEP. 0x4b670 (inside 0x4b600): count
+  [reg+0x80], list [reg+0x74], stride 0xc; per entry: push 0,
+  ecx = mode, edx = the requester, ebx = &scratch, `call
+  [entry+0x1c]`. (b) THE BODIES. 0x52c70 (41 tables): zero
+  [obj+0x28]/[obj+0x2c], ret. 0x54e00 (100 tables): that,
+  then the PR-443 refresh - shadow = live, [obj+0xe2]=0,
+  [obj+0xd2]=0 (the PR-442 control object), [obj+0xb1]=0x16,
+  [obj+0xe6]=0, [obj+0xb6] &= ~0xc0. 0x50380 (13 tables, the
+  0x502f0 input family): copies the live pair to +0x14, chains
+  0x54e00, then overwrites [obj+0xb1] with a /10 scale and
+  sets [obj+0xad] = 0x64. (c) THE PICK. 0x45400: rejects the
+  candidate when its state byte [candidate+0xaa]'s +0xc byte >
+  mode; brackets the candidate's x in its own segment table
+  (0x45380); takes the pair's segment list through virtual
+  +0x6c; walks it at stride 0xd computing the 0x455a0 y-gap
+  from the candidate position to the requester; keeps the best
+  - first better-than-[cand+0xea], then only strictly better
+  unless the candidate already is [cand+0xa9]; writes cand ->
+  [cand+0xe6], gap -> [cand+0xea], state -> [cand+0xe2].
+  [obj+0xa9] - which 0x4b600 reads back to adjust the query
+  point (PR-446) - is the same field. (d) THE CYCLE. +0xac
+  method -> row-gated trio -> registry sweep -> state-gated
+  nearest-segment pick -> [obj+0xe6]/[obj+0xe2] -> the attach
+  tail of PR-446 (state 2, the 0x58c speed skip). The port's
+  contact-table and snap-chain model (PR-122/275/331) has its
+  full engine cycle now; nothing in the port changes.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. Two lines of this journal - the position/shadow line
+  (PR-443/446) and the surface/snap line (PR-121/122/275/331) -
+  turn out to be the two halves of ONE loop, and the join was
+  an unnamed virtual slot. Naming it also renamed a misnomer:
+  the "pointer-less reset body" is the most-installed method in
+  the game's tables, the field-refresh every object answers to.
+

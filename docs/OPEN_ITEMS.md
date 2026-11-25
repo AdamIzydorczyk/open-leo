@@ -6575,6 +6575,28 @@ OI-128: what landing and leaving a surface does - the class verbs
     Open: who writes [obj+0xe6]/[obj+0xe2], the answering entry
     classes (the port's contact-table objects), the query mode
     arg 0/2, 0x4b500/ds:[0xa94e8], and virtuals +0xb4/+0xb8.]
+    [PR-447 ANSWERS THE FIRST TWO AND THE MODE ARG: the +0x74
+    list's entries are called through their virtual +0x1c
+    (edx=requester, ebx=answer block, ecx/stack=mode), whose
+    100-table body 0x54e00 IS the PR-443 "pointer-less reset"
+    (misnomer corrected - it refreshes shadow/attach fields,
+    zeroes the control object, sets [obj+0xb1]=0x16), the
+    41-table body 0x52c70 zeroes +0x28/+0x2c, and the 13-table
+    input variant 0x50380 adds the +0x14 copy and a /10 scale.
+    The answer callback is 0x45400 (slot +0x3bc/+0x3b4 of the
+    player/input tables): it rejects segments whose state byte
+    (PR-275's record +0xc) exceeds the mode arg - so 0/2 ARE
+    state thresholds, the same byte the attach tail tests -
+    brackets x with 0x45380, walks the +0x6c segment list at
+    stride 0xd, and keeps the nearest by the PR-122 0x455a0
+    y-gap, WRITING [cand+0xe6]/[cand+0xea]/[cand+0xe2] - the
+    only non-reset writers in the range. The whole +0xac cycle
+    is now closed: row gate -> queries -> pick -> attach tail,
+    and it is the engine cycle the port's contact/snap model
+    (PR-122/275/331) mirrors. Open: who registers [reg+0x74]
+    entries, the +0x1c calls at 0x41d5c, the +0x70/+0x78 answer
+    classes, [obj+0xb1]/[obj+0xad], and entry-by-entry matching
+    of the port's contact table against the admitted states.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
