@@ -57995,3 +57995,125 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   means the engine's per-state behaviour is normally a delegation to the
   object's child, which is the thing the port's state records have no
   equivalent of.
+
+## PR-415 - THE STATE-CLASS BASE TABLE IS A PURE-VIRTUAL TABLE, AND THE
+## THREE SHARED VERBS ARE ONE CURSOR OVER AN INSTANCE ARRAY AT
+## [obj+0x2a] OF (INDEX, COUNT) PAIRS
+
+```
+KIND: read
+SUBSYSTEM: the base half of the state-class tables of PR-414 - the pure
+  virtual table at 0xa09f0, the instance array at [obj+0x2a] its three
+  shared verbs walk, the lookup that calls a per-state +0x18 verb when no
+  instance exists, and the field layout of the object that owns them all
+ADDRESSES: 0x3fb60, 0x3fb73, 0x3fb80, 0x3fb83, 0x3fb90, 0x3fbb0, 0x3fbb9,
+  0x3fbc5, 0x3fbd5, 0x3fbe9, 0x3fbf2, 0x3fc08, 0x3fc20, 0x3fc43, 0x3fc53,
+  0x3fc61, 0x3fc6d, 0x3fc84, 0x3fc93, 0x3fc98, 0x3fcd1, 0x3fce0, 0x3fce6,
+  0x3fced, 0x3fcf2, 0x3fcf7, 0x3fd00, 0x3fd1c, 0x3fd35, 0x3fd3c, 0x3fd4e,
+  0x3fd5c, 0x3fd70, 0x3fd89, 0x3fd9c, 0x3fdf0, 0x3fe01, 0x4ff6b, 0x50003,
+  0x50043, 0x520c0, 0x521a5, 0x52360, 0x5c320, 0x74970, 0x74971, 0x7498e,
+  0x74be0, 0x76a64, 0x95c20, 0xa09f0, 0xa9bac, 0x00, 0x04, 0x08, 0x0c,
+  0x0e, 0x10, 0x14, 0x16, 0x18, 0x1a, 0x2a, 0x2e
+NAMES: pure virtual table, instance array, item cursor, per-state fallback
+  verb, instance lookup, base ctor, state-class fields, pr415_base.txt,
+  OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE SUB-INDEX AT instance+4 MEANS - 0x3fd2c reads
+    [[[obj+0x2a] + idx*8] + 4] as a second index into the item list and
+    0x3fd70 zeroes every one of them, so a row instance starts with no
+    item attached; WHO SETS [obj+0x1a] besides 0x3fc53; WHAT THE +0x0c AND
+    +0x10 VERBS OF AN ITEM ARE - they are the item's own class-table
+    slots that the cursor calls, which is the row-item interface in the
+    abstract, unnamed so far; whether the base table is installed only
+    while no authored state is loaded, since 0x3fb73 and 0x3fb83 are the
+    only writers of 0xa09f0; and what the constant 0x961fc stored at
+    [ebx+4] by 0x3fb65 is.
+CLOSES: PR-414's OPENS item WHAT THE CHILD FIELD [obj+0x16] IS - it is
+  not a child, it is the ITEM CURSOR: an index into the item-pointer
+  array at [[obj]] with -1 meaning no current item, and the three shared
+  verbs are the walk machinery over it. It also closes PR-414's OPENS
+  item about which of the four per-state slots is the entry verb, in
+  part: the +0x18 slot is the one the base class calls back when its own
+  instance lookup misses (0x3fd3c), so +0x18 is a factory, not a tick.
+CORRECTS: PR-414's sentence that the shared trio is "base-class plumbing
+  over the child index - delegate to the child". The mechanism is a
+  cursor over an INSTANCE array, and the array's 8-byte entries are
+  (item index, sub-index) pairs, not child pointers; 0x3fcc0 is not
+  calling a child but the current item's +0x0c verb. PR-414 also called
+  0xa09f0 the start of a run of generated tables: it is the base class's
+  own PURE VIRTUAL table, which is why its per-state-looking slots are a
+  pure-virtual stub and a base ctor.
+MEASURED: (a) THE BASE TABLE. 0xa09f0 = 0x3fb80, 0x3fdf0, 0x3fcc0,
+  0x3fce0, 0x3fbb0, 0x3fc20, 0x74970. Its slot +0x18 is 0x74970 = `if
+  (!word ds:0xa9bac) { word ds:0xa9bac = 1; call 0x77bdc(1, 0x95c20) }`
+  and 0x95c20 is the string `pure virtual function called!` - a C++ pure
+  virtual thunk, so the state-class base is an abstract class and the
+  generated tables of PR-414 are its subclasses. Two instructions at
+  0x3fb73 and 0x3fb83 install this table at [obj+0x2e]; the first sits
+  in a function that also zeroes [obj+0x2a] (0x3fb6c), the second is the
+  table's own slot +0x00 and chains to 0x74be0 (the universal base ctor
+  of PR-355) after installing it. (pr415_base)
+  (b) THE FIELDS. Reading the three shared verbs and their helpers
+  together, the object they run on has: [[obj]] an array of item
+  pointers, indexed by dword, item class tables at [item+0x08];
+  [obj+0x08] the item count; [obj+0x16] the item cursor, -1 when there
+  is no current item; [obj+0x1a] the boolean returned by the current
+  item's +0x0c verb (written at 0x3fc53); [obj+0x2a] the instance array,
+  one 8-byte entry per item; [obj+0x2e] the state-class table itself.
+  (c) THE INSTANCE ARRAY. The base table's own +0x0c verb 0x3fce0 does
+  `ecx = [obj+0x08]; eax = ecx*8; call 0x76a64; [obj+0x2a] = eax`, where
+  0x76a64 is a `jmp 0x5c320` thunk to the allocator of PR-355 - so the
+  array is count*8 bytes - and then calls 0x3fd70, which loops over the
+  items writing the item INDEX into instance+4 (0x3fd9c: `mov
+  DWORD PTR [ecx+eax-4], [item[i]]` with ecx = [obj+0x2a]) and zeroing
+  instance+0 (0x3fd89). So an instance entry is (sub-index = 0, item
+  index).
+  (d) THE LOOKUP THAT CALLS THE PER-STATE VERB. 0x3fd00(obj=eax,
+  item=edx, idx=ebx): `ebp = [[[obj+0x2a] + idx*8] + 4]`; if that is
+  zero it calls `[[obj+0x2e] + 0x18](obj, item)` - one of the four
+  per-state functions of PR-414 - and stores the answer into
+  [[obj+0x2a] + idx*8] (0x3fd3c-0x3fd4e); it then returns that sub-index
+  minus 1 (0x3fd5c-0x3fd5f). Three call sites: 0x3fbd5, 0x3fc61,
+  0x3fdcd.
+  (e) THE CURSOR. 0x3fcc0: if the cursor is -1 return, else call the
+  current item's +0x0c verb. 0x3fbb0: with edx non-zero set the cursor
+  to 0, then run the item's +0x10 verb for indices 1..count-1, advancing
+  the cursor by `inc [obj+0x16]` (0x3fbf2); when the cursor reaches the
+  count it is set back to -1 (0x3fc08). 0x3fc20: calls the current
+  item's +0x0c verb and stores the answer at [obj+0x1a], then either
+  calls the item's +0x10 verb directly (cursor -1, 0x3fc84) or
+  increments the cursor and calls it again (0x3fc93-0x3fc98), repeating
+  with edx = 1 if that failed. 0x3fdf0, the base table's own +0x04 verb,
+  also calls the current item's +0x10 verb.
+  (f) THE TIE TO PR-412. The row-advance's row count is read as `lea
+  eax,[rec+0x2e]; mov eax,[eax+8]` (0x521a5) - that is exactly this
+  object's item count at [obj+0x08] reached THROUGH its state-class
+  table pointer at [obj+0x2e], and the three calls into 0x52360 at
+  0x4ff6b, 0x50003 and 0x50043 are the record classes' use of the same
+  entry verb.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr415_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr415_base.txt (the base table and two generated tables
+  read at aligned addresses from build/leo/leo.img). 0x3fce0, 0x3fd00,
+  0x3fd70, 0x3fc20, 0x3fbb0, 0x3fdf0 and 0x74970 were each decoded from
+  their own entry address with `python3 tools/re/leodb.py dis`, and the
+  string at 0x95c20 comes from the DB's str table.
+```
+
+- WHY. PR-414 counted four per-state slots and three shared ones but
+  could not say what the shared ones did, and called [obj+0x16] a child
+  index. It is not a child: it is a cursor, and the state-class object
+  owns an instance array at [obj+0x2a] that maps an item index to a
+  per-state instance, created on demand by calling that state's own
+  +0x18 verb. That is the boundary PR-414 was looking for stated
+  exactly: for every authored state the engine keeps a list of items and,
+  per item, one object that only that state's +0x18 factory knows how to
+  make. The port has item lists but no per-item instance layer, so any
+  future difference in how often per-row setup runs has a named mechanism
+  behind it, and the pure-virtual table at 0xa09f0 says the base class
+  was never instantiated in the original either.

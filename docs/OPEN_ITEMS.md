@@ -6026,6 +6026,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     entry 2 and entry 0). THE SEGMENT MACHINERY OF PR-411 RUNS AS THE
     +0x0c VERB: 0x72d50 is at 0xa66a8+0x0c, with siblings 0x72cb0
     (0xa66c4) and 0x72330 (0xa640c).]
+    [PR-415 READS THE BASE HALF OF THOSE TABLES. The table at 0xa09f0 is
+    not a generated one: its slot +0x18 is 0x74970 = `if (!word
+    ds:0xa9bac) { word ds:0xa9bac = 1; call 0x77bdc(1, 0x95c20) }` and
+    0x95c20 is `pure virtual function called!`, so the state-class base
+    is an ABSTRACT class and the 140 tables are its subclasses; two sites
+    install it (0x3fb73, with [obj+0x2a] = 0, and the base ctor 0x3fb80
+    which chains to 0x74be0). The three "shared" verbs are ONE cursor
+    mechanism, and [obj+0x16] is an ITEM CURSOR, not a child index:
+    [[obj]] is the item-pointer array, [obj+0x08] the item count, -1
+    means no current item, [obj+0x1a] holds the boolean returned by the
+    current item's +0x0c verb (0x3fc53). The object also owns an
+    INSTANCE ARRAY at [obj+0x2a], one 8-byte entry per item: the base
+    table's own +0x0c verb 0x3fce0 allocates it as count*8 via the
+    `jmp 0x5c320` thunk 0x76a64 and 0x3fd70 fills each entry with
+    (sub-index 0, item index). The helper 0x3fd00 is the lookup: if
+    `[[[obj+0x2a]+idx*8]+4]` is zero it calls the STATE'S OWN +0x18 verb
+    - one of the four per-state functions - and caches the answer
+    (0x3fd3c-0x3fd4e), so slot +0x18 is a per-item factory, not a tick.
+    THE PORT HAS ITEM LISTS BUT NO PER-ITEM INSTANCE LAYER.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
