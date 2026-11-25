@@ -7310,6 +7310,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     entry), and shows 0xa0c08/0xa0c34 are NOT tags - they are
     the draw-verb blocks of PR-475; the tag entries in that
     sub-block start at 0xa0b94.]
+    [PR-486 FINDS THE RUNTIME READER OF PR-94'S CLASS-TOKEN
+    TABLE: the factory chain 0x4df10 (via 0x4dcc0) is 31
+    comparisons 0x4df1c-0x4e93b against the string block
+    0x91f3d-0x92018 - the same 31 authored row names, in the
+    same order as PR-94's block at 0x90f3d (ANITAB ... BERLO;
+    only BAL has no string there). Each arm allocates the kind
+    size via 0x5c320 (0xa5 usually; 0x50 RECT/DRECT/DRECT2,
+    0x161 ZWIERZ, 0x122/0x126/0x12e movers, 0xf2 POCISK/
+    KORONA/BERLO, 0xd9 LINA) and installs tables at [obj+8]/
+    [obj+0xc]. Eleven class tables become NAMED: 0xa1eb4 ANITAB,
+    0x9815c GRABOBJ/WODOSPAD/PICT/TABLICA, 0xa14f4 DEMOTEXT,
+    0x98278 MOVEPLAT/KATPLAT, 0xa1cb4 DZWIGNIA, 0x981e8
+    GRUPA/GRABG, 0xa1924 ZONE/KORONA, 0x97d94 SURPRISE,
+    0xa1bfc DNGANI, 0x97f50 LINA (PR-191's unknown class),
+    0xa1a08 BERLO. Three of PR-477's unnamed tables resolve.
+    PR-480's "only two names read" is now complete.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

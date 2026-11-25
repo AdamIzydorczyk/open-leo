@@ -64726,3 +64726,83 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   the strongest available count of the original's type system:
   391 deletible types.
 
+
+## PR-486 - THE FACTORY CHAIN 0x4df10 IS THE RUNTIME READER OF
+## PR-94'S CLASS-TOKEN TABLE: 31 COMPARISONS, THE SAME 31
+## AUTHORED ROW NAMES, IN THE SAME ORDER
+
+```
+KIND: read
+SUBSYSTEM: the name dispatcher 0x4df10 (called by the object
+  factory 0x4dcc0, PR-480): a linear chain of 31 comparisons
+  (0x76a69) at 0x4df1c-0x4e93b against the string block
+  0x91f3d-0x92018 = ANITAB, PLANT, GRABOBJ, DEMOTEXT, ANIBACK,
+  MOVEPLAT, MOVERECT, RECT, DRECT, DRECT2, KATPLAT, DZWIGNIA,
+  WODOSPAD, ZWIERZ, GRUPA, PICT, POCISK, IDPOCISK, GRABG,
+  GWIAZDKI, NIESP, ZONE, KORONA, SURPRISE, BAL, DNGANI, TRASA,
+  TRASA2, LINA, TABLICA, BERLO - the same vocabulary PR-94 read
+  verbatim from the block at 0x90f3d
+ADDRESSES: 0x4df10, 0x4df1c, 0x4e93b, 0x4df15, 0x4e934,
+  0x91f3d, 0x92018, 0x90f3d, 0x4dcc0, 0x76a69, 0xa5, 0x48,
+  0x122, 0x126, 0x50, 0x12e, 0xad, 0x161, 0x44, 0x40, 0xf2,
+  0x106, 0xa9, 0x54, 0x68, 0xd9, 0x97d94, 0x97f50, 0x9815c,
+  0x981e8, 0x98278, 0xa14f4, 0xa1924, 0xa1a08, 0xa1bfc,
+  0xa1cb4, 0xa1eb4, 0x5c320, 0x531f0, 0x31
+NAMES: factory chain, row-name vocabulary, class token block,
+  row size table, pr486_factory.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE FOURTEEN NAMES WHOSE ARMS STORE NO RESOLVABLE
+    TABLE (PLANT,
+    ANIBACK, MOVERECT, RECT, DRECT, DRECT2, ZWIERZ, POCISK,
+    IDPOCISK, GWIAZDKI, NIESP, ZONE, TRASA, TRASA2 - the
+    geometry family, PR-191's 0x976xx), so their class arrives
+    through another store form; THE TOKEN BAL - PR-94's block
+    has it between SURPRISE and DNGANI but no string row exists
+    at 0x91fed and the chain skips it; WHY TWO COPIES of the
+    vocabulary (0x90f3d, PR-94's parse-side block, and
+    0x91f3d, this one), presumably parser vs factory; and the
+    row SIZES: the chain allocates 0xa5 for most kinds, 0x50
+    for RECT/DRECT/DRECT2, 0x161 for ZWIERZ, 0x122/0x126/0x12e
+    for the mover family - unexplained beyond the record classes
+    PR-471/PR-473 already describe.
+CLOSES: PR-94's class-token table now has its reader: the
+  shipped .des grammar and the factory are literally the same
+  list - 0x4df10 compares the row's first token against that
+  block in exactly PR-94's printed order and then allocates the
+  kind's byte size (0x5c320) and installs its object table
+  (0x531f0 then stores at [obj+8]/[obj+0xc]). Reading the rest
+  of the chain also closes PR-480's OPENS ("only its first two
+  names were read"): all 31 comparisons are enumerated in the
+  evidence file, and 11 object tables become named: 0xa1eb4 =
+  ANITAB, 0x9815c = GRABOBJ/WODOSPAD/PICT/TABLICA, 0xa14f4 =
+  DEMOTEXT, 0x98278 = MOVEPLAT/KATPLAT, 0xa1cb4 = DZWIGNIA,
+  0x981e8 = GRUPA/GRABG, 0xa1924 = ZONE/KORONA, 0x97d94 =
+  SURPRISE, 0xa1bfc = DNGANI, 0x97f50 = LINA, 0xa1a08 = BERLO.
+  Three of PR-477's "still unnamed" tables resolve this way
+  (0x9815c, 0x981e8 via GRABG, 0x98278 = MOVEPLAT - a
+  window-blind/physics-tier class exactly as PR-457 predicted),
+  and PR-191's unknown class 0x97f50 is LINA, whose size 0xd9
+  PR-191 had already measured.
+CORRECTS: nothing. (PR-94's table reading stands; this adds the
+  consumer.)
+MEASURED: (a) THE CHAIN: 31 call sites of 0x76a69 from 0x4df1c
+  to 0x4e93b, each preceded by `mov edx,<token address>`; the
+  name list in SUBSYSTEM is in image order. (b) THE ARM SHAPE:
+  `mov eax,<size>; call 0x5c320; call 0x531f0; mov [obj+8],
+  <table>; mov [obj+0xc],<table-8>`. (c) THE TWO BLOCKS:
+  PR-94's at 0x90f3d and this one at 0x91f3d, same 31 tokens,
+  ~0x1000 apart. (d) THE SHARING: four names share 0x9815c and
+  two share 0x981e8/0x98278/0xa1924 - the same table-sharing
+  law as PR-471's action rows. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port parses these row names but the journal never
+  found the engine's counterpart. It is a 31-link strcmp chain
+  that turns each authored token into an allocation size and an
+  object table - and reading it named eleven class tables,
+  including the LINA class the journal had carried as unknown
+  since PR-191.
+
