@@ -6283,6 +6283,17 @@ OI-128: what landing and leaving a surface does - the class verbs
     command pattern, and the port needs one command object, not 34
     verb functions. Where lock vs unlock vs ground_* differ is open;
     so is who calls the record slots.]
+    [PR-430 CLOSES THE COMMAND LIFECYCLE. The base record 0xa1000 =
+    {0x457b0 dtor, 0x457e0, forwarders, +0x14 = 0x74970 pure
+    virtual} - commands are an abstract C++-style hierarchy and a
+    command's subject is normally ANOTHER command: 0x45780
+    deep-copies via the subject's clone slot +0x14, 0x457b0 frees
+    via its record slot +0x00 with delete flag 2. EXECUTION: the
+    state walker iterates an item array via [ebp+0x2e]/[ebp+0x04]
+    and per item calls [item+0x04] record slot +0x08 (0x52235) then
+    +0x0c (0x52303) with a scratch buffer, gated by predicates
+    0x495b0/0x47e40. Whether those items are the 0x45df0-compiled
+    commands is the open link; so are the leaf subjects.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

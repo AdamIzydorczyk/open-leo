@@ -59565,3 +59565,91 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   only fixes the argument shape - the distinction must be carried
   elsewhere, and finding that carrier (most likely the subject or a
   parameter word) is the next concrete question on this path.
+
+## PR-430 - COMMANDS COMPOSE COMMANDS AND THE STATE WALKER RUNS THEM:
+## AN ABSTRACT BASE RECORD WITH A PURE-VIRTUAL CLONE, DEEP COPY,
+## RECURSIVE DELETE, AND THE EXECUTION LOOPS AT 0x52221-0x52303
+
+```
+KIND: read
+SUBSYSTEM: the lifecycle and execution of the PR-429 command objects -
+  the abstract base record 0xa1000, the deep-copy initialiser 0x45780,
+  the recursive delete body 0x457b0, and the loops in the state
+  walker that take an object's method record and call its +0x08 and
+  +0x0c slots with a scratch buffer
+ADDRESSES: 0xa1000, 0x74970, 0x45780, 0x457b0, 0x47800, 0x45800,
+  0x45870, 0x458e0, 0x52221, 0x52229, 0x52235, 0x5223c, 0x522e6,
+  0x522fc, 0x52303, 0x495b0, 0x47e40, 0x2e, 0x04, 0x08, 0x0c,
+  0x10, 0x14, 0x02
+NAMES: abstract base record, pure virtual clone, deep copy,
+  recursive delete, composite command, execution loop, scratch
+  buffer, pr430_driver.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHETHER THE ITEMS ITERATED AT 0x52229 ARE THE COMPILED
+    STATE-BODY COMMANDS OR PR-415'S STATE-CLASS ITEMS - both are
+    arrays of objects whose +0x04 is a method record called at
+    +0x08/+0x0c, but no data link between the 0x45df0 output list
+    and the [ebp+0x2e] item array has been followed; WHAT THE
+    PREDICATES 0x495b0 AND 0x47e40 READ in the scratch buffer left
+    by the +0x08 call; WHICH LEAF SUBJECTS the forwarders bottom out
+    on - their method tables also answer +0x08/+0x0c/+0x10; and
+    where the command list returned by 0x45df0 is stored in the
+    state record at 0x516d7 (the caller writes fields +0x08/+0x0c
+    before the call, the receiver of the result was not traced).
+CLOSES: PR-429's OPENS item WHO INVOKES the record slots: the
+  walker does, at 0x52235 for +0x08 and 0x52303 for +0x0c, each
+  command reached through an indexed item array.
+CORRECTS: PR-429 left the subject's nature open; the base record
+  0xa1000 settles part of it: a command's subject is usually another
+  command - 0x45780 deep-copies it through ITS record's clone slot
+  +0x14, and 0x457b0 destroys it through its record slot +0x00 with
+  the PR-421 delete flag edx = 2 - so commands nest, and only the
+  innermost subject is a non-command leaf.
+MEASURED: (a) THE ABSTRACT BASE. Record 0xa1000 = {0x457b0,
+  0x457e0, 0x45800, 0x45870, 0x458e0, 0x74970} - the last is the
+  pure-virtual stub of PR-415 (the string `pure virtual function
+  called!`), so no command exists of the base class; the base is
+  installed by 0x45780/0x457b0 whenever a command's subject slot is
+  empty, which is what makes empty subjects callable safely.
+  (pr430_driver)
+  (b) DEEP COPY. 0x45780(new=eax, src=edx): zero [new+0x00], set
+  the base record at +0x04; if src has a subject ecx, load ecx's
+  record [ecx+0x04] and call its +0x14 (clone), storing the copy at
+  [new+0x00]. The per-verb clones of PR-429 call this first and
+  then copy their argument fields.
+  (c) RECURSIVE DELETE. 0x457b0(cmd): set base record, then for a
+  present subject: edx = 2, call [subject-record+0x00] - the
+  PR-421 mode-bit thunk in its delete arm - so freeing a command
+  frees its nested subject chain.
+  (d) THE EXECUTION LOOPS. 0x52221-0x52235: with a table pointer
+  at [ebp+0x2e] and index [ebp+0x04], `ebx = [[tbl] + idx*4]`;
+  `esi = [ebx+0x04]`; `edx = scratch`; `call [esi+0x08]`; then
+  0x5223c tests the scratch with predicate 0x495b0. The second loop
+  0x522fc-0x52303 walks ebx through objects and calls
+  `[ebx+0x04]+0x0c` with scratch edx, gated by predicate 0x47e40 at
+  0x522e6. Both are inside the state walker region of PR-107's
+  0x52000 walk.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr430_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr430_driver.txt: the record 0xa1000 dwords and the
+  decodings of 0x45780, 0x457b0 and both walker loops, taken from
+  their own entry addresses.
+```
+
+- WHY. This closes the command path from authored text to run-time:
+  a state body is parsed into a chain of small per-verb objects that
+  only marshal arguments, each pointing at a nested subject, and the
+  row walker drives everything by calling record slots +0x08 and
+  +0x0c per item with a scratch buffer that predicates then read.
+  The port can mirror exactly this shape - one abstract command with
+  clone/delete-by-record, per-verb argument fields, and two hooks
+  the state machine calls - instead of inventing its own. The one
+  unproven link, that the items walked at 0x52229 ARE those
+  compiled commands, is now the single sharpest open question here,
+  and the predicate pair 0x495b0/0x47e40 is where the row-condition
+  semantics of PR-412 will actually live.
