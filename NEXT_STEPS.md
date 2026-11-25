@@ -59993,3 +59993,95 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   The corrected control-bit census also upgrades the method:
   bit-test searches must include the load-then-test-dh form, which
   is how CH_DIR hid from PR-410 and how FRAME_REV may still hide.
+
+## PR-434 - WHO RUNS THE MOVE EVENTS: A DRAIN LOOP FEEDS THE QUEUE
+## TO VIRTUAL METHOD +0x10, AND THE STEP ENTRY 0x52b80 IS
+## DRAIN, TICK, THEN CONDITIONAL SELF-FREE
+
+```
+KIND: read
+SUBSYSTEM: the consumer side of the PR-433 actor event queue at
+  [actor+0x10]: the drain loop 0x52b50 with its free through
+  0x5c370, the step entry 0x52b80 that its only caller path uses,
+  and the census of the 18 event-type constants passed to the
+  appender 0x52b10 across the image
+ADDRESSES: 0x52b10, 0x52b50, 0x52b54, 0x52b67, 0x52b6d, 0x52b72,
+  0x52b80, 0x52b85, 0x52b8f, 0x52b92, 0x52ba2, 0x5c370, 0x5c320,
+  0x4aed6, 0x4baed, 0x4bb12, 0x55398, 0x55696, 0x556af, 0x4abd0,
+  0x4ba90, 0x552e0, 0x555a0, 0x45a84, 0x45cfd, 0x53b70, 0x73f00,
+  0xcf2cc, 0x00, 0x04, 0x08, 0x0c, 0x10, 0x14, 0x28, 0x02, 0x19,
+  0x21
+NAMES: event drain loop, step entry, self-free flag, event type
+  census, FIFO queue, heap free 0x5c370, pr434_queue.txt,
+  pr434_step.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT EACH OF THE 18 EVENT TYPES DOES - the handler is the
+    per-class virtual at table +0x10 and no implementation has been
+    read; WHAT VIRTUAL +0x14 (the tick in the step entry) DOES per
+    class; WHAT [actor+0x28] IS - the nonzero condition that
+    triggers the conditional self-free at 0x52ba2; WHICH LOOPS the
+    four step callers are (0x4abd0 and 0x4ba90 sit in the PR-415
+    factory container region, 0x552e0 and 0x555a0 in the 0x557xx
+    class family region) - presumably scene-object iteration per
+    frame; WHICH SUBSYSTEMS the enqueuer clusters 0x1e9xx-0x1f4xx,
+    0x2exxx-0x2f9xx and 0x3cxx-0x3e8xx belong to (input, controls
+    or object scripts); and the meaning of type 0x19 x11 being by
+    far the most enqueued.
+CLOSES: PR-433's OPENS item WHO DEQUEUES [actor+0x10]: 0x52b50
+  drains the queue FIFO - per node it takes the method table at
+  [actor+0x08], saves [node+0x00], and virtual-calls table slot
+  +0x10 with eax = actor and edx = the whole event node; then it
+  calls the heap free 0x5c370 (the free half of the 0x5c320
+  allocator pair, 776 call sites image-wide, null-guarded with the
+  heap root at ds:[0xcf2cc]) and unlinks. Appends go at the tail
+  (PR-433), pops from the head.
+CORRECTS: nothing earlier; PR-433's "motion is queued, not
+  immediate" is now closed end to end, and the queue node fields
+  are confirmed at the consumer: nodes are read back whole, so
+  {+0x00 next, +0x04 type, +0x08 a, +0x0c b} of 0x52b10 is the
+  full layout.
+MEASURED: (a) THE DRAIN. 0x52b50: while edx = [actor+0x10]
+  nonzero: ecx = [actor+0x08]; esi = [edx+0x00]; eax = actor;
+  call [ecx+0x10] (edx = node); eax = [actor+0x10]; call 0x5c370;
+  [actor+0x10] = esi; repeat. (pr434_step)
+  (b) THE STEP ENTRY. 0x52b80: call 0x52b50 (drain), then virtual
+  [table+0x14] (tick), then if [actor+0x28] nonzero: virtual
+  [table+0x00] with edx = 2 - the PR-421 mode-bit thunk in its
+  delete arm, i.e. conditional self-free. Its only xrefs:
+  0x4aed6, 0x4baed, 0x4bb12 (inside FUN_0004abd0/FUN_0004ba90,
+  the PR-415 container region) and 0x55398, 0x55696, 0x556af
+  (FUN_000552e0/FUN_000555a0). (pr434_step)
+  (c) THE EVENT SPACE. 67 call sites of 0x52b10 carry 18 distinct
+  type constants in edx: 0x1 x7 (MOVE, written by 0x45cfd and the
+  frame-marker handler), 0x2 x5, 0x5 x7, 0x8 x5 (zero_v, 0x45a84),
+  0xa, 0xb, 0xc, 0xd x4, 0xf x5, 0x10, 0x11, 0x12 x2, 0x14,
+  0x15 x4, 0x19 x11, 0x1b x5, 0x1d, 0x1e, 0x21, plus 2 computed.
+  Enqueuers concentrate in game-logic function clusters (0x1e9xx,
+  0x2exxx, 0x3cxx-0x3e8xx, 0x4bcd7/0x4bd13 in the PR-415 region,
+  0x53b70/0x53ba4, 0x73f00 in the PR-425 class-ctor region).
+  (pr434_queue)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr434_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical),
+  /tmp/opencode/pr434_step.txt (decodings of 0x52b50, 0x52b80 and
+  0x5c370 from their entry addresses) and /tmp/opencode/pr434_queue
+  .txt (the 67 enqueue sites, the 18 type constants and the
+  function-level distribution of enqueuers).
+```
+
+- WHY. The per-frame contract of the engine's scene objects is now
+  legible and tiny: drain queued events into a virtual handler,
+  tick through a second virtual, self-free when a flag says so.
+  That is exactly the shape ported/ll_play.c's step loop has been
+  approximating, and it says a faithful port needs one per-class
+  event virtual rather than inline special-case handling, plus the
+  self-free flag at object+0x28. The 18-type census also gives a
+  concrete work queue for the physics line: reading the base
+  implementations of table slots +0x10 and +0x14 will name the
+  event semantics (type 1 = the MOVE pair this line started from),
+  and those two bodies are the closest engine-side description of
+  the step the port still has to match.
