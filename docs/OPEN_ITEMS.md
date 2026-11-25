@@ -7626,6 +7626,16 @@ OI-128: what landing and leaving a surface does - the class verbs
     tables export ONLY the manager getter 0x2b4c0 at +0xc.
     Pair semantics (owner,target?) and the 0xcec9x block
     remain open.]
+    [PR-505 CLOSES THE PRODUCER QUESTION: light attachments
+    are BUILT EMPTY - all 8 ctor calls pass edx=0, and the
+    helper 0x2d820 (8 sites in 0x2ba90/0x2ca80) allocates
+    via 0x2d990, installs 0x9b4b4 and stores a signed WORD
+    param at [light+0x14]; pairs arrive only at runtime via
+    the protocol verbs. Sizes settled: SWIATLO/LEW_SWT 0xbf,
+    OBJ_SWT 0xc3, PODMUCH 0x575; light base = 0x16 bytes at
+    +0xa9 (0xbf-0xa9 exact). Runtime APPEND verb still
+    unidentified (no direct call to 0x2dad2), the +0x14 word
+    meaning, and PODMUCH's big 0x575 payload map: open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

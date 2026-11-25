@@ -66336,3 +66336,75 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   convention to know when reading any ctor body's vptr
   store.
 
+
+## PR-505 - LIGHT ATTACHMENTS ARE BUILT EMPTY AT CONSTRUCTION:
+## THE 0x2d820 HELPER ALLOCATES THE LIGHT BASE AND THE CLASS
+## SIZES FIX THE +0xa9 ATTACHMENT IN THE ALLOCATION CENSUS
+
+```
+KIND: read
+SUBSYSTEM: PR-504's OPENS "which code fills a source pair
+  array". Answer: NOTHING at construction time. The 8 call
+  sites of the light-base ctor 0x2d7d0 pass edx=0 (e.g.
+  0x2cac4 `xor edx,edx`), and the helper 0x2d820 - called
+  8 times from the KADMAR2 families 0x2ba90/0x2ca80 - is:
+  push ecx; mov ecx,ebx; xor ebx,ebx; call 0x2d990 (alloc
+  empty light base) -> [L+0x10]=0x9b4b4 -> `mov WORD PTR
+  [eax+0x14],cx`: the light base starts with an EMPTY pair
+  array (PR-504) plus one WORD parameter from the stack
+  argument at [light+0x14]. So pairs are registered only at
+  RUNTIME by the protocol verbs (0x2da30 walks slots as
+  (pair0,pair1) through [[L+0x10]+4]) - the source arrays
+  are built while the level plays, not while classes
+  construct. The construction sites also settle the class
+  allocation sizes (0x5c320 sizes, PR-191 census form):
+  SWIATLO/LEW_SWT objects = 0xbf bytes, OBJ_SWT = 0xc3,
+  PODMUCH = 0x575 (1397 bytes - a large embedded payload,
+  consistent with a pumped-light emitter), and the pattern
+  `mov eax,<size>; call 0x5c320; call 0x531f0 (base chain);
+  add eax,0xa9; <edx flag>; call 0x2d820/0x2d7d0` shows
+  the light base lives INSIDE the object allocation at
+  +0xa9, total size = class size (0xbf = 0xa9 + 0x16 -> the
+  light base is exactly 0x16=22 bytes: array ptr, count,
+  capacity, ops block ptr, and the +0x14 word). The
+  0x2d820 sites sit right after the manager-getter print
+  branches (0x2cb40/0x2cc3f), i.e. in the same ctor arms.
+ADDRESSES: 0x2d820, 0x2d990, 0x2d7d0, 0x2cac4, 0x2ba90,
+  0x2ca80, 0x5c320, 0x531f0, 0x2baa2, 0x2bb5a, 0x2bf49,
+  0xcb, 0xc3, 0x575, 0xa9, 0x14, 0x2d8a0, 0x2da30,
+  docs/OPEN_ITEMS.md
+NAMES: empty-at-construction, light base 22 bytes,
+  allocation census sizes, runtime registration, word
+  parameter, pr505_producer.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH RUNTIME VERB APPENDS pairs (no direct call to
+    0x2dad2: the append must flow through a protocol verb
+    on the light - find the [[L+0x10]+8] call sites); what
+    the +0x14 word parameter controls (set from the ctor
+    stack arg, movsx'd sign-extend at 0x2bac5 suggests a
+    SIGNED level parameter); and PODMUCH's 0x575 payload
+    map - the biggest light-class object by far.
+CLOSES: PR-504's OPENS "which code fills a source pair
+  array passed to 0x2dad2": none at construction -
+  attachments start empty (edx=0) and only the runtime
+  protocol feeds them; plus the exact light-base size
+  (0x16 bytes) and the 4 class allocation sizes.
+CORRECTS: none. (PR-504's pair-slot model is confirmed by
+  the ctor passing edx=0 for the "source array".)
+MEASURED: (a) All 8 call sites of 0x2d820 with 10-
+  instruction contexts (pr505_producer.txt) - sizes 0xbf/
+  0xbf/0xc3/0x575 visible verbatim. (b) 0x2d7d0 ctor-path
+  call at 0x2cac6 preceded by xor edx,edx. (c) 0x2d820/
+  0x2d990 bodies verbatim. (d) Size arithmetic: 0xbf-0xa9=
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port can represent a light attachment as a
+  22-byte empty-at-start array of pairs inside each object,
+  sized 0xbf/0xbf/0xc3/0x575 for the four classes - and
+  knows the pairs only ever arrive through the protocol
+  verbs during play.
+
+
