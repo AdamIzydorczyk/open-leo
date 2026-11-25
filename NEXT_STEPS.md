@@ -56057,3 +56057,173 @@ MEASURED: (a) THE BAND, FOUND BY SIGNATURE, NOT BY A TABLE LIST. The five
   carry and expensive to have missed, and both came from the same habit -
   check the address against the bytes before believing anything about the
   thing that owns it.
+
+
+## PR-400 - THE +0x04 VERB OF EVERY NODE CLASS IS ONE SHAPE: VISIT THE
+## REST OF THE CHAIN FIRST, THEN DO ONE THING TO THE OBJECT - AND NO CODE
+## CALLS ANY OF THOSE TWENTY-FOUR VERBS DIRECTLY
+
+```
+KIND: read
+SUBSYSTEM: the node-class rows of PR-101 (the run of 30 six-slot tables at
+  0xa0f28) and their +0x04 verb - the slot PR-399 found to be the only
+  route into the object-side attach, detach, land and leave dispatchers;
+  the walk 0x457e0, the per-type actions the other rows take, and the
+  field those actions branch on
+ADDRESSES: 0x45750, 0x45766, 0x45769, 0x457e0, 0x457e1, 0x457e3, 0x457e5,
+  0x457e7, 0x457e9, 0x457ec, 0x457ef, 0x459b0, 0x459b3, 0x459b8, 0x459ba,
+  0x459c0, 0x459c2, 0x459d0, 0x459d3, 0x459d8, 0x459da, 0x459f0, 0x459f3,
+  0x45a10, 0x45a13, 0x45a30, 0x45a37, 0x45a49, 0x45a50, 0x45a53, 0x45a58,
+  0x45a5a, 0x45a70, 0x45a74, 0x45a79, 0x45a84, 0x45ab0, 0x45ab7, 0x45acb,
+  0x45ae0, 0x45ae3, 0x45aed, 0x45b00, 0x45b06, 0x45b10, 0x45b20, 0x45b28,
+  0x45b40, 0x45b50, 0x45b58, 0x45b7f, 0x45b90, 0x45b96, 0x45ba3, 0x45ba9,
+  0x45bb0, 0x45bb3, 0x45bba, 0x45bd0, 0x45bd3, 0x45bdf, 0x45be5, 0x45be8,
+  0x45c00, 0x45c06, 0x45c13, 0x45c19, 0x45c20, 0x45c26, 0x45c36, 0x45c45,
+  0x45c50, 0x45c56, 0x45c5b, 0x45c63, 0x45c6d, 0x45c80, 0x45c86, 0x45c8b,
+  0x45c96, 0x45ca4, 0x45cb0, 0x45cb6, 0x45cbb, 0x45cc6, 0x45cd4, 0x45ce0,
+  0x45ce7, 0x45cfd, 0x45d10, 0x45d18, 0x45d28, 0x45d3a, 0x52070, 0x52b10,
+  0x52c80, 0x52cc0, 0x52d00, 0x53670, 0x1cc10, 0x54f40, 0x4578a, 0x457b6,
+  0x45ea1, 0x46db5, 0x46dc5, 0x46623, 0x46a42, 0x46aa5, 0x46584, 0x465db,
+  0xa0f28, 0xa0f40, 0xa0f58, 0xa0f70, 0xa0f88, 0xa0fa0, 0xa0fb8, 0xa0fd0,
+  0xa0fe8, 0xa1000, 0xa1018, 0xa1030, 0xa1048, 0xa1060, 0xa1078, 0xa1090,
+  0xa10a8, 0xa10c0, 0xa10d8, 0xa10f0, 0xa1108, 0xa1120, 0xa1138, 0xa1150,
+  0xa1168, 0xa1180, 0xa1198, 0xa11b0, 0xa11c8, 0xa11e0, 0xa2638,
+  0x45dc0, 0x0c, 0x04, 0x08, 0x1c, 0x2c, 0x30, 0x6d, 0x99, 0xb4, 0xc0
+NAMES: node class row, visit verb, chain walk, right fold, apply verb,
+  per-object queue, channel value, holder, [[arg]], no direct caller,
+  slot-only dispatch, node ctors, OI-127, OI-128, pr400_nodeverbs.py,
+  pr400_nodeverbs.txt, pr400_visitshape.py, pr400_visitshape.txt,
+  pr400_callsites.py, pr400_callsites.txt, pr400_callplus4.txt,
+  pr400_rowctors.txt
+CODE: no: no file under ported/ or tools/ changes, and no port comment
+  asserts anything about these rows. One sentence of OI-128 (what the
+  dispatcher keys on) is corrected in this commit.
+HOOKS: none - no leg and no fixture moves; the port models neither the
+  node chain nor a directive queue.
+OPENS: WHO STARTS A VISIT - the walk is the only one of the 25 verbs with
+  direct callers, so some code must call `[[x+4]+4]` on a chain head, and
+  of the 146 `call [reg+0x4]` sites in the image the scan for a base
+  loaded from `[x+4]` finds seven, of which two are the walks themselves
+  (0x457ec, 0x45769) and the other five take a table from a stack slot or
+  from another field (0x3e308, 0x450e1, 0x51101, 0x520e1, 0x74b63), not
+  from a node; WHICH NODE TYPE EACH ROW IS - every row is installed at
+  [x+4] by two to nine ctor sites in 0x45750-0x47d50 and those ctors are
+  the per-authored-kind builders PR-101 saw, but no row has been tied to
+  an authored directive name (PR-354's `lock`, `unlock`, `rdir`); what the
+  twelve verbs with no second call MEAN - each writes one constant to
+  one field (1 or -1 to [[arg]+0x6d], the facing of PR-131; the
+  negation of [[arg]+0x99], the third term C of PR-100's row-order
+  reversal law at 0x5214b-0x52193), but which authored directive asks
+  for that; whether the value the four pair dispatchers test at
+  [node+8] is the same quantity the +0x10 channel query 0x45dc0 adds
+  into an output, which is what this row assumes; and the 31st table
+  PR-101 found at 0xa2638, not re-read here.
+CLOSES: PR-399's OPENS item "WHICH OF THE 30 NODE-CLASS ROWS IS ASKED -
+  no call site of a node's +0x04 verb has been matched to a row", in the
+  part that closes from the callee side: the verb is a virtual one, no
+  code anywhere calls it by address, and every one of the 24 per-type
+  bodies has the same three steps, so the question is now only where a
+  visit starts, not what a visit is; and the part of OI-128 that asked
+  what the land/leave dispatcher branches on.
+CORRECTS: PR-345, PR-362 and PR-399, three sentences about the same
+  four dispatchers. (1) OI-128's PR-345 paragraph and the PR-345 record
+  say the dispatcher is
+  keyed "on the surface's record count at [handle+8]". The subject of
+  that test is the NODE, not a surface: the verb is entered with eax =
+  the node, its prologue keeps edx (the second argument) and tests `cmp
+  DWORD PTR [ecx+0x8],0` with ecx = the node (0x45c8b, 0x45cbb, 0x45c5b)
+  - the same field the +0x10 channel query adds into an output. (2) The
+  same row in OI-128 and PR-399 say these thunks "choose between" a pair
+  and that the object action runs "only when it is non-zero": both arms
+  act on the object, the branch only picks which member of the pair runs
+  (0x45cb0: +0xb4 at 0x45cc6 else +0xb8 at 0x45cd4; 0x45c80: +0xc0 else
+  +0xc4; 0x45c50: 0x54f40 else 0x54f90). (3) PR-399's paragraph calls
+  0x45c20 "the mirror of bit 0x20" as if it branched; it does not test
+  anything - it clears bit 0x20 of [[arg]+0xb6] and re-or's it from
+  ([node+0x8]&1)<<5. What those six verbs DO to the object, as PR-399
+  described it, is unchanged; the owner and the meaning of the branch
+  value are what change.
+MEASURED: (a) THE SHAPE. 30 rows at 0xa0f28, stride 0x18, carry 25
+  distinct +0x04 verbs (six rows share 0x457e0). Decoded from each verb's
+  own address (pr400_visitshape.py, pr400_nodeverbs.txt), 23 of the 25
+  open the same way: save the second argument, then `call 0x457e0`, then
+  exactly one type-specific action. The two exceptions ARE the walk:
+  0x457e0 is `mov ebx,[eax]; test ebx,ebx; je ret; mov eax,ebx; mov
+  ebx,[ebx+4]; call [ebx+4]` - visit the next link's +0x04 with that link
+  in eax, and stop at a null link - and 0x45750 is the variant that
+  first writes through the level record (PR-101) and then walks. So a
+  visit is a right fold: the chain is walked to its end before the first
+  action runs, and the LAST node's action happens first. (PR-399 named the
+  six surface verbs; this row reads the other 18.)
+  (b) SLOT-ONLY DISPATCH. A raw scan of every rel32 call and jump in the
+  image finds ZERO direct edges into the 24 per-type verbs, and 23 direct
+  edges into 0x457e0, all of them inside those verbs (0x459b3, 0x459d3,
+  0x459f3, 0x45a13, 0x45a37, 0x45a53, 0x45a74, 0x45a93, 0x45ab7,
+  0x45ae3, 0x45b06, 0x45b28, 0x45b58, 0x45b96, 0x45bb3, 0x45bd3,
+  0x45c06, 0x45c26, 0x45c56, 0x45c86, 0x45cb6, 0x45ce7, 0x45d18). The
+  verb is reachable only as `[row+4]`, which is why PR-399's "nothing
+  calls it" reading of the same code was half right.
+  (c) THE ACTION, PER ROW. After the walk, 12 verbs make no call at all
+  and write one constant to one object field - 0x459b0 is `mov eax,[ebx];
+  mov ebx,[eax+0x99]; neg ebx; mov [eax+0x99],ebx`, which NEGATES
+  [[arg]+0x99]; 0x459f0 writes -1 and 0x45a10 writes 1 to [[arg]+0x6d].
+  Seven call a known helper on [[arg]]: 0x52b10 (PR-137's 16-byte
+  per-object queue node) from 0x45a70, from 0x45ce0 with edx=1 and from
+  0x45d10 twice; 0x52c80 from 0x45ab0, 0x45b20, 0x45b50; 0x52cc0 from
+  0x45ae0, 0x45b00; 0x52d00 from 0x45bb0; 0x53670 (the facing flip of
+  PR-160) from 0x459d0; 0x52070 (the word setter of PR-105) from 0x45a50
+  with eax = edx itself; 0x1cc10 from 0x45a90. Four run the OBJECT's
+  class verbs: 0x45bd0 `call [class+0x30]` then `[class+0x1c]` then
+  writes 0 to [[arg]+0x20]; 0x45c00 `[class+0x30]` then `[class+0x2c]`;
+  0x45b90 `[class+0x30]` then `[class+0x0c]`; 0x45cb0, 0x45c80, 0x45c50
+  and 0x45c20 are the four pair dispatchers of (d). One more, 0x45a30,
+  visits a second object's +0x04 through `[esi+4]`.
+  (d) THE PAIR DISPATCHERS AND THEIR BRANCH VALUE. Four verbs end the
+  same way: they walk, then test the NODE's own field at +8 (`cmp DWORD
+  PTR [ecx+0x8],0` with ecx = the node, at 0x45c8b, 0x45cbb, 0x45c5b),
+  and BOTH arms call the object - non-zero takes the first verb of a
+  pair, zero takes its partner. 0x45cb0 runs `[class+0xb4]` (0x45cc6) or
+  `[class+0xb8]` (0x45cd4); 0x45c80 runs `[class+0xc0]` (0x45c96) or
+  `[class+0xc4]` (0x45ca4); 0x45c50 runs 0x54f40 (0x45c63) or 0x54f90
+  (0x45c6d), which are not table slots; 0x45c20 does not branch at all -
+  it clears bit 0x20 of [[arg]+0xb6] and re-or's it from
+  ([node+0x8]&1)<<5 (0x45c36-0x45c45). So PR-399's "chooses between the
+  pair" is right but incomplete: the pair is not gated, one of its two
+  members always runs, and what decides which is the value the node
+  itself carries - the same field the +0x10 channel query 0x45dc0 adds
+  into an output (`add [out],[node+8]`). 0x45c00 is the odd one of the
+  six: it reads [node+0xc] and [node+0x8] but runs its two class verbs
+  unconditionally.
+  (e) WHO INSTALLS A ROW. Every one of the 30 rows is named by code that
+  writes it at [x+4]: between two and nine sites each, all in
+  0x45750-0x47d50 (0xa0f28 by 0x45ea1, 0x46db5, 0x46dc5 and one more;
+  0xa1078 by 0x46a42, 0x46aa5, 0x47641, 0x478b2; 0xa1180 by 0x462bb,
+  0x4717b, 0x47b3c; the full list in pr400_rowctors.txt, 30 of 30 rows
+  named). Those are the per-kind builders PR-101 noticed, and they are
+  the way back from a row to the authored thing it stands for.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr400_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). The
+  image reads quoted in MEASURED come from the scripts named in NAMES,
+  each verb decoded from its own entry address with
+  `python3 tools/re/leodb.py dis`, output kept beside the script.
+```
+
+- WHY. PR-399 ended with a question it could not answer - if the only way
+  into the object's attach, detach, land and leave code is a class slot
+  that nobody calls, is that code alive at all? This row answers it from
+  the callee side and the answer is a shape, not a call graph: the slot is
+  a visit verb, every node type implements it the same three steps, and
+  the walk makes a chain of them fold from the tail. That matters beyond
+  the attachment question. It says an authored list of these nodes applies
+  its LAST entry first, which is the kind of detail that decides whether a
+  ported sequence matches the original. It moves a value - the node's own
+  +8 word - where four rows put a surface handle, and it shows that the
+  land/leave and lock pairs are never gated: one member of the pair
+  always runs, so "not attached" is not "nothing happens", it is the
+  other verb of the pair. And it hands the next row a concrete way back
+  from a class row to the authored directive it models: the two to nine
+  builder sites that install it.

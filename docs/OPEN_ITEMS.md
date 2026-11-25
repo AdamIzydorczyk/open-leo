@@ -5525,10 +5525,12 @@ OI-128: what landing and leaving a surface does - the class verbs
     31 px; PR-399 reads the rest of the verb band - the lock-bit pair
     +0xc0/+0xc4, the [obj+0xb6] bit map, and the five thunks that
     dispatch into the pair, each named once by field +0x04 of a row of
-    PR-101's node-class run. Still open: what the second anchor NAMES
+    PR-101's node-class run, and PR-400 reads all 25 of those rows'
+    +0x04 verbs: one shape, walk the chain then act once on [[edx]], with
+    no direct caller anywhere. Still open: what the second anchor NAMES
     (OI-129), the 0x58c
-    timer posters, the block 0x546de-0x54700, the '#' census, and which
-    node-class row is asked)
+    timer posters, the block 0x546de-0x54700, the '#' census, and who
+    starts a visit)
   origin: PR-345 (the class verb +0xAC read)
     The ground-contact verb 0x546a0 ends by telling the object about
     its surface: when the standing query's answer differs from the
@@ -5547,7 +5549,13 @@ OI-128: what landing and leaving a surface does - the class verbs
     from `ret`, four padding bytes, `push ebx; push ecx` - and IT IS
     NAMED, once, as field +0x04 of row 16 of PR-101's node-class run at
     0xa0f28, the dword at 0xa10ac. Four of its siblings are named the same
-    way and are listed in that record.]
+    way and are listed in that record.] [CORRECTED AGAIN BY PR-400: what
+    that dispatcher tests is not a surface's record count. Its eax is a
+    NODE of PR-101's chain, and the test is `cmp DWORD PTR [ecx+0x8],0`
+    on the node's own +8 word (0x45cbb) - the field PR-101's channel
+    query 0x45dc0 adds into an output. It is also not a one-sided gate:
+    both arms act on the object, non-zero runs +0xB4 and zero runs
+    +0xB8.]
     The other half is a timer. 0x54766 leaves the surface whenever the
     winning record's flag byte [obj+0xe2] is 2 - a '#' record of
     PR-335 - and [obj+0xc6] has reached 0x58c, 1420. That word is one
@@ -5813,6 +5821,13 @@ OI-128: what landing and leaving a surface does - the class verbs
     this row named is one of five thunks at 0x45c00, 0x45c20, 0x45c50,
     0x45c80, 0x45cb0 that all open with PR-101's chain walk 0x457e0 and
     then test the surface record count at [handle+8]: 0x45cb0 chooses
+    [CORRECTED BY PR-400: the value tested is the NODE's own +8 word,
+    `cmp DWORD PTR [ecx+0x8],0` at 0x45cbb, not a surface's count, and
+    the pair is not gated - non-zero runs the first member and zero runs
+    the second, so one of them always runs. 0x45c20 tests nothing at all.
+    PR-400 also reads the other 19 verbs of that row: all 25 are the same
+    three steps - walk the chain with 0x457e0, then one action on
+    [[edx]] - and none of the 24 per-type verbs has a direct caller.]
     +0xb4/+0xb8, 0x45c80 chooses +0xc0/+0xc4, 0x45c50 chooses the two
     single-bit functions 0x54f40 and 0x54f90 (which are NOT table slots:
     0 occurrences as a dword), 0x45c20 is the mirror of bit 0x20. Each is
@@ -5827,11 +5842,16 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x5266c; the only computed write is 0x45c45, bit 0x20 from (edx&1)<<5;
     mask 0x10 is tested twice and never set by a literal. Bit 0x02 is
     therefore never set alone but CAN stand alone, because 0x54fcb clears
-    bit 0x01 and leaves it. What stays open here: which node-class row is
-    asked, i.e. who calls a node's +0x04 verb and for which of the 30
-    rows; what the other 24 rows' +0x04 verbs do; the sixth thunk 0x45ce0;
-    why the point provider runs the element's LEAVE verb; and a setter for
-    bit 0x10.
+    bit 0x01 and leaves it. What stays open here (PR-400 read the 25
+    +0x04 verbs and the six thunks, so the middle items below are closed;
+    see PR-400): WHO STARTS A VISIT - no code in the image calls any of
+    the 24 per-type verbs by address, so some code must call
+    `[[x+4]+4]` on a chain head and the 146 `call [reg+4]` sites do not
+    contain it; WHICH NODE TYPE EACH ROW IS - each row is installed at
+    [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
+    way back to the authored directive, but none has been tied to a name;
+    why the point provider runs the element's LEAVE verb; and a setter
+    for bit 0x10.
 
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -
