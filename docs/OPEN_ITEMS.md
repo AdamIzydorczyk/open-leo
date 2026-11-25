@@ -3037,6 +3037,34 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     0x4b600 walks the level's own ground array with one
     `call [element class + 0x1c]` per element (0x4b67e-0x4b6a8), which is
     the walk this row's ground-query description assumed but had not read.
+    PR-394 READS THE TWO SIBLING QUERIES THIS ROW SENT NEXT, AND FIXES
+    THE BLOCK RECORD'S SHAPE. 0x4b430 builds a 20-byte request block
+    (0x4b441-0x4b455, [0x10] = the view 0x98274), fills it from the
+    ENTRY through 0x534e0, shifts both its x fields by [obj+0xca] and
+    both its extent fields by [obj+0xce] (0x4b462-0x4b48c), and asks
+    every entry of [world+0x70] at stride 0x14 through the DIRECT call
+    0x4b4aa to 0x45620 - no verb. 0x45620 treats the entry as a
+    vertical barrier: its x at [entry+4] must lie between [block+0] and
+    [block+8] and its y at [entry+8] between [block+4] and
+    [block+4]+[block+0xc]; the push then moves [obj+0xca] by the signed
+    distance to the NEARER edge ([block+8]+1 or [block+0]-1), refused
+    when that distance is <= 1 (0x45677-0x45690) - the same field the
+    position carry at 0x54825 applies, which is why a block answer
+    slides a body instead of stopping it. On a hit 0x4b4ec sets bit 0 =
+    AC_BLOK in the result block, and 0x4b7f0's is 0x4b844 `or BYTE
+    [result+3],0x2` = AC_UP_DUP, index 25 of the port's table - the
+    same first dword, a different bit. The record's third word is NOT a
+    length to the engine: 0x4db50 copies the file's three numbers
+    verbatim into [0x00], [0x04], [0x08] (via 0x455e0) and 0x45620 uses
+    [0x08] as the absolute RIGHT EDGE. ZAR.BLK (dumped to
+    /tmp/opencode/pr394_zar.blk from the HD ETAPY, sha be5d8b92; 10
+    `.BLK` members there, none in the CD-stage container) authors
+    `2240,0,700`, which under that reading spans x 2240..2940 - past
+    the world edge. Either the loader completes it elsewhere or PR-313's
+    and PR-314's `len` naming was wrong; named open. The ladder itself
+    is unchanged, and both branches of 0x546c5 still end at the shared
+    0x4b7f0 + 0x49580 tail (0x54704 `jmp 0x54746`), the second one with
+    a pre-filled [esp+0x10] buffer.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -5345,6 +5373,20 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     level and calls [[x]+4], is the +4 verb of the base node table
     0xa1000; whether tool entries use tables from the same verb block
     is not measured. The row stays open.
+    PR-394 ANSWERS THE ENTRY-TABLE HALF for the two registries the
+    physics step asks. 0x4b600's `call [element class + 0x1c]` reads
+    the table at [entry+8], NOT [entry+0]: 0x443b2 fills such arrays
+    with 12-byte records {0, 0, 0x98278} (0x443ce), and 0x98278 is a
+    shared view {0x23ed0, 0x23ea0, 0x23e00} - the surface descriptor's,
+    also written by 0x23e67 when 0x23e30 turns a record's x0/x1 centre
+    into that descriptor. 0x98274, the other view, belongs to the
+    request block 0x4b430 builds, not to an element: it is stored at
+    [obj+0x10] by 33 class ctors and its +0x8 slot is the value 154 of
+    158 ctor tables store at [obj+0x8]. The [world+0x70] and
+    [world+0x78] registries are a different shape again (0x14 stride;
+    0x4b430 asks directly, 0x4b7f0 through [[entry+0x10]+0x4]), and
+    0x5da60 only copies group heads into the mirrors when they are
+    null. Tool entries are still unnamed; the row stays open.
 
 OI-128: what landing and leaving a surface does - the class verbs
   +0xB4 and +0xB8, the '#' ejection counter, and the unread head of
@@ -5613,6 +5655,19 @@ OI-128: what landing and leaving a surface does - the class verbs
     "0x58c counter" this row keeps listing is not a counter: 0x58c is
     compared against [obj+0xc6], the signed v_y, at 0x5476f - a flag-2
     answer is dropped at or above terminal fall.
+    PR-394 MEASURES THE GETTER CENSUS THIS ROW'S +0x6C SENTENCE NEEDS.
+    It is not universal. Two clean families, found by walking every view
+    in 0x96000..0xa7000 from its +0x48 slot: 186 views with +0x48 =
+    0x23aa0, +0x50 = 0x53e40, +0x68 = 0x23900 and +0x6c = 0x23a10 -
+    PR-351's and PR-392's reading, confirmed for that family - and 33
+    views (0x96e94 first, the STRUMIEN family) with +0x48 = 0x23be0
+    (`mov eax,0xcf004`), +0x50 = 0x23bc0 (`mov eax,1`), +0x68 =
+    0x23b60 (`ret`) and +0x6c = 0x23b50 (`ret`). For those 33 the state
+    block the aim chain walks is the all-zero data block 0xcf004 and
+    the sample pair is the object's own position, so any law stated as
+    "[obj+0x89] is the sample point for every asker" needs that
+    qualifier. 0x23b80/0x23b90 are a setter/getter pair on [obj+0x2c],
+    the clamp output of 0x23b70 (4 views at +0x68, 1 at +0x6c).
 
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -

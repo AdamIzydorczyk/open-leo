@@ -54755,3 +54755,202 @@ MEASURED: (a) THE PAIR, INSTRUCTION BY INSTRUCTION. 0x4543c-0x4545e is
   falling line `idiv` puts the engine's surface one pixel ABOVE the real
   one, so a floor division in the port would have accepted a row the
   engine refuses.
+
+## PR-394 - THE BLOCK QUERY TESTS THE WALL AGAINST THE REQUESTER'S OWN
+## SHIFTED BOX, ITS THIRD FILE WORD IS USED AS THE RIGHT EDGE, AND THE
+## SAMPLE GETTER IS NOT UNIVERSAL: 33 CLASS VIEWS POINT THE CHAIN AT A
+## GLOBAL ZEROED BLOCK
+
+```
+KIND: read
+SUBSYSTEM: F6's physics step, the sibling queries of the +0xAC ladder -
+  0x4b430 over the level's block registry, 0x45620's sideways push, the
+  request block that 0x534e0 fills, and the class-view census of the
+  getters those chains call
+ADDRESSES: 0x4b430, 0x4b439, 0x4b441, 0x4b459, 0x4b462, 0x4b46d,
+  0x4b479, 0x4b48c, 0x4b494, 0x4b4a1, 0x4b4a3, 0x4b4aa, 0x4b4be,
+  0x4b4c9, 0x4b4d6, 0x4b4ec, 0x4b7f0, 0x4b81e, 0x4b823, 0x4b828,
+  0x4b844, 0x4b85d, 0x45620, 0x45626, 0x45629, 0x45631, 0x4563a,
+  0x4563d, 0x45644, 0x4564b, 0x4565c, 0x4566e, 0x45673, 0x45677,
+  0x45683, 0x45688, 0x45690, 0x456a0, 0x534e0, 0x534e9, 0x534ec,
+  0x534f0, 0x53503, 0x5350b, 0x53510, 0x53517, 0x53e40, 0x53e55,
+  0x53e63, 0x541f0, 0x541f6, 0x54226, 0x23a10, 0x23a50, 0x23aa0,
+  0x23b50, 0x23b60, 0x23b80, 0x23b90, 0x23bc0, 0x23be0, 0x23900,
+  0x23e30, 0x23e67, 0x23e80, 0x23ea0, 0x23ed0, 0x98274, 0x98278,
+  0x443b2, 0x443ce, 0x4db50, 0x4db8e, 0x4dbb9, 0x4dbcf, 0x455e0,
+  0x5da60, 0x5daa8, 0x4cf94, 0x4cfc7, 0x4cf9c, 0x91e2c, 0x91e38,
+  0x49580, 0x49590, 0x749a0, 0x96858, 0x5c370, 0x91f24, 0x91ee5,
+  0x96e94, 0xa0774, 0x4000,
+  0x0100, 0x70, 0x7c, 0x74, 0x78, 0x84, 0x89, 0xa9, 0xca, 0xce,
+  0xd6, 0x14, 0x4, 0xc, 0x68, 0x6c, 0x50, 0x48, 0x2e, 0x3, 0x2c,
+  0xcf004, 0x58c
+NAMES: blokady, ZAR.BLK, .BLK, AC_BLOK, AC_UP_DUP, request block,
+  shared request-block view, surface descriptor, sample getter, aim
+  getter, state block, current .SEQ row, control=, CHECK_BASE_LN,
+  CHECK_LN, pr394_zar.blk, OI-078, OI-127, OI-128
+CODE: no: none. No port file changes; this record only reads the two
+  sibling queries and measures the getter census.
+HOOKS: none
+OPENS: what the global block 0xcf004 holds and who writes it (the aim
+  chain of 33 class views ends there); the .BLK loader's handling of the
+  third word, since the engine reads it as an absolute right edge while
+  the authored files read as lengths; whether the 33-view family's
+  0x23e30-shaped centre builder is what turns a block row into a
+  standable surface; and the live ask fields, still unmeasured.
+CLOSES: PR-350's open question about what the block query's "rect"
+  operand is; and the part of OI-127 that asks what the registry
+  entries' tables are, for the [world+0x70] registry.
+CORRECTS: PR-313's description of the block record as "(entry x at +0x4,
+  y at +0x8, length at +0x10)": 0x45620 reads the right edge at +0xc and
+  never touches +0x10, and 0x4db50 copies the file's third number
+  straight into +0x8 - see MEASURED (b). And PR-351's/PR-392's "the
+  +0x6c verb is 0x23a10 in all 186 class views" is true only of the 186
+  views reached through +0x48 = 0x23aa0: a second family of 33 views
+  holds 0x23b50 (`ret`, the object pointer itself) at +0x6c and
+  0x23be0/0x23bc0/0x23b60 at +0x48/+0x50/+0x68, so the sample pair and
+  the state block are not universal. PR-312's and PR-392's account of
+  the two control bits and of the raise sites stands.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only, so the light profile of section 2 rule 4
+  applies. Evidence: /tmp/opencode/pr394_docs.log (re_index, then
+  `make verify-docs verify-index`, rc=0). The census commands and their
+  raw output are quoted in MEASURED; the .BLK dump is
+  /tmp/opencode/pr394_zar.blk, 76 bytes, sha256 66a8c17cb0fe2738...
+  quoted in MEASURED (b).
+MEASURED: (a) THE FULL LADDER, AGAIN. 0x546c2 reads the state control
+  word at state+0x12 and tests it twice: `test ah,0x40` (bit 0x4000) at
+  0x546c5 and `test ah,0x1` (bit 0x0100) at 0x54706. Bit 0x4000 runs
+  0x4b600 with ecx = 0 into [esp+0x20] (0x546d7), 0x4b430 into
+  [esp+0x30] (0x546f0), then falls through 0x54704 to the SHARED tail
+  0x54746-0x54754, which runs 0x4b7f0 into [esp+0x40] and merges. Bit
+  0x0100 runs 0x4b600 with ecx = 2 into [esp] (0x54719), 0x4b430 into
+  [esp+0x50] (0x54732), and its `jmp 0x54742` loads [esp+0x10] into the
+  tail instead - so with that bit the ceiling registry is asked with a
+  buffer the caller filled earlier, not with a fresh one. With neither
+  bit, 0x54709 jumps past all of it to 0x54759. Each of the six query
+  calls is followed by 0x49580, which is exactly `for k in 0..2:
+  [eax+4k] |= [edx+4k]` over three dwords (0x49586 `lea ecx,[eax+0xc]`,
+  0x49590 `or edi,ebx`): the answer is OR-ed into the caller's signal
+  set, not stored.
+  (b) 0x4b430 AND THE 0x14-BYTE ENTRY, RE-READ FROM THE BYTES.
+  0x4b439 saves the caller's point at [esp+0x14]; 0x4b441-0x4b455 build
+  a 20-byte request block on the stack: [0] = [4] = [8] = [0xc] = 0 and
+  [0x10] = 0x98274. 0x4b45b calls 0x534e0 with eax = the entry from the
+  walk and edx = that block, and 0x534e0 fills the block's first four
+  dwords from the entry's getters (see (d)). 0x4b462-0x4b48c then shift
+  the block in place: [0] += [obj+0xca], [8] += [obj+0xca],
+  [4] += [obj+0xce], [0xc] += [obj+0xce] - the same clamp-delta pair
+  the position carry uses, added to BOTH x fields and both extent fields.
+  The walk is 0x4b494-0x4b4bc: count = [[world]+0x7c] (skip when <= 0),
+  eax = [world+0x70] + i*0x14, edx = the requester, and a direct
+  `call 0x45620` - there is no verb through the entry here. 0x45620
+  (ecx = edx = the requester throughout) tests the ENTRY as a vertical
+  barrier: reject unless [entry+4] is in [block+0]..[block+8] (0x45629,
+  0x45631) and [entry+8] in [block+4]..[block+4+block+0xc] (0x45640,
+  0x45651); then 0x4565c-0x45676 choose the nearer edge -
+  ([block+0]-[entry+4]) >= ([entry+8]-[block+0]) pushes to
+  [block+8]+1, else to [block+0]-1 - and 0x45677-0x45686 take
+  |[block+4] - that target| and refuse it when <= 1; otherwise
+  0x45688-0x45690 ADD the signed distance to [requester+0xca], the
+  X-delta the carry at 0x54825 applies, and return 1. On 1, 0x4b4d6
+  clears the block's flag byte at 0x4b4e3/0x4b4cb, 0x749a0 zeroes the
+  12-byte result head, and 0x4b4ec `or BYTE [result],0x1` sets signal
+  bit 0 = AC_BLOK. 0x4b7f0 is the same shape over [world+0x78] with
+  count [world+0x84], asking through `[[entry+0x10]+0x4]` (0x4b823,
+  0x4b828), and its raise is 0x4b844 `or BYTE [result+3],0x2` =
+  AC_UP_DUP; that is index 25 of the port's verified table, byte 0 bit
+  1, so the result block's own layout is what those two writes agree
+  on: bit 0 for the block answer, bit 1 for the ceiling answer, in the
+  first dword.
+  (c) THE FILE WORDS ARE COPIED, NOT CONVERTED. 0x4cf94/0x4cfc7 are the
+  `blokady` and `sufity` arms of the levels-file parser (the compare is
+  0x76d20 against 0x91e2c/0x91e38, and a line matching no key ends at
+  0x4d423 with the string "Bledny wpis w pliku levels: %s" at 0x91ee5),
+  and the block loader is 0x4db50: it
+  reads one line, parses it with the scanset format at 0x91f24 into a
+  stack row (0x4db8e), allocates count*0x14 through 0x76a64, stores the
+  array at [anchor+0x70] (0x4dbc6) and per record calls 0x455e0, which
+  copies FOUR dwords from the parsed row into the record and then parses
+  two more numbers out of the same line into a side buffer. So the
+  record's [0x00], [0x04], [0x08] are the file's three numbers verbatim
+  and [0xc] is the unparsed remainder - and 0x45620 uses [0x08] as the
+  RIGHT EDGE, x0 <= wall.x <= x1. Measured on the HD ETAPY container
+  (sha be5d8b92, 10 `.BLK` members; the CD-stage ETAPY holds none, the
+  same split PR-391 measured for `.PLT`): ZARIA.01/ZAR.BLK is 76 bytes,
+  /tmp/opencode/pr394_zar.blk, `6` then `0,0,700`, `2240,0,700`,
+  `1299,341,118`, `1462,244,28`, `1540,194,27`, `1620,0,200` with CRLF
+  endings. Under the engine's own reading those last two numbers are
+  absolute right edges, so the second wall spans x 2240..2940 - outside
+  the 0..2240 world - which is either an authoring convention the
+  loader completes somewhere else or a name for these numbers that
+  PR-314/PR-313 had wrong. Named open. 0x5da60 is not the supplier: it
+  only copies the group heads [anchor+0x14..0x20] into the registry
+  mirrors [0x6c..0x78] when they are null (0x5daa8 stores the same zero
+  it has just tested).
+  (d) 0x534e0 AND THE GETTER CENSUS. 0x534e0 writes four dwords into
+  the block: `call [class+0x68]` then [[that]+0] (0x534e9-0x534ee),
+  the same call again then +4 (0x534f5-0x534fb), `call [class+0x48]`
+  (0x53503), then [[state]+0x33] (0x5350b) and `call [class+0x50]`
+  (0x53510), then `call [[0x33 result]]`. The +0x48 getter 0x23aa0
+  indexes state = [[obj+0x50] + [obj+0x5c]*4], so the two extent words
+  come from the state block. The +0x50 getter 0x53e40 is the row
+  accessor: it re-reads that same state, takes [[state]+0x2e] (0x53e55)
+  as an index into the .SEQ table it gets from [[state]]+0x4, and
+  returns that row, or -1 when the row's +0x14 is 0 (0x53e63). So
+  "position and extents" for this engine means the current STATE block's
+  fields [0x75] and [0x76] (the +0x68 getter 0x23a50 is `lea
+  edx,[eax+0x75]; call 0x534e0` on top of 0x23900 = `add eax,0xd6`,
+  giving [state+0x75] = the animation block's x, [state+0x76] = its y)
+  and the current .SEQ row. The census, `python3 tools/re/leodb.py
+  slots 0x6c 0x68` over the 158 ctor-proven class tables: slot +0x6c is
+  0x23a10 in 140, 0x23b50 in 17, 0x23b80 in 1; slot +0x68 is 0x23900
+  in 116, 0x23b60 in 41, 0x23b90 in 1. Widening to PR-351's own method
+  (every view in 0x96000..0xa7000 reached from its +0x48 slot) gives
+  two clean families and no mixture: 186 views with +0x48 = 0x23aa0,
+  +0x50 = 0x53e40, +0x68 = 0x23900, +0x6c = 0x23a10 - PR-351's and
+  PR-392's reading, confirmed - and 33 views with +0x48 = 0x23be0
+  (`mov eax,0xcf004`), +0x50 = 0x23bc0 (`mov eax,1`), +0x68 = 0x23b60
+  (`ret`) and +0x6c = 0x23b50 (`ret`, the object itself), the STRUMIEN
+  family, 0x96e94 first among them. For those 33 the aim chain's state
+  block is the data-segment block at 0xcf004, which is all zeroes in
+  the image, and their sample point is the object's own x at [obj+0].
+  0x23b60's `ret` means the +0x68 result is the object, so the "x"
+  0x534e0 stores is [obj+0] - the position, not an animation extent.
+  0x23b80/0x23b90 (4 tables for +0x68, 1 for +0x6c, e.g. 0xa0774) are
+  the setter/getter pair on [obj+0x2c], the clamp output of 0x23b70.
+  (e) THE TWO SHARED VIEWS, AND WHY 0x98274 IS NOT AN ELEMENT CLASS.
+  0x98274 = {0x23e30, 0x23ed0, 0x23ea0, ...} is the view of the
+  request block itself: 0x23e30 reads a record as x0 at +0x0, y at
+  +0x4, x1 at +0xc (0x23e3b-0x23e4f, |x1-x0|/2 + x0 = its centre),
+  writes 0x98278 at [out+8] (0x23e67) and then calls
+  [[out+8]+0x4] = 0x23ea0, which stores that centre as {x, y} - the
+  12-byte surface descriptor of 0x4b600's element array. 0x98278 =
+  {0x23ed0, 0x23ea0, 0x23e00} is that descriptor's view, and 0x443b2
+  fills arrays of 12-byte records {0, 0, 0x98278} (0x443ce), which is
+  the shape 0x4b600 walks: `call [[entry+8]+0x1c]` (0x4b697) reads the
+  view at [entry+8], not at [entry+0]. That settles the sentence in
+  OI-127 about an entry's first word being a code table: for these two
+  registries the table 0x4b600 dispatches through is the SECOND dword
+  and it is the shared surface-descriptor view. 0x23ed0, the +4 slot,
+  tests the mode byte's bits 0x4 and 0x2 and calls 0x96858's table or
+  0x5c370 - the second read named in OI-127's tail, not chased here.
+```
+
+- WHY. PR-392 corrected the sampler of the ground query and left its two
+  siblings unread. A ground model that ignores the block query cannot
+  tell a pushed lion from a landed one, and the push is written into the
+  same [obj+0xca] the carry applies - so the port needs the block law
+  before it can claim anything about sideward motion. Reading it also
+  tests the getter story PR-351 built for the aim: if that story is
+  wrong for 33 of the game's classes, it is wrong in a way that matters
+  for water.
+
+- WHAT SURPRISED ME. That the engine never converts the `.BLK` third
+  number: the loader copies it and the test treats it as an absolute
+  right edge, so a wall authored as `2240,0,700` spans 2240..2940,
+  outside the world - the "length" reading was ours, not the engine's.
+  And that the sample getter is not one function: 33 class views hold
+  `ret` there, so their sample point is their own position, and their
+  whole state block is a single global buffer at 0xcf004 that the image
+  leaves zero.
