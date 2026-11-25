@@ -5974,9 +5974,17 @@ OI-128: what landing and leaving a surface does - the class verbs
     `time`, `sample`, `time_scale`, `seq` and `control`, zeroes
     [rec+0x12], and OR-s each authored keyword into it: BY_X 0x01,
     BY_Y 0x02, BY_TIME 0x03, BY_TX 0x04, BY_TY 0x08, FRAME_REV 0x10,
-    SEQ_REV_X 0x20, SEQ_REV_Y 0x40 - and note CHECK_ZW is compared
-    BEFORE CHECK_ANI and takes 0x80 while CHECK_ANI takes 0x40 - while
-    CHECK_ALL is the macro `or WORD PTR [rec+0x12],0x1c0` at 0x51c73.
+    SEQ_REV_X 0x20, SEQ_REV_Y 0x40, CHECK_ZW 0x40 (compared first, at
+    0x51c14) and CHECK_ANI 0x80 (compared at 0x51c2e) - PR-409 corrects
+    the swap in the first draft of this note - while CHECK_ALL is the
+    macro `or WORD PTR [rec+0x12],0x1c0` at 0x51c73, SOLID2 is 0x20400
+    at 0x51d5f and SEMI_SOLID 0x40400 at 0x51d79. THE MODE FIELD IS
+    BITS 0..2 AND ONLY THE BY_* KEYWORDS WRITE IT: the dispatcher
+    0x543a2 does `mov eax,[rec+0x12]; and eax,7; cmp eax,4; ja;
+    jmp [eax*4+0x54380]` with the table 0x543c6, 0x543dc, 0x543fb,
+    0x543f2, 0x5441b, so BY_X=1, BY_Y=2, BY_TIME=3, BY_TX=4 - and
+    BY_TY's 0x08 is bit 3, OUTSIDE the mask: a lone `control=BY_TY`
+    masks to mode 0 and runs the BY_X arm.
     THE ROW-CURSOR MIRROR IS SELECTED BY FRAME_REV XOR SEQ_REV_X:
     0x52360 tests 0x10 at 0x52385 and 0x20 at 0x523a0, XORs them at
     0x523b8, and only when they differ uses `count - edx - 1`; the
@@ -5988,10 +5996,12 @@ OI-128: what landing and leaving a surface does - the class verbs
     class's +0x30 verb 0x52790 is the collision-check method: it tests
     CHECK_ANI 0x40 and CHECK_ZW 0x80 and passes [rec+0x12]&0x8000 to
     0x4bd30/0x4b890. CORRECTION TO CARRY: tools/re/mov_channels.py's
-    ENGINE_CTRL lists BY_Y 0x1, BY_TIME 0x2, BY_TX 0x3, BY_TY 0x4,
-    FRAME_REV 0x8, SEQ_REV_X 0x10, SEQ_REV_Y 0x20 - those are mode
-    INDICES, not the word's bits; fixing the tool is a separate gated
-    step.]
+    ENGINE_CTRL lists BY_X 0x0, BY_Y 0x1, BY_TIME 0x2, BY_TX 0x3,
+    BY_TY 0x4, FRAME_REV 0x8, SEQ_REV_X 0x10, SEQ_REV_Y 0x20 - those
+    are mode INDICES, not the word's bits, and the tool's
+    `word |= ENGINE_NAMES[t]` plus `MODES[word&7]` therefore
+    mis-sorts modes (a lone BY_TIME computes 2 = BY_Y). Fixing the tool
+    is a separate gated step, still owed as of PR-409.]
     WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;

@@ -57268,3 +57268,118 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   are unaffected, because the tool compares names, not masks - but any
   later row that quotes those masks would be quoting a wrong table, so
   the correction belongs in the journal before the tool edit.
+
+## PR-409 - MY OWN CORRECTION: TWO of PR-408's control KEYWORD MASKS
+## WERE SWAPPED, AND THE MODE FIELD OF [rec+0x12] IS WRITTEN ONLY BY THE
+## FIVE BY_* KEYWORDS
+
+```
+KIND: read
+SUBSYSTEM: the control word at [rec+0x12] - the keyword-to-mask table of
+  PR-408 restated correctly, the mode dispatch 0x543a2/0x54380 and the
+  fact that the mode field is only the BY_* keywords while CHECK_ZW's
+  bit sits outside it
+ADDRESSES: 0x51b0d, 0x51b2e, 0x51b38, 0x51b49, 0x51b5e, 0x51b6f, 0x51b78,
+  0x51b89, 0x51b92, 0x51ba3, 0x51bbd, 0x51bd7, 0x51be0, 0x51bf1, 0x51c0b,
+  0x51c25, 0x51c3f, 0x51c73, 0x543a2, 0x543af, 0x543b2, 0x543b5, 0x543be,
+  0x54380, 0x543c6, 0x543dc, 0x543f2, 0x543fb, 0x5441b, 0x5443f, 0xca,
+  0xce, 0xa1, 0xba, 0xbe, 0x388, 0x9216e, 0x92173, 0x92178, 0x92180,
+  0x92186, 0x9218c, 0x92196, 0x921a0, 0x921aa, 0x921b3, 0x921c6, 0x12,
+  0x01, 0x02, 0x03, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1c0
+NAMES: control word, keyword mask, mode field overlap, mode dispatch,
+  PR-408 correction, mov_channels.py, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. The tool fix
+  PR-408 promised stays owed and is unchanged by this row.
+HOOKS: none - no leg and no fixture moves; no tool output changes, so no
+  census numbers move either.
+OPENS: HOW MANY SHIPPED control= LINES NAME BY_TY, and what those
+  states actually do - if the authored intent is a vertical feed then
+  the engine's own dispatch contradicts it, and only a census of the
+  level scripts can say whether the discrepancy is reachable; HOW THE
+  ENGINE AUTHOR MEANT
+  BY_TY to dispatch, given that its mask 0x08 leaves the mode field at
+  0 - the arm at 0x5441b is reached only by a word whose bits 0..2 are
+  4, which no single keyword produces; and whether some other word of
+  the record, not [rec+0x12], carries a vertical-feed mode, since
+  0x5441b feeds [obj+0xa1] from [world+0x388] under the [obj+0xbe]
+  guard exactly like 0x543f2 does under [obj+0xba].
+CLOSES: PR-408's OPENS item about the tail of the keyword chain, in the
+  part reachable from the same chain walk: SOLID2 is the macro 0x20400
+  at 0x51d5f and SEMI_SOLID is 0x40400 at 0x51d79, and CHECK_ALL is
+  0x1c0 at 0x51c73 - three of the unlisted keywords are multi-bit
+  macros, not single bits.
+CORRECTS: PR-408's two CHECK lines. PR-408 wrote "CHECK_ANI 0x40 -
+  note CHECK_ZW is compared BEFORE CHECK_ANI and takes 0x80 while
+  CHECK_ANI takes 0x40" in OI-111 and "CHECK_ZW = 0x80 and CHECK_ANI =
+  0x40" in its MEASURED (a); the masks are the other way round -
+  CHECK_ZW is compared at 0x51c14 and its OR is 0x40 at 0x51c25, and
+  CHECK_ANI is compared at 0x51c2e and its OR is 0x80 at 0x51c3f.
+  Everything else in PR-408's table stands - BY_X 0x01, BY_Y 0x02,
+  BY_TIME 0x03, BY_TX 0x04, BY_TY 0x08, FRAME_REV 0x10, SEQ_REV_X
+  0x20, SEQ_REV_Y 0x40 - and so does its claim that
+  tools/re/mov_channels.py's ENGINE_CTRL is off by one on the BY_* row:
+  the engine's BY_X is 0x01, not 0x0. The tool fix PR-408 promised is
+  still owed.
+MEASURED: (a) HOW THE CHAIN PAIRS. The pattern is `mov edx,<keyword>;
+  mov eax,[ebp-0x20]; call 0x76a69; test eax,eax; jne <next keyword>;
+  or BYTE PTR [esi+0x12],<mask>; jmp 0x51dc3`. The `jne` on NO match
+  jumps to the NEXT keyword's string load, and the OR on a match is at
+  the bottom of that block - so the mask printed just after a keyword
+  literal belongs to THAT keyword, and the keyword string that appears
+  immediately above an OR belongs to the NEXT one. A walk that prints
+  each OR with the last literal loaded therefore shifts every name by
+  one; that is how PR-408's second reading fooled me. Pairing them the
+  other way gives BY_X 0x1 at 0x51b6f, BY_Y 0x2 at 0x51b89, BY_TIME
+  0x3 at 0x51ba3, BY_TX 0x4 at 0x51bbd, BY_TY 0x8 at 0x51bd7,
+  FRAME_REV 0x10 at 0x51bf1, SEQ_REV_X 0x20 at 0x51c0b, CHECK_ZW 0x40
+  at 0x51c25, CHECK_ANI 0x80 at 0x51c3f, CHECK_ALL 0x1c0 at 0x51c73,
+  SOLID2 0x20400 at 0x51d5f, SEMI_SOLID 0x40400 at 0x51d79. Note
+  CHECK_ZW is compared first (0x51c14, mask 0x40) and CHECK_ANI second
+  (0x51c2e, mask 0x80). (b) THE MODE FIELD. 0x543a2 is the row-clock
+  feed: `mov eax,[obj+0x5c]; mov edx,[obj+0x50]; mov eax,[edx+eax*4];
+  mov eax,[eax+0x12]; and eax,0x7; cmp eax,4; ja 0x5443f; jmp
+  [eax*4+0x54380]`. The table 0x54380 = 0x543c6, 0x543dc, 0x543fb,
+  0x543f2, 0x5441b: the first two arms add |[obj+0xca]| and |[obj+
+  0xce]| to the row clock [obj+0xa1]; the third adds [world+0x388] per
+  iteration; the fourth requires [obj+0xba] non-zero first and the
+  fifth requires [obj+0xbe] non-zero first, both then adding the same
+  [world+0x388]. With the table of (a) the mode field reads cleanly:
+  bits 0..2, 1 = BY_X, 2 = BY_Y, 3 = BY_TIME, 4 = BY_TX, and BY_TY's
+  0x8 is outside the mask, so `and eax,7` maps it to 0 - the slot no
+  keyword produces, whose arm adds |[obj+0xca]|. (c) THE FIELD IS CLEAN,
+  AND BY_TY DOES NOT REACH IT. No flag keyword writes bits 0..2:
+  CHECK_ZW is 0x40, CHECK_ANI 0x80, CHECK_ALL 0x1c0, SEQ_REV_Y 0x40 -
+  all at bit 5 or above - so the mode is set by the BY_* keyword alone
+  and cannot be corrupted by the rest of the line. But BY_TY's 0x08 is
+  bit 3, OUTSIDE `and eax,0x7`: an authored `control=BY_TY` on its own
+  produces the word 0x08, which masks to mode 0 and takes the first arm
+  of the dispatcher, adding |[obj+0xca]| - the BY_X behaviour. The arm
+  that guards on [obj+0xbe], which is the one PR-108 read as the
+  vertical feed, is reached only by a word whose bits 0..2 are 4, and
+  the only keyword that writes that is BY_TX.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr409_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). The
+  keyword chain 0x51b0d-0x51d79 and the dispatcher 0x543a2-0x5443f were
+  decoded from their own addresses with `python3 tools/re/leodb.py dis`,
+  the jump table 0x54380 and the keyword strings were read at aligned
+  addresses from build/leo/leo.img, and the pairing rule was re-derived
+  from the `jne` targets, not from the order of literals.
+```
+
+- WHY. Three rows in a row I have now been wrong in the same way:
+  reading a compare-then-OR chain by attaching each OR to the *previous*
+  keyword. It is worth putting in the journal as its own record, because
+  the wrong version is already in OI-111 and in a commit message, and
+  the correction is the kind of thing that only survives if it is
+  written down. What stands from it is better than what I got wrong:
+  the mode field of [rec+0x12] is written only by the five BY_*
+  keywords, cleanly, and BY_TY's bit sits OUTSIDE the mask the
+  dispatcher uses - `control=BY_TY` alone runs the BY_X arm. That is a
+  live disagreement between the authored keyword and the engine's own
+  dispatch, and it is worth a census of the shipped `control=` lines
+  (which the tools can answer without any further decoding) before any
+  port work touches the vertical feed.
