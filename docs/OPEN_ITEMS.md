@@ -6355,6 +6355,19 @@ OI-128: what landing and leaving a surface does - the class verbs
     hidden form corrects PR-410's bit-test census: full scan = 40
     sites; FRAME_REV's +0x12.0x8 still has no consumer; identity of
     +0x14 sites in 0x1197e/0x164dd/0x7af24/0x7b062/0x7b262 open.]
+    [PR-434 CLOSES THE EVENT QUEUE. Drain 0x52b50: while
+    [actor+0x10]: table=[actor+0x08], next=[node+0], virtual-call
+    table+0x10 with eax=actor edx=node, free the node via 0x5c370
+    (the free half of the 0x5c320 pair, heap root ds:[0xcf2cc],
+    776 sites image-wide), unlink - FIFO. STEP ENTRY 0x52b80:
+    drain, virtual table+0x14 (tick), then if [actor+0x28] nonzero
+    call table+0x00 with edx=2 = PR-421 self-free. Step callers:
+    container loops in FUN_0004abd0/0x4ba90 (PR-415 region) and
+    FUN_000552e0/0x555a0. EVENT SPACE: 67 enqueue sites, 18 types
+    (0x1 MOVE x7, 0x8 zero_v, 0x19 x11 most common, up to 0x21);
+    enqueuers cluster in game logic 0x1e9xx/0x2exxx/0x3exxx plus
+    the verbs. Base table+0x10/+0x14 bodies are the direct next
+    input for the physics port.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
