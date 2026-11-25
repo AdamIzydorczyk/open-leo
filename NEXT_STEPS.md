@@ -66764,3 +66764,66 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   shipped content except stages exercises, so the port must
   parse them but need not special-case them.
 
+
+## PR-511 - THE PLAN-STAGE FUNCTION 0x4b1d0: UP TO 3 PLAN
+## ENTRIES, PER-STAGE TARGET COUNTS, AND THE STAGE COUNT
+## PUSHED TO EVERY STAGE RECORD VIA VERB +0x5c
+
+```
+KIND: read
+SUBSYSTEM: PR-510's OPENS "exact stage-loop bounds in
+  0x4b1d0". 0x4b1d0 (called ONLY from the settings/frame-
+  loop function 0x4c8a0) walks the PLAN ENTRY TABLE at
+  [level+0x30] - 4-byte entry handles, HARD-BOUNDED AT 3
+  (0x4b20e `cmp ebx,0x3; jge done`): the engine supports
+  at most THREE plan chains per level. Per entry: [e+0x44]
+  = stage count (dword), [e+0x58] = stage-record list
+  base; the inner walk (0x4b23d) counts 'A' chars (0x4b250
+  `cmp dl,0x41; inc eax`) up to a per-stage target (loop
+  runs WHILE the 'A-count < ebp = stage index+1 - a
+  POSITIONAL check, the 'A' at stage n gates stage n), and
+  tallies 0x7c '|' separators into ecx. Then for EVERY
+  stage record in the chain (0x4b27f: rec=[e+0x58]+i*4,
+  then rec=[rec+0x34] linked list) it calls verb +0x5c
+  (eax=record, edx=ecx=the stage count) - each stage-
+  trigger record is TOLD how many stages its plan has.
+  Finally (0x4b2ba) it enumerates the '|'-positions of the
+  chain via the PR-494 scanner loop: 0x57dd0 find, then
+  0x57e70(eax=chain, edx=position) per hit until -1 -
+  segment iteration (split or per-segment callback, 0x57e70
+  body unread). Lengths use `repnz scasb` (strlen, 0x4b1e8)
+  - so [level+0x30] elements ARE string-bearing plan
+  objects, confirming PR-495's chain reading. This also
+  answers PR-501's stage question mechanically: 'T|TALA|
+  ATAB' = 2 separators = 3 stages, each with its own 'A'
+  positional gate and record chain.
+ADDRESSES: 0x4b1d0, 0x30, 0x44, 0x58, 0x34, 0x5c, 0x4b20e,
+  0x4b250, 0x4b261, 0x4b27f, 0x4b286, 0x57dd0, 0x57e70,
+  0x4c8a0, 0x4b140, docs/OPEN_ITEMS.md
+NAMES: plan entry table, three-plan bound, stage record
+  chain, positional A gate, stage-count verb, segment
+  iteration, pr511_stages.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE 0x57e70 BODY (segment split vs callback - the
+    last piece of the segment walk); WHAT VERB +0x5c DOES
+    on stage records (their class = the [e+0x58] chain
+    element class - identify it); and WHO fills [e+0x44]
+    stage counts - settings parse or derived from the plan?
+CLOSES: PR-510's OPENS "HOW 0x4b1d0 USES the pipe-probe
+  result exactly". Adds the 3-plan-chain bound to the
+  settings model (the port currently models one plan).
+CORRECTS: none.
+MEASURED: (a) 0x4b1d0 full body verbatim (110 lines,
+  pr511_stages.txt). (b) Single-caller census: 0x4c8a0.
+  (c) The 0x57dd0/0x57e70 enumerate-loop form verbatim.
+  (d) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port's plan model must carry up to 3 plan
+  entries, each with a stage count and a linked stage-
+  record chain told its stage count via verb +0x5c - a
+  hard engine bound any faithful loader must enforce.
+

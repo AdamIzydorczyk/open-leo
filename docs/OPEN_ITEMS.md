@@ -7710,6 +7710,18 @@ OI-128: what landing and leaving a surface does - the class verbs
     optional '.' seq suffix, ':' means a path. Exact stage-
     loop bounds in 0x4b1d0 and whether any level file uses
     the '.' form: open.]
+    [PR-511 MAPS THE STAGE LOOP: 0x4b1d0 (only caller
+    0x4c8a0) walks the plan entry table [level+0x30] with
+    a HARD BOUND OF 3 entries (`cmp ebx,3`); per entry
+    [e+0x44]=stage count, [e+0x58]=linked stage-record
+    chain (rec=[rec+0x34]); inner scan counts 'A' chars
+    positionally per stage and tallies '|'; every record is
+    told its stage count via verb +0x5c; finally the pipe
+    positions are enumerated (0x57dd0 find + 0x57e70 per
+    hit - 0x57e70 body unread). 'T|TALA|ATAB' = 3 stages
+    each with its own positional A-gate. Port must model
+    up to 3 plan chains. Stage-record class + who fills
+    [e+0x44]: open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
