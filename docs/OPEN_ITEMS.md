@@ -6835,6 +6835,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x91f10 -> 0x57a40 -> 0x4df10), the 0x554f0/0x23bc0
     variants, and which plan leg supplies the broadcast's
     layer.]
+    [PR-461 NAMES THE WINDOW-LATCH VIRTUAL +0x40: default
+    0x23860 = bit 5 of [obj+0xb6] in 116 tables (the bit
+    PR-135 showed authored ATC_ON rows write through 0x45c20),
+    a CONSTANT ZERO in 41 classes, and 0x23c30 in 1; eight call
+    sites, and PR-399's "pairing rule" at 0x50f04..0x50f1a is
+    exactly two calls of this virtual, one per pair member. The
+    companion +0x9c default is `mov eax,1; ret` (always true,
+    135 tables) - a class opt-in hook, not a predicate - so in
+    the event method of PR-454 the only real gate is the
+    window: an authored ATC_ON window is what lets a DANGER row
+    deal the hit. Correction to PR-454's "the +0x9c/+0x40
+    gates" phrasing, measurement unchanged. Also re-confirmed
+    against the port: 0x5495b raises signal 53 = K_JUMP when
+    [obj+0xba] != 0 and bit 0x10 of that byte (the PR-443
+    climb latch) is clear, exactly the K_ANY mask story of
+    ll_play.h:434-440. Open: the 41 constant-false classes,
+    the 0x3d980/0x23e00 +0x9c variants, and a bit-by-bit table
+    for [obj+0xb6].]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

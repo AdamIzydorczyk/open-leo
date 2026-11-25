@@ -62566,3 +62566,75 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   happens to a drawn object when the scene's layer changes",
   and it is stated by ten call sites and one loop.
 
+
+## PR-461 - THE WINDOW LATCH IS A VIRTUAL: +0x40 DEFAULTS TO "bit
+## 5 OF [obj+0xb6]" (THE AUTHORED ATC_ON LATCH OF PR-135), IS
+## CONSTANT-FALSE IN 41 CLASSES, AND THE HIT PATH ASKS BOTH
+## PAIR MEMBERS THROUGH IT
+
+```
+KIND: read
+SUBSYSTEM: slot +0x40 (default 0x23860 = bit 5 of [obj+0xb6],
+  116 tables; 0x23c00 = constant 0, 41; 0x23c30, 1) and slot
+  +0x9c (0x23a40 = `mov eax,1; ret` = always true, 135
+  tables; 0x3d980 in 5); their call sites; the link to
+  PR-135's atc_on applier 0x45c20 and PR-399's pairing rule
+ADDRESSES: 0x40, 0x9c, 0x23860, 0x23c00, 0x23c30, 0x23a40,
+  0x3d980, 0xb6, 0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x12b60,
+  0x1f019, 0x3da16, 0x50f09, 0x50f15, 0x50fce, 0x50fee,
+  0x51016, 0x53ccd, 0x550cf, 0x55262, 0x45c20, 0xa10f0,
+  0x5495b, 0xba, 0x35
+NAMES: window latch virtual, atc_on bit, always-true predicate,
+  pairing gate, pr461_window.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE 41 CONSTANT-FALSE CLASSES - which objects can never
+    open a window (their rows' ATC_ON would be inert); the
+    +0x9c variants 0x3d980 (5 tables) and 0x23e00 (2, the
+    point-in-rect stub used as a predicate); the bit 0x1
+    readers 0x23885/0x238b5 and the physics tests of 0x1/0x2
+    as flags (PR-99 read some of these; the bit-by-bit meaning
+    table is still not written); and 0x12b60's class (a bare
+    `call [edx+0x40]; ret` thunk).
+CLOSES: PR-454's OPENS "what virtual +0x9c (default 0x23a40)
+  asks": 0x23a40 IS `mov eax,1; ret` - an always-true class
+  hook, so in 135 tables the event method's first gate never
+  fires and the real gate is the window. And it settles what
+  the +0x40 gate is in the hit path: the default reads bit 5
+  of [obj+0xb6], the same bit PR-135 showed authored ATC_ON
+  rows write through the applier 0x45c20 - so the DANGER hit
+  PR-454 described requires the target's authored ATC_ON
+  window, and PR-399's "pairing rule" (0x50f04..0x50f1a) is
+  exactly two calls of this virtual, one per pair member.
+CORRECTS: PR-454's description of the event method's gates as
+  "the +0x9c and +0x40 gates" with the +0x9c default unread:
+  +0x9c's default is TRUE (a per-class opt-in hook), so the
+  method is gated on the window latch alone for 135 tables'
+  classes. The measurements there stand.
+MEASURED: (a) THE TIERS. +0x40: 0x23860 116 / 0x23c00 41 /
+  0x23c30 1 (sums to the 158 detected tables). +0x9c:
+  0x23a40 135 / 0x3d980 5 / 0x23e00 2 / three one-table
+  variants. (b) THE CALL SITES. +0x40: 0x12b60, 0x1f019,
+  0x3da16, 0x50f09, 0x50f15, 0x50fee, 0x550cf, 0x55262.
+  +0x9c: 0x3d9d7, 0x3e8bd, 0x50fce, 0x53ccd, 0x55318. (c)
+  THE BIT. `mov eax,[eax+0xb6]; shl 0x1a; shr 0x1f` = bit 5
+  of the byte (shl 26 then shr 31), matching PR-135. (d) THE
+  SIBLING BIT, RE-CONFIRMED AGAINST THE PORT: 0x5495b raises
+  signal index 53 = K_JUMP (`or BYTE [esp+6],0x20` in the
+  8-bits-per-dword layout) when [obj+0xba] != 0 and bit 0x10
+  of the same byte is CLEAR - the PR-140/PR-217 K_ANY mask
+  story (ll_play.h:434-440). (e) THE PORT. Unchanged: the port
+  models the ATC_ON/ATC_OFF latch and the window test for its
+  legs already (PR-135's close); the pairing rule is port-side
+  unmodelled and no shipped leg needs it.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The keyword chain finishes: an authored ATC_ON row
+  raises a bit whose only named reader is this virtual, and
+  the hit path asks it of both objects before delivering.
+  Knowing the +0x9c default is `return true` also prevents a
+  future read from inventing a predicate where the engine put a
+  class hook.
+
