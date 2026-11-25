@@ -100,6 +100,14 @@ FIELDS = [                # name -> offset in the object, per the ledger
     # s factor (0x542ab) - the field the port only ever seeds for
     # BY_X states.
     ('intent_x', 0xba), ('intent_y', 0xbe),
+    # PR-515: state identity and the row-admission words. [obj+0x50] is
+    # the record-array pointer and [obj+0x5c] the current record index
+    # (PR-100/107: 0x4ffb0/0x534b6 read `[obj+0x50]` indexed by
+    # `[obj+0x5c]*4`); together they name WHICH authored state the live
+    # object runs. [obj+0x95] is PR-99's one-shot row-pull gate and
+    # [obj+0xa1] the row accumulator whose threshold-gate PR-100 read.
+    ('st_array', 0x50), ('st_index', 0x5c),
+    ('gate_95', 0x95), ('accum_a1', 0xa1),
 ]
 WIN = 0x140               # sampled window: covers every FIELDS offset
 MENU_AT = (640, 400)      # the chapter map menu's CRTC geometry (PLAN S6)

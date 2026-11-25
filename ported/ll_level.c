@@ -7849,9 +7849,11 @@ static void play_advance(play_ctx *pl, const ll_play_keys *keys,
     }
     if (verbose)
         printf("ll_level: play tick %d: state %s seq %s frame %d pos %d,%d"
-               " grounded %d\n", tick, pl->mov->st[pl->p.sti].name,
+               " grounded %d v %lld,%lld\n", tick,
+               pl->mov->st[pl->p.sti].name,
                pl->mov->st[pl->p.sti].seqkey, ll_player_frame(&pl->p),
-               xi, yi, pl->p.grounded);
+               xi, yi, pl->p.grounded,
+               (long long)(pl->p.vx * 100.0), (long long)(pl->p.vy * 100.0));
 }
 
 /* the lion LAST, over bg + scene objects: the .SEQ anchor convention is

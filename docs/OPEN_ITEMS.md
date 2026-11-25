@@ -5301,6 +5301,49 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     there, the PR-321 family): that pair is NOT a ZARIA
     blocker (pr514_lock2.txt). The carrier is the running
     jump, pending PR-515's port leg and a measured arc.
+    PR-515 MEASURES THE WORD, THE WALK, THE JUMP AND THE
+    CHASM ITSELF IN THE LIVE ORIGINAL (10 Hz, TLewZaria
+    0x524400; /tmp/opencode/pr515c.jsonl, pr515e.jsonl).
+    (a) [obj+0xba] is the KEYBOARD's raw +/-20 for the
+    player, ground AND air, whole press windows - never
+    +/-10. The kind-1 terrain rewrite (0x54a57/-10/0, the
+    slope lookahead PR-102 read) runs only behind a
+    [obj+0xd2] contact record; the player's seed stands
+    (0x54a10 taken). PR-98's "terrain scalars +-10/0" is
+    the OBJECT path; PR-514's suspected 20->10 normalizer is
+    REFUTED for the player. (b) WALK: sustained right at
+    +20 gives 50-64 px/s (not the 100 the 0x54250 law
+    predicts at that word); the port's s=10 net sits at the
+    band's bottom. The gap is now measured and named. (c)
+    STANDING spc-jump: x = 23 for the ENTIRE flight (680-
+    >545->680, 3.7 s, intent 0) - the port's x-frozen
+    flights are FAITHFUL for that input; the arc (135 px,
+    3.7 s) is NOT the port's A_JUMP arc (272 px, 1.7 s).
+    (d) RUNNING spc-jump: +86..92 px over 3.5-3.7 s, mean
+    flight x ~25 px/s = raw 1.2-1.5 = the I 120-150 numbers
+    HELD, not decayed (PR-98's "pins v_x while that row is
+    current" line, against the port's one-shot apply). (e)
+    THE CHASM, LIVE: the lion runs the low line at 61 px/s
+    and steps off at x=408 - exactly the authored west lip -
+    falls 656->1195, x 413->482 (+69 px over 2.9 s), dies,
+    respawns at (50,640). The ORIGINAL crosses 408..624 by
+    neither run, running jump (+90) nor fall (+70): the
+    span is 216. OI-124's carrier is NOT a ground-level
+    jump; the canopy route and any un-catalogued element
+    stay open, now bounded by these numbers. (f) CLOCK: QMP
+    1500-ms holds measure 1.2-1.3 s live - the guest clock
+    is ~real time; these px/s are game numbers. The trace
+    `tick` field is a constant word (broken, named). (g)
+    STATE IDENTITY (run 10, new st_index field): walk=4
+    A_WALK, idle=18 A_DRAP (ZARIA has no A_STAY - the
+    port's fallback name, confirmed), the spc flights run
+    A_JUMP_S (I 120,-1200: flight x ~24 px/s held = the
+    measured mean - PR-98's pin reading over the port's
+    one-shot) and A_ZABLOK (authored F=0,0, no I pair -
+    its 100 px surf-off carry and the walk-past-the-F-law
+    both point at the unmodelled SEQ-step words [obj+0xe2/
+    e6/ea]); gate_95/accum_a1 live, matching PR-100's
+    threshold arithmetic.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that

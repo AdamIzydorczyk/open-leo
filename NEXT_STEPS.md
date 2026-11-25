@@ -67090,3 +67090,171 @@ MEASURED: (a) port run 600 ticks: per-tick state+pos trace,
 GATE: make 0 warnings; verify-all fixtures rc=0 65 (ok);
 GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
 
+
+## PR-515 - THE LIVE ORIGINAL KEEPS THE RAW KEYBOARD WORD FOR
+## THE PLAYER (GROUND AND AIR, NEVER +/-10); ITS RUNNING JUMP
+## HOLDS THE I-TARGET ~25 PX/S; AND THE FIRST CHASM IS NOT
+## CROSSABLE BY RUN, JUMP OR FALL - THE ORIGINAL ITSELF DIES
+
+```
+KIND: read
+SUBSYSTEM: OI-124's carrier question, settled to bounds, and
+  the intent-word question PR-514 opened. (1) THE WORD, AT
+  THE SOURCE: 0x549f2 seeds [obj+0xba]/[obj+0xbe] from the
+  caller's block words UNCONDITIONALLY (0x549f9/0x54a08);
+  the kind-1 terrain rewrite (+10 at 0x54a57, -10 at
+  0x54a82, 0 at 0x54a93, a slope lookahead against the
+  [vt+0x68] point provider, PR-102's reading) runs ONLY
+  when [obj+0xd2] carries a contact record (0x54a10 `test
+  edx,edx; je 0x54b90`); the playable TLewZaria takes the
+  je - the seed stands. Live census across two 10 Hz runs
+  (2821 lion samples): intent_x = +20 on the ground (420
+  samples) and in the air (239), whole 1.2-1.5 s press
+  windows end to end; +/-10 NEVER appears on the player.
+  PR-98's "terrain scalars the ground code recomputes each
+  tick, +-10/0" is the object path (its branch operands
+  re-read here instruction by instruction); for the player
+  it is corrected below, and PR-514's OPENS "L1-normalizer
+  at 0x54108" is REFUTED: no 20->10 rewrite exists on the
+  player's live stream. (2) THE WALK, LIVE: sustained right
+  at the raw +20 gives 50-64 px/s (446.32-447.43: 308->376,
+  61 px/s). The 0x54250 law at that word predicts 100 px/s
+  steady; the port's s=10 constant (50 px/s) sits at the
+  measured band's bottom edge. The halving between the word
+  and the force is now a MEASURED, NAMED gap. (3) THE
+  JUMPS, LIVE: a standing spc-jump moves x = 0 for the
+  whole flight (x stays 23 through a 680->545->680, 3.7 s
+  arc, intent 0) - the port's x-frozen standing flights are
+  FAITHFUL for that input; the port's A_JUMP arc (272 px,
+  1.7 s, from its I-impulse-plus-drag model) is NOT the
+  live one (135 px, 3.5-3.7 s), and the state the live
+  jump runs is un-named (the trace had no state word - the
+  fields are added by this record). A RUNNING spc-jump
+  (spc inside a held-right
+  window) carries +86..92 px over 3.5-3.7 s: mean flight x
+  ~25 px/s = raw 1.2-1.5 px/it = the authored I 120-150
+  numbers HELD for the flight, not decayed - PR-98's line
+  "while a row carrying a target is the current row the T=
+  drag cannot slow that axis" is the live behaviour; the
+  port's one-shot admit lets the T=20 drag eat the carried
+  velocity inside the flight (+2 px total, measured with
+  the play-trace's new v fields). (3b) STATE IDENTITY
+  (run 10, the new st_index field): the walk state reads
+  4 = A_WALK and the standing idle 18 = A_DRAP - ZARIA has
+  NO A_STAY, which is exactly why the port's idle
+  fallback names A_DRAP (ll_play.c 2617), so the
+  [obj+0x5c] map is confirmed; the airborne states of the
+  spc chains read 1 = A_JUMP_S (its authored I 120,-1200:
+  flight x ~24 px/s = 1.2 px/it, the measured mean) and,
+  at the obstacle line, 5 = A_ZABLOK - 3.5-3.8 s carries
+  of +86..100 px along the water line with the surface
+  link off (surf=0); its
+  authored block (control=BY_X|FRAME_REV|CHECK_ALL|CH_DIR,
+  F=0,0, T=30,5, G=0,350, seq=walk rows at 6 ms, exit
+  A_FALL_DOWN(1)=AC_ONAIR) carries NO force and NO I pair,
+  so that carry runs on a channel with no authored numbers
+  at all; the death flyover reads 2 = A_JUMP at (199,200).
+  gate_95
+  flips 1/0 around row admits on the live object (census
+  1072 ones / 1858 zeros) and accum_a1 carries exactly the
+  authored row-threshold remainders (100/200/300) -
+  PR-100's accumulator, live. (4) THE CHASM, LIVE, AND
+  THE BOUND: the lion
+  runs the low line at 61 px/s with intent +20 and steps
+  off the ledge at x = 408 - the authored west lip (PR-205)
+  at the end of the 403 ledge line (PR-514) - falls 656->
+  1195 through the gap while x decays 413->482 (+69 px in
+  2.9 s), dies past the world bottom (flyover (200,232),
+  b6 |= 1), respawns (50,640). The ORIGINAL crosses
+  408..624 by NEITHER run (it walks off the lip straight
+  in), NOR running jump (+90 px), NOR the fall (+70): the
+  span is 216 and the original's own lion dies trying. The
+  crossing is the canopy route (PR-131's strengthened
+  reading) or an element not yet catalogued; this record
+  supplies the hard per-element bounds every candidate must
+  satisfy.
+ADDRESSES: 0x549f2, 0x549f9, 0x54a08, 0x54a10, 0x54a1b,
+  0x54a57, 0x54a82, 0x54a93, 0x54b65, 0x54b90, 0x54250,
+  0x542ab, 0x54170, 0x50, 0x5c, 0x95, 0xa1, 0xd2, 0xba,
+  0xbe, docs/OPEN_ITEMS.md
+NAMES: player-seed-stands, raw-20-live, sustained-walk-50-
+  64, standing-jump-x-zero-faithful, held-itarget-25,
+  run-off-fall-69, chasm-bounds, st-index, gate-95-field,
+  accum-a1-field, pr515c.jsonl, pr515e.jsonl,
+  pr515f.jsonl, pr515_evidence.md
+CODE: yes: ported/ll_level.c - the verbose play-tick line
+  appends the velocity register pair after `grounded` (the
+  measurement that closed the port-flight arithmetic: the
+  carried walk velocity decays exactly x0.8/it under T=20);
+  tools/golden_level_trace.py - FIELDS gains st_array/
+  st_index ([obj+0x50]/[obj+0x5c], PR-100/107's record
+  array + current index - state identity) and gate_95/
+  accum_a1 (PR-99/100's row-admission words). No physics,
+  no leg, no pin moves.
+HOOKS: none - the appended v fields sit AFTER every field
+  the play legs grep; the new trace fields are extra jsonl
+  keys. Full gate pair confirms.
+OPENS: WHERE the word halves: raw +20 yields 50-64 px/s,
+    not 100 - a key-frame duty cycle, a different T in
+    force, or another x channel; the 10 Hz stream cannot
+    resolve it (a 50 Hz pass decides); the y-arc of the
+    live A_JUMP_S (rise 135 px, 3.5-3.7 s) against its
+    authored I 120,-1200 through 0x54170's climb rule and
+    the G= pair - the x side matches at raw 120, the y
+    side's arithmetic is open; whether the I-target pull
+    re-runs every iteration from the merged record or the
+    row keeps re-admitting (gate_95's live flip cadence
+    decides); WHICH channel carries A_ZABLOK's 100 px
+    surf-off carry and the sustained walk past the F law's
+    numbers -
+    its block has F=0,0 and no I pair, so the candidate is
+    the SEQ-step motion words [obj+0xe2]/[obj+0xe6]/
+    [obj+0xea] (PR-512's move-over-N-iterations verb),
+    unmodelled for the player; a 50 Hz pass with the
+    e-words sampled decides both; the trace's `tick` field
+    is one constant word in this build (1030852) - a
+    broken read, unused here because the QMP holds clock
+    the guest at ~real time; and the crossing element
+    itself, now bounded: no ground-level element carries
+    216.
+CLOSES: none. Narrows OI-124 hard: ground-level run/jump/
+  fall carry 0/69/90 px in the ORIGINAL ITSELF against a
+  216-span - the first chasm needs the canopy route or an
+  un-catalogued element, and every candidate now has
+  measured bounds.
+CORRECTS: PR-98: "[obj+0xba]/[obj+0xbe] are terrain
+  scalars the ground code recomputes each tick, +-10/0,
+  NOT .MOV-authored" - true only for objects whose
+  [obj+0xd2] chain is kind 1; for the playable lion the
+  seed stands and the live word is the keyboard's raw
+  +/-20 (see MEASURED). PR-514's OPENS candidate
+  "the [obj+0xba] read at 0x54108 feeds an L1-normalizer"
+  - no: 0x54108 copies words 0xba..0xce between
+  structures, no scaling; nothing halves the player's
+  word anywhere in its live stream.
+MEASURED: (a) intent censuses pr515c/pr515e (1522+1299
+  lion samples; the table in pr515_evidence.md 2/6). (b)
+  walk ramps and sustains 27->64 px/s at +20 (windows
+  listed). (c) standing jump x=23..23 whole flight, and
+  the running-jump arcs +92/+86 with intent live. (d) the
+  408 step-off, the 69-px fall drift, the death and
+  respawn, second by second (pr515e dump). (e) PORT
+  flight register decay x0.8/it with the new v fields
+  (/tmp/opencode/pr515_vx.log). (f) the LEW.MOV / LEWPL.
+  MOV state index tables (evidence 8). (g) the lock-free
+  guest clock: 1500-ms holds as 1.2-1.3 s live windows.
+  (h) run-10 (2930 samples): st_index/gate_95/accum_a1
+  censuses and the window-to-state map (evidence 9).
+```
+
+- WHY. The chasm thread asked which element carries a lion
+  across 216 units. The original now answers for three
+  candidates - and dies in the gap itself, on camera at 10
+  Hz. That is the negative closure this register wanted,
+  with bounds for the survivors; and the physics side got
+  its own corrections: the player's word is raw 20, the
+  walk halves somewhere real, and flight x is the I-target
+  held, which is exactly the port's one-shot gap.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 65 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
