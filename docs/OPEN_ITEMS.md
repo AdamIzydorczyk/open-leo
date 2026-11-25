@@ -5970,6 +5970,28 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x523f0 shows the call-in `mov esi,[eax+0x44]; call [esi+0x08];
     call [esi+0x0c]`. THE PORT WALKS ITS LADDER FORWARD - this is a
     checkable difference.]
+    [PR-408 NAMES THE SWITCH. The state-header parser 0x51913 reads
+    `time`, `sample`, `time_scale`, `seq` and `control`, zeroes
+    [rec+0x12], and OR-s each authored keyword into it: BY_X 0x01,
+    BY_Y 0x02, BY_TIME 0x03, BY_TX 0x04, BY_TY 0x08, FRAME_REV 0x10,
+    SEQ_REV_X 0x20, SEQ_REV_Y 0x40 - and note CHECK_ZW is compared
+    BEFORE CHECK_ANI and takes 0x80 while CHECK_ANI takes 0x40 - while
+    CHECK_ALL is the macro `or WORD PTR [rec+0x12],0x1c0` at 0x51c73.
+    THE ROW-CURSOR MIRROR IS SELECTED BY FRAME_REV XOR SEQ_REV_X:
+    0x52360 tests 0x10 at 0x52385 and 0x20 at 0x523a0, XORs them at
+    0x523b8, and only when they differ uses `count - edx - 1`; the
+    row-advance repeats the pair at 0x52158 and 0x52171. On shipped
+    data that branch is rare - SEQ_REV_X appears in 7 states and
+    SEQ_REV_Y in 22, while `control=BY_TIME|FRAME_REV|...` is common.
+    The same function parses the ` ( N ) ` transition format (0x9225c),
+    so header, control word and start row are one parser. The record
+    class's +0x30 verb 0x52790 is the collision-check method: it tests
+    CHECK_ANI 0x40 and CHECK_ZW 0x80 and passes [rec+0x12]&0x8000 to
+    0x4bd30/0x4b890. CORRECTION TO CARRY: tools/re/mov_channels.py's
+    ENGINE_CTRL lists BY_Y 0x1, BY_TIME 0x2, BY_TX 0x3, BY_TY 0x4,
+    FRAME_REV 0x8, SEQ_REV_X 0x10, SEQ_REV_Y 0x20 - those are mode
+    INDICES, not the word's bits; fixing the tool is a separate gated
+    step.]
     WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;

@@ -57155,3 +57155,116 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   and +0x1c, so the port's "state" object and the engine's are much
   closer than the sixteen tables suggested - the state is a pair of
   hooks plus a name, not a subclass of anything large.
+
+## PR-408 - THE AUTHORED `control=` KEYWORDS ARE OR-ed INTO [rec+0x12]
+## BY ONE PARSER AT 0x51913, AND THE ROW-CURSOR MIRROR OF PR-407 IS
+## SELECTED BY FRAME_REV XOR SEQ_REV_X
+
+```
+KIND: read
+SUBSYSTEM: the state-record header parser - the `time`/`sample`/
+  `time_scale`/`seq`/`control=` fields, the 26 authored control keywords
+  and the bit values the engine gives them at [rec+0x12], and which of
+  those bits the row machinery reads back
+ADDRESSES: 0x51913, 0x5192c, 0x5196d, 0x519ab, 0x519e9, 0x51b0d, 0x51b38,
+  0x51b44, 0x51b49, 0x51b51, 0x51b6f, 0x51b89, 0x51ba3, 0x51bbd, 0x51bd7,
+  0x51bf1, 0x51c0b, 0x51c25, 0x51c3f, 0x51c59, 0x51c73, 0x51d5f, 0x51d79,
+  0x51dc3, 0x51e12, 0x51e3b, 0x51e3e, 0x51b2e, 0x51913, 0x76a69, 0x57d30,
+  0x52360, 0x52381, 0x52385, 0x523a0, 0x523b8, 0x523bc, 0x523cb, 0x520c0,
+  0x52158, 0x52171, 0x52790, 0x527c0, 0x527c5, 0x527db, 0x52805, 0x4bd30,
+  0x4b890, 0x49580, 0x92119, 0x92127, 0x92131, 0x9213f, 0x9215a, 0x9216e,
+  0x92173, 0x92178, 0x92180, 0x92186, 0x9218c, 0x92196, 0x921a0, 0x921aa,
+  0x921b3, 0x921bd, 0x921c6, 0x921d0, 0x921da, 0x921e8, 0x921ee, 0x921f5,
+  0x921fb, 0x92202, 0x92212, 0x9221d, 0x92224, 0x9222f, 0x9225c, 0x0x12,
+  0x12, 0x01, 0x02, 0x03, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x8000,
+  0x1c0, 0x20400, 0x40400
+NAMES: state header parser, control word, control keyword, frame
+  reversal, sequence reversal, collision-check verbs, engine control
+  table, mov_channels.py, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. A tool fix follows:
+  tools/re/mov_channels.py's ENGINE_CTRL table has six wrong values and
+  this row records them so the tool edit is a separate, gated step.
+HOOKS: none - no leg and no fixture moves; the port does not parse
+  `control=` in ported/, only the tools do.
+OPENS: WHICH BITS THE REMAINING KEYWORDS GET - this row read the chain
+  only as far as CHECK_ALL, and the tail 0x51c80-0x51e07 (CHECK_LEW,
+  CHECK_BASE_LN, SOLID, CH_DIR, INV_V, DANGER, CHECK_ALL_PLANE,
+  ANTI_SOLID, SOLID2, SEMI_SOLID, ANTI_POCISK) was not decoded word by
+  word; WHAT `[rec+0x12] & 0x8000` IS - the class verb at +0x30
+  0x52790 reads it as a mask into 0x4bd30/0x4b890 while testing 0x40
+  and 0x80, so it is a collision-filter bit, but which keyword sets it
+  is not established here; whether the two flag bits FRAME_REV and
+  SEQ_REV_X have DIFFERENT effects elsewhere - both 0x52360 and 0x520c0
+  test them as an XOR, which makes them interchangeable in the row path;
+  and how the port should represent a word it does not parse at all.
+CLOSES: PR-407's OPENS item about the flag bytes tested at 0x52385 and
+  0x523a0 with masks 0x10 and 0x20: those bits are the authored
+  keywords FRAME_REV and SEQ_REV_X, set by the state-header parser at
+  0x51bf1 and 0x51c0b. It also closes the part of PR-407 that asked
+  what the count at [rec+0x36] is used for beyond initialising the
+  cursor - the same two bits select the mirrored form there too, in the
+  row-advance itself at 0x52158 and 0x52171.
+CORRECTS: PR-99's control-word table as recorded in
+  tools/re/mov_channels.py, which documents itself as the bits of the
+  word at rec+0x12 exactly as the engine ORs them. The engine's ORs at
+  0x51b6f-0x51c73 are BY_Y = 0x02, BY_TIME = 0x03, BY_TX = 0x04,
+  BY_TY = 0x08, FRAME_REV = 0x10, SEQ_REV_X = 0x20, SEQ_REV_Y = 0x40
+  and CHECK_ZW = 0x80, while the table has 0x1, 0x2, 0x3, 0x4, 0x8,
+  0x10, 0x20. The table's values
+  are the MODE INDICES (the same numbers as its MODES dictionary), not
+  the word's bits; the mode mask is `and [rec+0x12],7` per PR-99, so
+  the correct bit values are the ones measured here.
+MEASURED: (a) THE PARSER. 0x51913 is one function that reads a state
+  block's header: it fetches the strings `time` (0x92119), `sample`
+  (0x92131 is `time_scale`, 0x92127 is `sample`), `seq` (0x9213f) and
+  `control` (0x9215a), then `mov DWORD PTR [esi+0x12],0` at 0x51b2e and
+  a chain of `mov edx,<keyword>; mov eax,[ebp-0x20]; call 0x76a69;
+  test eax,eax; jne next; or BYTE PTR [esi+0x12],<mask>` for each
+  keyword: BY_X 0x01 at 0x51b6f, BY_Y 0x02 at 0x51b89, BY_TIME 0x03 at
+  0x51ba3, BY_TX 0x04 at 0x51bbd, BY_TY 0x08 at 0x51bd7, FRAME_REV
+  0x10 at 0x51bf1, SEQ_REV_X 0x20 at 0x51c0b, SEQ_REV_Y 0x40 at
+  0x51c3f, CHECK_ANI 0x40 - read the order carefully: the keyword
+  CHECK_ANI is compared at 0x51c2e and its OR is at 0x51c3f, and
+  CHECK_ZW is compared at 0x51c14 with its OR at 0x51c25, so
+  CHECK_ZW = 0x80 and CHECK_ANI = 0x40; then CHECK_LN at 0x51c48 and
+  CHECK_ALL at 0x51c62, the latter with `or WORD PTR [esi+0x12],0x1c0`
+  at 0x51c73 - CHECK_ALL is a macro over three bits. The same function
+  ends with the transition-line format ` ( %[^) ] %*[)] = ` (0x9225c at
+  0x51e12) that PR-107 read, so the state header, the control word and
+  the `( N )` start row are parsed in one place. (b) WHO READS THE
+  BITS. The state-entry verb 0x52360 tests 0x10 at 0x52385 and 0x20 at
+  0x523a0, XORs the two booleans at 0x523b8 and, when they DIFFER,
+  writes the cursor as `[[rec+0x36]-edx-1]` at 0x523bc-0x523c5; when
+  they agree it writes edx raw at 0x523cb. The row-advance 0x520c0
+  repeats the same pair of tests at 0x52158 and 0x52171. The record
+  class's +0x30 verb 0x52790 is a collision-check method: it tests
+  0x40 (CHECK_ANI) at 0x527db and 0x80 (CHECK_ZW) at 0x52805 and
+  passes `[rec+0x12] & 0x8000` to 0x4bd30 and 0x4b890. (c) ON SHIPPED
+  DATA the keyword appears as e.g. `control=BY_TIME` 850 times,
+  `control=BY_TIME|FRAME_REV|CHECK_ALL|CH_DIR` 127 times,
+  `control=BY_TIME|SOLID2|ANTI_POCISK` 121 times, and SEQ_REV_X occurs
+  in 7 states and SEQ_REV_Y in 22 per the PR-99 census, so the
+  mirror branch of 0x52360 is rare and FRAME_REV is common.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr408_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). Every
+  instruction quoted was decoded from its own aligned address with
+  `python3 tools/re/leodb.py dis`; the keyword strings were read out of
+  build/leo/leo.img at the addresses named in the ADDRESSES list, and
+  the shipped-data counts come from the existing PR-99 census.
+```
+
+- WHY. PR-407 found a cursor that can be initialised two ways and could
+  not say what selects between them. It is an authored switch the level
+  author writes in plain text - FRAME_REV against SEQ_REV_X - which also
+  means the engine itself treats those two flags as one bit in the row
+  path, and that the mirror is rare on shipped data (7 of 415 scripts
+  carry SEQ_REV_X). Second, and cheaper to act on: the tool that
+  produced the PR-99 and PR-100 censuses documents a control-word table
+  that is wrong in six of its mode rows. The census counts themselves
+  are unaffected, because the tool compares names, not masks - but any
+  later row that quotes those masks would be quoting a wrong table, so
+  the correction belongs in the journal before the tool edit.
