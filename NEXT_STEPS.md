@@ -59202,3 +59202,88 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   gorilla. It also opens the second, larger vocabulary (`AC_*`) whose
   owner file and parser have not been placed - the next known
   unknown.
+
+## PR-426 - THE `AC_*` VOCABULARY IS THE ENGINE'S BUILT-IN ACTION
+## STATES: ONE DISPATCHER OF 47 NAMES BACKS THE SHARED STATE TARGETS
+## OF THE .MOV FILES, AND EVERY AUTHORED AC_ NAME HAS AN ENGINE BODY
+
+```
+KIND: read
+SUBSYSTEM: the built-in action-state dispatcher FUN_00048000, its
+  single caller that tokenises a text line first, the corpus census of
+  AC_ names as transition targets in the .MOV files, and the exact
+  two-way match between the authored and the compiled AC_ vocabularies
+ADDRESSES: 0x48000, 0x47dc2, 0x47dce, 0x47dd2, 0x47dd7, 0x47de5,
+  0x57e70, 0x76a69, 0x919c7, 0x919ec, 0x919f5, 0x82581, 0x0c
+NAMES: built-in action state, AC dispatcher, AC_BREAK_NEXT, AC_TIME,
+  AC_ENEMY_ATC, transition target, shared state, action command
+  interpreter, pr426_ac.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT EACH BUILT-IN DOES - the dispatcher picks between 47
+    bodies but not one of them has been read; WHO CALLS THE LINE
+    HANDLER at 0x47d?? - the text source of an action line is not
+    traced, though the names occur only as transition targets; WHAT
+    THE BYTE [obj+0xc] IS, set to 1 or 2 by the '!' test at 0x47dce
+    before the dispatch; which built-in bodies the 10 compiled-but-
+    never-authored names serve - AC_WALK_UP, AC_WALK_DOWN, AC_K_ANY,
+    AC_K_NEVER, AC_MRECT, AC_DEADDUP, AC_EV_MAX, AC_UP_DUP,
+    AC_BLOK_Y have no corpus use in the 777 unpacked files, so
+    either packed data uses them or they are dead code; and what the
+    two AC_ comparisons inside 0x82581 do, outside the dispatcher.
+CLOSES: PR-425's OPENS item WHAT THE 192 COMPARED NAMES THAT ARE NOT
+  ETAPY LEADERS ARE, for the AC_ cluster: they are built-in state
+  implementations shared by object classes, dispatched by one name
+  table at 0x919ec.
+CORRECTS: nothing earlier: PR-425's note that the AC_ family was
+  "unplaced" is now placed, and PR-412/PR-407's picture of transition
+  targets as names resolved against the object's own state list gains
+  its other half - a target like AC_BREAK_NEXT resolves instead to
+  this compiled dispatcher.
+MEASURED: (a) THE DISPATCHER. FUN_00048000(name=ebx) compares its
+  argument case-insensitively through 0x76a69 against 47 literals
+  starting at 0x919ec (AC_K_ANY, AC_K_NEVER, AC_BLOK, AC_BLOK_Y,
+  AC_BREAK_NEXT, AC_BREAK_PREV, AC_DUP, AC_OFF, AC_DEADDUP,
+  AC_ENEMY, AC_EDGE, AC_TIME, ... AC_WALK_UP, AC_WALK_DOWN,
+  AC_APPEAR, AC_DISAPPEAR, AC_EV_MAX). Its only caller is 0x47de5,
+  inside a line handler that first runs the token matcher 0x57e70 on
+  a text line (eax = stack token, edx = a record at ebp), tests a
+  trailing '!' at 0x47dce writing 1 or 2 into [obj+0xc], then calls
+  0x48000 with the captured name and that object. (pr426_ac)
+  (b) THE CORPUS. The 777 unpacked .MOV files use 38 distinct AC_
+  names, in 362 files, always as the right-hand target of a
+  transition line - `A_READY(1)=AC_BREAK_NEXT`, `A_DOSTAL(1)=
+  AC_ENEMY_ATC` - led by AC_BREAK_NEXT x280 files, AC_TIME x133,
+  AC_ENEMY_ATC x76, AC_START x49, AC_PLAT_OFF x28.
+  (c) THE TWO-WAY MATCH. Authored AC_ names are a strict subset of
+  the compiled list: no authored name lacks an engine branch; 9
+  compiled action names plus the string coincidences acos/acosh have
+  no authored use. The AC_ literals sit adjacent to the level-file
+  error strings - the same data neighbourhood as the level
+  description grammar of PR-425.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr426_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr426_ac.txt: the engine-side AC_ string and
+  comparison-site census with the enclosing-function clustering, and
+  the corpus-side AC_ usage counts over the 777 unpacked .MOV files.
+  FUN_00048000 and the 0x47d?? line handler were decoded from their
+  entry addresses; the 0x82581 region is only noted, not read.
+```
+
+- WHY. PR-407 and PR-412 left a hole in the row/transition model: a
+  transition can name a state the object does not define, and the
+  journal had no place where such a name meant anything. It does -
+  38 of these built-ins are used by the shipped files, so a transition to
+  AC_BREAK_NEXT is the engine's own "finish this animation and
+  advance" behaviour, not level content. That makes the built-in
+  list a first-class part of the state model the port implements,
+  and its file-frequency ranking says exactly which ones a faithful
+  port needs first: AC_BREAK_NEXT, AC_TIME and AC_ENEMY_ATC lead the
+  2,220 authored transition targets that name an AC_ state. The exact
+  two-way vocabulary match is also the second clean
+  coverage result after PR-425: authored action names are a subset
+  of compiled ones, with 9 spare built-ins as slack.

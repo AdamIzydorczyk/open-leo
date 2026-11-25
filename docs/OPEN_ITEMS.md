@@ -6221,6 +6221,19 @@ OI-128: what landing and leaving a surface does - the class verbs
     decorations share the root ctor 0x52860 at 0x40-0x68. The 192
     non-ETAPY compared names include an `AC_*` action vocabulary,
     unplaced.]
+    [PR-426 PLACES THE AC_ VOCABULARY: BUILT-IN ACTION STATES.
+    FUN_00048000 case-compares a captured name against 47 AC_*
+    literals at 0x919ec (AC_BREAK_NEXT, AC_TIME, AC_ENEMY_ATC,
+    AC_WALK_UP...); its only caller 0x47de5 first tokenises a text
+    line via 0x57e70 and tests a trailing '!' into [obj+0xc]. CORPUS:
+    the 777 .MOV files use 38 distinct AC_ names as transition
+    targets in 362 files, 2,220 occurrences, led by AC_BREAK_NEXT
+    x280 files, AC_TIME x133, AC_ENEMY_ATC x76. Two-way match: every
+    authored AC_ name has a compiled body; 9 compiled ones
+    (AC_WALK_UP/DOWN, AC_K_ANY/NEVER, AC_MRECT, AC_DEADDUP,
+    AC_EV_MAX, AC_UP_DUP, AC_BLOK_Y) are never authored. So a
+    transition naming AC_BREAK_NEXT resolves to engine code, not the
+    object's state list - the other half of PR-407/412's model.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
