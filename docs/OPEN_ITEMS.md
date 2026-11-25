@@ -7376,6 +7376,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     enable it; the 0x44558 string PR-487 left unread is
     "%i" (0x917f3), the item-frame digit count -> [belt+0x70]
     = 100/(n-1).]
+    [PR-490 FINDS THE FACTORY'S FALLBACK TIER: after its 31
+    arms fail, 0x4df10 (0x4e994-0x4e9e7) calls eight
+    constructor functions in sequence - 0x29090, 0x2ba90,
+    0x2ea00, 0x33370, 0x34c20, 0x3a250, 0x3acf0, 0x383c0 -
+    each owning its own name cluster. The 6th, 0x3a250, names
+    TUNTRAS/KLODA/GUARD/TMPLAT/XCHG/TLewTunga1/TLewJunction
+    (0x9130c-0x91340) and installs 0x9f7b4/0x9f854/0x9f934/
+    0x9fa38 (TUNTRAS composes subtables 0x9e294/0x9f790/
+    0x9f788; XCHG runs base ctor 0x3a110). PR-478's "authored
+    trigger 0x3a170" is corrected: it is the KLODA class
+    (0x9f854) method +0x348; [obj+0xf2]/[+0xf6]/[+0xfa] are
+    PR-104's base-ctor state fields. Kind 30 is a stage-STATE
+    FLIP: KLODA gates on [[mgr+0x394] event bit 0x27 and
+    [controller+0xee]==[this+0xf2], queues {0x1e, a=[+0xf2],
+    b=[+0xf6]}; the TLewTunga1 handler (0x9f668+0x10, 0x39de0)
+    clears ds:0xcef5c[4a], sets [4b], stores [obj+0xee]=b, may
+    force 0xa/0xb via the ds:0xcef64..0xcef88 pairs, then
+    calls belt method 0x44910. KLODA records success bit 0x26
+    / mismatch bit 0x27 in its own event map; [this+0xfa] also
+    broadcasts kind 0x12 with edx=ds:0xcee2c.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

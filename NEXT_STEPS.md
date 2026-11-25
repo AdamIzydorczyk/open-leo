@@ -65075,3 +65075,100 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   assume when a level omits them: tools on, crown enabled
   (the flag records the disable).
 
+
+## PR-490 - THE FACTORY'S FALLBACK TIER AND ITS SECOND NAME
+## CLUSTER 0x3a250 (TUNTRAS/KLODA/GUARD/TMPLAT/XCHG): THE
+## KLODA CLASS AND THE KIND-30 STAGE-STATE FLIP
+
+```
+KIND: read
+SUBSYSTEM: two things. (1) After its 31 comparison arms the
+  name factory 0x4df10 does not give up: 0x4e994-0x4e9e7
+  calls EIGHT fallback constructors in sequence with the name
+  in eax - 0x29090, 0x2ba90, 0x2ea00, 0x33370, 0x34c20,
+  0x3a250, 0x3acf0, 0x383c0 - and returns the first non-null
+  object. This record reads the 6th, 0x3a250: a chain of 7
+  comparisons (0x9130c-0x91340) naming TUNTRAS, KLODA, GUARD,
+  TMPLAT, XCHG, TLewTunga1, TLewJunction, each arm then
+  allocating (0x5c320) and running a base ctor (0x52860,
+  0x53ff0, 0x500b0, 0x3a110). (2) The KLODA class (table
+  0x9f854) and its method at +0x348, 0x3a170 - PR-478's
+  "authored trigger", the only kind-30 sender - and the
+  receiver: the TLewTunga1 table (0x9f668) carries the
+  kind-30 handler at its message verb +0x10, entry 0x39de0
+ADDRESSES: 0x4df10, 0x4e994, 0x4e9d1, 0x4e9d6, 0x29090,
+  0x2ba90, 0x2ea00, 0x33370, 0x34c20, 0x3acf0, 0x383c0,
+  0x3a250, 0x3a254, 0x3a2dd, 0x3a315, 0x3a37f, 0x3a401,
+  0x3a430, 0x3a466, 0x9130c, 0x91314, 0x9131a, 0x91320,
+  0x91327, 0x9132c, 0x91337, 0x5c320, 0x52860, 0x53ff0,
+  0x500b0, 0x3a110, 0x44fe0, 0x76a69, 0x9f7b4, 0x9f790,
+  0x9f788, 0x9e294, 0x9f854, 0x9f84c, 0x9f934, 0x9f92c,
+  0x9fa38, 0x9fa14, 0x9fa0c, 0x9f668, 0x9f660, 0x9f540,
+  0x9f538, 0x3a170, 0x39de0, 0x52b10, 0x4bc40, 0x39e76,
+  0x44910, 0x53ff0, 0xcef5c, 0xcef64, 0xcef68, 0xcef6c,
+  0xcef7c, 0xcef84, 0xcef88, 0xcee2c, 0x348, 0x10, 0xf2,
+  0xf6, 0xfa, 0xee, 0x64, 0x66, 0x1e, 0x12, 0x7d0, 0x394,
+  0x27, 0x26, 0x68, 0xee, 0x102, 0x122, 0x112, 0x12a
+NAMES: fallback constructor, second name cluster, KLODA,
+  stage state map, state flip, kind 30, TUNTRAS, GUARD,
+  TMPLAT, XCHG, pr490_kloda.txt, pr490_trigger.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE OTHER SEVEN FALLBACK CTORS (0x29090, 0x2ba90,
+    0x2ea00, 0x33370, 0x34c20, 0x3acf0, 0x383c0) and their
+    name clusters - each surely owns more authored names; THE
+    MEANING OF THE STATE MAP: what the words at ds:0xcef5c +
+    4*i are read by, and what ids 0xa/0xb (the special
+    assignments in the handler) mean; the kind-0x12 broadcast
+    with payload edx = ds:0xcee2c (still open since PR-478);
+    the XCHG base ctor 0x3a110 and the TUNTRAS composite at
+    0x52860 (it installs subtables 0x9e294, 0x9f790, 0x9f788
+    through computed offsets); and WHY A KLODA CHECKS EVENT
+    CODE 0x27 (bit 0x80 of [controller+0x64]) before flipping
+    the stage.
+CLOSES: PR-486's OPENS "the row names whose arms store no
+  resolvable TABLE - their class arrives through another
+  store form": no - unknown names fall through to eight
+  fallback constructors, each owning its own name cluster;
+  this second tier adds 7 names to the factory vocabulary (38
+  total) and names four more class tables: 0x9f854 = KLODA,
+  0x9f934 = GUARD, 0x9fa38 = TMPLAT, 0x9f7b4 = TUNTRAS (the
+  TLewTunga1/TLewJunction pair of that cluster matches the
+  names PR-104 already gave those tables). PR-478's OPENS on
+  the trigger fields [obj+0xf2]/[obj+0xf6]/[obj+0xfa] close
+  as base-class fields (PR-104's base ctor 0x500b0 defaults
+  +0xf2=1, +0xf6=0x7d0, +0xfa=0): at runtime KLODA gates on
+  [[mgr+0x394] event-map bit 0x27 and [controller+0xee] ==
+  [this+0xf2], then queues {kind 0x1e, a=[this+0xf2],
+  b=[this+0xf6]} to the controller - kind 30 is the stage
+  STATE FLIP: the TLewTunga1 handler clears map slot a, sets
+  map slot b in the array at ds:0xcef5c, stores b into
+  [obj+0xee], may hard-set 0xa/0xb through the ds:0xcef64..
+  0xcef88 pairs, and ends by calling belt method 0x44910 with the
+  payload's first word in edx. The KLODA itself records the outcome in its
+  own event map: bit 0x26 (0x40 in [+0x66]) on success, bit
+  0x27 on mismatch.
+CORRECTS: PR-478's "authored trigger 0x3a170": it is a
+  method of the KLODA prop class (table 0x9f854 +0x348), not
+  an authored trigger object, and the fields it reads are the
+  shared base-class state fields, not trigger-specific ones.
+MEASURED: (a) THE FALLBACK TAIL verbatim 0x4e994-0x4e9e7:
+  six `test eax,eax; jne ret` pairs between the calls. (b)
+  THE CLUSTER: 7 comparisons at 0x3a259-0x3a46d; sizes
+  0x68/0xee/0x102/0x122/0x112/0x12a/0x12a; table stores
+  verbatim, e.g. 0x3a304 `mov [eax+8],0x9f854; mov
+  [eax+0xc],0x9f84c` and the GUARD arm's computed form
+  `add eax,0xee; ... mov [eax-0xe6],0x9f934` = object +8.
+  (c) THE FLIP: 0x3a1d5-0x3a1f7 and 0x39de2-0x39e8c verbatim
+  in the evidence files. (d) SLOT MATH: 0x9fb9c = 0x9f854+
+  0x348, 0x9f678 = 0x9f668+0x10. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port recognizes only the 31 row tokens; the engine
+  has a second factory tier with more authored names, and the
+  kind-30 protocol is how a level prop (KLODA) drives the
+  stage controller's state machine - a level-scoped state map
+  the port has no model for at all.
+
