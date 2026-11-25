@@ -64449,3 +64449,98 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   reads it. That is directly portable and it explains why some
   objects never move without any per-class special case.
 
+
+## PR-483 - THE FRAME LOOP'S EXIT LAW: THREE EXIT CODES, THE
+## RUN FLAG [mgr+0x3a0] (0=QUIT, 1=KEEP RUNNING), THE HERO'S
+## PAUSE WORD +0x116, AND THE DEFERRED OBJECT SLOT +0x3b0
+
+```
+KIND: read
+SUBSYSTEM: the head of the frame loop 0x4abd0 (already mapped
+  by PR-63/PR-157): the per-iteration tests on the hero's
+  fields ([lvl+0x394]+0x116 and [lvl+0x4]) and on [mgr+0x3a0];
+  the three exit codes left in ebx (3, 1, 2) and the exit tail
+  (0x1cfd0, 0x1dba0 retrace, 0x1cfe5, 0x4a160(0xcef30),
+  0x4a9f0); the deferred-object slot [mgr+0x3b0] with its
+  one-shot verb +0x8; the writers of the run flag - the
+  menu-completion thunk 0x51181 and the level ctor 0x4a4c0 and
+  the death path 0x5045f (only when the life counter ds:0xa94f0
+  reaches 0); and the authored kind-0xc message sent to the
+  hero at 0x1ef22, whose dispatcher arm 0x50d9c sets +0x116
+ADDRESSES: 0x4abd0, 0x4ac3b, 0x4ac41, 0x4ac55, 0x4ac76,
+  0x4ac84, 0x4ac9d, 0x4aca2, 0x4ae53, 0x4ae82, 0x4ae8b,
+  0x4a4c0, 0x4ea10, 0x961c4, 0x76c00, 0x51181, 0x51187,
+  0x503d0, 0x5045f, 0x50464, 0xa94f0, 0x3a0, 0x3b0, 0x116,
+  0x5c, 0x394, 0x54, 0xec, 0xe8, 0xcc, 0x8, 0x128, 0x106,
+  0x1ef22, 0x1ee20, 0x50d9c, 0xc, 0x3, 0x1, 0x2, 0x5d170,
+  0x5d233, 0x5d249, 0x28, 0x3a8, 0xad, 0xb5, 0x1cfd0,
+  0x1dba0, 0x1cfe5, 0x4a160, 0x4a9f0
+NAMES: run flag, exit codes, exit tail, deferred object slot,
+  pause word, life counter, menu-completion thunk, frame-loop
+  head, pr483_tickseq.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHO CALLS THE MENU THUNK (its store at 0x51187 sits at
+    the end of a 0x51150-anchored verb group with no direct
+    call sites, so it is reached through a view not yet named);
+    THE THREE EXIT CODES' CONSUMERS - 0x5d170 stores the
+    result at [ebp-0xc] per mode entry, but the meaning of 1,
+    2, 3 to the mode dispatcher is unproven; what the hero
+    verbs +0x54, +0xec, +0xe8 at the loop head do (called
+    before every iteration, values discarded except the +0xec
+    result kept in ebx); and [lvl+0x4] as a second pause
+    switch - only one store of it was seen (PR-479's LION ctor
+    0x500b0 region writes neighbouring fields), unproven.
+CLOSES: PR-476's OPENS "[mgr+0x3a0] and the reset path": the
+  field is the loop's run flag, not an emitter switch. The
+  frame loop tests it once per iteration at 0x4ac76 and jumps
+  to the exit tail when it is 0; it is written by exactly three
+  sites - 0x4a4c0 (the level constructor, called first from
+  every mode-entry function at 0x5d233) sets it to 0, the
+  menu-completion thunk 0x51181 (`mov edx,ds:0xcef40; mov
+  [edx+0x3b0],eax` sibling - it frees the menu object through
+  0x76c00 with tag 0xa at 0x4ea1b and then sets it to 1), and
+  the hero-death path 0x50464 clears it ONLY when the life
+  counter ds:0xa94f0 has reached 0 - with lives left, the run
+  flag stays 1 and the loop re-enters the level. The emitter
+  test of PR-476 is therefore a redundant inner copy of the
+  same flag. It also names two more frame-loop fields: the
+  hero's +0x116 is the pause/quit switch (tested first every
+  iteration; set by the dispatcher's kind-0xc arm 0x50d9c and
+  by the authored message pushed at 0x1ef22 with the payload
+  (0, 0xc, 0, 0) addressed to [mgr+0x394] - kind 0xc is the
+  only kind whose table arm writes it), and [mgr+0x3b0] is a
+  one-shot deferred object: whatever the menu path stores there
+  gets [[obj]+0x8] called at the top of the next iteration and
+  the slot is cleared (0x4ac84-0x4aca2), which is how the
+  engine hands a finished menu back to the level loop.
+CORRECTS: PR-476's "the emitter step is skipped while
+  [mgr+0x3a0] is non-null" framing: the value 0 means "the
+  frame loop is exiting" - the interpreter only ever runs
+  inside a live frame, so its test cannot differ from the loop
+  head's at 0x4ac76; the field is the run flag.
+MEASURED: (a) THE LOOP HEAD, verbatim from 0x4ac3b: `mov
+  eax,[ecx+0x394]; mov eax,[eax+0x116]; test eax,eax; je next;
+  mov ebx,3; jmp exit`, then `cmp [ecx+0x4],0; je next; mov
+  ebx,1; jmp exit`, then the input read 0x58690(0xcf400, 12
+  dwords), then `mov eax,[ecx+0x3a0]; test eax,eax; jne body;
+  ... mov ebx,2; jmp exit`. (b) THE EXIT TAIL at 0x4ae53: five
+  calls then `mov eax,ebx; ret` - the loop returns its code.
+  (c) THE DEATH BRANCH: 0x503fb `dec edx` on ds:0xa94f0 and
+  0x5045b `test ebx,ebx; je clear_flag`. (d) THE KIND-0xc
+  PUSH at 0x1ef07: `mov edx,0xc; ... mov eax,[mgr+0x394]; xor
+  ecx,ecx; call 0x52b10` - a queue message addressed to the
+  hero object, drained by PR-481's tick at 0x4aed6. (e) THE
+  PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port's level run ends on its own conditions. The
+  original ends on three: the hero's pause word, the manager's
+  second word, and the run flag - the last written only by
+  level start, menu completion, and an exhausted life counter.
+  Recording the codes and the flag's three writers makes the
+  quit path portable and it retires a wrong reading of
+  [mgr+0x3a0] as an effect switch.
+

@@ -7258,6 +7258,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     closing PR-466's mode-word question (it IS the mode word
     mirrored on the singleton). PR-482 corrects PR-466's
     phrasing of those two terms.]
+    [PR-483 NAMES THE FRAME LOOP'S EXIT LAW (0x4abd0, already
+    PR-63's loop). Per iteration it tests, in order: the HERO
+    field [[mgr+0x394]+0x116] (exit code 3), [mgr+0x4] (code
+    1), then the RUN FLAG [mgr+0x3a0] - 0 means quit (code 2)
+    and the exit tail (0x1cfd0, 0x1dba0, 0x1cfe5, 0x4a160,
+    0x4a9f0) returns ebx. The run flag has exactly three
+    writers: the level ctor 0x4a4c0 (called from every mode
+    entry 0x5d170.. at 0x5d233) sets 0, the menu-completion
+    path (0x51187 stores the finished object into the ONE-SHOT
+    deferred slot [mgr+0x3b0]; 0x4ea10 frees it with tag 0xa
+    and sets the flag to 1), and the hero-death path 0x50464
+    clears it only when the life counter ds:0xa94f0 reaches 0 -
+    with lives left the loop just re-enters. The hero's +0x116
+    is the pause/quit word: the dispatcher's kind-0xc arm
+    0x50d9c sets it, fed by the only kind-0xc push at 0x1ef22
+    (payload (0,0xc,0,0) to [mgr+0x394], drained by PR-481's
+    LION tick). The deferred slot gets [[obj]+0x8] called once
+    at the top of the next iteration then cleared (0x4ac84).
+    PR-483 corrects PR-476: [mgr+0x3a0] is not an emitter
+    switch - the emitter test is a redundant inner copy.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
