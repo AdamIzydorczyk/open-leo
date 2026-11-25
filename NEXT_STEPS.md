@@ -56768,3 +56768,151 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   the table census is pr404_states.txt; every function quoted was decoded
   from its own address with `python3 tools/re/leodb.py dis`.
 ```
+
+## PR-405 - THREE OBJECT FAMILIES, THREE PLACES FOR A CLASS TABLE:
+## [obj+0x04] FOR NODE CLASSES, [obj+0x2e] FOR THE 140 GENERATED ONES,
+## [obj+0x44] FOR A STATE'S IMPLEMENTATION TABLE - AND THE VISITED
+## FUNCTION IS ALWAYS THE +0x04 VERB OF THE TABLE FOUND THERE
+
+```
+KIND: read
+SUBSYSTEM: how class tables are addressed in the object model - the
+  vptr-style field at [obj+0x04] used by the 30 node-class rows, the
+  field at [obj+0x2e] that PR-404 censused, the field at [obj+0x44]
+  that holds a record-class table, and what 0x520c0's
+  `[[rec+0x2e]+[rec+4]*4]` + `[+4]` sequence really evaluates to
+ADDRESSES: 0x520c0, 0x520cf, 0x520d2, 0x520d5, 0x520d7, 0x520da, 0x520dd,
+  0x520df, 0x520e1, 0x52331, 0x52338, 0x52100, 0x524cf, 0x52508, 0x1e119,
+  0x23115, 0x240f6, 0x26425, 0x270fd, 0x33d98, 0x517c2, 0x51851, 0x3fb30,
+  0x3fb42, 0x3fb45, 0x3fb80, 0x3fb83, 0x3fb8a, 0x3fb8f, 0x3fb94, 0x3fb97,
+  0x3fba1, 0x3fc7a, 0x3fc84, 0x3fc8e, 0x3fc98, 0x3fca4, 0x3fca9, 0x3fdf0,
+  0x215d0, 0x215d8, 0x61de0, 0x61e40, 0x61f00, 0x618c2, 0x74012, 0x74be0,
+  0x74bc0, 0x5c320, 0x21670, 0x216c0, 0x57990, 0x57a00, 0xa0f28, 0xa0f40,
+  0xa0f58, 0xa0f70, 0xa09f0, 0xa3054, 0xa30a8, 0xa67d8, 0x97c9c, 0x98e7c,
+  0x9a8cc, 0xa25d4, 0xa260c, 0x46d70, 0x46db5, 0x459b0, 0x457e0, 0x45800,
+  0x45870, 0x458e0, 0x45c00, 0x45c20, 0x47c90, 0x74bac, 0x1034c, 0x961fc,
+  0x96200, 0xa0d0c, 0x04, 0x2e, 0x44, 0x2a, 0x1e, 0x16, 0x08, 0x0c, 0x32,
+  0x36, 0x3e, 0x46, 0x18, 0x00
+NAMES: vptr-style field, state class family, thunk slot, self-slot
+  thunk, row-advance dispatch, implementation table field, embedded base
+  subobject, generated ctor family, pr405_thunk.txt, pr405_vptr.txt,
+  pr405_rec.txt, pr405_2e.txt, pr405_alloc.txt, OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. OI-111's and OI-128's
+  sentences about the [rec+0x2e] operand gain this row's clarification.
+HOOKS: none - no leg and no fixture moves; the port's row pass is not
+  changed by this read.
+OPENS: WHETHER THE 140 GENERATED CLASSES ARE THE OBJECT THAT HOLDS THE
+  ROWS - a generated object is 0x32 bytes with the cursor at +0x16, its
+  class table at +0x2e and a base subobject at +0x1e, and the row cursor
+  the record keeps is at +0x04 of an object whose class table is at
+  +0x44; nothing proves those are two fields of ONE object, and no
+  generated ctor names any of the 14 record-class tables; HOW THE NODE
+  OBJECTS GET THEIR +0x2e FIELD - all 141 writes of that offset are
+  compile-time class-table stores and no code takes its address, so the
+  reading in which it holds an authored node-list base has no writer in
+  the image; WHY 4 OF THE 140 TABLES DO NOT FOLLOW THE THUNK SHAPE at
+  their +0x04 while 136 do; WHAT THE 14 record-class tables keep at
+  their own +0x44 (0x23ea0, 0x12a00, 0xbf00, 0x2a00, 0x3 and similar -
+  data or small integers, not table pointers); and whether the cursor at
+  [rec+0x04] counts vtable slots or array elements - the two readings
+  give different verb slots and only a run on shipped data can separate
+  them.
+CLOSES: the OPENS item PR-404 left, WHICH OBJECT OWNS THE 140 TABLES STORED
+  AT FIELD +0x2e, in the part that asked whether those stores are vptr
+  writes: they are - 0x3fb80 is the destructor of the first of those
+  classes and it installs 0xa09f0 at [obj+0x2e] right before destroying
+  the object, and the same field is called through unindexed at 0x3fc84,
+  0x3fc98, 0x3fca9 and 0x215d8. It also closes the part of PR-404's
+  correction that said none of the 140 tables carries a visit-family
+  verb: my scan filtered on a verb at +0x04 but the installed field in
+  PR-400's own observation was [x+4] of the object, and the node-class
+  rows do carry those verbs at their +0x04.
+CORRECTS: PR-404's sentence "the only 141 code sites that write that
+  field are constructor actions that store a CLASS TABLE POINTER there"
+  followed by "one of the two readings is wrong": no reading has to be
+  wrong, because [obj+0x2e] is a class-table slot for the objects those
+  141 ctors build and the value 0x520c0 computes,
+  `[[T]+cursor*4]+4`, is exactly the +0x04 verb of the table T when
+  cursor is 0 - the same slot PR-400 named. PR-404 also mis-stated its
+  own census: the 140 tables were filtered by the wrong slot, and 4 of
+  the 30 node-class rows' +0x04 verbs (0x45c00, 0x45c20, 0x45c80,
+  0x45d10) are among the addresses that row printed as absent.
+MEASURED: (a) THE NODE-CLASS CONVENTION. 128 immediate sites install a
+  row of the 0xa0f28 run, and their destination is `DWORD PTR [eax+0x4]`
+  in 106 of them - 4 at [ebx+4] and 18 at the negative displacements
+  -0x8, -0x4, -0x10, the last three being the same field reached from an
+  adjusted base. So
+  for a node object the class table lives at [node+0x04]. 0x520c0
+  matches that convention exactly: at 0x520d7 it loads T =
+  [[rec+0x2e]+cursor*4], at 0x520da `mov ebx,[edi+0x4]` - that is
+  [node+0x04], the node's class table - and at 0x520e1 `call
+  [ebx+0x04]`, the +0x04 verb. The 30 rows' +0x00 slots are real
+  constructors (0xa0f28's is 0x46d70: `push ebx; push ecx; mov ebx,eax;
+  mov ecx,edx; test cl,0x4; ...; mov edx,0xa0d0c`), and their +0x04
+  slots are the 25 verbs PR-400 named: row 0 is 0x46d70, 0x459b0,
+  0x45800, 0x45870, 0x458e0, 0x47c90, and 0x459b0 is
+  `push ebx; mov ebx,edx; call 0x457e0; ...`. (pr405_rec.txt,
+  pr405_thunk.txt)
+  (b) THE GENERATED FAMILY'S FIELD IS A vptr-SLOT TOO. 0x3fb80 is the
+  destructor of the first of the 140 classes: `push ebx; mov ebx,eax;
+  mov DWORD PTR [eax+0x2e],0xa09f0; mov eax,[eax+0x2a]; xor edx,edx;
+  call 0x74be0; lea eax,[ebx+0x1e]; call 0x57a00; sub eax,0x1e; xor
+  edx,edx; call 0x21670; pop ebx; ret` - the class table is installed
+  last, as a destructor does, then the pointer at +0x2a is released by
+  the 0x74bc0/0x74be0 pair of PR-403, then the base subobject at +0x1e
+  is destructed by 0x57a00 and the block freed by 0x21670. 0x3fb30 is
+  the matching base constructor: it allocates, `lea ebx,[eax+0x1e]`,
+  `mov DWORD PTR [eax+0x16],0xffffffff` (the cursor), and runs the
+  0x96200/0x961fc engine pair at that subobject. The allocation in
+  front of each of the 141 stores is `mov eax,N; call 0x5c320` with
+  N = 0x32 in 135 sites, 0x36, 0x3e in two each, and 0x46 in one; two
+  sites allocate differently. And four sites call THROUGH that field
+  without indexing it: 0x3fc84, 0x3fc98 and 0x3fca9 do
+  `mov ebx,[ecx+0x2e]; ...; call DWORD PTR [ebx+0x10]`, and 0x215d8
+  does `mov ebx,[eax+0x2e]; mov edx,2; call DWORD PTR [ebx]`. (pr405_
+  2e.txt, pr405_alloc.txt)
+  (c) THE THUNK AT +0x04 OF THE GENERATED TABLES. Reading each of the
+  140 tables' first seven slots and decoding the first instruction of
+  each target: slot +0x00 is a plain function in all 140 (a ctor, e.g.
+  0xa3054's 0x61f00), and slot +0x04 is a two-instruction thunk
+  `call <f>; ret` in 136 of them, where f is the very next slot, +0x08
+  (0xa3054 has 0x61de0 = `call 0x3fdf0; ret`, and 0x3fdf0 is its own
+  +0x08). So for this family a call through [table+0x04] runs the
+  method at [table+0x08] - the mirror of PR-400's discovery that the
+  node classes' +0x04 verbs are the interesting ones. (pr405_thunk.txt)
+  (d) THE THIRD FIELD, [obj+0x44]. 42 immediate sites store a class
+  table at `DWORD PTR [reg+0x44]` - 17 of the 18 distinct values there
+  are class tables, e.g. `mov DWORD PTR [eax+0x44],0x97c9c` at 0x1e119
+  and 0x23115, and 0xa25d4 at 0x524cf and 0x52508. That is how the
+  record classes of PR-401 are attached, and the record code calls
+  through that field: 0x52331-0x52338 is `mov esi,[ebp+0x44]; mov
+  eax,ebp; call DWORD PTR [esi+0x18]` - the row-advance at +0x18 of
+  that table. The field is not itself a vptr in the same sense: of the
+  14 tables, 9 hold data addresses or small integers at their +0x44
+  (0x23ea0, 0x12a00, 0xbf00, 0x2a00, 0x44b80, 0x3). (pr405_vptr.txt)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr405_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). The
+  counts come from the scripts named in NAMES run over the re DB's
+  `imm`/`insn` tables and over build/leo/leo.img; every function quoted
+  was decoded from its own address with `python3 tools/re/leodb.py dis`,
+  and every table slot was read at its aligned address, not out of a
+  slice.
+```
+
+- WHY. PR-404 ended by doubting its own finding, and the doubt came from
+  assuming a class table can only live in one place per object. It does
+  not: this engine keeps three different table fields at three different
+  offsets, and once all three are on the table PR-400's and PR-401's
+  reading survives intact - `[[T]+cursor*4]+4` names the +0x04 verb
+  whenever T is the table, which is the case for the node classes whose
+  tables sit at [node+0x04]. What is genuinely unresolved is narrower
+  and much more useful: whether the 140 generated state classes and the
+  14 record classes are one object (the field layouts fit: cursor at
+  +0x16, table at +0x2e, table at +0x44, and the cursor the row-advance
+  uses is at +0x04 of a 0x48+-byte object), because if they are, the
+  "node list" the row cursor walks is a vtable and the row index is a
+  slot number.

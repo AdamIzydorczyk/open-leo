@@ -1730,10 +1730,19 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     state step (0x52217) and set only by the row-admission
     tail (0x5234a), so an `I`/`F` pull is a ONE-SHOT at
     row entry, and the sums are of the current row (the
-    chain head table is at [rec+0x2e] indexed by the row [CORRECTED BY
-    PR-404: every code site that writes [x+0x2e] writes a CLASS TABLE,
-    so this indexing rests on the instruction text alone] indexed by the row
+    chain head table is at [rec+0x2e] indexed by the row
     cursor [rec+4], 0x5268e/0x52221 - PR-98's inference
+    [PR-404 questioned that indexing because every code site writing
+    [x+0x2e] writes a class table; PR-405 resolved it: that field is a
+    class-table slot in the 140 generated state classes, and the value
+    0x520c0 computes, `[[T]+cursor*4]+4`, is exactly the +0x04 verb of
+    the table T when the cursor is 0. Node classes keep their table at
+    [node+0x04] - 128 sites install the 0xa0f28 rows there - so
+    `mov ebx,[edi+4]` at 0x520da IS the node's class table and
+    `call [ebx+4]` at 0x520e1 IS its +0x04 visit verb. The
+    chain-head/node-list reading stands; what is unresolved is whether
+    the 140 generated classes and the 14 record classes are one object,
+    in which case the row index is a vtable slot number.]
     now fact). PR-251 CORRECTS the arc numbers PR-250
     printed: run right, one-shot, the authored A_JUMP arc
     is 109 px (apex iteration 19, land 40) - PR-250's
@@ -5914,6 +5923,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     is written in code, and neither reading is proven. Also note the 16
     record classes that hold 0x520c0 at +0x18 are NOT what those 140
     constructors build.]
+    [PR-405 SETTLES THE APPARENT CONTRADICTION. There are three table
+    fields, not one: node classes at [obj+0x04] (128 sites, of which
+    106 are `mov DWORD PTR [eax+0x4],<row>`), the 140 generated state
+    classes at [obj+0x2e] (0x3fb80 is such a class's destructor - it
+    stores 0xa09f0 at +0x2e, then frees [obj+0x2a] through 0x74be0 and
+    destructs the base subobject at +0x1e through 0x57a00; 135 of the
+    141 objects are `mov eax,0x32; call 0x5c320`), and a state's
+    implementation table at [obj+0x44] (42 sites, 17 of the 18 values
+    are class tables; 0x52338 calls its +0x18). With that, PR-401's
+    reading stands: `[[rec+0x2e]+cursor*4]` then `[+4]` is the
+    class-table lookup of a node whose table is at [node+0x04], and the
+    visited function is the +0x04 verb PR-400 named. Also new: 136 of
+    the 140 generated tables have a `call <own +0x08 slot>; ret` thunk
+    at their own +0x04, so calling their +0x04 runs the method at
+    +0x08 - the mirror of the node classes.]
     WHICH NODE TYPE EACH ROW IS - each row is installed at
     [x+4] by two to nine ctor sites in 0x45750-0x47d50, and those are the
     way back to the authored directive, but none has been tied to a name;
