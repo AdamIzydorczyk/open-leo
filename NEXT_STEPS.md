@@ -65519,3 +65519,71 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   per-level behavior differences authors observed trace to
   that one character, not to tools=/crown= parsing.
 
+
+## PR-495 - THE BELT GATE IN SHIPPED CONTENT: THE INTERPRETER
+## IS BUILT IFF THE PLAN NAMES 'B' IN EITHER CASE, AND
+## JUNCTION'S "TL" PLAN LEAVES [X+0x38c] = 0
+
+```
+KIND: read
+SUBSYSTEM: two closings of PR-494's open half. (1) The gate
+  polarity, re-read from the verbatim flow: 0x4d5f7 cmp
+  eax,-1 / 0x4d5fa jne BUILD, then the 'b' probe 0x4d608 cmp
+  eax,-1 / 0x4d60b je SKIP - so the settings/plan-interpreter
+  object is built iff the plan mentions the belt character
+  'B' OR 'b' at all (the interpreter case-folds via TOUPPER
+  0x76e98, PR-191 F2); it is skipped only when the plan
+  names NO belt. (2) The byte-level census over shipped
+  data: 67 `plany=` sites (the plan source, PR-208: the
+  LEVELDES key parsed into [level+0x30]) in LL.iso, none in
+  either HD ETAPY file; 11 distinct plan strings; ZERO
+  lowercase 'b' anywhere. 10 of the 11 carry 'B'; only
+  JUNCTION's "TL" carries none (its .des has no belka=,
+  PR-208) - so in shipped content the object exists for
+  every level except JUNCTION, whose [X+0x38c] stays 0, and
+  the lowercase spelling is a latent author option never
+  used.
+ADDRESSES: 0x4d5e8, 0x4d5f7, 0x4d5fa, 0x4d608, 0x4d60b,
+  0x42, 0x62, 0x76e98, 0x38c, 0x30, ported/ll_level.c,
+  LL.iso, ETAPY, docs/OPEN_ITEMS.md
+NAMES: belt-naming law, plan census, TL plan, null
+  interpreter, latent option, pr495_plans.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: DO THE 12 METHOD FAMILIES that read [X+0x38c]
+    (PR-487) all guard the null - JUNCTION exercises that
+    path at every belt touch; WHICH STAGES own the three
+    plan strings PR-208 did not name in its list ('T|TALA|
+    ATAB', 'T|TA|ATALAB', 'T|T|ATAALAB' - their A-counts
+    3/4/4); and why the HD ETAPY container carries no
+    plany= bytes at all (CD-only LEVELDES?).
+CLOSES: PR-494's OPENS "WHICH REAL SHIPPED PLANS CONTAIN
+  'B'/'b'": all 11 shipped plan strings, verbatim + counts,
+  in pr495_plans.txt; 'B' everywhere except JUNCTION, 'b'
+  nowhere. The effect is binary: one shipped level runs
+  without the settings/plan-interpreter object.
+CORRECTS: PR-494's "BUILD iff the plan contains 'B' (0x42),
+  or contains no 'b' (0x62). A plan that uses lowercase 'b'
+  without any 'B' is the author's opt-out": inverted - that
+  case BUILDS (0x4d60b falls through when 'b' is found);
+  only a plan with NEITHER letter skips the build. PR-489's
+  original "id 0x42 present OR id 0x62 absent" wording was
+  the same inversion.
+MEASURED: (a) THE FLOW verbatim (pr494_plan.txt /
+  pr489_loader.txt: jne BUILD after the 0x42 probe; je SKIP
+  only when the 0x62 probe ALSO returns -1). (b) THE CENSUS:
+  67 raw sites -> 11 distinct strings, 'b' count 0, 'TL' x5
+  copies (the LEVELDES record repeats in the ISO image).
+  (c) INDEPENDENT MATCH: the port's fixture for TUNGA.11 is
+  "T|TA|ATALABA" (ported/ll_level.c:8766) = one of the 11
+  observed strings, letter-for-letter. (d) THE PORT.
+  Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. One shipped level runs with [X+0x38c] = 0, so every
+  consumer of the settings object must tolerate null - and
+  the engine's belt opt-in is simply "name B (or b) in the
+  plan", now confirmed over all authored content.
+

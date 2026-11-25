@@ -40,9 +40,9 @@ token, never that the engine author WROTE it. A key with NO
 current - the ledger simply never wrote a correction for it; deciding
 whether an uncorrected claim still stands means reading its records.
 
-# entries: 2444 address keys (>=3 records) = 15774/24577 (64%)
+# entries: 2444 address keys (>=3 records) = 15775/24583 (64%)
 # of all address mentions; 328 field tokens (>=3) = 74%
-# of field mentions; 327 authored names (all of them). Built from 479 records.
+# of field mentions; 327 authored names (all of them). Built from 480 records.
 
 
 ## Addresses
@@ -3274,6 +3274,10 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-387 PR-396 PR-397 PR-403 PR-405 PR-406 PR-422
         latest mention: PR-422
 
+### 0x76e98 - 7 records
+        mentions: PR-106 PR-189 PR-190 PR-191 PR-209 PR-494 PR-495
+        latest mention: PR-495
+
 ### 0x9198e - 7 records
         mentions: PR-194 PR-222 PR-224 PR-310 PR-316 PR-321 PR-354
         latest mention: PR-354
@@ -3976,10 +3980,6 @@ whether an uncorrected claim still stands means reading its records.
 ### 0x72d50 - 6 records
         mentions: PR-381 PR-404 PR-407 PR-414 PR-416 PR-418
         latest mention: PR-418
-
-### 0x76e98 - 6 records
-        mentions: PR-106 PR-189 PR-190 PR-191 PR-209 PR-494
-        latest mention: PR-494
 
 ### 0x77bdc - 6 records
         mentions: PR-336 PR-366 PR-387 PR-401 PR-402 PR-415
@@ -11306,6 +11306,10 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-101 PR-164 PR-189 PR-212 PR-437 PR-440
         latest mention: PR-440
 
+### [level+0x30] - 6 records
+        mentions: PR-106 PR-191 PR-209 PR-212 PR-214 PR-495
+        latest mention: PR-495
+
 ### [level+0x58] - 6 records
         mentions: PR-105 PR-154 PR-208 PR-209 PR-212 PR-214
         latest mention: PR-214
@@ -11429,10 +11433,6 @@ whether an uncorrected claim still stands means reading its records.
 ### [esp+0x8] - 5 records
         mentions: PR-190 PR-191 PR-209 PR-351 PR-401
         latest mention: PR-401
-
-### [level+0x30] - 5 records
-        mentions: PR-106 PR-191 PR-209 PR-212 PR-214
-        latest mention: PR-214
 
 ### [level+0x4] - 5 records
         mentions: PR-193 PR-194 PR-198 PR-309 PR-316
@@ -12415,6 +12415,11 @@ whether an uncorrected claim still stands means reading its records.
                   PR-263 PR-266 PR-296 PR-332 PR-441 PR-442
         latest mention: PR-442
 
+### plany= - 15 records
+        mentions: PR-59 PR-61 PR-106 PR-190 PR-191 PR-192 PR-193 PR-208 PR-209
+                  PR-212 PR-213 PR-302 PR-385 PR-389 PR-495
+        latest mention: PR-495
+
 ### A_ATAK - 14 records
         mentions: PR-79 PR-81 PR-89 PR-90 PR-91 PR-92 PR-110 PR-125 PR-163
                   PR-191 PR-192 PR-206 PR-273 PR-309
@@ -12429,11 +12434,6 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-90 PR-102 PR-103 PR-104 PR-134 PR-186 PR-187 PR-330 PR-331
                   PR-333 PR-377 PR-406 PR-441 PR-471
         latest mention: PR-471
-
-### plany= - 14 records
-        mentions: PR-59 PR-61 PR-106 PR-190 PR-191 PR-192 PR-193 PR-208 PR-209
-                  PR-212 PR-213 PR-302 PR-385 PR-389
-        latest mention: PR-389
 
 ### AC_DUP_CD - 13 records
         mentions: PR-178 PR-179 PR-181 PR-295 PR-313 PR-318 PR-319 PR-320
@@ -12794,6 +12794,10 @@ whether an uncorrected claim still stands means reading its records.
         mentions: PR-69 PR-135 PR-290
         latest mention: PR-290
 
+### belka= - 3 records
+        mentions: PR-208 PR-302 PR-495
+        latest mention: PR-495
+
 ### bottom= - 3 records
         mentions: PR-85 PR-86 PR-87
         latest mention: PR-87
@@ -12965,10 +12969,6 @@ whether an uncorrected claim still stands means reading its records.
 ### array= - 2 records
         mentions: PR-279 PR-369
         latest mention: PR-369
-
-### belka= - 2 records
-        mentions: PR-208 PR-302
-        latest mention: PR-302
 
 ### clip= - 2 records
         mentions: PR-17 PR-391

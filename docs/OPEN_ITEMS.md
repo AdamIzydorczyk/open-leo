@@ -7469,6 +7469,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     non-plan records (0x44074, 0x4b2ca, 0x59f90, 0x5a469) -
     open; per-level 'B'/'b' census needs the ETAPY plan
     bytes.]
+    [PR-495 FIXES THE BELT-GATE POLARITY AND FINISHES THE
+    CENSUS: the flow (0x4d5fa jne BUILD after the 0x42 probe;
+    0x4d60b je SKIP only if the 0x62 probe ALSO returns -1)
+    builds the settings/plan-interpreter object iff the plan
+    names the belt char 'B' OR 'b' at all - PR-489/PR-494's
+    "'b' absent" reading was inverted; a plan with NEITHER
+    letter skips it. Byte census of shipped data: 67 plany=
+    sites in LL.iso (none in HD ETAPY), 11 distinct strings,
+    ZERO lowercase 'b' - 10 contain 'B'; only JUNCTION's
+    "TL" names no belt, so JUNCTION alone runs with
+    [X+0x38c] = 0 (its .des has no belka=, PR-208). Do the
+    PR-487 readers of [X+0x38c] guard the null? Port
+    fixture TUNGA.11 "T|TA|ATALABA" matches the raw bytes
+    letter-for-letter; three strings (T|TALA|ATAB,
+    T|TA|ATALAB, T|T|ATAALAB) await stage attribution.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
