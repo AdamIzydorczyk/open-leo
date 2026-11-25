@@ -58778,3 +58778,93 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   chosen by a mode bit, so "how many scene objects exist and when are
   they freed" is a question about a flag, not about a call site - which
   matters for anything in the port that tries to match object lifetime.
+
+## PR-422 - THE 503 CLASS-DATA BLOCKS READ: THREE CONSTRUCTOR POINTERS,
+## THREE DESTRUCTOR POINTERS, AN OBJECT SIZE TIMES 256, AND A ZERO - THE
+## ENGINE'S WHOLE CLASS INVENTORY WITH THE SIZE OF EVERY CLASS
+
+```
+KIND: read
+SUBSYSTEM: the descriptor blocks passed as the second argument to the base
+  constructor thunk 0x74bc0 and destructor thunk 0x74be0 - their exact
+  slot layout, how many classes have no constructor of their own, the
+  size of every class in the engine, and the confirmation of the state
+  record's and scene object's sizes found by other rows
+ADDRESSES: 0x74bac, 0x74bc0, 0x74be0, 0x961c4, 0x96390, 0x963a4, 0x96420,
+  0xa6428, 0xa643c, 0xa6b68, 0x36280, 0x36730, 0x367a0, 0x50300, 0x50ea0,
+  0x9f250, 0x00, 0x04, 0x08, 0x0c, 0x10, 0x12, 0x14, 0x16, 0x1a, 0x2e,
+  0x32, 0x36, 0x3a, 0x5c, 0x120, 0x124, 0x128, 0x12c, 0x12e, 0x132, 0x136,
+  0x288, 0x60, 0x28c, 0x1bad
+NAMES: class descriptor, ctor pointer, dtor pointer, class size,
+  implicit constructor, class inventory, size census, pr422_classdata.txt,
+  OI-111, OI-127, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHY THE SIZE IS STORED TIMES 256 - every block's +0x0c dword is a
+    multiple of 256 with the low byte zero, which fits 3-byte entries read
+    with a 4-byte load, so the layout may be byte-tripled; if so what the
+    first byte of each entry holds, since it is always zero; WHAT THE 29
+    CLASSES OF SIZE 0x120 ARE - the most frequent size after 0x32 and the
+    one the engine repeats most; WHETHER THE 187 CLASSES WITH NO CONSTRUCTOR
+    POINTER ARE data-only classes; what the size 0x1bad = 7085 class is,
+    the largest in the image; and whether the base ctor thunk 0x74bc0 reads
+    the block at run time or only its three constructor pointers, which
+    would say whether the sizes are used at all.
+CLOSES: PR-421's OPENS item WHAT THE 20-BYTE CLASS-DATA BLOCKS CONTAIN -
+  five dwords: three constructor pointers, three destructor pointers, a
+  size, and a zero. It also closes the size half of PR-418's field map and
+  PR-421's object-extent question: the scene-object class is 0x28c bytes.
+CORRECTS: PR-418's estimate that a scene object is "about 0x290 bytes" is
+  firmed to 0x28c = 652, from its own class descriptor at 0xa6428; the
+  `mov eax,0x60; call 0x5c320` state-record size of PR-406 is confirmed
+  by 15 class descriptors of size 0x60, one of them naming PR-102's
+  record constructor 0x52500.
+MEASURED: (a) THE INVENTORY. The value passed in edx to a call of the
+  base-ctor thunk 0x74bc0 or the dtor thunk 0x74be0 takes 503 distinct
+  addresses in 0x961c4-0xa6b68, at a 20-byte stride. Each is a five-dword
+  block, and the slots are used identically in all 503: +0x00 and +0x04
+  and +0x08 hold constructor addresses (0 where the class has none - 187
+  blocks have 0 at +0x00), +0x0c and +0x10 hold destructor addresses
+  (+0x04 is the universal base ctor 0x74bac in 419 of them), +0x0c-as-read
+  at the fifth slot holds the object size multiplied by 256, and the last
+  dword is zero in all 503. Read literally: 0xa6428 = `07278000 074bac00
+  073b0000 00028c00 00000000` - constructors 0x72780, 0x74bac, 0x73b00,
+  size 0x28c. (pr422_classdata)
+  (b) THE SIZES. dword(+0x0c)/256 gives 88 distinct sizes for the 503
+  classes; it is a multiple of 256 in every block. The most common is 0x32
+  = 50 bytes (135 classes), then 0x120 = 288 (29), 0x14 (28), 0x0c (22),
+  0xee (19), 0x60 (15), 0xa5 (15), 0x122 (15). The largest is 0x1bad =
+  7085 bytes.
+  (c) THE CROSS-CHECKS. The state record is allocated with
+  `mov eax,0x60; call 0x5c320`; 15 descriptors carry size 0x60 and one of
+  them, 0x96420, names 0x524a0 and 0x52500 as constructors - 0x52500 is
+  the record constructor of PR-102, whose `operator new(0x60)` this is.
+  The scene-object family of PR-418 and PR-421 has size 0x28c, which fits its field map exactly: its highest
+  field used anywhere is the chain link at +0x288.
+  (d) A NEARBY BLOCK OF THE SAME SHAPE. 0x9f250 - the dword PR-419 found
+  holding the scanner 0x36280 - reads as `00036280 00050300 00036730
+  000367a0 00050ea0`: five small code addresses in the same block shape,
+  so that is another class descriptor rather than a table.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr422_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr422_classdata.txt: the 503 blocks enumerated from the
+  DB's imm table, their five dwords read from build/leo/leo.img, the
+  slot-usage counts and the size histogram. 0x74bc0, 0x74be0 and the
+  cross-check constructors were decoded from their own entry addresses.
+```
+
+- WHY. This is the first row that reads the compiler's own class
+  metadata rather than following it. The payoff is a census of the engine
+  as a program: 503 classes, 187 of them without a constructor, sizes
+  from 8 to 7085 bytes, and the largest concentration at 50 bytes. For
+  this project the two cross-checks matter most: the 0x60-byte state
+  record of PR-406 and the field map of the scene object of PR-418 are
+  now confirmed by the sizes the executable itself carries, so any future
+  claim about a field beyond +0x288 on that object or +0x60 on a state
+  record is refutable from one dword. It also gives every later row a
+  cheap way to identify an unknown object - find its descriptor and read
+  its size and constructor triple.

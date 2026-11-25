@@ -6152,6 +6152,23 @@ OI-128: what landing and leaving a surface does - the class verbs
     BRANCHES ON THE AUTHORED OBJECT NAME instead (ll_level.c:1555-1556,
     PALMA and KATAPULT), where the engine has compiled variants chosen at
     construction time.]
+    [PR-422 READS THOSE 20-BYTE DESCRIPTORS: THE ENGINE'S CLASS
+    INVENTORY. Each of the 503 blocks is five dwords used identically:
+    three CONSTRUCTOR addresses (0 where the class has none - 187 blocks
+    have 0 in the first slot), then the base-ctor chain entry 0x74bac (in
+    419 of them) and further destructor addresses, then the OBJECT SIZE
+    multiplied by 256, then a zero in all 503. Example, 0xa6428 = `072780
+    00 074bac00 073b0000 00028c00 00000000`: constructors 0x72780,
+    0x74bac, 0x73b00 and size 0x28c. CENSUS: 88 distinct sizes, most
+    common 0x32 = 50 bytes (135 classes), then 0x120 (29), 0x14 (28),
+    0x0c (22); the largest is 0x1bad = 7085. CROSS-CHECKS THAT LOCK
+    EARLIER ROWS: 15 descriptors are 0x60 - the state-record size of
+    PR-406 - and one of them names 0x52500, the record ctor already in
+    PR-102's record ctor; the scene object of PR-418 is 0x28c = 652
+    bytes, matching
+    its highest used field at +0x288 and correcting PR-418's "about
+    0x290". 0x9f250, the dword PR-419 saw holding 0x36280, is another
+    such descriptor, not a table.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
