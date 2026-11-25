@@ -61746,3 +61746,89 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   450th: the model the port has carried since PR-442 is now
   anchored at the call site, not just in the builder body.
 
+
+## PR-451 - THE DIRECTION FIELD'S DOMAIN: [obj+0x6d] IS WRITTEN
+## ONLY WITH +/-1 (OR COPIED), ITS THREE SIGN CONSUMERS MATCH THE
+## PORT'S THREE SIGN TESTS, AND THE FIELD HAS ONE TABLE-SLOT
+## COLLISION IN A NON-PLAYER FAMILY
+
+```
+KIND: read
+SUBSYSTEM: the whole-word census of [obj+0x6d] - every writer
+  (literal +/-1, spawn copies through the +0x70 getter, and one
+  family that stores a CLASS TABLE there), every reader (the
+  three sign consumers of PR-444/445/450 plus two zero-compares
+  in unread classes), against the port's p->face domain and its
+  sign tests
+ADDRESSES: 0x6d, 0x32487, 0x324a1, 0x324f5, 0x327d7, 0x327e0,
+  0x32a29, 0x33fc6, 0x33fcf, 0x45a1a, 0x50442, 0x5387a, 0x2457d,
+  0x2458e, 0x2e307, 0x613a4, 0x613b9, 0x545de, 0x545e5, 0x3d8c0,
+  0x3d901, 0x96874, 0x24a0b, 0x53670, 0x53683, 0x53e7b, 0x53e83,
+  0x52385, 0x52390, 0x70, 0x8, 0xb1
+NAMES: direction field domain, sign consumers, spawn face copy,
+  table-slot collision, pr451_face.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE +0x6d-as-table WRITERS' FAMILY: 0x545e5 stores the
+    chain link [arg+8] (a class table) and 0x3d901 stores the
+    arg's +8; both sit in birth paths for objects whose +0x8 is
+    set to a table nearby - which class, and whether its +0x70
+    getter is the face getter or the 17-table variant, is
+    unread; the two ZERO tests 0x24a0b/0x24a18 (cmp [obj+0x6d],
+    0) - the only equality-with-zero reads, in an unread class
+    (if that class is the table-storing one, "no direction yet"
+    is its meaning); and the [src+0xb1]/[new+0xb1] copy that
+    walks every spawn path (a state index? PR-447 set it to
+    0x16 at reset - the same open).
+CLOSES: PR-444's OPENS "the [obj+0x6d]=p->face identity check"
+  and PR-450's version of it, against all three consumers:
+  0x5367e/0x53683 (the CH_DIR face flip - the port's CH_DIR
+  gates ll_play.c:2144, ll_level.c:1477 flip to the travel
+  direction the same way), 0x53e83 (frame sign iff [obj+0x6d]
+  == -1 - the port's frame/mirror model reads p->face < 0 at
+  ll_player_mirror_of, ll_play.c:2922), 0x52390 (SEQ_REV frame
+  index iff the face getter answers negative - the port's
+  authored-mirror legs). The DOMAIN checks too: every literal
+  store of the field in the image is 1 or -1 (11 sites), the
+  other stores copy the value through the +0x70 getter in
+  spawn/clone paths, and the port's p->face takes exactly
+  {1,-1} (init ll_play.c:1692, the walkdir flip at :2144).
+  Sign-based equivalence, the only kind the consumers can
+  observe, holds at every site.
+CORRECTS: nothing. (PR-445's frame-sign reading and PR-450's
+  getter reading are re-verified here unchanged; 0x3d901 is a
+  decode note, not a correction - read from its entry anchor,
+  the unanchored window decodes mid-instruction.)
+MEASURED: (a) THE LITERALS. Every immediate store to +0x6d:
+  0x32487/0x327d7/0x32a29/0x33fc6 = -1; 0x324a1/0x324f5/
+  0x327e0/0x33fcf/0x45a1a/0x50442/0x5387a = +1; no other
+  immediate. (b) THE COPIES. 0x2458e/0x2e307/0x613b9: call the
+  object's virtual +0x70 (the 140-table getter, PR-450) and
+  store into the new object's +0x6d - each next to a
+  [new+0xb1] = [src+0xb1] copy: spawned objects inherit the
+  spawner's direction. (c) THE COLLISION. 0x3d8c0 is a player-
+  family ctor ([obj+8] = 0x96874 at 0x3d8cf); 0x545e5 and
+  0x3d901 store CLASS-TABLE values into +0x6d in birth paths -
+  another object family whose +0x6d is its table field, so the
+  offset is not globally a direction; the consumers are all
+  reached from player-family code paths, so nothing contradicts
+  (a)/(b) in practice. (d) THE TESTS. Three sign tests (the
+  CH_DIR neg gate, the frame-sign ==-1 test, the row-entry
+  jge) and two zero-compares in unread classes; nothing else
+  reads the field. (e) THE PORT. p->face in {1,-1} by
+  construction; every port use is a sign test (face>=0 at
+  ll_play.c:1775/2056, face<0 at :2922, walkdir-driven set at
+  :2144); no port change - the identity check asked for twice
+  now passes at all three sites.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The direction field had been read three times from
+  three consumer sides; this is the field itself - its writers,
+  its domain, and its one gotcha (another family uses the same
+  offset as its table pointer). The port's p->face model passes
+  every check, which is the point of keeping the identity
+  checks coming: each one converts a "probably the same thing"
+  into a checked equivalence.
+

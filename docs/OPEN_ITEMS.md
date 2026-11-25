@@ -6659,6 +6659,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     unnamed input class, the 24-table +0x8c variant, the
     [obj+0x6d] value domain (+/-1?), and that three-consumer
     identity check.]
+    [PR-451 RUNS THAT DOMAIN CHECK AND IT PASSES: every
+    immediate store of [obj+0x6d] in the image is +1 or -1
+    (11 sites); the other stores copy it through the +0x70
+    getter in spawn/clone paths (0x2458e/0x2e307/0x613b9, each
+    beside a [new+0xb1]=[src+0xb1] copy - spawned objects
+    inherit the spawner's direction); the only readers are the
+    three sign consumers (0x53683 neg under CH_DIR, 0x53e83
+    ==-1, 0x52390 jge) plus two cmp-0 tests in unread classes.
+    The port matches at every site: p->face in {1,-1} by
+    construction (init 1692, walkdir flip 2144), all uses are
+    sign tests (1775/2056 face>=0, mirror_of 2922 face<0), the
+    CH_DIR gates flip to travel dir (2143/1477). One gotcha: a
+    NON-player family stores class TABLES at +0x6d (0x545e5
+    stores the [arg+8] link, 0x3d901 an arg's +8; 0x3d8c0 is
+    the player ctor setting [obj+8]=0x96874) - the offset is
+    not globally a direction, so slot-based identity claims
+    need the class, not just the offset. Open: that family,
+    the cmp-0 readers, and what [obj+0xb1] is (copied on every
+    spawn, set 0x16 at reset, /10-scaled by the input class).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
