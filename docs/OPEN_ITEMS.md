@@ -6963,6 +6963,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     [x+0x16], no class table points at the four draw bodies),
     and block A's head half (+0x00..+0x34, the element/factory
     verbs).]
+    [PR-468 READS THE MESSAGE DISPATCHER 0x50d60 ITSELF: it has
+    NO code reference at all - it is reached only as a class
+    verb (14 table entries; five at slot +0x10, the message
+    verb, in the 0x98f34/0x9b4d4/0x9f540/0xa0624/0xa2218
+    families) and by EIGHT tail calls from methods that test a
+    type locally and fall through for the rest (0x1e18f,
+    0x241f4, 0x274bb, 0x2e8e8, 0x32145, 0x33ef2, 0x365f6,
+    0x39e8d - the last being the unmatched continuation of
+    PR-465's type-30 handler). The default arm 0x50e4f is not
+    silent: it tail-dispatches the message to PR-62's GENERIC
+    handler 0x54560, so unlisted types are handled as
+    velocity/push messages. The pre-arm 0x50d7b->0x50e58 is a
+    CONSUME - when [rec+0x126] != 0 a type-1 message is
+    accepted and dropped. Several handler arms use the PR-452
+    hit pipeline 0x52cc0 (edx = 9, 0x31, 0x18) with
+    [[ds:0xcef40+0x38c]]/0x44900 and [a94f4] first. Also: the
+    scan gives ZERO table entries for PR-466's 0x29062 - the
+    cleanest orphan found so far. Open: what [obj+0x126] is,
+    who reads the [obj+0x10] queue, and the nine deep-slot
+    dispatcher entries.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

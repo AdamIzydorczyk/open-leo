@@ -63126,3 +63126,94 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   clean map: the block's head half is element/factory verbs,
   its tail half is the frame verbs (box, margins, draws).
 
+
+## PR-468 - THE TYPE SWITCH 0x50d60 IS THE MESSAGE VERB +0x10 OF
+## FIVE CLASS FAMILIES, ITS DEFAULT ARM FALLS THROUGH TO THE
+## GENERIC HANDLER 0x54560, AND ITS TYPE-1 ARM CONSUMES
+
+```
+KIND: read
+SUBSYSTEM: the message dispatcher 0x50d60 (PR-464's type switch
+  0x50d70 with its head): the fourteen class-table entries that
+  install it as a verb, the five at slot +0x10 = the message
+  verb; its default arm 0x50e4f; its type-1 pre-arm 0x50d7b ->
+  0x50e58; the eight methods that tail-call it as the unmatched
+  arm of their own type tests; the [rec+0x126] gate it tests
+ADDRESSES: 0x50d60, 0x50d70, 0x50d7b, 0x50d85, 0x50e4f,
+  0x50e58, 0x50e60, 0x54560, 0x52cc0, 0x44900, 0x44910,
+  0xa94f4, 0x38c, 0x126, 0x12e, 0x1d, 0x1f, 0x20, 0x1e,
+  0x1e18f, 0x241f4, 0x274bb, 0x2e8e8, 0x32145, 0x33ef2,
+  0x365f6, 0x39e8d, 0x241cd, 0x241d3, 0x32139, 0x98f34,
+  0x9b4d4, 0x9f540, 0xa0624, 0xa2218, 0x9ad48, 0x9ae34,
+  0x9b244, 0x9b3dc, 0xa0070, 0xa0150, 0xa04ac, 0xa0538,
+  0xa21e8, 0x79c, 0x6b0, 0x2a0, 0x108, 0x5c4, 0x4e4, 0x188,
+  0xfc, 0x40, 0x10
+NAMES: message verb, dispatcher default arm, consume arm,
+  fall-through handler chains, rec+0x126 gate, pr468_dispatcher
+  txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT [obj+0x126] IS - the dispatcher's first test and
+    the pre-arm's gate; its namespace has 60+ uses and one
+    store of a literal (0x27f1b, 0x8ca), so it reads like an
+    object/record id, unproven; WHO READS THE QUEUE at [obj+
+    +0x10] - PR-464's 0x52b10 appends 16-byte nodes and nothing
+    in the image reads that field as a pointer (searched every
+    operand), so the consumer is a tail call or a register walk
+    the index cannot tie to the field; the nine deeper-slot
+    entries of the dispatcher as a verb (+0x40..+0x79c) - which
+    verb each replaces; and [obj+0x12e] written by the type-
+    0x1d arm and the [obj+0x67] bit 0x20 written by the type-2
+    arm at 0x241d3.
+CLOSES: PR-464's OPENS "the queue drain loop" and "who else
+  feeds the handler", partly and sharply: 0x50d60 has NO code
+  references (no call, jump, or immediate anywhere) - it is
+  reached only as a class verb (14 table entries, five of them
+  at slot +0x10, the message verb, in the 0x98f34/0x9b4d4/
+  0x9f540/0xa0624/0xa2218 families; nine more at deep slots of
+  other tables) and by EIGHT tail calls from methods that test
+  a message type locally and fall through for the rest (0x1e18f,
+  0x241f4, 0x274bb, 0x2e8e8, 0x32145, 0x33ef2, 0x365f6,
+  0x39e8d - the last is the unmatched continuation of PR-465's
+  type-30 handler). Two arms of PR-464's table are now read
+  live: the default arm 0x50e4f is not a silent default, it
+  tail-dispatches `call [obj.vt+0x10]` into PR-62's GENERIC
+  handler 0x54560 - so every unlisted type is handled as a
+  velocity/push message by the common handler; and the pre-arm
+  0x50d7b -> 0x50e58 is a CONSUME: when [rec+0x126] != 0, a
+  type-1 message is accepted and dropped. The 0x39e8d/0x33ef2/
+  0x274bb/0x1e18f pattern also shows the hit-pipeline idiom
+  inside handler chains: `[[ds:0xcef40+0x38c]]` through 0x44900
+  with [a94f4] set, then the PR-452 hit pipeline 0x52cc0 with
+  edx = 9, 0x31, 0x18 - after which the dispatcher is tail-
+  called.
+CORRECTS: nothing. (PR-464's reading of the table and arms
+  stands; the new facts are the verb slots, the tail-call sites,
+  the default arm's target and the type-1 consume.)
+MEASURED: (a) THE TABLE ENTRIES: a dword scan over all detected
+  tables gives exactly 14 holders of 0x50d60, listed in
+  ADDRESSES, five at slot +0x10; the same scan for 0x29062
+  (PR-466's backward walker) gives ZERO - it has no verb slot
+  and no caller, the cleanest orphan in the journal so far.
+  (b) THE DEFAULT ARM, verbatim: `mov edx,eax; mov eax,ecx;
+  call 0x54560` - a tail-dispatch of the message to the generic
+  handler. (c) THE CONSUME: 0x50d7b `cmp [msg+4],1` jumps to
+  0x50e58 = `add esp,0x10` + the epilogue, i.e. return without
+  acting, and that path is taken only when 0x50d6e's
+  `cmp [rec+0x126],0` is non-zero. (d) THE SITES: all eight
+  with 40 bytes of context in the evidence file; 0x32134 tests
+  type 0x1d and writes [obj+0x12e]=1, 0x365ce tests 0x1f/0x20.
+  (e) THE PORT. Unchanged: the port's message model covers the
+  PR-62 kinds only.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The type switch looked like a loose end - a handler with
+  no visible caller and a default arm that did nothing. Both are
+  wrong: it IS the message verb for five class families, its
+  default falls through to the common velocity/push handler, and
+  one arm swallows a message on purpose. That is the shape of a
+  real event system: per-class overrides, a shared fallback, and
+  explicit consumes.
+
