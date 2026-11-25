@@ -6597,6 +6597,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     entries, the +0x1c calls at 0x41d5c, the +0x70/+0x78 answer
     classes, [obj+0xb1]/[obj+0xad], and entry-by-entry matching
     of the port's contact table against the admitted states.]
+    [PR-448 DRIVES THE CYCLE: virtual +0xac's only call sites
+    are 0x535f7/0x53620 (the row-change dispatch 0x535a0 and
+    the state-change path) and 0x52416 (the per-step sequence
+    0x523f0, called only from the physics step 0x5371c) - and
+    every one passes either &obj+0x60 or the step scratch: the
+    flag vector IS the method's out argument. Row change runs
+    the old row's +0x20 and +0x1c, zeroes the [obj+0x9d] row
+    timer, installs the new row, then re-runs the contact
+    method; state change re-runs it too. The per-step sequence
+    is: virtual +0x8c merged into &obj+0x60, the row-table's
+    +0x8/+0xc into the scratch, +0xac, +0xa8, the row-table's
+    +0x10 with ecx=0xc, then a 13-byte copy - the contact record's size -
+    into the record; the physics return merges the same way.
+    +0xb4/+0xb8 outside the attach tail = 0x45cb2's contact-
+    list membership dispatch (non-empty -> +0xb4, empty ->
+    +0xb8, after the 0x457e0 chain). Closes PR-446's virtuals
+    open and PR-445's +0xa8-arg-record open. Open: the row-
+    table method class (the [row+0x44] table's +0x8/+0xc/+0x10
+    - PR-410 read the parser, not these), the 13-byte copy's
+    target, virtual +0x8c, and [obj+0x9d].]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

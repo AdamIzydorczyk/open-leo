@@ -61468,3 +61468,95 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   the "pointer-less reset body" is the most-installed method in
   the game's tables, the field-refresh every object answers to.
 
+
+## PR-448 - WHO DRIVES THE CONTACT CYCLE: ROW-CHANGE AND
+## STATE-CHANGE DISPATCH RUN +0xac WITH &obj+0x60 AS ITS ARGUMENT,
+## THE PER-STEP SEQUENCE IS +0x8c MERGE, +0xac, +0xa8, AND THE
+## +0xb4/+0xb8 PAIR IS CONTACT-LIST MEMBERSHIP
+
+```
+KIND: read
+SUBSYSTEM: the callers of the PR-446/447 contact method - the
+  row-change dispatch 0x535a0 and its state-change sibling
+  0x53609, the per-step physics sequence 0x523f0 (its only
+  caller 0x536f0, the physics step of the PR-313 line) and the
+  13-byte record copy in its tail, and the contact-list
+  membership dispatcher 0x45cb2 that fires the virtuals
+  +0xb4/+0xb8 outside the attach tail
+ADDRESSES: 0x535a0, 0x535b0, 0x535bf, 0x535c2, 0x535ea, 0x535ed,
+  0x535f7, 0x53609, 0x53616, 0x53620, 0x53626, 0x523f0, 0x52402,
+  0x5240c, 0x52416, 0x52423, 0x52430, 0x52435, 0x52442, 0x5244d,
+  0x536f0, 0x536ff, 0x5370c, 0x5371c, 0x53725, 0x45cb2, 0x45cc6,
+  0x45cd4, 0x457e0, 0x49580, 0x8c, 0x9d, 0xa4, 0x5c, 0x60, 0xac,
+  0xb4, 0xb8
+NAMES: row-change dispatch, state-change re-run, per-step
+  sequence, contact membership dispatcher, 13-byte record copy,
+  pr448_drivers.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE ROW-TABLE METHODS +0x8, +0xc, +0x10 (the class
+    behind [row+0x44] - PR-410 read the row PARSER, not this
+    method table; +0x10 is called with ecx=0xc and its output
+    feeds the 13-byte copy); what the 13-byte record copied in
+    the physics tail is (the contact-record size of PR-331 -
+    the bridge from +0xa8's arg record to the contact table is
+    right there and unread); virtual +0x8c (the step-start
+    vector merged into the flag vector before the physics);
+    [obj+0x9d] (the row-timer accumulator the state-change path
+    increments); and the row's own +0x20 exit method.
+CLOSES: PR-446's OPENS "virtuals +0xb4/+0xb8" - outside the
+  attach tail the pair is fired by 0x45cb2 on contact-list
+  membership: it refreshes through 0x457e0, then `cmp
+  [[obj]+8], 0` - non-empty calls the object's +0xb4, empty its
+  +0xb8, exactly the attach/detach pair the attach tail uses.
+  PR-445's OPENS on "+0xa8's record argument - who calls the
+  method and fills the [ecx]/[ecx+2] flag bytes": the answer is
+  the per-step sequence 0x523f0 - the scratch vector is built
+  by the row-table's +0x8/+0xc methods, +0xac and +0xa8 run
+  against it in order, and its tail copies 13 bytes (dwords
+  then leftover bytes - the contact record's size) into it.
+  It also pins the +0xac method's argument once and for all:
+  every call site passes either &obj+0x60 (row change, state
+  change) or the step scratch - the flag vector, exactly what
+  the 0x49580 merges target (PR-438/442), so the method's
+  answer writes the vector directly.
+CORRECTS: PR-446's note in its OPENS that the attach tail's
+  "queries' answers are the candidates, but the store sites are
+  unread" left the trigger unknown too: the trigger was never in
+  the queries - the queries run INSIDE the +0xac method, and it
+  is the row/state-change dispatch (0x535a0/0x53609) and the
+  per-step sequence (0x523f0/0x5371c) that run the method. The
+  byte readings of PR-446/447 stand unchanged.
+MEASURED: (a) ROW CHANGE. 0x535a0: if the requested row !=
+  [obj+0x5c]: old row's table +0x20 (exit), [obj+0x9d]=0 (the
+  row timer), old row's +0x1c, [obj+0x5c]=new, then virtual
+  +0xac with edx = &obj+0x60. (b) STATE CHANGE. 0x53609: if
+  the row's state word [row+4] differs from the request, store
+  it and re-run +0xac(&obj+0x60); the code after maintains the
+  [obj+0x9d] row-timer accumulator through the row array.
+  (c) PER STEP. 0x536f0: virtual +0x8c, merge into &obj+0x60
+  via 0x49580; then 0x523f0: [row_table+0x8](scratch),
+  [row_table+0xc](scratch), +0xac(scratch), +0xa8(scratch),
+  [row_table+0x10] with ecx=0xc, then a 13-byte copy into the
+  scratch record; the physics return is merged into &obj+0x60
+  through 0x49580 like the +0x8c vector - the contact layer
+  votes into the same flag vector the input pipeline writes
+  (PR-442), once on transition and once per step. (d) THE
+  MEMBERSHIP PAIR. 0x45cb2: 0x457e0 (node chain, each node's
+  +0x4), then non-empty -> +0xb4, empty -> +0xb8. (e) THE
+  PORT. The port runs its contact table from its own step
+  order (PR-331/338); this record fixes the ENGINE's order -
+  transition-time and step-time calls of one method whose out
+  arg is the flag vector - which is where any future re-order
+  evidence would have to come from. No port change.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The cycle PR-446/447 mapped now has its clock: the same
+  method runs on every row and state transition and once per
+  physics step, and its argument has been the flag vector all
+  along. That is also the last structural excuse for the port's
+  contact table to be modelled separately from the input
+  pipeline - in the engine they are the same vector.
+
