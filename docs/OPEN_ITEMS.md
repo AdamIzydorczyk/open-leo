@@ -5487,9 +5487,23 @@ OI-127: what a 0x1b payload is - the entry array at [0xcef40+0x74],
     shared table 0x98278" and PR-305 names "the view 0x98274", but those
     are the same bytes four apart, and the run reads 0x23e30, 0x23ed0,
     0x23ea0, 0x23e00 and then 0x74bac one byte PAST a dword boundary
-    (0x98285), the packed-field shape of the class records at 0xa14c0
-    and 0xa14d8 rather than a method table's. Tool entries are still
-    unnamed; the row stays open.
+    (0x98285). PR-397 MEASURES THAT LAST GUESS AND FINDS IT WRONG: those
+    two addresses do not match the class-descriptor shape at their first
+    byte (0x30 and 0xd0) nor at their first field (0xd000023e and
+    0xa000023e, outside the code range), and the same test fails at the
+    LION view 0x96874 (0x70), while 0xa14c0 and 0xa14d8 match it exactly.
+    So they ARE method tables, as PR-293, PR-305 and PR-386 used them, and
+    the only thing left open about them is which table a caller means. The
+    loose byte pattern PR-397 tried instead of that guess matches 344
+    places in 0x90000-0xb8000, which is why the negative test is the byte
+    test and the positive test is the code that consumes a descriptor.
+    What PR-396 left as "C+9 an unread verb" is read now: 0x4fba0 and
+    0x4ee20 are the two classes' copy-with-release verbs - `test dl,4`
+    takes a reference on the source's allocation header at [src-4] through
+    0x74bc0 and calls the delete 0x74be0, `test dl,2` calls 0x5c370 - they
+    write no field of the record, and 0x7b791 keeps [class+9] in the guard
+    the array builder registers, which is where the container holds a
+    class's copy verb. Tool entries are still unnamed; the row stays open.
 
 OI-128: what landing and leaving a surface does - the class verbs
   +0xB4 and +0xB8, the '#' ejection counter, and the unread head of
@@ -6164,8 +6178,22 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     destructor called!", the class's vtable slot 0, the object size, 0},
     20-byte records at stride 0x14 with every record at 1 mod 4, naming 200
     of the 219 class tables (54 of the 62 no-token ones) and giving the same
-    object size as PR-380's token branch in 144 of 144 cases; whether
-    anything reads them stays open, as does whether 0x5c320 returns a
+    object size as PR-380's token branch in 144 of 144 cases. PR-397
+    MEASURES ONE READER: 0x76b24 is the engine's array builder, and it and
+    the two element-construction paths it chooses between (0x76ab0, which
+    hands each constructor the element size in edx, and 0x7b82c, which
+    hands it 0) read the first byte at [class+0], the constructor at
+    [class+1] and the element size at [class+0xd]; the byte at [class+0]
+    is 0 for 287 of the 290 records pr397_classbyte.py finds in
+    0x96000-0xa7000 and 4 for exactly three array starts (0xa68a0,
+    0xa6a74, 0xa6aa4), which no code passes to a builder - so no class
+    that takes the 0x7b82c path is known. Two caveats for anyone reusing
+    the shape: the fifth dword is not always zero (the two registry
+    descriptors at 0xa14c0/0xa14d8 carry 0x01000000 and 0xb0000000 there
+    and are 0x18 apart, so they are NOT such a record), and the byte a
+    builder tests at [class+0] is the previous record's zero for any
+    interior record, so a 4 can only appear at an array start. Whether
+    anything else reads them stays open, as does whether 0x5c320 returns a
     pointer inside a larger block, whether the lion's own standing query ever
     consults such a per-object array (0x96874 carries neither the list
     pass nor a container sub-table), what the [x+0x10] queue drives, what

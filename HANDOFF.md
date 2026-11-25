@@ -730,6 +730,17 @@ Pitfalls seen:
   same leg passed when run alone, and passed in the same pair at `-j4`.
   The cause is not established. Run the gate pair at `-j4`, or rerun that
   one target, before believing a red.
+- A CONTEXT BREAK CAN LEAVE BEHIND IT A ROW THAT WAS NEVER RUN. After one,
+  the working notes in hand described four records, two commit hashes and a
+  green gate pair that this repository had never seen: `git log --oneline
+  -1` still read PR-396, the journal's `^## PR-` count was unchanged, and
+  none of the evidence files those notes cited existed under /tmp/opencode.
+  Nothing had been lost - the work had not happened - but the next record
+  would have cited a PR number, a count and a measurement that did not
+  exist. After any break, re-establish the state from the repository before
+  writing anything: HEAD and its subject, the journal's record count and
+  last heading, the OPEN_ITEMS rows, and the /tmp/opencode files the notes
+  name.
 - peak `ll_level` RSS is ~1.1 GB (RAN.01); run one level at a time.
 
 ## 4. Architecture map

@@ -55472,3 +55472,207 @@ MEASURED: (a) THE CLASS RECORD, AND WHERE A RECORD'S TABLE COMES FROM.
   level's own slot, and the ten are authored zeros. A row that ends with
   "the shipped data says no" has to be sure the data was looked for
   properly, and here it was not the first time.
+
+## PR-397 - THE ARRAY BUILDER TESTS A CLASS'S FIRST BYTE TO DECIDE WHETHER
+## THE ELEMENT CONSTRUCTOR IS HANDED THE ELEMENT SIZE, AND THE FIELD AT
+## CLASS+9 OF BOTH REGISTRY CLASSES IS A COPY-WITH-RELEASE VERB
+
+```
+KIND: read
+SUBSYSTEM: the class-descriptor reading that PR-395's and PR-396's record
+  law rests on - the array builder 0x76b24 and the two element-construction
+  paths 0x76ab0 and 0x7b82c it chooses between, the guard chain it and both
+  of them register through 0x77e10 at 0xcf4f4, and the verb at class+9 of
+  the two registry classes 0xa14c0 (.BLK) and 0xa14d8 (.SUF); plus the
+  census of that first byte across the construction records PR-387 counted
+ADDRESSES: 0x76b24, 0x76b35, 0x76b37, 0x76b5b, 0x76b60, 0x76b6f, 0x76b74,
+  0x76b79, 0x76b83, 0x76b8b, 0x76b93, 0x76b96, 0x76b9a, 0x76b9c, 0x76ba1,
+  0x76bab, 0x76bad, 0x76bb3, 0x76bb7, 0x76bbf, 0x76ab0, 0x76ac2, 0x76ac9,
+  0x76acc, 0x76ad9, 0x76adb, 0x76adf, 0x76ae3, 0x76ae7, 0x76aed, 0x7b82c,
+  0x7b83b, 0x7b842, 0x7b845, 0x7b852, 0x7b856, 0x7b85e, 0x7b862, 0x7b86a,
+  0x7b791, 0x7b796, 0x7b79d, 0x7b7a0, 0x7b7aa, 0x7b7af, 0x7b7b7, 0x7b7ba,
+  0x77e10, 0x77e1c, 0x77e1e, 0x77e29, 0x74bc0, 0x74bcb, 0x74bce, 0x74bd4,
+  0x74bd9, 0x74be0, 0x74b7c, 0x74b92, 0x74a4c, 0x5c370, 0x5c376, 0x5c37c,
+  0x5c382, 0x53a30, 0x4fba0, 0x4fba8, 0x4fbb2, 0x4fbc0, 0x4ee20, 0x4ee28,
+  0x4ee2d, 0x4ee32, 0x4ee40, 0x4ee50, 0x4ee6f, 0x4ee80, 0x4fbd0, 0x4fbe4,
+  0x4fbf2, 0x4fb70, 0x74bac, 0x75dc0, 0x79ddc, 0x79e88, 0x76450, 0x7645e,
+  0x79f48, 0x79f56, 0x7a004, 0x7a012, 0xa14c0, 0xa14d8, 0xa14c1, 0xa14d9,
+  0xa68a0, 0xa6a74, 0xa6aa4, 0x98274, 0x98278, 0x96874, 0x4da90, 0x4db02,
+  0x4db50, 0x4dbbe, 0x4dc00, 0x4dc72, 0x4daf8, 0x4dbaf, 0x96000, 0xa7000,
+  0xcf4f4, 0xcf2cc, 0xcf2d0, 0xa13bc, 0x14, 0x18, 0x20, 0x2c, 0x3c, 0x401
+NAMES: array builder, element constructor, element size, first byte,
+  copy-with-release, assignment verb, guard chain, cleanup callback, delete
+  thunk, allocation header, [class+0], [class+1], [class+9], [class+0xd],
+  [class+0x14], block table, construction record, array start, census,
+  OI-127, OI-128, pr397_classbyte.py, pr397_classbyte.txt, pr397_desc.py,
+  pr397_desc.txt
+CODE: no: no file under ported/ or tools/ changes. Two sentences of
+  PR-396's OPENS text and the matching sentence of its OI-127 paragraph are
+  corrected here (CORRECTS); no port comment asserts the thing corrected.
+HOOKS: none - no leg and no fixture changes, so the light gate of section 2
+  rule 4 applies.
+OPENS: WHO TAKES THE 0x7b82c PATH - the only three classes in the census
+  with 4 at their first byte (0xa68a0, 0xa6a74, 0xa6aa4) are never handed
+  to an array builder by any immediate in the image, so the value 4 has no
+  owner this row found; WHAT THE FIELD AT CLASS+0x14 IS - 0x401 for `.BLK`
+  and the code address 0x4eab0 for `.SUF`, at 0xa14d4 and 0xa14ec, so it is
+  either of two types or it is not one field; WHICH CONSTRUCTORS READ the
+  element size that 0x76ab0 passes in edx - the row checked only the two
+  registry constructors, which ignore it; what 0x74a4c does with the chain
+  at 0xcf4f4, and what 0x5c370's table at 0xcf2cc/0xcf2d0 holds; the
+  reader of the guard's copy of the class and of its class+9 verb, since no
+  `call [reg+0x18]` exists in 0x76000-0x78000; whether 0x98274 or 0x98278
+  is the base a given caller means, which this row does not settle, only
+  that neither is a descriptor; and the tool-entry half of OI-127.
+CLOSES: PR-396's OPENS item "the class record's C+9 verb (0x4fba0 here,
+  0x4ee20 for `.BLK`) - the neighbouring table 0xa14f4 leads to
+  0x4ea30/0x4ea70, which read as clone-pairs" - they are not clone pairs:
+  class+9 is the record class's own copy-with-release verb and 0x4fba0 /
+  0x4ee20 are its two instances, with 0x4ee50 the same shape for the class
+  0xa13bc; the part of OI-128 that asks "whether anything reads" the
+  construction records, for the array-building path - 0x76b24 reads the
+  first byte, [class+1] and [class+0xd], and both builders run the
+  constructor it names (PR-388 already showed one handed to 0x74bc0); and
+  which of the two paths the registries take: the test at 0x76b74 is false
+  for both, and what the two paths actually differ in is now named.
+CORRECTS: PR-396 - one half-sentence of its OPENS, and the same sentence
+  repeated in the PR-396 paragraph of OI-127. It wrote that the run
+  0x98274-0x98288 has "the packed-field shape of the class records at
+  0xa14c0 and 0xa14d8 rather than a method table's". That test does not
+  hold: read as a descriptor, 0x98274 would carry the first byte 0x30, a
+  first field 0xd000023e outside the code range and an element size 0x23e;
+  0x98278 would carry 0xd0, 0xa000023e and the same bad size; the LION view
+  0x96874 would carry 0x70. None matches, while 0xa14c0 and 0xa14d8 match
+  exactly. So those three are method tables, as PR-293, PR-305 and PR-386
+  used them; PR-396's measured one-dword overlap between the first two
+  stands, and what is open about them is only which table a caller means.
+  PR-396's descriptor law itself - the constructor at class+1, the element
+  size at class+0xd, 0x76ab0 running that constructor over the array, the
+  count written at [mem], mem+4 returned as the array - is re-read here
+  from the builder side and stands unchanged; it is also NOT one of PR-387's
+  0x14-stride records, whose fifth dword would have to be zero (measured
+  0x01000000 and 0xb0000000), so the two structures stay separate.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md, HANDOFF.md and the
+  generated docs/RE_INDEX.md only - nothing under ported/, tools/, the
+  Makefile or .github - so the light profile applies. Evidence:
+  /tmp/opencode/pr397_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0). The two image scans quoted in
+  MEASURED (e) and (f) are /tmp/opencode/pr397_classbyte.py with its output
+  pr397_classbyte.txt, and the older pr397_desc.py with pr397_desc.txt,
+  whose section (1) counts 344 matches of the loose byte pattern and whose
+  section (4) carries the negative test; every other line was read with
+  `tools/re/leodb.py dis` and the xref/imm tables of tools/re/leodb.py.
+MEASURED: (a) THE BUILDER AND ITS THREE ENTRY SHIMS. 0x76b24 takes eax = a
+  block whose first dword is to hold a count, ebx = the class, edx = that
+  count, ecx = a cleanup callback and one more argument at [esp+0x3c]. It
+  writes the count at [eax] (0x76b35), registers a guard through 0x77e10
+  (0x76b6f, with the context at esp+0x1c, the [esp+0x3c] value as the
+  guard's first argument and ecx as its second), and then at 0x76b74 does
+  `cmp BYTE [esi],0x4` on the class's first byte: equal, the target stored
+  at esp+0x2c is 0x7b82c (0x76b79); otherwise 0x76ab0 (0x76b83). That
+  target is called at 0x76b96 with eax = mem+4, ebx = the class, edx = the
+  count, and 0x76b24 returns what it returns (0x76b9a, 0x76ba1) after
+  closing the guard at 0x77e29; both builders do return mem+4, since each
+  reads back the element pointer the guard kept (0x76aed and 0x7b86a both
+  load ctx+0xc), so PR-396's "returns mem+4 - the address of record 0" is
+  right. The shims measured are 0x76bab (`push 1` then the call), 0x76bb3
+  (`push 2`, jumping into the same call) and 0x76bb7, which pushes 1 and
+  sets ecx to 0x74be0 - the delete thunk PR-388 named - so an array
+  allocated that way is freed again if construction throws. 0x76bb7 has 17
+  call sites in the xref table and three of them are the registry loaders:
+  0x4db02 in the .SUF loader 0x4da90, 0x4dbbe in the .BLK loader 0x4db50
+  and 0x4dc72 in the .PLT loader 0x4dc00; the class addresses themselves
+  appear as immediates at only four sites, 0x4daf8 and 0x4dbaf in the
+  loaders and 0x4fba8 and 0x4ee28 inside the two verbs of (d).
+  (b) THE TWO PATHS DIFFER IN ONE ARGUMENT. Both read the constructor at
+  [class+1] and the element size at [class+0xd] (0x76ac9/0x76acc and
+  0x7b842/0x7b845), both build their guard through 0x7b791 (0x76ac2,
+  0x7b83b), both call the constructor on each element and step by the
+  element size (0x76adf-0x76ae3, 0x7b85a-0x7b85e). The only difference is
+  the second argument to the constructor: 0x76ab0 leaves edx = the element
+  size it loaded at 0x76acc, while 0x7b82c does `xor edx,edx` (0x7b854)
+  before its `call [esp+0x20]`. The first byte of a class therefore does
+  not say whether it has a constructor - both paths run one - it says
+  whether the constructor is handed the element size. Neither registry
+  constructor reads it: 0x4fbd0 is six instructions, writing 0 at +0, +4
+  and +0xc, the view 0x98278 at +8 and the table 0xa218c at +0x10, and
+  0x4fb70 is the mirror PR-395 read, which is why both registries come out
+  the same under either path. 0x7b82c has no call site of its own in the
+  xref table: it is reached only through 0x76b24's chosen target.
+  (c) THE GUARD KEEPS THE CLASS'S class+9 VERB. 0x7b791 fills a 32-byte
+  stack block: the value 2 at ctx+0x10, the class at ctx+0x14, [class+9]
+  at ctx+0x18 (loaded at 0x7b7a0, stored at 0x7b7aa), 0 at ctx+0x1c, the
+  object at ctx+0xc and ctx+0x4 = ctx+0x10; 0x77e10 then links that block
+  into the global chain at 0xcf4f4 (0x77e1c saves the old head, 0x77e1e
+  stores the new one) and 0x77e29 pops the head. Three sites in
+  0x74b7c-0x74ba9 pass that chain to 0x74a4c with ebx 0 or 1. So the
+  field at class+9 is what the container machinery keeps at hand for a
+  record it has to copy - and nothing in 0x76000-0x78000 calls
+  `[reg+0x18]`, so the reader of the guard's copy stays open.
+  (d) class+9 IS COPY-WITH-RELEASE, NOT A CLONE. 0x4fba0 (.SUF) and
+  0x4ee20 (.BLK) are the same nine instructions: keep the record in ebx;
+  `test dl,4` - if set, load edx = the record's OWN class (0xa14d8 and
+  0xa14c0, at 0x4fba8 and 0x4ee28), call 0x74bc0, then call 0x74be0;
+  `test dl,2` - if set, call 0x5c370; return the record. 0x74bc0 reads the
+  word at [src-4], the allocation header PR-388 named, hands it to 0x76c00,
+  and returns that header's address in eax (0x74bd9 `mov eax,ecx`) - a
+  detail PR-388's "discards the descriptor argument" did not cover; 0x74be0
+  is `jmp 0x5c370`; and 0x5c370 tests eax, then indexes the globals
+  0xcf2cc and 0xcf2d0 (0x5c37c, 0x5c382), which is a block table rather
+  than the free-list chain this row first assumed. The third verb in that
+  group, 0x4ee50 for the class 0xa13bc, takes the branch PR-388 described
+  instead - `mov edx,1; call 0x53a30` at 0x4ee6f, then `test cl,2` before
+  0x5c370. What all three share is that the verb writes NONE of the
+  record's fields: it takes a reference on the source's header and releases
+  the old value, the generated assignment of a class that owns something.
+  That is the builder-side confirmation of what PR-396 argued from the
+  loader side - a record's three integers can only come from its
+  constructor and its row parser - and it settles the field PR-396 left as
+  "C+9 an unread verb".
+  (e) THE FIRST BYTE, CENSUSED. Both registry descriptors hold 0 there (the
+  bytes at 0xa14c0 and 0xa14d8 are 00), so 0x76b74's test is false for
+  them and they take 0x76ab0, exactly as PR-396 reported. Across the
+  construction records PR-387 described - his shape is ctor, ctor/dtor
+  slot, member function, size, 0 at stride 0x14 with every record at 1 mod
+  4 - the predicate in pr397_classbyte.py finds 290 of them in
+  0x96000-0xa7000 in 75 arrays, and the byte one before the first field is
+  0 for 287 and 4 for exactly three: 0xa68a0, 0xa6a74 and 0xa6aa4, whose
+  constructors are 0x75dc0, 0x79ddc and 0x79e88 and whose element sizes are
+  0x7c, 0x74 and 0x38. All three are array starts, which is what that
+  shape forces: for an interior record the byte is the most significant
+  byte of the PRECEDING record's fifth field, and that field is 0 by the
+  shape. Those three addresses appear in the image only as the edx argument
+  of 0x74bc0 inside their own class's verbs (0x7645e, 0x79f56, 0x7a012) -
+  never as a class passed to an array builder - so this row does not find a
+  single class that takes the 0x7b82c path (OPENS). For the same reason the
+  registry pair is not one of those records: read as PR-387's shape at
+  0xa14c1 and 0xa14d9 its fifth dword is 0x01000000 and 0xb0000000, not
+  zero, and the two descriptors are 0x18 apart. The field at class+0x14 -
+  0x401 in the `.BLK` descriptor at 0xa14d4 and 0x4eab0 in the `.SUF` one
+  at 0xa14ec - is what separates a descriptor from a record here, and it is
+  unread (OPENS).
+  (f) THE NEGATIVE TEST, WHICH IS WHY THIS ROW STARTED. 0x98274, 0x98278
+  and 0x96874 do not match the descriptor shape at their first byte
+  (0x30, 0xd0 and 0x70) nor at their first field (0xd000023e, 0xa000023e,
+  and 0x23e as an element size); pr397_desc.txt section (4) is that
+  measurement and section (1) shows what the loose pattern costs - 344
+  matches in 0x90000-0xb8000, more than the 243 records PR-387 counted,
+  because an ordinary run of pointers read one byte off centre looks the
+  same. The honest test for a descriptor is not its bytes but the code that
+  consumes it, and here that is 0x76b24 - which is why this row started
+  from the builder, as PR-397's first draft did not.
+```
+
+- WHY. Two of PR-396's OPENS items and one sentence of its reasoning were
+  about the structure that row had just leaned on: what the field at class+9
+  of the two registry classes does, and whether the two views 0x98274 and
+  0x98278 are records or tables. The answers reach past the two registries.
+  The class's first byte is a real switch in the engine's own array builder,
+  and it switches the ARGUMENT a constructor receives, not whether one runs;
+  the guard the builder registers is where a class's copy verb is kept, and
+  that verb touches no field of the record, which closes the last doubt
+  about where a registry record's numbers come from. The negative test also
+  matters as method: the byte pattern PR-396 used to guess at 0x98274
+  matches 344 places in that region, so it was never evidence, and the three
+  addresses it was meant to explain are tables after all.
