@@ -66258,3 +66258,81 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   one base-built global singleton, and per-attached-object
   owning arrays whose elements are constructed elsewhere -
   no special manager class exists to model.
+
+## PR-504 - THE LIGHT FAMILY'S INTERNALS: 8-BYTE PAIR SLOTS,
+## THREE OPS TABLES WHERE THE CTOR TABLE IS THE VERB TABLE
+## SHIFTED BY ONE SLOT
+
+```
+KIND: read
+SUBSYSTEM: PR-503's OPENS "what the array elements are".
+  The light container family has THREE code-installed ops
+  tables (all with zero data-segment stores): 0x9b4b4 =
+  [ctor 0x2d7d0, dtor-verb 0x2d8f0, ...], 0x9b4bc =
+  [0x2d8f0, ...] and 0x9b4c4 = [0x2da90, 0x2dd20, 0x2dc50,
+  0x2dc10, ...]. They are ONE table viewed at successive
+  slots: 0x9b4b4 = 0x9b4bc shifted one slot, 0x9b4c4 = two
+  - the ctor-path installs put the vptr at the ctor's own
+  slot, post-construction installs land on the verb slots
+  (0x2d7f7 -> 0x9b4b4, 0x2d90b/0x2d938/0x2d9a3 -> 0x9b4bc,
+  0x2daab/0x2dad8 -> 0x9b4c4). THE ELEMENTS ARE NOT
+  OBJECTS: the build routine 0x2dad2 allocates count*8
+  bytes (0x76a64) and copies PAIRS of dwords from the
+  source array - an element = 8-byte (dword, dword) slot;
+  the reset verb 0x2da30 walks them calling
+  [[L+0x10]+4](self, pair[0], pair[1]) per slot (the
+  PR-30x protocol form), while 0x2d8a0 passes the single
+  first field. VERB GETTERS of the family: 0x2dc90 =
+  `mov eax,ds:0xcec84` (the frame counter global),
+  0x2dca0 = `mov eax,ds:0xcec98`, and verb 0x2dd20 runs a
+  SECOND startup-singleton block: 10 consecutive `call
+  0x44350; mov ds:0xcec98..0xcecb4+` stores. 0x2dc50 calls
+  the PR-106 base ctor 0x500b0, sets [obj+0x12a]=-1,
+  [obj+0x12e]=1 and installs the TLewKadmar2 pair
+  ([obj+8]=0x9b4d4, [obj+0xc]=0x9b4cc - PR-303's named
+  table). 0x2dc10 starts `sub eax,0xc` - a contained-part
+  dtor whose object sits at +0xc in its owner. In the level
+  classes only the LIGHT MANAGER getter (0x2b4c0 at table
+  slot +0xc) is exported; the frame/0xcec98 getters belong
+  to the inner ops tables only.
+ADDRESSES: 0x9b4b4, 0x9b4bc, 0x9b4c4, 0x2d7f7, 0x2d90b,
+  0x2d938, 0x2d9a3, 0x2daab, 0x2dad8, 0x2dad2, 0x76a64,
+  0x2da30, 0x2d8a0, 0x2dc90, 0x2dca0, 0xcec84, 0xcec98,
+  0x2dd20, 0x44350, 0x2dc50, 0x500b0, 0x9b4d4, 0x9b4cc,
+  0x2dc10, 0x12a, 0x12e, docs/OPEN_ITEMS.md
+NAMES: pair slots, 8-byte element, ctor-table shift,
+  ops-table family, contained-part dtor, second singleton
+  block, pr504_verbs.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE PAIRS MEAN (owner,target? light,target?) -
+    which code fills a source pair array passed to 0x2dad2;
+    who calls verb +4 with these self/pair args (the
+    protocol receiver side); the ten 0xcec9x singletons
+    from 0x2dd20; and why 0x2dc50 installs the TLewKadmar2
+    pair inside the light family (a KADMAR2 hero-light
+    wiring?).
+CLOSES: PR-503's OPENS "WHAT THE ARRAY ELEMENTS ARE":
+  8-byte dword-pair slots, not class objects; and the
+  0x9b4b4/0x9b4bc duplicate-table question: they are
+  slot-shifted views of ONE verb table.
+CORRECTS: none. (PR-503's "element-ops block" wording
+  stands for the CALL TARGET, but the elements themselves
+  are raw pairs, not objects with their own tables.)
+MEASURED: (a) Tables 0x9b4b4/0x9b4bc/0x9b4c4 dumped 32
+  slots (pr504_verbs.txt) - exact one-slot shift verified.
+  (b) 0x2dad2 verbatim: `lea eax,[ecx*8]; call 0x76a64` +
+  pair copy loop. (c) 0x2da30/0x2d8a0 call forms verbatim.
+  (d) 0x2dd20's 10-store block verbatim 0x2dd40-0x2dd90.
+  (e) Slot scan: level-side light tables export only the
+  0x2b4c0 getter at +0xc. (f) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. For the port a light attachment is just an array of
+  (handle, handle) pairs plus a protocol reset - trivially
+  modelable - and the "shifted ctor table" is a new engine
+  convention to know when reading any ctor body's vptr
+  store.
+

@@ -7610,6 +7610,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x2cb40, the init store) - all consumer use goes via
     the +0xc getter verb. Element class + the five other
     cf05x singletons: open.]
+    [PR-504 FINISHES THE LIGHT FAMILY: its three ops tables
+    0x9b4b4/0x9b4bc/0x9b4c4 are ONE verb table viewed at
+    successive slots (ctor stores put the vptr at the CTOR's
+    own slot - a new engine convention); ELEMENTS ARE RAW
+    8-BYTE DWORD PAIRS, not objects: 0x2dad2 allocates
+    count*8 via 0x76a64 and copies pairs; reset verbs
+    0x2da30/0x2d8a0 call [[L+0x10]+4](self,pair) per slot.
+    Family getters: 0x2dc90 reads ds:0xcec84 (frame
+    counter), 0x2dca0 reads ds:0xcec98; verb 0x2dd20 builds
+    a SECOND singleton block (10 stores 0xcec98-0xcecb4 via
+    0x44350); 0x2dc50 base-ctor 0x500b0 + [obj+0x12a]=-1/
+    [obj+0x12e]=1 + the TLewKadmar2 pair 0x9b4d4/0x9b4cc;
+    0x2dc10 is a contained-part dtor (sub eax,0xc). Level
+    tables export ONLY the manager getter 0x2b4c0 at +0xc.
+    Pair semantics (owner,target?) and the 0xcec9x block
+    remain open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
