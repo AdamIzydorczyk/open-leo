@@ -62325,3 +62325,81 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   what these classes drop, six hundred addresses away from
   where it is set.
 
+
+## PR-458 - OBJECT VIRTUAL +0x74 IS FULLY OCCUPIED AND HAS FIVE
+## CALL SITES: THE PLAN-LEG VERB, TWO UNPREDICATED ARRAY WALKS,
+## AND THE ACTOR'S HURT-COUNTDOWN BLINK GATE AROUND THE DEFAULT
+
+```
+KIND: read
+SUBSYSTEM: slot +0x74 end to end: the tier census (default
+  0x54c00 = PR-399's name-resolved effect verb, 99 tables;
+  0x23950 ungated, 20; the actor's 0x50320, 14), the five and
+  only call sites (the plan-alphabet L-legs of PR-191 plus two
+  array-walking loops 0x553b0/0x29062), and the 0x50320 ->
+  0x502b0 phase test of the PR-92 hurt countdown
+ADDRESSES: 0x74, 0x54c00, 0x23950, 0x50320, 0x502b0, 0x5032c,
+  0x4afe1, 0x4b2f0, 0x4b380, 0x553b0, 0x29062, 0x23b80, 0x23870,
+  0x2c, 0x64, 0x34, 0x3c, 0x40, 0x60, 0xbc, 0xb5, 0xb6, 0x102,
+  0xf2, 0x126, 0x50, 0x390, 0x57530, 0xcef40, 0x96960
+NAMES: plan-leg verb, blink phase, array-walk verb loops,
+  predicate default, pr458_slot74.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE DRAW VERB - the lion's table has NO slot whose
+    target lies in the render band 0x57xxxx (checked across all
+    512 entries), so what draws an object is still unnamed
+    (+0x74 is not it); who reaches 0x29062 - no caller and no
+    table slot, an unreferenced entry like PR-109's 0x50252;
+    the [obj+0x3c]/[obj+0x40] arrays the two extra loops walk
+    (count + dword-pointer array; 0x553b0 is itself a method
+    in 17 tables at high slots 0x69c-0x7b4 - which container
+    each class keeps there is unread); and what the +0x60
+    predicate's default [obj+0x2c] and the +0xbc probe's
+    default cmp [obj+0xa9],0 mean as flags.
+CLOSES: PR-191's "predicate +0x60 then action +0x74" legs with
+  the slots' full shape: +0x74 is occupied in 158/158 detected
+  tables (the third fully-occupied slot after +0x60 and +0x50)
+  and has EXACTLY FIVE call sites in the image - three inside
+  the L-legs PR-191 mapped (the lion first at 0x4afe1, then the
+  [mgr+0x64] chain, then the authored-vector loop at 0x4b380)
+  and two outside them (0x553b0 walks a [obj+0x40] array
+  forward, 0x29062 the same array BACKWARDS, neither uses the
+  predicate). The predicate default is 0x23b80 = return
+  [obj+0x2c] (129 tables). And 0x50320's arithmetic is now
+  read: 0x502b0 computes ceil([obj+0x102]/2) and returns 1
+  only when that half-count is ODD and [obj+0xf2] != 0 - so
+  during the PR-92/PR-135 hurt countdown (30 steps) the actor
+  SKIPS the per-frame verb every other half-count: the hit
+  lock's flicker, byte-backed.
+CORRECTS: nothing. (PR-109's "(the generic step 0x54c00 is the
+  candidate and is unread)" is closed by PR-399's sound-law
+  reading, re-confirmed here as the +0x74 default; PR-109's
+  0x50320 gate description stands, with 0x502b0's halving now
+  spelled out.)
+MEASURED: (a) THE TIERS. +0x74: 0x54c00 in 99 tables, 0x23950
+  in 20 (calls vt+0x50 ungated), 0x50320 in 14 (actor), the
+  rest per-family variants. (b) THE CALL SITES. sql over the
+  insn table: exactly 0x29082, 0x4afea, 0x4b314, 0x4b3a5,
+  0x553cd. (c) THE BLINK MATH. 0x502b0: `sar 0x1f; sub; sar
+  1` = (count+1)/2, `idiv 2` -> remainder, `cmp [obj+0xf2],0`
+  -> 1 iff odd and the flag set; 0x50320 calls the default
+  only when that returns 0 and [obj+0x126]==0. (d) THE
+  BACKWARDS WALK. 0x29062 seeds `lea edx,[ebx*4]` then reads
+  `[edx+eax-4]` and `sub edx,4` - reverse draw/visit order,
+  the only such loop found. (e) THE PORT. No change: the port
+  models the hit lock (pl->lock=30, PR-89) but not the
+  flicker, which is a render-side effect outside the fixture
+  model.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The plan tick's "action" verb stops being a black box:
+  it is a fully-occupied slot with five doorways, its default
+  is the name-resolved effect method PR-399 named, and the
+  actor wraps it in a blink gate that matches the hit-lock
+  countdown the port already carries. It also states plainly
+  what +0x74 is NOT - the draw verb - with the negative
+  measurement that proves it.
+

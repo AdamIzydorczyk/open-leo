@@ -6778,6 +6778,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     override (actors), raw applier (interactive objects),
     step-only (props). Open: which classes those 12 tables are
     and who dispatches to them.]
+    [PR-458 MAPS THE PLAN-LEG VERB SLOT +0x74: occupied in
+    158/158 tables, FIVE call sites only - three inside
+    PR-191's L-legs (lion first at 0x4afe1, then the [mgr+0x64]
+    chain, then the authored-vector loop 0x4b380, both guarded
+    by the +0x60 predicate whose default 0x23b80 returns
+    [obj+0x2c]), two outside (0x553b0 walks a [obj+0x40]/
+    [obj+0x3c] pointer array forward, 0x29062 the same array
+    BACKWARDS, no predicate; 0x29062 has no caller and no
+    table slot). The default IS PR-399's name-resolved effect
+    verb 0x54c00 (99 tables); 20 tables take an ungated
+    variant 0x23950; the 14 actor tables take 0x50320, whose
+    gate 0x502b0 computes ceil([obj+0x102]/2) and skips the
+    verb when that half-count is ODD and [obj+0xf2] != 0 - the
+    hit-lock flicker, byte-backed against PR-92/PR-135's 30.
+    And +0x74 is NOT the draw verb: the lion's table holds no
+    slot into the render band 0x57xxxx (512 entries checked) -
+    the draw verb stays open, with the [obj+0x3c]/[obj+0x40]
+    arrays and the [obj+0x2c] predicate flag.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
