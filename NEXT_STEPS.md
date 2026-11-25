@@ -64094,3 +64094,86 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   kinds 3 and 4 are never queued - bounds where those arms can
   ever fire.
 
+
+## PR-479 - THE MESSAGE VERB +0x10 HAS FOUR IMPLEMENTATIONS IN
+## THE 158 CLASS TABLES; THE DISPATCHER 0x50d60 IS INSTALLED IN
+## EXACTLY FIVE - PR-468's FOURTEEN WAS AN OVERCOUNT
+
+```
+KIND: read
+SUBSYSTEM: class-table slot +0x10, the message verb: the value
+  census over all detected ctor tables (0x54560 in 81, 0x53770
+  in 16, 0x52bb0 in 10, 0x3d8f0 in 5, 0x50d60 in 5, 0x1e130 in
+  3, and others); the five physical words holding 0x50d60 and
+  the ten nested table views that share those words; and the
+  bodies of the alternative message verbs 0x53770 (kind 0x10
+  with a magic payload tag) and 0x52bb0 (the position/velocity
+  arms)
+ADDRESSES: 0x50d60, 0x54560, 0x53770, 0x52bb0, 0x3d8f0,
+  0x1e130, 0x55720, 0x3db50, 0x98f34, 0x9b4d4, 0x9f540,
+  0xa0624, 0xa2218, 0x9ad48, 0x9ae34, 0x9b244, 0x9b3dc,
+  0xa0070, 0xa0150, 0xa04ac, 0xa0538, 0x98f44, 0x9b4e4,
+  0x9f550, 0xa0634, 0xa2228, 0x5377b, 0x53780, 0x8138764,
+  0x52bb6, 0x52bc6, 0x54, 0x10, 0x4, 0x8, 0xc
+NAMES: message verb census, base handler, position handler,
+  magic payload tag, nested table views, pr479_msgverb.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE MAGIC TAG IS - 0x53770 accepts only kind 0x10
+    whose payload field [+8] equals 0x8138764 and then converts
+    [+c] through 0x749a0, a protocol message of some sort, with
+    no literal 0x8138764 anywhere else in the immediate census;
+    the remaining 43 tables of the 158, which hold other verbs
+    at +0x10 not in the top list; the two deep-slot installations
+    (+0x5c4 in the 0xa0070 family, +0x79c in the 0x9ad48
+    family) - those slots are sparsely populated (no value
+    appears in more than 4 tables), so there is no default to
+    name; and the relation of 0x3d8f0 and 0x1e130, the two
+    further message verbs, both unread in this journal.
+CLOSES: PR-468's OPENS "the nine deeper-slot entries of the
+  dispatcher as a verb - which verb each replaces": there are no
+  nine. There are five physical words containing 0x50d60, at
+  0x98f44, 0x9b4e4, 0x9f550, 0xa0634 and 0xa2228, every one of
+  them at offset +0x10 from its table; PR-468's fourteen came
+  from counting the same words through nested table detections
+  (0x9b4e4 is seen through 0x9b4d4+0x10 and additionally
+  through 0x9ad48+0x79c, 0x9ae34+0x6b0, 0x9b244+0x2a0,
+  0x9b3dc+0x108; 0xa0634 through 0xa0624+0x10 and
+  0xa0070+0x5c4, 0xa0150+0x4e4, 0xa04ac+0x188, 0xa0538+0xfc).
+  It also fills in the verb's family: slot +0x10 is populated in
+  all 158 detected tables, with the generic handler 0x54560 the
+  majority answer (81), the base handler 0x53770 in 16, the
+  position/velocity handler 0x52bb0 in 10, and the dispatcher
+  0x50d60 in five - and the two big alternatives are now read:
+  0x53770 takes only kind 0x10 with payload [+8] = 0x8138764,
+  and 0x52bb0 (the base, PR-255's minority form) handles kinds
+  0xf/0x10 as position adds plus the +0x54 verb, kind 0xe as a
+  write to [obj+0x30] and kind 0x21 as the [obj+0x28] latch.
+CORRECTS: PR-468's MEASURED (a) "a dword scan over all detected
+  tables gives exactly 14 holders of 0x50d60, five at slot
+  +0x10": the true figure is five holders, all five at slot
+  +0x10; the other nine were the same two words (0x9b4e4,
+  0xa0634) recounted through overlapping table detections. Its
+  conclusions about the dispatcher are unaffected.
+MEASURED: (a) THE SLOT CENSUS: 158 tables, every one with a
+  .text target at +0x10; values and counts in SUBSYSTEM. (b)
+  THE NESTING, verbatim: the word at 0x9b4e4 lies inside the
+  detected tables 0x9ad48 (512 entries), 0x9ae34 (510),
+  0x9b244 (250), 0x9b3dc (148) and 0x9b4d4 (86) - one table is
+  counted at five offsets because the detector reports nested
+  prefixes of the same data. (c) THE HANDLER ARMS: 0x52bb6
+  `cmp ebx,0xe; jb; jbe; cmp ebx,0x21` and 0x5377b
+  `cmp eax,0x10; cmp DWORD PTR [edx+8],0x8138764`. (d) THE
+  PORT. Unchanged: the port's message model covers PR-62's
+  kinds only.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. A count of fourteen had been used to argue the dispatcher
+  was installed as nine exotic verbs. It is not - it is five
+  tables, all at the message-verb slot. Fixing the count also
+  produced the complete picture of that slot: three mainstream
+  handlers, one specialised dispatcher, and a magic-tag protocol
+  handler nobody had read.
+

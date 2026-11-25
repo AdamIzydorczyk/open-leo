@@ -7184,6 +7184,24 @@ OI-128: what landing and leaving a surface does - the class verbs
     (0x4bcc6) - +0xc is a COMPARISON verb selecting targets -
     and it forwards the kind in edx, supplied at 0x3a20d by the
     data-segment global ds:0xcee2c.]
+    [PR-479 FIXES THE MESSAGE-VERB COUNT: class-table slot
+    +0x10 is filled in ALL 158 detected tables - 0x54560 in 81,
+    0x53770 in 16, 0x52bb0 in 10, 0x3d8f0 in 5, 0x50d60 in 5,
+    0x1e130 in 3. The dispatcher 0x50d60 has exactly FIVE
+    installations (words 0x98f44, 0x9b4e4, 0x9f550, 0xa0634,
+    0xa2228), every one at offset +0x10: PR-468's "14 holders,
+    5 at +0x10, 9 at deep slots" was one word recounted through
+    nested table detections (0x9b4e4 also lies inside 0x9ad48/
+    0x9ae34/0x9b244/0x9b3dc, and 0xa0634 inside 0xa0070/0xa0150/
+    0xa04ac/0xa0538) - its OPENS item about nine deep-slot
+    entries is closed as void. Two of the alternative handlers
+    are now read: 0x53770 accepts ONLY kind 0x10 whose payload
+    [+8] equals the magic tag 0x8138764 and converts [+c]
+    through 0x749a0; 0x52bb0 (the base form) treats kinds f/10
+    as position adds plus the +0x54 verb, kind e as a write to
+    [obj+0x30] and kind 21 as the [obj+0x28] latch. Open: what
+    0x8138764 is, 0x3d8f0 and 0x1e130, and the remaining 43
+    tables' verbs.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
