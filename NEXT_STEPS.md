@@ -60189,3 +60189,115 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   naming is now mechanical. The tick core 0x536f0 reaching into
   the row array and 0x523f0 is the strongest lead yet for wiring
   row conditions to motion in the port.
+
+## PR-436 - THE DEFAULT EVENT DISPATCHER 0x54560 IS NOT INERT: AN
+## EIGHT-ARM BASELINE VOCABULARY EVERY SCENE OBJECT UNDERSTANDS
+
+```
+KIND: read
+SUBSYSTEM: the dispatch tree of the default event handler 0x54560
+  (PR-435's +0x10 default for 49 of 110 class tables), its signal
+  raise and flag-merge fallback 0x53770, and the actor-class event
+  handler 0x52bb0 that owns the MOVE arm and sets the PR-434
+  self-free flag
+ADDRESSES: 0x54560, 0x54569, 0x5456c, 0x54590, 0x545a7, 0x545c6,
+  0x545d2, 0x545de, 0x545f4, 0x5460e, 0x5463a, 0x54649, 0x5465d,
+  0x54680, 0x53770, 0x53780, 0x53790, 0x537d2, 0x537db, 0x52bb0,
+  0x52bc6, 0x52be4, 0x52bef, 0x52bf9, 0x49580, 0x49589, 0x52ba2,
+  0x749a0, 0x8138764, 0x2882d, 0x2c5e1, 0x2c613, 0x2c653,
+  0x2c99a, 0x3eacf, 0x27366, 0x3674b, 0x2b721, 0x00, 0x04, 0x08,
+  0x0c, 0x28, 0x30, 0x54, 0x60, 0x6d, 0x71, 0xa9, 0xb6, 0xc2,
+  0xc6, 0x1b, 0x1e
+NAMES: event dispatch tree, baseline event vocabulary, signal
+  raise, flag merge, attach slot, delete-request flag, move arm,
+  pr435_tables.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE ACCUMULATED PAIR [obj+0xc2]/[obj+0xc6] FEEDS -
+    its readers cluster at 0x273xx and 0x367xx and its only other
+    writer is the pair-add arm; WHAT THE +0x71 WORD IS, written
+    unconditionally beside the direction set by the +0xd arm; WHICH
+    CLASSES USE THE +0xa9 ATTACH SLOT - its heaviest use region is
+    0x2b7xx, same region as the magic-tag sites; WHAT BITS 0x4 AND
+    0x8 OF [obj+0xb6] MEAN - PR-433 established only bit 0 locked
+    and bit 5 atc; WHAT THE VIRTUAL +0x54 CALLED AFTER A POSITION
+    CHANGE DOES; the 0x749a0 call with a 12-byte scratch buffer
+    inside the signal arm is unread; and event type 0x19 x11 goes
+    unhandled by this baseline - its meaning lives in the
+    overriding +0x10 bodies.
+CLOSES: PR-434's OPENS item WHAT [actor+0x28] IS: it is the
+  delete-request flag - event type 0xe sets [obj+0x28] = 1 at
+  0x52be4, and 0x52ba2 is the only reader found (PR-434's
+  conditional self-free). Part of PR-434's WHAT EACH OF THE 18
+  EVENT TYPES DOES: the baseline handles types 2, 3, 4, 5, 6, 7,
+  8, 0xd, 0x10 and 0x1b in shared code. And PR-434's type-0x1
+  question: the actor-class handler 0x52bb0 makes type 1 a MOVE -
+  it ADDS the node pair to [obj+0x00] and [obj+0x04] (PR-435's
+  position words) and calls virtual +0x54 - a relative move, while
+  the pos verb sets them absolutely.
+CORRECTS: PR-435's framing that the default dispatcher merely
+  branches: it is not inert but a shared eight-arm vocabulary every
+  class inherits; and its note "the 0x54590 arm copies the pair"
+  is made precise - type 2 reaches that arm only through the chain
+  at 0x54680. Cross-checks with PR-224 and PR-225: the 0x53770
+  signal raise and the six producer sites of the 0x8138764 tag
+  re-derive identically from the code, and 0x49580 is now decoded
+  as an OR merge of three dwords into the target flag vector.
+MEASURED: (a) THE TREE. 0x54560: eax = object (ebx), edx = event
+  node (ecx); eax = [node+0x04], then cmp/jb chains at 0x5456c
+  (6), 0x54577 (0xd), 0x54582 (0x1b), 0x54649 (8), 0x5465d (3),
+  0x54680 (2). Arms: type 2 stores the node pair into
+  [obj+0xc2]/[obj+0xc6] at 0x54590; types 5 and 6 add the pair
+  there at 0x545a7; type 3 ORs 0x4 into [obj+0xb6] at 0x545c6;
+  type 4 ORs 0x8 at 0x545d2; type 0xd at 0x545de writes
+  [obj+0x6d] = node word 1 when nonzero (PR-433's direction byte)
+  and [obj+0x71] = node word 2 unconditionally; types 7 and 8
+  route at 0x54649 - 8 zeroes both words at 0x545f4, 7 takes the
+  0x53770 fallback; type 0x1b at 0x5460e detaches [obj+0xa9]
+  through its slot +0x04, stores node word 1 at [obj+0xa9] and,
+  if nonzero, calls the new object's slot +0x00 with edx = this
+  object - attach with construction; everything else
+  (0, 5, 6, 9-0x1a, 0x1c-0x20) falls through to 0x53770.
+  (pr435_tables)
+  (b) THE SIGNAL RAISE. 0x53770: only type 0x10 with
+  [node+0x08] = 0x8138764 is handled: the payload byte
+  [node+0x0c] is a signal index (clamped to 0..11 by a 0x749a0
+  call), then OR-s 1 << (idx % 32) into [obj+0x60 + 4*(idx >> 5)]
+  at 0x537cb and calls 0x49580 with eax = [obj+0x60] - the exact
+  PR-224 bit raiser. 0x49580: for eax = dst, edx = src it
+  computes dst[i] |= src[i] for i = 0..2 (loop 0x49589-0x4959a) -
+  a flag merge into the actor's own flag vector. Any other type
+  delegates to 0x52bb0 at 0x537db. (pr435_tables)
+  (c) THE ACTOR HANDLER. 0x52bb0 (installed as +0x10 in 6 class
+  tables; 9 xrefs, all table slots): branches on [node+0x04] -
+  type 1 at 0x52bc6: [obj+0x00] += node word 1, [obj+0x04] +=
+  node word 2, virtual call table +0x54; type 0xe at 0x52be4:
+  [obj+0x28] = 1; type 0x10 at 0x52bef: [obj+0x30] = node word
+  1; other types return. The magic 0x8138764 appears at exactly
+  7 sites: the 6 producers PR-225 listed (0x2882d, 0x2c5e1,
+  0x2c613, 0x2c653, 0x2c99a, 0x3eacf) plus this check.
+  (pr435_tables)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr435_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr435_tables.txt, extended this pass with full
+  disassemblies of 0x54560 (all arms), 0x53770, 0x52bb0 and
+  0x49580 taken from their entry addresses.
+```
+
+- WHY. The engine's event model is now legible end to end: one
+  shared baseline vocabulary every object understands, overridden
+  per class through the same slot. For the port that means the
+  event enum has a common core - store/add a pair, set two
+  control bits, clear a pair, set direction, attach, raise a
+  signal, move relatively, request deletion - and per-class arms
+  on top. Two direct port hooks follow: the signal raise ends in
+  a row re-resolution through the 0x49580 merge into [obj+0x60],
+  exactly the flag vector PR-435's tick core consults, so the
+  port's signal handling and row selection are one pipeline; and
+  the MOVE arm shows authored motion is DELTA-based through the
+  same position words the pos verb sets, which is what the port's
+  step loop must consume.

@@ -6384,6 +6384,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     two words. Closes PR-434's virtual +0x10/+0x14 items and the
     PR-432 pos meaning; class-naming each table via its ctor is
     now mechanical work.]
+    [PR-436 READS THE BASELINE EVENT VOCABULARY. Dispatcher
+    0x54560 tree: 2 stores the pair at [obj+0xc2]/[+0xc6]; 5/6
+    add it; 3/4 OR 0x4/0x8 into [obj+0xb6]; 8 zeroes the pair;
+    0xd sets direction [obj+0x6d] (if nonzero) plus word [obj+
+    0x71]; 0x1b attach: detach [obj+0xa9] via its slot +0x04,
+    store node word 1, call its slot +0x00(edx=obj); else fall
+    to 0x53770 = the PR-224 signal raiser (type 0x10 + magic
+    0x8138764, bit into [obj+0x60]) then 0x49580 = OR-merge of 3
+    dwords into that vector - signals fold into the row-flag
+    state. Fallback else 0x52bb0 (actor handler, 6 tables): type
+    1 MOVE adds the node pair to [obj+0x00]/[+0x04] + virtual
+    +0x54 (authored motion is DELTA-based); 0xe sets
+    [obj+0x28]=1 - closes PR-434's delete-flag item; 0x10 sets
+    [obj+0x30]. Open: +0xc2/+0xc6 readers, +0x71, +0xa9 classes,
+    +0xb6 bits 4/8, virtual +0x54, type 0x19.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
