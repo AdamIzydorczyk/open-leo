@@ -59287,3 +59287,95 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   two-way vocabulary match is also the second clean
   coverage result after PR-425: authored action names are a subset
   of compiled ones, with 9 spare built-ins as slack.
+
+## PR-427 - A STATE'S BODY LINES ARE A COMMAND LANGUAGE: THE ENGINE
+## COMPILES THEM AT LOAD INTO 12-BYTE INTERPRETER ITEMS, WITH A
+## 34-VERB VOCABULARY BLOCK AND THE ERROR STRING `Bledna komenda`
+
+```
+KIND: read
+SUBSYSTEM: the state-body command pipeline found by following PR-426's
+  dispatcher backwards - FUN_00051660 calling the state-body compiler
+  FUN_00045df0, its grammar and verb keyword block at 0x91844, the
+  12-byte interpreter item with method table 0xa11e0, and the corpus
+  counts of every verb
+ADDRESSES: 0x516d7, 0x45df0, 0x46b04, 0x46b09, 0x46b17, 0x46b2f,
+  0x47d60, 0x48000, 0x57d30, 0x57a00, 0x45770, 0x749a0, 0x91844,
+  0x919ec, 0x919c7, 0x919d1, 0x961fc, 0xa11e0, 0x04, 0x0c, 0x14,
+  0x436c, 0x457e0, 0x45800, 0x45920
+NAMES: state body language, command verbs, Bledna komenda, TEventSet,
+  interpreter item, verb vocabulary, GEN, MOVE, end_level, lock,
+  goto, smp, pr427_verbs.txt, OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT EACH VERB DOES AT RUN TIME - the grammar shows arity
+    (`smp %i`, `smpauto %i %i %i %i`) but no verb body has been read;
+    HOW THE F/T/G PARAMETER LINES AND FRAME MARKERS I/IC/F/FC/M
+    ENTER THIS GRAMMAR - the block's frames entries sit right before
+    the error string and the corpus uses `F=100,0` style lines that
+    this comma grammar does not literally match; WHAT THE 12-BYTE
+    INTERPRETER ITEM HOLDS (the fields at +0x04/-0x8 of the table
+    0xa11e0); WHO CALLS THE OUTER STATE LOADER chain above
+    FUN_00051660 (single-step xrefs only followed to 0x51611); and
+    what `TEventSet::match` as a class name implies about which
+    record is the `esi` being passed to the interpreter.
+CLOSES: PR-426's OPENS item WHO CALLS THE LINE HANDLER - the
+  interpreter 0x47d60 is created and driven by the state-body
+  compiler region 0x45df0-0x46b2f, itself called only from 0x516d7
+  inside FUN_00051660 (a caller at 0x51611, near the state header
+  parser of PR-410's region).
+CORRECTS: nothing earlier; PR-426's "text line" for the dispatcher is
+  made precise: the input is a compiled state body, split on commas
+  by the grammar ` , %[^,| \r\n\t]`, and each command becomes one
+  12-byte interpreter item before execution.
+MEASURED: (a) THE PIPELINE. FUN_00051660 (one caller, 0x51611,
+  writes fields +0x08/+0x0c/+0x14 of a record at esi first) calls
+  0x45df0; 0x45df0 runs the token matcher 0x57d30 with grammar
+  0x91844 and token table pointer 0x961fc, and per matched command
+  allocates 0xc bytes (0x46b09 `mov ebx,0xc` through the 0x749a0
+  item helper), zeroes [item+0xc], installs table 0xa11e0, and runs
+  0x47d60 with the item and the record; inside 0x47d60 the captured
+  command name goes to the AC_ dispatcher 0x48000 (PR-426).
+  (pr427_verbs)
+  (b) THE VOCABULARY. The string block 0x91844..0x919eb, 55
+  entries: comma-splitting grammars with arities plus the verbs rev,
+  zero_v, zero, zero_t, vol_music, smp, smp2, smp3, smpauto,
+  smpauto2, smpprior, vol, smp_loop, smp_unloop, smp_stop, atc_on,
+  atc_off, lock, lock2, unlock, unlock2, ground_on, ground_off,
+  chdir, ldir, rdir, pos, goto, gotorel, goto_rel, MOVE, GEN, Wait,
+  end_level, frame markers I, IC, F, FC, M and ` %i`/` %d` operands;
+  terminated by `Bledna komenda %s w pliku %s.` and
+  `TEventSet::match :Bledna operacja` - the engine naming its own
+  state/event-set class.
+  (c) THE CORPUS. Verb occurrences in the 777 unpacked .MOV state
+  bodies: GEN x770, MOVE x32, lock x27, end_level x26, goto x25,
+  smp_loop x16, smpprior x6, goto_rel x6, smp x5, then singletons
+  (unlock, unlock2, smpauto, smp3, lock2, rdir, pos, zero, smp_stop,
+  gotorel); zero_v, zero_t and Wait do not occur in the unpacked
+  corpus. The parameter lines F=/T=/G= appear x1379-1382.
+  (d) THE ITEM. 0xa11e0 holds four code addresses 0x46c70, 0x457e0,
+  0x45800, 0x45920 - the interpreter item's methods.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr427_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr427_verbs.txt: the 55-entry grammar and verb block
+  dumped from 0x91844..0x919eb, and the per-verb occurrence counts
+  over the 777 unpacked .MOV files. FUN_00045df0, FUN_00047d60,
+  FUN_00051660 and 0xa11e0 were decoded from entry addresses or read
+  as bytes from build/leo/leo.img.
+```
+
+- WHY. This is the missing layer under PR-406..PR-412's row and
+  transition model: an authored state is not only frames plus
+  transition lines - its body carries a compiled command program,
+  and the engine tokenises it once at load into fixed 12-byte items.
+  The vocabulary is small enough to port wholesale (34 verbs, and
+  the corpus uses ~20 of them), and the two error strings hand the
+  class a name, TEventSet, which future rows can anchor. The
+  frequency census orders the work: GEN, MOVE, lock, end_level and
+  goto are the verbs a faithful port needs; zero_v/zero_t/Wait are
+  engine-only slack, exactly like the 9 unused built-ins of
+  PR-426.

@@ -6234,6 +6234,22 @@ OI-128: what landing and leaving a surface does - the class verbs
     AC_EV_MAX, AC_UP_DUP, AC_BLOK_Y) are never authored. So a
     transition naming AC_BREAK_NEXT resolves to engine code, not the
     object's state list - the other half of PR-407/412's model.]
+    [PR-427 FINDS THE STATE-BODY COMMAND LANGUAGE. FUN_00051660 ->
+    FUN_00045df0 compiles an authored state body with the token
+    matcher 0x57d30 and grammar block 0x91844: comma-split grammars
+    ` , %[^,| \r\n\t]` with arities, and 34 verbs - rev, zero_v,
+    zero, zero_t, vol_music, smp/smp2/smp3/smpauto/smpauto2/
+    smpprior, vol, smp_loop/smp_unloop/smp_stop, atc_on/atc_off,
+    lock/lock2/unlock/unlock2, ground_on/ground_off, chdir, ldir,
+    rdir, pos, goto/gotorel/goto_rel, MOVE, GEN, Wait, end_level -
+    plus frame markers I/IC/F/FC/M. Each command becomes a 12-byte
+    interpreter item with table 0xa11e0 (methods 0x46c70/0x457e0/
+    0x45800/0x45920), executed by 0x47d60, whose names fall through
+    to the AC_ dispatcher 0x48000. Error strings: `Bledna komenda %s
+    w pliku %s.` and `TEventSet::match :Bledna operacja` - the
+    engine's own class name. CORPUS: GEN x770, MOVE x32, lock x27,
+    end_level x26, goto x25, smp_loop x16; zero_v/zero_t/Wait never
+    authored. Closes PR-426's line-source item.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
