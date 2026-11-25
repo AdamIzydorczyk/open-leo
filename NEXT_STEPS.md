@@ -57655,3 +57655,137 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   unmodelled. That is worth recording before any further row-cursor work,
   because the mirror branch of 0x52360 counts down from exactly this
   value.
+
+## PR-412 - THE ROW-WALK DIRECTION LAW: THE SEQ_REV FLAGS ARE GATED BY A
+## vTABLE PREDICATE AND BY THE OBJECT'S DIRECTION FIELD, AND THE THIRD
+## OPERAND IS THE JUST-ENTERED-STATE SENTINEL
+
+```
+KIND: read
+SUBSYSTEM: the row cursor's direction - the three inputs the row-advance
+  0x520c0 XORs before it decides whether the row index counts up or down,
+  the container's vtable predicate that gates two of them, and the wrap
+  rules at both ends of the row list
+ADDRESSES: 0x520c0, 0x52140, 0x5214b, 0x52150, 0x52153, 0x52156, 0x52158,
+  0x5215e, 0x52165, 0x52167, 0x52169, 0x5216c, 0x5216f, 0x52171, 0x52177,
+  0x5217e, 0x52180, 0x52182, 0x52184, 0x5218b, 0x52193, 0x52195, 0x52198,
+  0x5219a, 0x521a1, 0x521a5, 0x521a8, 0x521a9, 0x521ae, 0x521b6, 0x521b9,
+  0x521c1, 0x521c5, 0x521d4, 0x521da, 0x52360, 0x52364, 0x5236b, 0x52375,
+  0x52377, 0x52381, 0x52383, 0x52385, 0x5238b, 0x52390, 0x52393, 0x52397,
+  0x5239e, 0x523a0, 0x523a6, 0x523a8, 0x523ad, 0x523af, 0x523b6, 0x523b8,
+  0x523ba, 0x523bc, 0x523cb, 0x523ce, 0x53883, 0x545eb, 0x549f0, 0x54b9a,
+  0x54ba5, 0x730d3, 0x730d6, 0x730ee, 0x730f1, 0x73438, 0x7343b, 0x73450,
+  0x73453, 0xa25d4, 0x97c9c, 0x4fef0, 0x52360, 0x12, 0x26, 0x70, 0x71,
+  0x99, 0xa1, 0x04, 0x2e, 0x10, 0x20, 0x08, 0x04, 0x0a
+NAMES: row direction law, gated flag, segment boundary predicate,
+  direction field, just-entered sentinel, cursor wrap, reverse walk,
+  OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes. The port already
+  counts this behaviour as a known gap (ll_play.c:763-775); this row only
+  names what the two guards are.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH vTABLE THE +0x70 SLOT BELONGS TO IN EACH CLASS - PR-411
+  showed the same slot being called on the container of a scene object,
+  where it answers -1 or +1 against the two ends of that object's
+  segment, but the class tables of the two objects that call it here were
+  not identified, so the predicate is named by its use and not by a class;
+  WHAT [obj+0x71] IS CALLED - it is written 1 (0x54ba5, 0x53883) and -1
+  (0x54b9a) and by 0x545eb, and read at 0x52169, 0x523a8 and 0x5337b;
+  the 0x549f0 writes sit in the same block that sets [obj+0xba] and
+  [obj+0xbe] to 10 and -10, which is the walk direction of PR-410, so it
+  is a facing flag, but no name is established; WHO WRITES -1 TO
+  [obj+0x99] - 0x52377 and 0x53883 both write 1, and the row-advance and
+  the entry verb both test for -1, so the third operand of the law has no
+  known producer; WHY THE STATE-ENTRY COPY OF THE TEST USES `test
+  eax,eax / jge` WHILE THE ROW-ADVANCE USES `cmp eax,-1 / jne` - the two
+  sites disagree about what the same predicate must return for an authored
+  flag to count, which may simply be a bug in the original; and whether
+  the segment of PR-411 and this predicate are the same table entry seen
+  twice, since 0x730d3 and 0x52150 both read a boundary and both call
+  vtable +0x70 within one instruction of it.
+CLOSES: PR-410's OPENS item WHAT THE OTHER BITS DO, in the part about
+  the bits tested at 0x52158 and 0x52171: they are GATED, not read bare,
+  and this row names both gates. It also closes PR-407's and PR-410's
+  account of what selects the walk direction: those rows described the
+  switch as one XOR of two authored flags, while PR-101 had already read
+  the three-operand form - the correction here is that two of the
+  operands are the segment-boundary predicate and the object's own
+  direction flag, both of which PR-411 and PR-410 had found separately
+  without connecting them.
+CORRECTS: PR-409 and PR-410, which both wrote that the two SEQ_REV bits
+  "select" the mirrored row order. They do not select it alone: each is
+  AND-ed with a runtime test before the XOR, so the authored flag is a
+  permission, not a switch. PR-410's sentence "the only bit tests on
+  these three bytes are 0x10 and 0x20 at 0x52158/0x52171/0x52385/
+  0x523a0" is right as a list and misleading as a description. Nothing in
+  PR-410 or PR-411 about the flag VALUES or the segment TABLE changes.
+MEASURED: (a) THE EXPRESSION. In the row-advance 0x520c0 (esi = the state
+  record) 0x5214b-0x52193 computes
+      A = (call [[obj+0x26] vtable +0x70]) == -1  AND  bit 0x10 of
+                                                            [rec+0x12]
+      B = ([obj+0x71] == -1)                      AND  bit 0x20 of
+                                                            [rec+0x12]
+      C = ([obj+0x99] == -1)
+      dir = (A XOR B) XOR C
+  where obj = [rec+0x26] is read at 0x5214b and 0x52167 by
+  `mov eax,[esi+0x26]` - the same field PR-411 used at 0x73073. The call
+  is virtual: [obj+0x26]+8 is that object's class table, +0x70 is its
+  29th entry.
+  (b) THE PREDICATE IS PR-411's SEGMENT TEST. 0x730d3 asks the SAME slot
+  twice, once after `edx = [obj+0x32] + 0xa; cmp edx, [[obj+0x26]]` and
+  once after `edx = [obj+0x36] - 0xa; cmp edx, [[obj+0x26]]`, comparing
+  the answers with -1 and +1; 0x73438-0x73459 is the same pair. So the
+  +0x70 verb answers whether a coordinate is near one end of the
+  object's segment, in ten-unit steps, with -1 for false and 1 for true -
+  which is why the row-advance can test it with `cmp eax,-1`: that is
+  "NOT at a boundary".
+  (c) THE CURSOR MOVEMENT. 0x52195-0x521d7: with `eax = [rec+0x2e] + 8`
+  so `[eax+8]` is the row count (PR-407's `lea eax,[esi+0x2e];
+  mov eax,[eax+8]`), if dir != 0: when the cursor [rec+0x04] is 0 set
+  the object's flag `[ebp+0] |= 0x8` and move the cursor to count-1, else
+  move it to cursor-1. If dir == 0: when the cursor equals count-1 set
+  `[ebp+0] |= 0x4`, reset the cursor to 0 and RETURN from the verb; else
+  move it to cursor+1. Both ends wrap, and which end sets which flag bit
+  depends on dir.
+  (d) THE STATE-ENTRY COPY, AND ITS DIFFERENCE. The entry verb 0x52360
+  sets [obj+0xa1] = 0 (0x5236b) and [obj+0x99] = 1 (0x52377), returns
+  with the cursor untouched when its argument edx < 0 (0x52381 - the
+  authored absent or `x` argument, PR-107), and then enables bit 0x10's
+  operand only when the same virtual call returns a NEGATIVE value
+  (`test eax,eax; jge` at 0x52393) and bit 0x20's only when [obj+0x71]
+  is >= 0 (0x523ad) - the OPPOSITE sense from the row-advance, which
+  requires -1. It then XORs the two operands (0x523b8) and writes
+  count - edx - 1 if non-zero (0x523bc-0x523c5) else edx (0x523cb).
+  (e) THE SENTINEL. [obj+0x99] is written 1 at state entry by 0x52377 and
+  again at 0x53883, and read as a plain value by the mode dispatcher's
+  family; the row machinery only ever compares it with -1, so C is a
+  "this state has been running for at least one row" flag whose setter is
+  not found.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr412_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical). Every
+  instruction quoted was decoded from its own aligned address with
+  `python3 tools/re/leodb.py dis` (0x520c0, 0x52140 and 0x52360 were each
+  re-decoded from their entry, not from a sweep), and the port's prior
+  wording is quoted from ported/ll_play.c:763-775.
+```
+
+- WHY. PR-101 already wrote this expression down - the port's own
+  comment at ll_play.c:763-775 names the two guards and the
+  `[obj+0x99] == -1` third operand and records the mirror as unmodelled.
+  What this row adds is what the operands ARE. The first is PR-411's
+  segment predicate: the same vtable slot, called one instruction after a
+  `+0xa` / `-0xa` compare against the two ends of the object's interval at
+  0x730d3 and 0x73438, answers -1 or +1. The second is the walk
+  direction itself: [obj+0x71] is only ever set to 1 or -1, in the block
+  that also sets the horizontal and vertical speed accumulators. So the
+  authored SEQ_REV flag means "reverse at the end of my segment, when I am
+  facing back along it", not "walk backwards", and the port - which
+  counts these tokens as known gaps and walks forward - has a named
+  condition set it could now reproduce. The opposite test sense at state
+  entry (jge there, cmp -1 in the row path) is recorded as found, not as
+  explained; it is either a bug in the original or a hint that the entry
+  call answers something else, and the OPENS line says so.

@@ -5983,6 +5983,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x523f0 shows the call-in `mov esi,[eax+0x44]; call [esi+0x08];
     call [esi+0x0c]`. THE PORT WALKS ITS LADDER FORWARD - this is a
     checkable difference.]
+    [PR-412 NAMES THE DIRECTION LAW AND ITS TWO GUARDS (PR-101 had read
+    the expression; ported/ll_play.c:763-775 records it as unmodelled).
+    The row-advance 0x520c0 computes, at 0x5214b-0x52193, `dir =
+    ([[obj+0x26] vtable +0x70]() == -1 AND control bit 0x10) XOR
+    ([obj+0x71] == -1 AND control bit 0x20) XOR ([obj+0x99] == -1)`, and
+    then 0x5219a-0x521d7: dir != 0 walks the cursor DOWN from count-1
+    with `[obj flag] |= 0x8` at the bottom, dir == 0 walks it UP and sets
+    `|= 0x4` and returns from the verb at the top. THE FIRST GUARD IS THE
+    SEGMENT PREDICATE OF PR-411 - the same vtable slot is called one
+    instruction after `+0xa`/`-0xa` against the two ends of the interval
+    at 0x730d3 and 0x73438, answering -1 or +1 - so SEQ_REV_X means
+    "reverse at my segment end", not "walk backwards". THE SECOND GUARD IS
+    THE OBJECT'S OWN DIRECTION: [obj+0x71] is written only 1 (0x54ba5)
+    and -1 (0x54b9a), in the same block of 0x549f0 that sets the
+    horizontal and vertical speed accumulators to 10 and -10. NOTE THE
+    TWO SITES DISAGREE: at state entry 0x523a0/0x523ad enables the same
+    operands on `>= 0`, in the row-advance on `== -1`; and [obj+0x99] is
+    written 1 by 0x52377 and 0x53883 but only ever tested against -1, so
+    the third operand has no known producer.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
