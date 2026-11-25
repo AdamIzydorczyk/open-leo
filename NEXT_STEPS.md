@@ -66024,3 +66024,76 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   now traces to the 0x98278 stub class rather than to a
   mystery data template.
 
+
+## PR-501 - THE SEVEN STILL-UNNAMED CLASS TABLES GET WORD-PAIR
+## NAMES: THE KADMAR2 LIGHT-CLASS QUARTET, THE KLINA WEDGE,
+## THE TUNTRAS TRACK AND THE SOUNDSOURCE CLASS
+
+```
+KIND: read
+SUBSYSTEM: closes PR-500's OPENS "word-pair names for the
+  six remaining new tables". Re-running the PR-493 arm-
+  segmentation (split cluster bodies at the 0x76a69 name-
+  compare calls, capture `mov edx,<name-str>` before each,
+  collect table stores in the arm AND one ctor level deeper)
+  over the 13 cluster heads plus the installer families of
+  the PR-499/500 new tables attributes 7 of the 8 (full map
+  in pr501_attr.txt, string addresses from leodb `str`):
+  the KADMAR2 cluster head 0x2ba90 (PR-103 cluster map)
+  owns a LIGHT-CLASS QUARTET the 158-census missed:
+  SWIATLO 0x9aa60 (name str 0x90ad0), LEW_SWT 0x9ab18
+  (0x90ad8, the hero-attached light), OBJ_SWT 0x9abd4
+  (0x90ae0, object-mounted light) and PODMUCH 0x9b324
+  (0x90b2e) - all installed by the paired ctor families
+  0x2ba90/0x2ca80; 0x9d6e0 = KLINA (0x910c9) under KADMAR/
+  KARA 0x34c20 (its per-level twin 0x35200 installs it for
+  TLewKara); 0x9f7b4 = TUNTRAS (0x9130c) under TUNGA 0x3a250
+  - the TUNGA-side sibling of TRASA/KTRASA; 0xa0780 = the
+  SOUNDSOURCE class (0x9129f) - its name lives in the
+  IGLO/SOPEL cluster 0x383c0's arm, which INSTANTIATES the
+  sound-source objects built by 0x3f560/0x3f5a0, confirming
+  the SOUNDSOURCE->0x3f560 route already in the journal.
+  Only 0xa0cb4 stays unattributed: its sole installer
+  0x45620 is the print-verb family (PR-497's 0x456b0/
+  0x456e0 neighbors) - a class-table-like block in the
+  root-verb region, not a level class.
+ADDRESSES: 0x9aa60, 0x9ab18, 0x9abd4, 0x9b324, 0x2ba90,
+  0x2ca80, 0x90ad0, 0x90ad8, 0x90ae0, 0x90b2e, 0x9d6e0,
+  0x910c9, 0x34c20, 0x35200, 0x9f7b4, 0x9130c, 0x3a250,
+  0xa0780, 0x9129f, 0x383c0, 0x3f560, 0x3f5a0, 0xa0cb4,
+  0x45620, 0x76a69, docs/OPEN_ITEMS.md
+NAMES: light-class quartet, word-pair attribution,
+  KADMAR2 cluster, wedge class, track class, sound source
+  class, pr501_attr.py, pr501_attr.txt, pr501_names.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE LIGHT CLASSES DO (SWIATLO/LEW_SWT/OBJ_SWT
+    = a light-system in KADMAR2 the port has never modeled -
+    check [obj+0x60]-style maps or draw blending); whether
+    the 158-census missing the whole quartet means KADMAR2
+    lights are absent from the port's class tables; the
+    0xa0cb4 block's role in the root-verb region; and the
+    PR-500 carry-overs (pair-holder semantics, two-arms per
+    cluster question).
+CLOSES: PR-500's OPENS "WORD-PAIR NAMES for the six
+  remaining new tables": 7 of 8 named with string-address
+  evidence; the 8th shown not to be a level class. The
+  PR-499 new-tables line of work is now fully attributed.
+CORRECTS: PR-500's "Six new tables still lack direct
+  names": the count was 8 unnamed including 0xa0cb4; 7 now
+  have direct word-pair names and 0xa0cb4 is not a level
+  class at all.
+MEASURED: (a) pr501_attr.py/txt: arm-segmented attribution
+  with per-table (name, cluster) sets. (b) str-table string
+  addresses for every name (verbatim in pr501_attr.txt).
+  (c) Negative: no arm yields 0xa0cb4; sole store site
+  0x456f4 inside 0x45620. (d) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. KADMAR2 ships a four-class light system that no
+  port-side class table models - that is a concrete feature
+  gap for the level port - and the census work is now
+  closed: every detected class table has a name.
+

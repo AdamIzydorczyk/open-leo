@@ -7566,6 +7566,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x2ba90/0x2ca80, 0x34c20/0x35200, 0x3a250/0x3a4a0,
     0x3f560/0x3f5a0, 0x45620) - word-pair reads open;
     pr500_join.txt, pr500_pairs.txt.]
+    [PR-501 NAMES THE REST OF THE NEW TABLES by re-running
+    the PR-493 arm segmentation over all cluster heads +
+    installer families (pr501_attr.py/txt): KADMAR2's head
+    0x2ba90 owns a LIGHT-CLASS QUARTET absent from the
+    158-census - SWIATLO 0x9aa60 (str 0x90ad0), LEW_SWT
+    0x9ab18 (0x90ad8), OBJ_SWT 0x9abd4 (0x90ae0), PODMUCH
+    0x9b324 (0x90b2e), all via ctor pair 0x2ba90/0x2ca80;
+    0x9d6e0 = KLINA (0x910c9) under KARA 0x34c20/0x35200;
+    0x9f7b4 = TUNTRAS (0x9130c) under TUNGA 0x3a250;
+    0xa0780 = SOUNDSOURCE (0x9129f), named from the IGLO/
+    SOPEL arm 0x383c0 but built by 0x3f560/0x3f5a0. Only
+    0xa0cb4 stays unattributed - sole installer 0x45620 is
+    the print-verb family, not a level class. Census work
+    CLOSED: every detected table is named. NEW FEATURE GAP:
+    a 4-class KADMAR2 light system no port model has.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
