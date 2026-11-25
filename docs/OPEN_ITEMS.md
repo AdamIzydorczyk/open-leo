@@ -6431,6 +6431,19 @@ OI-128: what landing and leaving a surface does - the class verbs
     ah 0x40 CHECK_ANI, scene query via ds:[0xcef40]/0x4b600);
     +0xa4 0x239c0 x95. Open: [obj+0xa5] bit map, [obj+0xba],
     +0xb6 bits 2/3, bodies +0xb0/+0x98.]
+    [PR-439 READS THE RENDER TAIL. Table +0x28 default 0x52a90
+    x107: sprite via +0x30 (default 0x23a00 = [obj+0x54]); skip
+    if [obj+0x20] null or sprite = sentinel ds:[0xcf0e4]; else
+    via [obj+0x20]: virtual +0x20 (default 0x52a50: world via
+    ds:[0xcef40]+0x394, two virtual +0x68, first-dword
+    difference), negate + 0x17c clamped 0..0xff, then +0x24
+    abs/cap term, then sprite virtual +0x28 = draw. +0x98
+    default 0x52a00 = world-position query (helper 0x52d30 x2);
+    +0xb0 default 0x544f0 = position copy that, under the
+    [obj+0xb6] bit-1 or +0xbc gate, resolves the SUPPORT object
+    via virtual +0x48 - closes PR-433's +0x48 item and PR-438's
+    +0x98/+0xb0 item. [obj+0x89] = screen pair (getter 0x23a10).
+    Open: [obj+0x20], ds:[0xcef40]+0x394, +0x68, 0x52d30, +0x34.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

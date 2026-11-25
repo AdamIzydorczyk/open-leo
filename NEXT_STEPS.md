@@ -60506,3 +60506,92 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   of PR-437 are one pipeline, and the row +0x12 control bits gate
   which contributors run - PR-410's authored control= table
   operating exactly as the port assumed.
+
+## PR-439 - THE RENDER TAIL OF THE TICK: SPRITE GETTER, DEPTH
+## DIFFERENCE, BRIGHTNESS CLAMP, DRAW - AND THE SURFACE RESOLVER
+
+```
+KIND: read
+SUBSYSTEM: the last virtual of the PR-437 tick core (table +0x28,
+  default 0x52a90 in 107 of 110 tables) and the two slot bodies
+  PR-438 left unread: the world-position query 0x52a00 / depth
+  difference 0x52a50 behind +0x98, and the surface-resolving
+  position propagator 0x544f0 behind +0xb0
+ADDRESSES: 0x52a90, 0x52a00, 0x52a50, 0x23a00, 0x544f0, 0x52d30,
+  0x41b90, 0xcf0e4, 0xcef40, 0x89, 0x94, 0x20, 0x24, 0x28, 0x30,
+  0x34, 0x48, 0x54, 0x68, 0x98, 0xb0, 0xb6, 0xbc, 0x17c, 0xff
+NAMES: render chain, sprite field, depth difference, brightness
+  clamp, surface resolver, null sprite sentinel, pr439_draw.txt,
+  OI-016, OI-091, OI-111
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT [obj+0x20] IS - the second-object field whose
+    presence gates the shading path in 0x52a90 and whose slot is
+    itself a depth virtual; WHAT THE SCENE GLOBAL ds:[0xcef40]
+    FIELD +0x394 IS (the world or camera the position and depth
+    queries go through) and its null sentinel ds:[0xcf0e4]; WHAT
+    THE VIRTUAL +0x68 RETURNS per class (a world position record
+    whose first dword is compared); the helper 0x52d30 called
+    twice by 0x52a00; WHAT VIRTUAL +0x34 DOES (paired with the
+    sprite getter everywhere); the clamp base 0x17c - which
+    brightness or depth value it centers on; and the [obj+0x89]
+    copy target's consumers.
+CLOSES: PR-437's OPENS item WHAT THE +0x28 VIRTUAL DOES: it is
+  the render tail - sprite, depth, shade, draw. PR-438's OPENS
+  item THE BODIES OF +0x98 AND +0xb0: +0x98 defaults to 0x52a00,
+  a world-position query through the scene global, and +0xb0 to
+  0x544f0, a position copy that falls through to the surface
+  resolver +0x48. Part of PR-433's OPENS item the +0x48 virtual:
+  0x544f0 calls it and uses the result's world depth, so +0x48
+  resolves the surface or support object under the actor.
+CORRECTS: nothing earlier is contradicted; PR-438's reading of
+  0x55070 gains the target meaning: the copy target [obj+0x89]
+  also appears as the standalone getter 0x23a10 (lea eax,[eax+
+  0x89]; ret), so it is a stored screen-position pair, and the
+  sprite field is confirmed at [obj+0x54] with the getter 0x23a00
+  in 95 tables.
+MEASURED: (a) THE RENDER CHAIN. 0x52a90: virtual [table+0x30] ->
+  sprite (default 0x23a00: return [obj+0x54]); if [obj+0x20] is
+  null or the sprite equals the sentinel ds:[0xcf0e4], return;
+  else through [obj+0x20]'s table: virtual +0x20 (default
+  0x52a50: world depth via ds:[0xcef40]+0x394, two virtual +0x68
+  calls, first dword minus second dword), negate, add 0x17c,
+  clamp to 0..0xff; virtual +0x24 on the second object (default
+  0x52a50), take the absolute value or cap at 0xff; then virtual
+  +0x28 on the sprite with edx = that term. (pr439_draw)
+  (b) THE WORLD QUERY. 0x52a00: eax = ds:[0xcef40], field +0x394
+  (defaulted world object); call 0x52d30 twice - once with the
+  world, once with a stack buffer - and hand the pair to the
+  caller through edx. 0x52a50: virtual +0x68 against the same
+  world field and against this object, subtract the first dwords
+  - a depth difference. (pr439_draw)
+  (c) THE SURFACE PROPAGATOR. 0x544f0 (default +0xb0, 78
+  tables): copies [obj+0x00] and [obj+0x04] to the target pair
+  like 0x541f0; when [obj+0xb6] bit 1 is set, or the held-surface
+  verb [table+0xbc] returns nonzero, calls virtual [table+0x48]
+  and continues with its result - resolving the support object
+  instead of the actor itself. (pr439_draw)
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile
+  or .github - so the light profile of section 2 rule 4 applies.
+  Evidence: /tmp/opencode/pr439_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical);
+  /tmp/opencode/pr439_draw.txt: the +0x20/+0x24/+0x28/+0x30/
+  +0x34/+0x98/+0xb0 slot census over the 110 tables and full
+  disassemblies of 0x52a90, 0x52a00, 0x52a50, 0x23a00 and
+  0x544f0 from their entry addresses; and /tmp/opencode/pr435_
+  tables.txt, whose 0x23a00 disassembly shows the adjacent getter
+  0x23a10.
+```
+
+- WHY. The tick's tail is one shared render chain, so the port's
+  step loop has a single, well-defined draw seam: get the sprite,
+  compute a clamped brightness term from the depth difference to
+  the world, draw through the sprite's own slot. The engine-side
+  field map for rendering is now concrete - [obj+0x54] sprite,
+  [obj+0x89] screen pair, [obj+0x20] second object for shading -
+  and the +0xbc surface gate plus the +0x48 resolver show the
+  same held-surface logic (PR-132's port notes) feeding BOTH the
+  position propagation and the render depth, which is exactly the
+  coupling the port's ceiling-walk work has to reproduce.
