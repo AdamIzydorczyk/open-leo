@@ -7101,6 +7101,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     +0x33). This also reopens PR-473's 0x8ca: as a small tag id
     beside a 0x32 size it looks like an element-type tag, not a
     bound.]
+    [PR-475 READS THE ELEMENT TYPE ITSELF. 0x21880 is the
+    element-VECTOR ctor (generic object ctor 0x228d0 with tag
+    edx=0xa, vector method table 0x97654 at [v+0x10], word
+    count at [v+0x14]); the factory 0x43fb0 then allocates the
+    0x1e-byte element (ctor 0x43df0), installs 0xa0bd0 at
+    [element+0x16] and push_backs it through [v+0x0]/[v+0x8]
+    with the growth helper 0x22780. The vector's verb +0x28 is
+    the descriptor's DESTROY entry: 0x218a5 calls
+    `[[x+0x33]+0x28]` with edx=2, and 0xa0c08+0x28 = 0x442f0.
+    Reading the 25 entries of 0xa0bd0: 14 are `ret`/`ret 4`
+    stubs, 4 are the delete/dtor variants (0x44210, 0x442e0,
+    0x441b0, 0x442f0 - `test dl,0x4` then delete with tag
+    0xa0b94/0xa0ba8/0xa0bbc, or the array form with strides
+    0x2b/8/8/0x1b through 0x21490/0x214d0), and 7 are the
+    draw/box band. So the block is a TYPE DESCRIPTOR, not a
+    general method table - PR-475 corrects PR-467's wording on
+    that point. The composite dtor destructs a 0x43-byte object,
+    so the frame type is larger than the 0x1e-byte element. The
+    element ctor's string arguments are the seven "none"
+    literals at 0x91d7a-0x91d9d. Open: the element's own fields
+    and who reads [element+0x16].]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

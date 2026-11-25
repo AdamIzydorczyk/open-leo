@@ -63746,3 +63746,94 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   type tag for deleting it, and the render band's entry point -
   one object type, three uses, all consistent.
 
+
+## PR-475 - THE ELEMENT IS A 0x1e-BYTE OBJECT IN A VECTOR; ITS
+## DESCRIPTOR 0xa0bd0 IS A TABLE OF DESTRUCTOR VARIANTS, NOT A
+## GENERAL METHOD TABLE
+
+```
+KIND: read
+SUBSYSTEM: the element type: its 0x1e-byte allocation and its
+  constructor 0x43df0 in the factory 0x43fb0; the vector that
+  holds elements (constructor 0x21880, method table 0x97654,
+  count at [v+0x8], data at [v+0x0]); the element descriptor
+  0xa0bd0 read entry by entry; and the destroy verb 0x442f0
+  which is the frame descriptor's +0x28 and the element
+  descriptor's +0x60
+ADDRESSES: 0x43fb0, 0x43fca, 0x43fd1, 0x43fdf, 0x43df0,
+  0x21880, 0x228d0, 0x97654, 0x218a5, 0x218b0, 0x218b8,
+  0x442f0, 0x441b0, 0x442e0, 0x44210, 0x44270, 0x442a0,
+  0x442b0, 0x44290, 0x442c0, 0x442d0, 0x44930, 0x449d0,
+  0x44a10, 0x44a40, 0x456e0, 0x21490, 0x214d0, 0x5c370,
+  0x74bc0, 0x74be0, 0xa0bd0, 0xa0b94, 0xa0ba8, 0xa0bbc,
+  0xa0bdc, 0xa0c08, 0x22780, 0x16, 0x8, 0x10, 0x14, 0x28,
+  0x2b, 0x1b, 0x1e, 0xa
+NAMES: element object, element vector, vector method table,
+  destructor variants, destroy verb, composite destructor,
+  element descriptor, pr475_elementtype.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: THE ELEMENT'S OWN FIELDS - the ctor 0x43df0 fills the
+    0x1e bytes but its parameter is the 0x91d7f "none" string
+    pair, so what an element carries (a name? a sprite?) is
+    still unread; who reads [element+0x16] as a descriptor - the
+    0x61000-0x74700 band reads [x+0x16] 60+ times but those
+    objects are not 0x1e bytes, so the descriptor's reader is
+    elsewhere; the sub-objects of the composite dtor (0x44930,
+    0x449d0, 0x44a10, 0x44a40, 0x456e0 through 0x21490/0x214d0)
+    - three parts at strides 8, 8 and 0x1b inside a 0x43-byte
+    object; and the vector's other verbs (0x97654's entries past
+    +0x28).
+CLOSES: PR-467's OPENS "what 0x21880 allocates, versus the
+  0x1e-byte block allocated right after it in the same factory":
+  0x21880 is the element-VECTOR constructor - it calls the
+  generic object ctor 0x228d0 with the vector tag (ebx=1,
+  edx=0xa), installs the vector's method table 0x97654 at
+  [v+0x10] and a word count at [v+0x14], and the factory then
+  allocates the 0x1e-byte element (0x43fdf is its ctor) and
+  push_backs it: `count=[v+0x8]; [v+0x0]+count*4 = element;
+  ++count`, with the empty case routed through the shared
+  growth helper 0x22780. The vector's verb +0x28 is the
+  DESTROY verb of the descriptor - 0x218a5 calls
+  `[[x+0x33]+0x28]` with edx=2, and 0xa0c08+0x28 = 0x442f0.
+  It also closes PR-467's "the 14 entries at +0x00..+0x34 of
+  block A": they are not business methods but the delete and
+  destructor family - 0x44270/0x44280/0x44260/0x442d0/0x442e0
+  are bare `ret` stubs, 0x442a0/0x442b0/0x44290/0x442c0 are
+  `ret 4` stubs, and the non-stubs (0x44210, 0x442e0, 0x441b0,
+  0x442f0) all have the same shape: `test dl,0x4; delete with
+  type tag` or the array form (`lea ebx,[eax+0x2b]`, sub 8/8/
+  0x1b through 0x21490/0x214d0, then `test dl,2; free`), i.e.
+  scalar dtor, vector dtor and composite dtor variants with tags
+  0xa0b94/0xa0ba8/0xa0bbc.
+CORRECTS: PR-467's "The block is a method table, not an offset
+  map": the arithmetic about the two views and the box entry
+  stands, but the block's contents are overwhelmingly destructor
+  and delete variants, so calling it a "method block" overstates
+  it - it is the type descriptor of the element, and the only
+  behaviour entries are the dtor family plus the two stub bands.
+MEASURED: (a) THE FACTORY, verbatim at 0x43fb0: vector from
+  0x21880, `mov [element+0x16],0xa0bd0`, `mov eax,0x1e; call
+  0x5c320; call 0x43df0`, then the push shown in CLOSES. (b)
+  THE DESCRIPTOR, all 25 entries with their bodies in the
+  evidence file; 14 of them are `ret`/`ret 4` stubs, 4 are
+  delete/dtor variants, 7 are the draw/box band shared with the
+  frame view. (c) THE COMPOSITE DTOR at 0x442f0: three
+  sub-object destructors at [obj+0x2b], -0x8, -0x8, -0x1b and
+  the conditional free - so the object it destructs is 0x43
+  bytes, not 0x1e: the frame type is bigger than the element
+  type, consistent with the frame descriptor being the tail
+  window at +0x38. (d) THE "none" DEFAULTS: the ctor's string
+  arguments are the seven consecutive "none" literals at
+  0x91d7a-0x91d9d. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The element was the one object in the engine whose type
+  the journal had described only by pointers into it. Reading
+  its descriptor entry by entry shows what it actually is: a
+  small object in a growable vector, with a default draw (a bare
+  `ret`) and a full set of destructor variants. That also fixes
+  the language of PR-467 - the block is a type descriptor.
+
