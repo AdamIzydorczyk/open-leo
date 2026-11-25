@@ -6796,6 +6796,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     slot into the render band 0x57xxxx (512 entries checked) -
     the draw verb stays open, with the [obj+0x3c]/[obj+0x40]
     arrays and the [obj+0x2c] predicate flag.]
+    [PR-459 FINDS SIX INTERNAL CALL SITES OF THE INPUT VIRTUAL
+    +0xcc: 0x27e1d, 0x282a1, 0x344c8, 0x4010c, 0x4110c,
+    0x41c01 - records the CALLER builds. 0x27d60 (a method of
+    the PR-457 physics-only tables, high slots 0x4d8-0x710)
+    fills the record with 10*|dx|/(|dx|+|dy|) and
+    10*|dy|/(|dx|+|dy|) (ds:0x909ef = 10.0) - exactly the
+    bound the ground code itself uses writing [obj+0xba] (10 at
+    0x54a57) - so "walk toward the target" travels the SAME
+    scalar channel and units as the player's keys; 0x281b0
+    sends a ZERO record behind the swim-state gate ([obj+0x5c]
+    ==4, [obj+0x112]==0, face==1); 0x34495 (a free,
+    unreferenced entry) sends 2*[obj.vt+0x68] signed by the
+    face. The enclosing method 0x27d60 IS the physics-only
+    classes' own, so PR-457's "who dispatches to them" is now
+    "who calls those high class slots". Correction to PR-456:
+    the tick is one of seven call sites, not the only source.
+    The port already models the receiving half (v += F= * s /
+    20, ll_play.c:2253/2303); only the internal feeders are
+    absent.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

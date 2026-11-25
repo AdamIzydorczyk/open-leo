@@ -62403,3 +62403,83 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   what +0x74 is NOT - the draw verb - with the negative
   measurement that proves it.
 
+
+## PR-459 - THE INPUT VIRTUAL IS ALSO CALLED INTERNALLY: SIX
+## SITES SYNTHESIZE THEIR OWN RECORD - A "WALK TOWARD" PAIR OF
+## SCALARS 10*|d|/(|dx|+|dy|), A ZERO RECORD BEHIND THE SWM
+## STATE, A DOUBLED AUTHORED SPEED SIGNED BY THE FACE
+
+```
+KIND: read
+SUBSYSTEM: the six non-tick call sites of object virtual +0xcc
+  (PR-456 found the scene tick): enclosing methods 0x27d60
+  (a method of the PR-457 physics-only tables at high slots
+  0x4d8-0x710), 0x281b0 (0x99668 +0x1d4), 0x34495 (free,
+  unreferenced), 0x40030/0x40eb0/0x41b90 (methods in 40/52/7
+  tables); the record each builds, and where the applier puts
+  its first two dwords
+ADDRESSES: 0xcc, 0x27d60, 0x27e0d, 0x27e1d, 0x27e25, 0x281b0,
+  0x28206, 0x34495, 0x344c8, 0x40030, 0x40eb0, 0x41b90,
+  0x909ef, 0xba, 0xbe, 0x549f0, 0x54a57, 0x126, 0x12a, 0x5c,
+  0x112, 0x68, 0x70, 0xd6, 0x99668, 0x9a07c, 0x9a2b4, 0x550a0,
+  0x23900, 0x14
+NAMES: synthetic input record, walk-toward intent, scalar pair
+  bound ten, swim zero record, authored speed doubled,
+  pr459_internal_input.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH SLOT THE FIVE METHOD ENTRIES SIT IN - the offsets
+    differ per class (0x4d8..0x710), so the "who dispatches
+    these" question PR-457 left open is the same question as
+    who calls those high slots; the [obj+0x126]/[obj+0x12a]
+    pair's author beyond "the target position the +0xd0 verb
+    gates on" (PR-447/PR-454); whether the record's FIRST TWO
+    dwords are the only fields a synthetic caller fills (the
+    tick's record is 12 bytes, PR-456; 0x27d60 builds 8); and
+    what the 0x281b0 zero-record means as a behavior - it runs
+    the physics-only handler with intent zero, which reads like
+    "stop while swimming", unproven.
+CLOSES: PR-457's "who calls them at the two identified sites"
+  one level up: the enclosing method 0x27d60 belongs to the
+  same 0x9a* physics-only tables (it is THEIR method), so the
+  pair "call +0xcc then call 0x550a0" is one class's own body,
+  not an outside dispatcher. And it closes PR-456's framing of
+  +0xcc as only "the input pipeline's door": six sites in the
+  image call it with a record THEY build. 0x27d60's record is
+  `10*|dx|/(|dx|+|dy|)`, `10*|dy|/(|dx|+|dy|)` (the constant
+  ds:0x909ef = 10.0 exactly) - the same fields the applier
+  stores to [obj+0xba]/[obj+0xbe] (0x549f9/0x54a08), whose
+  ground-code writers use the SAME bound, 10 (0x54a57 `mov
+  [obj+0xba],0xa`). So the engine sends a "walk toward the
+  target" intent through the identical channel and with the
+  identical units the player's input uses.
+CORRECTS: PR-456's sentence "one record per tick" as the
+  record's only source: the tick is ONE of seven call sites;
+  six are internal synthesizers (0x27e1d, 0x282a1, 0x344c8,
+  0x4010c, 0x4110c, 0x41c01). The per-frame delivery itself
+  stands.
+MEASURED: (a) THE CONSTANT. ds:0x909ef unpacks as the double
+  10.0. (b) THE RANGE ARGUMENT. The ground code writes 0xa to
+  [obj+0xba] at 0x54a57 and -10/0 at its neighbors (PR-99's
+  note), so the synthetic values land inside the legal scalar
+  range by construction, and both are 0 exactly when the
+  direction is not positive (0x27e0d). (c) THE SHAPE IN THE
+  PORT. The port's physics uses the same formula and divisor:
+  `v += (F= + row FC) * s / 20` (ll_play.c:2253, 2303) and
+  `400 * LL_PLAY_INTENT_FULL / 20` (ll_play.c:3455) - the
+  scalar channel the engine feeds from keys OR from these
+  synthesizers is already the port's model; only the internal
+  feeders are absent. (d) THE FREE ENTRY. 0x34495 has no
+  caller and no table slot (PR-109's unreferenced pattern)
+  while being one of the seven call sites.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. This is how the engine makes a creature walk: not a
+  special AI call, but the same input method the player's keys
+  drive, fed a record built from a direction. The bound-10
+  match with the ground code's own writes is what makes the
+  reading arithmetic rather than hopeful, and the port already
+  models the receiving half.
+
