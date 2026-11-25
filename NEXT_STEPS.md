@@ -65587,3 +65587,75 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   the engine's belt opt-in is simply "name B (or b) in the
   plan", now confirmed over all authored content.
 
+
+## PR-496 - THE [X+0x38c] READERS GUARD NOTHING: THREE
+## FIELD-STORE THUNKS, AND IN JUNCTION THE WRITES LAND IN
+## DEAD DS SCRATCH
+
+```
+KIND: read
+SUBSYSTEM: the null-safety question PR-495 opened. The full
+  census of +0x38c references is 27 instruction hits: 12
+  reader functions (0x1e0a0, 0x27280, 0x32840, 0x33cb0,
+  0x36280, 0x38a60, 0x3b570, 0x3d2c0, 0x50795, 0x50e60,
+  0x613d0 x2) = exactly PR-487's "12 method families", plus
+  the owner side (0x4d638 builds, 0x4a559 zeroes at level
+  cleanup, 0x4a716 guarded destroy) and two false positives
+  (constants 0x38c2/0x38c3 in 0x320d0; [esp+0x38c] in
+  0x5e410). NOT ONE reader tests the loaded pointer: every
+  reader goes straight into one of three belt-notify thunks,
+  and the thunks are unguarded two-field stores (verbatim
+  raw bytes - leodb mis-decodes two of them, file =
+  vaddr-0xF000): 0x44900 = [p+0x58]=0x37, [p+0x68]=edx;
+  0x44910 = [p+0x5c]=0x37, [p+0x6c]=edx; 0x44920 =
+  [p+0x60]=0x4b, [p+0x64]=0x19. Reachability: 0x50720 sits
+  at +0xa8 of the base-lion table 0xa2218 (and 7 derived),
+  0x50e60 at +0xfc of 0xa2218 and 10 derived tables
+  INCLUDING TLewJunction 0x9f540 - so JUNCTION's own lion
+  verbs call the unguarded path. With [X+0x38c] = 0 the
+  stores write ds:0x58..0x6c; ZERO instructions in the
+  image reference ds:0x00..0x70, so the writes are silent
+  scratch clobber, never a fault - that is how the engine
+  "handles" the belt-less level. The other 9 readers are
+  per-level class code (ZARIA/ENA/RAN/TUNGA ctor and method
+  families), all classes whose levels carry a 'B' plan.
+ADDRESSES: 0x1e0a0, 0x27280, 0x32840, 0x33cb0, 0x36280,
+  0x38a60, 0x3b570, 0x3d2c0, 0x50795, 0x50e60, 0x613d0,
+  0x44900, 0x44910, 0x44920, 0x50720, 0xa22c0, 0xa2314,
+  0x9f5e8, 0x9f63c, 0x4a559, 0x4a716, 0x4d638, 0x5e410,
+  0x320d0, docs/OPEN_ITEMS.md
+NAMES: belt-notify thunk, field-store trio, dead DS scratch,
+  null-belt clobber, raw-bytes correction, pr496_readers.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT [p+0x58..0x6c] MEAN on the real settings object
+    (three notify slots: two constants 0x37/0x37 plus a
+    payload in [p+0x68]/[p+0x6c], one pair 0x4b/0x19) -
+    which consumer reads those fields back; WHICH VERBS
+    +0xa8/+0xfc of the lion tables are (slot-census cross-
+    link) and how often JUNCTION's frame loop reaches them;
+    and the leodb decoding defect at 0x44900/0x44920 itself
+    (func entries landing on padding) - worth a note in the
+    RE-tools record.
+CLOSES: PR-495's OPENS "DO THE 12 METHOD FAMILIES guard the
+  null": none do, and none need to - the writes land in an
+  unreferenced DS window; the engine's answer to the belt-
+  less level is silent tolerance, not a guard.
+CORRECTS: none. (PR-487's "12 method families" count is
+  confirmed exactly by an independent census.)
+MEASURED: (a) THE CENSUS verbatim in pr496_readers.txt.
+  (b) THUNK BYTES verbatim (0x448f0-0x4493e raw line).
+  (c) SLOT PLACEMENTS: 0x50720 in 8 tables (0xa22c0 =
+  0xa2218+0xa8), 0x50e60 in 11 (0xa2314 = +0xfc; 0x9f63c =
+  0x9f540+0xfc). (d) DS-WINDOW SCAN: no insn names
+  ds:0x00..0x70. (e) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. A port that nulls the settings object on JUNCTION
+  would crash where the engine does not; the engine's real
+  contract is "notify thunks tolerate a null belt by writing
+  dead scratch" - and the three field pairs at +0x58..+0x6c
+  are new settings-object fields for the journal.
+

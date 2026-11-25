@@ -7484,6 +7484,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     fixture TUNGA.11 "T|TA|ATALABA" matches the raw bytes
     letter-for-letter; three strings (T|TALA|ATAB,
     T|TA|ATALAB, T|T|ATAALAB) await stage attribution.]
+    [PR-496 ANSWERS THE NULL-BELT QUESTION: none of the 12
+    [X+0x38c] reader families tests the pointer. All call
+    three unguarded notify thunks: 0x44900 [p+0x58]=0x37
+    [p+0x68]=edx; 0x44910 [p+0x5c]=0x37 [p+0x6c]=edx;
+    0x44920 [p+0x60]=0x4b [p+0x64]=0x19 (raw bytes; leodb
+    mis-decodes 0x44900/0x44920 as padding - file offset =
+    vaddr-0xF000). 0x50720/0x50e60 ARE lion-table slots
+    (+0xa8 of 0xa2218, +0xfc of 0xa2218 and of TLewJunction
+    0x9f540) so JUNCTION's lion reaches the path; with the
+    object null the stores write ds:0x58-0x6c, and zero
+    insns reference ds:0x00-0x70 - silent scratch clobber,
+    never a fault. Census = 27 hits: 12 readers (PR-487's
+    count exact), owner build 0x4d638 / zero 0x4a559 /
+    guarded destroy 0x4a716, 2 false positives. NEW settings
+    fields +0x58..+0x6c; who reads them back is open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
