@@ -6498,6 +6498,26 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x54b16. Open: the [obj+0xd2] class, 0x53670, mode-2 vector
     senders, the other 0xa5 writers (0x2b6a0/0x2b840), and the
     0x504e0 region's slot (it builds no 12-byte set).]
+    [PR-443 CLOSES PR-439'S +0x34/+0x68 AND NAMES THE THIRD POSITION
+    PAIR. +0x34 default = 0x23a30 `mov eax,1; ret` (always true,
+    140 tables). +0x68 default = 0x23900 `add eax,0xd6` - a getter
+    for the SHADOW position pair [obj+0xd6]/[+0xda] (116 tables,
+    both player-family tables); the 41-table variant 0x23b60
+    returns self (the live pair +0x00/+0x04). The shadow is a
+    copy of the live pair: the +0x54 chain hands &obj+0xd6 to
+    +0xb0, whose head copies +0x00/+0x04 into it, and the
+    pointer-less reset body 0x54e02 does it directly (zeroing
+    0xa5/0xe2 too). The bridge, 0x54eb0 (slot +0x58): raises
+    event 0x1b, then under the +0xb6 bit-1 / +0xbc / bit-0 gate
+    writes live = request - shadow + screen (the +0x89/+0x8d
+    pair). 0x53670 (the only `neg [obj+0x6d]` anywhere) is the
+    row-gated turn the applier tail calls when intent opposes
+    facing: [row+0x12] bit 0x800 must be set, then it negs the
+    direction and re-propagates position. Open: +0x58 callers,
+    0x544f0's SUPPORT-tail effect on the shadow, [obj+0xe2],
+    0x54e02's entry mode, the +0x64 slot bodies, and WHICH
+    keyword is row bit 0x800 (the port names bit 11
+    LL_CTRL_ANTI_SOLID - identity untested).]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

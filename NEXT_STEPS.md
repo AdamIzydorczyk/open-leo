@@ -60915,3 +60915,109 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   chain, which is where the remaining OPENS (the control object
   itself, mode-2 vectors) actually bite.
 
+
+## PR-443 - THE THREE POSITION PAIRS: THE +0x68 GETTER PUBLISHES THE
+## SHADOW AT +0xd6, THE +0x54 CHAIN REFRESHES IT FROM +0x00, AND THE
+## ONLY neg [obj+0x6d] IS THE ROW-GATED TURN AT 0x53670
+
+```
+KIND: read
+SUBSYSTEM: the object's position model - virtual +0x68 (the pair
+  getter the mode-1/4 tracking arms of PR-442 call), the live pair
+  [obj+0x00]/[+0x04], the screen pair [obj+0x89]/[+0x8d], the
+  published shadow [obj+0xd6]/[+0xda] and its writers (the +0x54
+  default of PR-438 through +0xb0, and the reset body 0x54e02),
+  the move-request slot +0x58 (0x54eb0), and the facing turn
+  0x53670 that the applier tail calls
+ADDRESSES: 0x23900, 0x23b60, 0x23a30, 0x238e0, 0x53670, 0x53683,
+  0x54eb0, 0x54ed9, 0x54f18, 0x54e02, 0x54e15, 0x544f0, 0x544f8,
+  0x55070, 0x55078, 0x55084, 0x541f0, 0x96874, 0x968cc, 0x968dc,
+  0x54be1, 0x00, 0x04, 0x12, 0x34, 0x54, 0x58, 0x64, 0x68, 0x89,
+  0x8d, 0x98, 0xb0, 0xbc, 0xd6, 0xda, 0xe2, 0x1b
+NAMES: live position pair, screen pair, published shadow pair,
+  move-request slot, row-gated turn, always-true +0x34,
+  pr443_pos.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHO CALLS virtual +0x58 (0x54eb0) - the request side is
+    unread, so the event-0x1b-then-store order is described but
+    not tied to a game action; the rest of 0x544f0's tail (the
+    SUPPORT-relative adjustment after the copy - does anything
+    rewrite +0xd6/+0xda there?); what keeps the shadow fresh
+    during a fall (the +0x54 chain's own callers); [obj+0xe2],
+    zeroed by the reset body; the reset body 0x54e02 itself has
+    NO xref and NO table pointer anywhere in the image - its
+    entry mode is unknown; the +0x64 slot census (0x238e0 in
+    109 tables, 0x53690 in 21, 0x23b70 in 16, 0x23140 in 2) was
+    observed but NO body was read; WHICH control= keyword the
+    row bit 0x800 is (the port's PR-410 table names bit 11
+    LL_CTRL_ANTI_SOLID - testing that identity is a keyword-chain
+    re-read at 0x51913, not this record); and whether the
+    engine's intent-vs-facing turn has an authored consumer that
+    the port's CH_DIR (bit 3, a DIFFERENT bit) path should grow.
+CLOSES: PR-439's OPENS "+0x34" and "+0x68": +0x34 is the
+  always-true method (0x23a30 = `mov eax,1; ret` in 140 of the
+  detected tables) and +0x68 is the pair getter - `add eax,0xd6`
+  (the shadow) in 116 tables, `ret` = the live pair +0x00/+0x04
+  in 41, and the one odd entry is the known drift artifact of
+  table 0xa0774. PR-442's OPENS item "the call at 0x54be1,
+  target 0x53670": 0x53670 is the row-gated turn - it reads the
+  CURRENT row's control word [row+0x12], needs bit 0x800, then
+  negs [obj+0x6d] (the only neg of that word in the whole image)
+  and calls the position-propagation +0x54. It also names where
+  PR-438's "+0x54 position propagation" propagates TO: +0xb0 is
+  handed &obj+0xd6 and its head copies the live pair into it.
+CORRECTS: nothing. PR-436's "[obj+0x00]/[+0x04] pair" and
+  PR-439's "[obj+0x89] screen pair, +0xb0 position copy, +0x54
+  position propagation" all stand; this record adds the third
+  pair and the edges between them.
+MEASURED: (a) THE GETTER. Table slot +0x68: 0x23900 = `add
+  eax,0xd6; ret` in 116 of the 158 detected tables - including
+  both player-family tables (the dwords at 0x96874+0x68 and
+  0x96900-0x8c+0x68 are 0x23900) - and 0x23b60 = a bare `ret`
+  (returns the object, so the pair is +0x00/+0x04) in 41. So
+  the mode-1/4 tracking arms PR-442 read compare authored target
+  words against the object's SHADOW pair for the player family.
+  (b) THE REFRESH. The +0x54 default 0x55070: lea edx,[obj+
+  0xd6] + call virtual +0xb0 - whose default 0x544f0 head (the
+  PR-439 body) is `[edx]=[[obj+0x00]]; [edx+4]=[obj+0x04]`, so
+  the shadow is a copy of the live pair; then 0x55084 lea edx,
+  [obj+0x89] + call 0x541f0 (PR-438's held-surface gate helper),
+  then virtual +0x98 (the PR-439 world query). The reset body
+  0x54e02 does the same copy directly (0x54e10-0x54e17) after
+  calling 0x52c70, and zeroes [obj+0xe2] and the PR-442 button
+  word [obj+0xa5] - it has no xref and no table pointer. (c)
+  THE BRIDGE. 0x54eb0 (slot +0x58 of the player family, table
+  dword 0x968cc): builds a zero-padded packet with type 0x1b,
+  pushes it through virtual +0x10 (PR-436's ATTACH event), then
+  under the same gate as +0xb0 ([obj+0xb6] bit 1, or virtual
+  +0xbc true, or bit 0) writes [obj+0x00] = req.x - [obj+0xd6]
+  + [obj+0x89] and [obj+0x04] = req.y - [obj+0xda] + [obj+
+  0x8d] (0x54f0c-0x54f20) - the three spaces in one identity:
+  live = request - shadow + screen. Unattached it stores the
+  request raw. (d) THE TURN. 0x53670, reached from the applier
+  tail exactly when x-intent x [obj+0x6d] < 0 (PR-442): reads
+  [[obj+0x50]+[obj+0x5c]*4] (the PR-437 row), tests [row+0x12]
+  bit 0x800 (`test dh,0x8` at 0x5367e), and ONLY then negs
+  [obj+0x6d] and calls +0x54 - a facing turn the CURRENT ROW
+  authorizes, followed by a full position re-propagation. (e)
+  THE PORT. p->x/p->y is the live pair; the port has one pair
+  because its legs read positions directly, and PR-439's screen
+  note plus this shadow note bound what a future camera/ATC
+  split would need - no behavior changes today, but the ladder
+  legs' implicit "queries see p->x" is now an engine fact with a
+  named field: they see the shadow, refreshed by the same chain
+  the port runs on every state change.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The tick, the camera and the ATC queries were three
+  separate stories in this journal; the +0x68 getter, the +0x54
+  refresh and 0x54eb0's identity stitch them: authored tracking
+  reads a published copy, position propagation refreshes it, and
+  a row-control bit decides whether an intent against facing
+  becomes a turn. Closing +0x34 and +0x68 also retires the last
+  two slots PR-439 left unread on the object's base surface, so
+  the next PR can take the row-control keyword chain itself.
+
