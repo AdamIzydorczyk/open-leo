@@ -62784,3 +62784,79 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   addresses are now recorded, so a future naming pass can work
   from a list instead of a re-scan.
 
+
+## PR-464 - OI-078 SETTLED FROM THE ALIGNED JUMP TABLE: THE +0xfc
+## ARM IS MESSAGE TYPE 15, AND NO SENDER PUTS 15-21 ON THE WIRE;
+## THE SENDER 0x4bc40 IS A BROADCAST OVER THE AUTHORED VECTORS
+
+```
+KIND: read
+SUBSYSTEM: the message-type switch 0x50d70 and its jump table
+  0x50d20 read as ALIGNED dwords (PR-399 read it misaligned);
+  the delivery primitive 0x52b10 (16-byte queue nodes on the
+  [obj+0x10] queue); the sender 0x4bc40 (broadcast over the
+  three authored-vector headers and the [mgr+0x64] chain, with
+  an optional receiver filter through virtual +0xc); the 22
+  sender sites and their type immediates
+ADDRESSES: 0x50d20, 0x50d58, 0x50d70, 0x50d7b, 0x50d85, 0x50d94,
+  0x50d9c, 0x50dae, 0x50dc7, 0x50df4, 0x50e4f, 0x50e58, 0x52b10,
+  0x4bc40, 0x4bcb2, 0x4bcde, 0x4bd13, 0x5c320, 0x4, 0x8, 0xc,
+  0x10, 0x34, 0x44, 0x58, 0x64, 0xd8, 0xfc, 0xc, 0x1, 0x9, 0xf,
+  0x19, 0x12, 0x10, 0x13, 0x7, 0x3, 0x1a, 0x2c5e6, 0x2f1ef
+NAMES: message type table, broadcast sender, queue append,
+  receiver class filter, pr464_msgtypes.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHO ELSE FEEDS THE HANDLER - the handler 0x50d70 is also
+    reached by direct dispatch (PR-399's 0x41ae2 [obj+0x160]
+    switch) and the queue is drained elsewhere: the drain loop
+    that pops the [obj+0x10] queue is not read here; the type-
+    1 pre-arm 0x50e58; the dynamic type sources (ebx = eax at
+    0x2c5e6/0x2c624/0x2c664, [esi+0xee], [edx+0x8], [edx],
+    [esi+0xf2], [esi+0x5c]) - which message kinds those carry;
+    and what virtual +0xc returns as the filter (PR-447's entry
+    callback sits at another slot; this one is unread).
+CLOSES: OI-078, "the +0xfc arm's exact message type": the
+  table 0x50d20-0x50d50 is ALIGNED (13 entries, entry i = case
+  type 9+i), so the arms are types 9 (0x50df4), 10 (0x50de0),
+  11 -> virtual +0xd8 (0x50dae), 15 -> virtual +0xfc (0x50dc7)
+  and 21 -> `mov [obj+0x116],1`; cases 12-14 and 16-20 go to
+  the default 0x50e4f. PR-399's "byte-misaligned index" was an
+  artifact of reading 0x50d9b. And it settles PR-182 item (4)'s
+  sender half: 0x4bc40 is a BROADCAST - walk the three plan
+  vector headers ([hdr+0x44] count, [hdr+0x58] array, then the
+  [node+0x34] chains) and the [mgr+0x64] chain, optionally
+  filtered by comparing the receiver's virtual +0xc against
+  ecx, and append a 16-byte node {next,type,payload,payload}
+  to each receiver's queue through 0x52b10; across its 22 call
+  sites the type argument is 0x19 x5, 0x12 x5, 0x10 x4, 0x13
+  x4, 7 x3, 3 and 0x1a once, plus dynamic values - never 15-
+  21, so the +0xfc arm is unreachable from this sender.
+CORRECTS: PR-399's sentence "The table is byte-misaligned in
+  the index (values repeat per case); reading it best, case +6
+  - message type 0xf - lands on the 0x50dc7 arm": the table is
+  aligned and the reading was right; only the misalignment
+  diagnosis was wrong (the 0x50d9b byte is the tail of the
+  `jmp cs:[edx*4+0x50d20]` instruction, not table data).
+MEASURED: (a) THE TABLE VERBATIM: 0x50d20 {0x50df4, 0x50de0,
+  0x50dae, 0x50e4f x3, 0x50dc7, 0x50e4f x5, 0x50d9c}; the
+  dword at 0x50d54 is not a code pointer, bounding the table
+  at 13 entries. (b) THE NODE. 0x52b10: walk [obj+0x10] to
+  the tail, allocate 0x10 bytes (0x5c320), store {0, type,
+  ebx, ecx} - matching PR-106's [msg+0] link / [msg+4] type.
+  (c) THE SITES. All 22 senders and their loaded types are in
+  the evidence file. (d) THE PORT. Unchanged: the port models
+  the signal/message semantics its legs need (PR-399's GEN
+  rows); no fixture exercises this dispatch.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. It closes a 300-PR-old uncertainty (OI-078) with eight
+  dwords, and it changes the shape of the message story: the
+  big sender is a broadcast to authored groups with a class
+  filter, not a targeted send - which is how a plan leg talks
+  to everything it spawned. The correction is also a caution:
+  read jump tables from their aligned base, not from the
+  instruction's last byte.
+

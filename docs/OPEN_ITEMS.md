@@ -6885,6 +6885,25 @@ OI-128: what landing and leaving a surface does - the class verbs
     are (they DO read input records through the raw applier),
     the 0x23c30 single-table variant, and the same cross-tab
     for the always-true +0x9c sets.]
+    [PR-464 CLOSES OI-078: the switch 0x50d70's jump table
+    0x50d20 is ALIGNED (13 entries, entry i = case type 9+i) -
+    PR-399's "byte-misaligned" was an artifact of the 0x50d9b
+    byte, which is the tail of the jmp through the table. The
+    arms: type 9 -> 0x50df4, 10 -> 0x50de0, 11 -> virtual
+    +0xd8, 15 -> virtual +0xfc, 21 -> `mov [obj+0x116],1`,
+    everything else -> 0x50e4f. So the +0xfc arm is EXACTLY
+    message type 15. And the sender half of PR-182 item (4):
+    0x4bc40 is a BROADCAST over the three authored-vector
+    headers (count +0x44, array +0x58, then [node+0x34]
+    chains) and the [mgr+0x64] chain, optionally filtered by
+    the receiver's virtual +0xc vs ecx, appending 16-byte
+    {next,type,payload,payload} nodes via 0x52b10 onto the
+    [obj+0x10] queue. Across its 22 call sites the type is
+    0x19 x5, 0x12 x5, 0x10 x4, 0x13 x4, 7 x3, 3, 0x1a, and
+    dynamic values - never 15-21, so that arm is unreachable
+    from this sender. Open: the queue drain loop, the type-1
+    pre-arm 0x50e58, the dynamic type sources, and virtual
+    +0xc's filter value.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
