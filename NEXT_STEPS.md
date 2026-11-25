@@ -62715,3 +62715,72 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   verbs' bodies show the bits are the engine's own record of
   "this pair is attached".
 
+
+## PR-463 - THE 41 CLASSES THAT CAN NEVER OPEN A WINDOW, AND THE
+## PROOF THAT THE PR-457 PHYSICS-ONLY INPUT TIER IS EXACTLY
+## TWELVE OF THEM
+
+```
+KIND: read
+SUBSYSTEM: the class set whose slot +0x40 holds the constant
+  zero 0x23c00 (41 detected tables, listed), its exact overlap
+  with the PR-457 +0xcc tiers (all 7 clear-and-step classes and
+  all 5 bare-step classes are in it; none of the 102 raw-
+  applier or 14 feed-override classes is), and the 116 tables
+  that keep the bit-5 reader
+ADDRESSES: 0x40, 0x23c00, 0x23860, 0xcc, 0x549f0, 0x50340,
+  0x550a0, 0x536f0, 0x96874, 0x96960, 0x96ddc, 0x96e94,
+  0x96f20, 0x9719c, 0x978dc, 0x97cdc, 0x9815c, 0x981e8,
+  0x99668, 0x9a07c, 0x9a220, 0x9a2b4, 0x9ac90, 0x9ba88,
+  0x9bb40, 0x9cfd0, 0x9d168, 0x9d220, 0x9d2ac, 0x9d8a8,
+  0x9da40, 0x9e4c0, 0x9e578, 0x9e82c, 0x9e8bc, 0x9ed18,
+  0x9edd0, 0x9ee88, 0x9f0e4, 0xa04ac, 0xa14f4, 0xa17dc,
+  0xa1894, 0xa1bfc, 0xa1cb4, 0xa1d70, 0xa1dfc, 0xa1eb4,
+  0xa20f4, 0xa2498, 0xa2550
+NAMES: window-blind classes, physics-only tier, class census
+  cross-tab, pr463_windowfalse.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH GAME OBJECTS the remaining 29 window-blind tables
+    are (they take the raw applier at +0xcc, so they DO read
+    input records, yet no authored ATC_ON can ever reach them
+    - by the table neighborhoods they are the prop/scenery
+    band, unproven); whether any class overrides +0x40 with
+    something that returns true unconditionally (the 0x23c30
+    single-table variant is unread); and the same cross-tab for
+    the other PR-461 slot, +0x9c (135 always-true): the two
+    predicates' class sets have not been intersected.
+CLOSES: PR-461's OPENS "the 41 constant-false classes - which
+  objects can never open a window", as a cross-tab rather than
+  a name: they include EXACTLY the 12 classes of the PR-457
+  physics-only input tier - all 7 with the clear-and-step
+  handler 0x550a0 and all 5 with the bare step 0x536f0 at
+  +0xcc - and NO class in the raw-applier (102) or feed-
+  override (14) tiers. So "answers input only by re-stepping
+  physics" and "can never be in an ATC window, hence never
+  deals or takes the PR-454 event hit" are the same class set.
+CORRECTS: nothing. (PR-461's tier counts - 116 bit-5 readers /
+  41 constant-zero / 1 other - are re-derived here, and the
+  player band 0x96874/0x96960 is confirmed to read the bit.)
+MEASURED: (a) THE CROSS-TAB. Reading slot +0x40 and slot +0xcc
+  out of all 158 detected ctor tables: constant-false 41; of
+  those, 7 hold +0xcc = 0x550a0 and 5 hold +0xcc = 0x536f0,
+  i.e. 12/12 of PR-457's physics-only tier; 0/102 of the
+  0x549f0 tier and 0/14 of the 0x50340 tier. (b) THE STUB.
+  0x23c00 is `xor eax,eax; ret`. (c) THE TABLE LIST. All 41
+  addresses are in ADDRESSES above, so the index carries the
+  set. (d) THE PORT. Unchanged: the port's hit legs involve
+  only player-family and interactable objects; no fixture
+  touches these classes' window state.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. Cross-tabulating two independent slot censuses produced
+  an equivalence the journal could not have guessed: the
+  engine's least-capable input tier is precisely the set of
+  classes for which the ATC window is hard-wired false. A
+  negative result, but a sharp one - and the 41 table
+  addresses are now recorded, so a future naming pass can work
+  from a list instead of a re-scan.
+

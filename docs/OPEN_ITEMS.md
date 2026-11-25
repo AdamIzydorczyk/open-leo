@@ -6870,6 +6870,21 @@ OI-128: what landing and leaving a surface does - the class verbs
     0x54090-0x54105 (copies bits 0..5 into a record at [eax-
     0x20]) - what reads that record, and bit 1's meaning
     distinct from bit 0, stay open.]
+    [PR-463 CROSS-TABBATES THE WINDOW SLOT WITH THE INPUT
+    SLOT: 41 detected tables hold the constant-zero 0x23c00 at
+    +0x40 (all 41 addresses recorded in the PR record), and
+    that set contains EXACTLY the 12 physics-only classes of
+    PR-457 - the 7 whose +0xcc is the clear-and-step handler
+    0x550a0 and the 5 whose +0xcc is the bare step 0x536f0 -
+    while none of the 102 raw-applier or 14 feed-override
+    classes is window-blind. So "input means only re-step
+    physics" and "can never be in an ATC window, never deals
+    or takes the PR-454 hit" are the same class set. The
+    player band 0x96874/0x96960 reads the bit (116 tables do).
+    Open: which game objects the other 29 window-blind tables
+    are (they DO read input records through the raw applier),
+    the 0x23c30 single-table variant, and the same cross-tab
+    for the always-true +0x9c sets.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains
