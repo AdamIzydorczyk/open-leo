@@ -7499,6 +7499,23 @@ OI-128: what landing and leaving a surface does - the class verbs
     count exact), owner build 0x4d638 / zero 0x4a559 /
     guarded destroy 0x4a716, 2 false positives. NEW settings
     fields +0x58..+0x6c; who reads them back is open.]
+    [PR-497 SHOWS THE TIMER TRIO IS WRITE-ONLY: the only
+    readers of settings +0x58/+0x5c/+0x60/+0x64/+0x68/+0x6c
+    are the belt animator chain 0x448ce -> 0x44710/0x447a0/
+    0x44810, which is DEAD CODE - no call and no dword in
+    the whole image names those four addresses, its gate
+    field [obj+0x54] is referenced nowhere, and 0x448ce is
+    ret-padding of 0x448c0 (raw bytes in pr497_tick.txt).
+    0x44910's read of [obj+0x5c] is a dead operand - a
+    timer refresh never observed. Live settings behavior is
+    the 0x44f90..0x45730 verb set in the 0xa0c5c class
+    table, a MIXED 4-/5-byte-record table (0x00+ptr slots)
+    - a second detector blind spot after PR-106. Corrects
+    PR-496's "no reader guards": the plan interpreter DOES
+    test [X+0x38c] at 0x4b059 before calling 0x448c0; the
+    12 unguarded sites are the direct-thunk ones, now
+    listed (4 per thunk). ds:0xceed4 (slot -0x8 getter)
+    and the 0x45xxx verbs open.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

@@ -65659,3 +65659,96 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   dead scratch" - and the three field pairs at +0x58..+0x6c
   are new settings-object fields for the journal.
 
+
+## PR-497 - THE SETTINGS TIMER TRIO IS WRITE-ONLY: THE BELT
+## ANIMATOR CHAIN THAT READS +0x58..+0x6C IS DEAD CODE, AND
+## THE PLAN INTERPRETER DOES GUARD THE SETTINGS POINTER
+
+```
+KIND: read
+SUBSYSTEM: answers PR-496's OPENS "which consumer reads those
+  fields back". Census of every reference to +0x58/+0x5c/
+  +0x60/+0x64/+0x68/+0x6c on the settings object: only three
+  code areas touch them - (1) the ctor 0x443b0 zeroes the
+  four counters (0x4457b-0x44590); (2) the notify thunks
+  0x44900/0x44910/0x44920 write them (PR-496); (3) an
+  animator chain 0x448ce -> 0x44710 / 0x447a0 / 0x44810 that
+  reads and decrements them while calling verb +0x10 over
+  the settings list fields +0x78/+0x80/+0x84/+0x88 with the
+  payload [obj+0x68]/[obj+0x6c] as element index. THE CHAIN
+  IS DEAD: no call instruction and no dword anywhere in the
+  image names 0x448ce, 0x44710, 0x447a0 or 0x44810 (raw
+  image scan, 0 occurrences); its own gate field [obj+0x54]
+  is never read or written by any other instruction; and the
+  raw bytes at 0x448ce (verbatim in pr497_tick.txt) decode
+  differently from the leodb listing - 0x448ce itself is the
+  unreachable tail of 0x448c0's ret padding. So in shipped
+  code the timers 0x37/0x37/0x4b are write-only, and
+  0x44910 - the only live READER - just reads [obj+0x5c]
+  into a dead operand and re-stores 0x37 with payload
+  [obj+0x6c]: a timer refresh whose effect is never observed.
+  Live consumers: none. Also (a) the plan interpreter calls
+  with a GUARD: 0x4b051 mov ebx,[esi+0x38c]; test ebx,ebx;
+  je skip; call 0x448c0 - PR-496's "none of the readers
+  guards" stands for the 12 direct-thunk sites, but the
+  interpreter path tests; (b) the 12 live call sites of the
+  thunks are now listed exactly (4 each), confirming PR-496's
+  reader census; (c) the settings class table at 0xa0c5c
+  (installed by ctor 0x443b0 at 0x44453) is a MIXED-ALIGNMENT
+  table: slots at 4-byte dwords AND at 5-byte records (0x00
+  + ptr), e.g. slot -0x8 = getter of ds:0xceed4 (0x44a40),
+  slot -0x14 = dtor with free-descriptor 0xa0c48 (0x44a10),
+  slots +0x4..+0x4c = the 0x44f90/0x44fe0/0x45xxx verb set,
+  with 0x74bac (free) and small ints 0xd/0xc/0x4/0x15
+  interleaved - unaligned class tables are a second detector
+  blind spot next to PR-106's computed-form stores.
+ADDRESSES: 0x448ce, 0x44710, 0x447a0, 0x44810, 0x448c0,
+  0x4457b, 0x44900, 0x44910, 0x44920, 0x4b051, 0x4b059,
+  0x4b061, 0x443b0, 0x44453, 0xa0c5c, 0xa0c48, 0x44a10,
+  0x44a40, 0x449d0, 0x1e179, 0x274a5, 0x33edb, 0x5079b,
+  0x39e84, 0x50e70, 0x614e2, 0x61522, 0x3302b, 0x365af,
+  0x3bada, 0x3d324, 0xceed4, docs/OPEN_ITEMS.md
+NAMES: write-only timers, dead animator chain, belt
+  animation subsystem, timer refresh, mixed-alignment table,
+  guard correction, pr497_tick.txt
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHICH CLASS THE SETTINGS VERB SET 0x44f90..0x45730
+    (table slots +0x4..+0x4c) implements - those verbs, not
+    the dead chain, are the object's live behavior; WHAT
+    ds:0xceed4 is (returned by table slot -0x8); the three
+    plan strings awaiting stage attribution (PR-495), and
+    the four non-plan 0x57dd0 probes 0x2e/0x3a/0x7c
+    (PR-494).
+CLOSES: PR-496's OPENS "which consumer reads [p+0x58..0x6c]
+  back": only the dead animator chain 0x448ce/0x44710/
+  0x447a0/0x44810 does; live code never observes the 0x37/
+  0x37/0x4b values. The belt "notification" protocol is
+  vestigial in the shipped EXE - the 12 reader families
+  refresh fields no live path reads.
+CORRECTS: PR-496's "0x50e60 ... (NO test)" framing is
+  narrowed: the plan-interpreter call path at 0x4b051 DOES
+  guard [X+0x38c] before calling 0x448c0; the unguarded
+  sites are exactly the 12 direct-thunk call sites listed
+  here. PR-496's claim that JUNCTION's lion verbs "call the
+  unguarded path" stands, but that path's stores are
+  write-only anyway.
+MEASURED: (a) FULL REFERENCE CENSUS of +0x54..+0x68/+0x6c
+  (pr497_tick.txt, pr497_54.txt: zero [p+0x54] refs).
+  (b) RAW IMAGE SCAN for the four dead-chain addresses: 0
+  occurrences of the absolute dwords. (c) RAW BYTES of the
+  mis-decoded tick 0x448ce-0x448f3 (pr497_tick.txt). (d)
+  THE GUARD VERBATIM 0x4b051-0x4b061. (e) TABLE DECODE of
+  0xa0c40..0xa0d60 as mixed 4/5-byte records
+  (pr497_slots.txt). (f) THE PORT. Unchanged.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
+```
+
+- WHY. The port does not need any belt-notify state machine
+  at all: the three notify thunks can be modeled as no-ops
+  (or counter stores), and JUNCTION's null settings object
+  cannot change behavior through them. The live settings
+  behavior is in the 0x45xxx verb family, which is now the
+  marked next step.
+
