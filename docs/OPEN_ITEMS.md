@@ -6045,6 +6045,27 @@ OI-128: what landing and leaving a surface does - the class verbs
     - one of the four per-state functions - and caches the answer
     (0x3fd3c-0x3fd4e), so slot +0x18 is a per-item factory, not a tick.
     THE PORT HAS ITEM LISTS BUT NO PER-ITEM INSTANCE LAYER.]
+    [PR-416 FINDS EVERY USER OF THE SEGMENT LOOKUP: SIX CALLS TOTAL, AND
+    ONLY ONE REAL OWNER. 0x37150 is called from its own seeder's function
+    (0x36f42), from one wrapper 0x371b0 (0x371bd, 0x371cb) and three
+    times inside FUN_00072d50 - the state-class +0x0c verb of PR-414
+    (0x7307d, 0x733f4, 0x735bb). The matcher 0x36d60 has one caller and
+    the seeder 0x36d90 exactly one: 0x38a60, a FOUR-CALL sequence `call
+    0x36650; call 0x36d90; call 0x37af0; call 0x37ff0` - so the
+    intervals are loaded once from the executable's own data and never
+    re-seeded. AT EVERY SITE THE KEY IS THE CONTAINER'S FIRST DWORD AND
+    THE PROBE ITS SECOND: `eax=[[obj+0x26]], edx=[[obj+0x26]+4]`
+    (0x73073), the same pair through a dispatcher arm (0x733ed), or two
+    calls of the container's vtable +0x6c getter (0x735a8, 0x735b6), with
+    the answer cached at [obj+0x3a] or [obj+0x42] and every caller
+    branching on the 0x11 result. 0x733fe-0x73407 also writes the identity
+    `entry = 0xced18 + idx*12` in two instructions. THE WRAPPER 0x371b0
+    looks one probe up against two keys, [obj-0x14] and [obj+0x5a], and
+    passes the two indices to 0x371e0, which PR-416 reads exactly: it
+    SWAPS two table entries - high end into high end at 0x37202/0x37208
+    and low end into low end at 0x3720f/0x37216 - then returns at once if
+    the segment count 0xcedf0 is 0. PR-413's phrase that 0x371e0 "fills"
+    high ends is replaced: its writes are swaps.]
     [PR-410 SETTLES THE control= TABLE, AFTER TWO WRONG DRAFTS. The
     state-header parser 0x51913 reads `time`, `sample`, `time_scale`,
     `seq` and `control`, zeroes [rec+0x12] at 0x51b2e, then chains

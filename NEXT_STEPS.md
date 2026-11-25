@@ -58117,3 +58117,121 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   future difference in how often per-row setup runs has a named mechanism
   behind it, and the pure-virtual table at 0xa09f0 says the base class
   was never instantiated in the original either.
+
+## PR-416 - EVERY CALL SITE OF THE SEGMENT LOOKUP, AND THE ONE-PLACE
+## SEQUENCE THAT SEEDS ITS TABLE: THE KEY IS ALWAYS THE CONTAINER'S FIRST
+## FIELD AND THE PROBE THE SECOND
+
+```
+KIND: read
+SUBSYSTEM: the users of the segment-interval lookup of PR-411/PR-413 -
+  all six call sites, the one function that seeds the table and what runs
+  beside it, the wrapper that looks a probe up against two different keys,
+  and the fixed argument pattern the call sites share
+ADDRESSES: 0x36650, 0x36b50, 0x36d02, 0x36d60, 0x36d90, 0x36f42, 0x37150,
+  0x37188, 0x371b0, 0x371b8, 0x371bd, 0x371c8, 0x371cb, 0x371d0, 0x371d4,
+  0x371e0, 0x37202, 0x37208, 0x3720f, 0x37216, 0x3721c, 0x37af0, 0x49580,
+  0x38a60, 0x38a65, 0x38a6a, 0x38a6f, 0x54050, 0x72d50, 0x73073, 0x73076,
+  0x73078, 0x7307b, 0x7307d, 0x733e0, 0x733ed, 0x733f0, 0x733f2, 0x733f4,
+  0x733f9, 0x733fb, 0x733fe, 0x73407, 0x735a2, 0x735a5, 0x735a8, 0x735ab,
+  0x735ae, 0x735b1, 0x735b4, 0x735b6, 0x735b9, 0x735bb, 0x735c0, 0x73ff0,
+  0xced18, 0xceddc, 0x26, 0x04, 0x00, 0x3a, 0x42, 0x5a, 0x14, 0x6c
+NAMES: segment lookup call sites, seeding sequence, key and probe fields,
+  probe wrapper, container coordinate getter, entry swap, pr416_xrefs.txt,
+  OI-111, OI-128
+CODE: no: no file under ported/ or tools/ changes.
+HOOKS: none - no leg and no fixture moves.
+OPENS: WHAT THE TWO KEYS ARE IN 0x371b0 - it takes one from [obj-0x14]
+    and one from [obj+0x5a] and looks the same probe up against both, then
+    hands the two indices to the permute function 0x371e0 of PR-411; WHAT
+    THE OBJECT AT [esi] IN 0x36d02 IS - it has a dword at +0x04 used as a
+    probe and a 0x20-byte buffer at +0x60 that a formatting call at
+    0x49580 writes, which smells like a message or command line; WHAT
+    0x36650, 0x37af0 and 0x37ff0 do in the same sequence as the seeding -
+    PR-411 saw 0x37af0 write 0xcedf0, the segment count; whether the 0x11
+    result is the authored NONE case, since every caller branches on it;
+    and the still-open PR-413 question of what the anchor values, which
+    step by about 96, are measured in.
+CLOSES: PR-413's OPENS item WHAT THE PROBE IS PHYSICALLY, as far as the
+  code goes: at all three sites in the state-class +0x0c verb it is the
+  container's SECOND dword - [obj+0x26] supplies the key at its +0x00 and
+  the probe at its +0x04, or two calls of the container's vtable +0x6c
+  getter. It also closes PR-411's OPENS item about when the table is
+  filled: exactly one call of the seeder exists, in a fixed four-call
+  sequence, so the intervals are static for the life of the process.
+CORRECTS: PR-411's sentence that the same code pair appears at
+  0x73090/0x733e8/0x735c8 is confirmed rather than corrected, but PR-411
+  did not say those are three calls of one lookup in one function; they
+  are, and FUN_00072d50 is the only non-helper user of the lookup in the
+  whole image. PR-413's sentence that 0x371e0 is "the only writer of an
+  interval's high end in the BSS copy" is wrong twice over: the seeder
+  writes all three fields (PR-413 established that itself), and 0x371e0's
+  writes are entry-to-entry swaps, not fills.
+MEASURED: (a) THE CALL SITES. The DB's xref table gives six calls of
+  0x37150: 0x36f42 inside the seeder's own function, 0x371bd and 0x371cb
+  inside one wrapper 0x371b0, and 0x7307d, 0x733f4, 0x735bb inside
+  FUN_00072d50 - the state-class +0x0c verb identified by PR-414. The
+  matcher 0x36d60 has exactly one caller, 0x37188 inside the lookup, and
+  the seeder 0x36d90 exactly one, 0x38a65. (pr416_xrefs)
+  (b) THE SEEDING SEQUENCE. 0x38a60 is a four-call sequence and nothing
+  else: `call 0x36650; call 0x36d90; call 0x37af0; call 0x37ff0; ret`.
+  The second is the interval-table seeder of PR-413; the third, 0x37af0,
+  is the function PR-411 saw write the segment count at 0xcedf0. So the
+  intervals are loaded once, from the image's own data, and never
+  re-seeded.
+  (c) THE ARGUMENT PATTERN AT THE THREE VERB SITES. 0x73073: `eax =
+  [ecx+0x26]; edx = [eax+4]; ebx = 0; eax = [eax]` then call - key =
+  [[obj+0x26]], probe = [[obj+0x26]+4], start = 0; the answer goes to
+  [ecx+0x3a]. 0x733ed: the same pair with edx = [eax+4] and eax = [eax]
+  reached through a dispatcher arm at 0x733e8 (`cmp edx,1`), stores the
+  answer at [ecx+0x3a] too and then reads the entry straight out of BSS:
+  `lea eax,[eax*4]; sub eax,ebx; mov eax,[eax*4+0xced18]` - the identity
+  `entry_base = 0xced18 + idx*12` written in two instructions
+  (0x733fe-0x73407). 0x735a2: `eax = [[obj+0x26] vtable +0x6c]()` for
+  the key and the same call again for the probe (0x735a8, 0x735b6), so
+  the container's coordinate getter is called twice rather than its
+  fields being read; the answer goes to [ecx+0x42], a different field.
+  All three compare the result with 0x11 and branch away.
+  (d) THE WRAPPER. 0x371b0(obj=eax, probe=edx): `ecx = probe; eax -=
+  0x14; call 0x37150` with ebx = 0, i.e. it looks the probe up against
+  the key at [obj-0x14]; then `lea eax,[obj+0x5a]` and a second call with
+  the SAME probe (0x371c8), i.e. against the key at [obj+0x5a];
+  then `call 0x371e0` with the two indices in eax and edx. 0x371e0 is
+  the permute function of PR-411, and what it does is now read: it
+  SWAPS two table entries - `esi = [idx2*12 + 0xced1c]` (the high end of
+  the second) stored at `[idx1*3*4 + 0xced1c]`, and `[idx1*3*4 +
+  0xced18]` (the low end of the first) stored at `[idx2*12 + 0xced18]`
+  (0x37202-0x37216) - and then reads the segment count at 0xcedf0 and
+  returns immediately when it is 0. So the permute is driven by lookup
+  results, which is the link PR-411 left open, and its high-end writes
+  are swaps, not fills.
+  (e) THE ONLY CALLER OF THE WRAPPER. 0x36d02, inside FUN_00036b50,
+  calls it as `edx = [esi+0x04]; eax = [esi]; call 0x371b0` - the probe
+  is that object's second dword, the same field shape as the verb sites -
+  a few instructions after a `lea eax,[esi+0x60]; call 0x49580`
+  formatting call on a 0x20-byte buffer inside the same object. No other
+  call of 0x371b0 exists.
+GATE: light: verify-index verify-docs rc=0 (ok);
+  The diff is NEXT_STEPS.md, docs/OPEN_ITEMS.md and the generated
+  docs/RE_INDEX.md only - nothing under ported/, tools/, the Makefile or
+  .github - so the light profile of section 2 rule 4 applies. Evidence:
+  /tmp/opencode/pr416_docs.log (tools/re_index.py, then
+  `make verify-docs verify-index`, rc=0, index byte-identical) and
+  /tmp/opencode/pr416_xrefs.txt (the DB's xref table for 0x37150,
+  0x36d60, 0x36d90, 0x371e0 and 0x371b0, with the containing function
+  from the func table). 0x371b0, 0x371e0, 0x38a60, 0x733e8 and 0x735a2
+  were each decoded from an aligned instruction boundary of their own
+  function, not from a drifting sweep.
+```
+
+- WHY. Five rows have described the segment lookup as if it were general
+  machinery; it has exactly one real user, one function, the same
+  function that owns the row cursor and the row direction law of
+  PR-412. That makes the mechanism's role definite: the interval table
+  selects which of 17 authored x-ranges an object is inside, once per
+  state verb, using its container's two coordinate dwords, and the answer
+  is cached in the object at [obj+0x3a] or [obj+0x42]. For the port that
+  is a concrete missing concept - it has no notion of an authored level
+  being cut into ranges with anchor values - and the fact that the table
+  is seeded once from the executable's own data, not from any level file,
+  says those ranges belong to the engine, not to the content.
