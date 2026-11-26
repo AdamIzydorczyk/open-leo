@@ -3460,10 +3460,19 @@ record.
   the water/pit at x~400 and the climb route - PR-524 then MEASURED
   that half and corrected it (NEXT_STEPS PR-524): a ground jump at
   the ladder column NOW enters A_WSP (ladder state 2, set 0x1400),
-  and the rider cycles at the authored pair y 560 without ever
-  seating on the canopy terrace at y 518 - the gap is the
-  top-of-CLIMB seat, one law (OI-073/OI-078's named candidates),
-  not a route-finding problem.
+  and the rider cycled at the authored pair y 560 without seating on
+  the canopy terrace - the gap was the top-of-CLIMB seat, one law.
+  PR-525 SHIPPED that law (NEXT_STEPS PR-525): the lift is the
+  `lock`/`unlock` words' element anchor shift - 0x54f40/0x54f90 call
+  the current element's own land/leave (0x42980/0x429d0) on
+  [obj+0x0]/[obj+0x4] behind the bit guards, LIFT.SEQ's +40/-22
+  anchors - and both climb legs now run the whole authored route:
+  ladder, climb, lift, terrace seat, and ly_chang's JUMP pressing a
+  first real A_JUMP_S launch onto the big-tree canopy. What ZARIA.01
+  still lacks to be "playable" is the level END (no end_level text;
+  the engine's stage re-entry 0x5d1f5 is unported) and the I-row
+  impulse unit re-fit (OI-015, now load-bearing for the canopy hop's
+  apex).
 
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`

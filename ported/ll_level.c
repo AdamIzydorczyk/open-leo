@@ -5426,6 +5426,44 @@ static int play_contact(const play_ctx *pl)
     return mov_state_contact(pl->mov, pl->p.sti, s);
 }
 
+/* PR-525: the anchor-shift resolver the `lock`/`unlock` row words call
+ * through ll_player.anchor_shift. The engine side is 0x54f40/0x54f90:
+ * the current-element getter [vt+0x48] (the lion's is 0x23aa0 - it
+ * walks [obj+0x5c] and the state array [obj+0x50] to the CURRENT ROW's
+ * element record), the flip getter [vt+0x50] (0x53e40: -1 while the
+ * current frame record's flip word is set, +1 otherwise), and the
+ * element record's own land/leave methods 0x42980/0x429d0, whose write
+ * target is the object pair passed in edx. This resolves the same
+ * element from the state's seqkey exactly as play_draw and play_contact
+ * do, and hands back the delta pair - answering 0 when the row has no
+ * element (frame 0 / out of range, the port's counterpart of the 0x7fff
+ * sentinel guard at 0x4298d/0x429dd). */
+static int play_anchor_shift(void *ctx, const ll_player *p, int land,
+                             int *dx, int *dy)
+{
+    const play_ctx *pl = ctx;
+    if (!pl->have || p->sti >= pl->mov->nst)
+        return 0;
+    const ll_mov_st *st = &pl->mov->st[p->sti];
+    const ll_seq *s = play_art(pl, st->seqkey[0] ? st->seqkey
+                                                 : pl->mov->seqkey);
+    if (!s)
+        return 0;
+    int frame = ll_player_frame(p);
+    ll_frame_ref r = ll_mov_frame_ref(frame);
+    if (frame == 0 || r.blank || r.idx >= (int)s->count)
+        return 0;
+    int x = 0, y = 0;
+    int facing = ll_player_mirror_of(p, r.mirror) ? -1 : 1;
+    if (land)
+        ll_seq_anchor_land(&s->els[r.idx], facing, &x, &y);
+    else
+        ll_seq_anchor_leave(&s->els[r.idx], facing, &x, &y);
+    *dx = x;
+    *dy = y;
+    return 1;
+}
+
 /* the surface under the spawn point is the CONTACT line: the position point
  * is placed contact px above it (PR-97; play_contact needs the state the
  * player starts in, which ll_player_start picks, so this runs after it) */
@@ -5434,6 +5472,10 @@ static void play_spawn(play_ctx *pl)
     ll_xy hit;
     int g = ll_plt_first_below(&pl->plt, (int)pl->sx, (int)pl->sy, &hit);
     ll_player_start(&pl->p, pl->mov, pl->sx, g ? (double)hit.y : pl->sy, g);
+    pl->p.anchor_shift = play_anchor_shift;   /* PR-525: ll_player_start
+                                              * memsets the player, so the
+                                              * hook rides on every spawn */
+    pl->p.anchor_ctx = pl;
     ll_player_set_contact(&pl->p, play_contact(pl));
     if (g && pl->p.grounded)
         pl->p.y = (double)hit.y - (double)pl->p.contact;

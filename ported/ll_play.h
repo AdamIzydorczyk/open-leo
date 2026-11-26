@@ -1132,7 +1132,7 @@ typedef struct { int k_fwd, k_bkwd, k_up, k_down, k_jump,
  * up across a 20 px gap - without teleporting across real drops). */
 #define LL_PLAY_STEP 16
 
-typedef struct {
+typedef struct ll_player {           /* tagged for the anchor_shift hook */
     const ll_mov_t *mov;
     /* PR-97: x,y is the POSITION POINT the frame art is anchored from (the
      * element's own anchor f0/f2 is measured from it), NOT the spot that
@@ -1227,6 +1227,28 @@ typedef struct {
                                  * 0x54f20 keeps the drawn body at the
                                  * frozen anchor; the port's counterpart
                                  * is ll_player_step's integration gate. */
+    /* PR-525: the ELEMENT ANCHOR SHIFT pair that the `lock`/`unlock`
+     * words carry. 0x54f40/0x54f90 are not only bit-writers: behind
+     * the bit guard they read the CURRENT .SEQ element (the lion's
+     * getter [vt+0x48] is 0x23aa0 - state word [obj+0x5c], state array
+     * [obj+0x50], the current row's element record), take the draw-flip
+     * sign ([vt+0x50] is 0x53e40: -1 while the current frame record's
+     * flip word [rec+0x14] is set, +1 otherwise) and call that
+     * element's own land/leave method 0x42980/0x429d0, whose write
+     * target is [edx]/[edx+4] with edx = the object - the LIVE
+     * position pair, not a presented point. ZARIA.01's A_PODCIAG
+     * `seq=lift` measures f2-f6 = +40 on element 0 (its `lock` row is
+     * `1,300,lock`) and -22 on element 7 (its `unlock` row is
+     * `8,300,unlock`), so the top of the authored climb is a 40 px
+     * jump of the position pair followed by the T=100 hold. The port
+     * resolves the art side through a driver hook because the loaded
+     * .SEQ blobs are the driver's (play_art in ll_level.c): the hook
+     * answers the facing-signed delta pair for the CURRENT row's
+     * element, 0 = no element for that row (blank frame / the 0x7fff
+     * sentinel, the engine's guard at 0x4298d/0x429dd). */
+    int (*anchor_shift)(void *ctx, const struct ll_player *p, int land,
+                        int *dx, int *dy);
+    void *anchor_ctx;
     signed char face;           /* PR-82: instance facing, -1/1, like
                                  * lvl_obj.face (PR-81). Updated from walkdir
                                  * only while the state carries CH_DIR;

@@ -68304,3 +68304,145 @@ MEASURED: (a) z_walk.log tick 88 off the cliff at x 408, the
   pass.
 
 GATE: light: verify-index verify-docs rc=0 (ok);
+
+## PR-525 - THE LIFT IS THE `lock`/`unlock` ELEMENT ANCHOR SHIFT:
+## 0x54f40/0x54f90 CALL THE CURRENT ELEMENT'S LAND/LEAVE ON THE LIVE
+## POSITION PAIR, AND ZARIA.01'S LADDER-RIDE SEATS ON THE CANOPY -
+## BOTH CLIMB LEGS RE-PINNED, THE CANOPY HOP RUNS
+
+```
+KIND: port
+SUBSYSTEM: the row-directive apply in ll_player_step (the lock/unlock
+  words), ll_player's new anchor_shift hook (ported/ll_play.h, plus
+  tagging the struct so the hook self-references), the driver's
+  anchor resolver and its wiring through play_spawn (ported/
+  ll_level.c), the new --play-selftest leg LK-S, and the two ZARIA
+  climb legs (ly_climb, ly_chang) in the Makefile. PR-524 named the
+  top-of-climb seat as THE gap; PR-321 had already wired the pair's
+  bit and PR-362/363/364 had already read the element methods
+  byte-exact - what was missing, and what this record reads from
+  the machine code first, is that 0x54f40/0x54f90 are not only bit
+  writers: behind their bit guards they run the current element's
+  land/leave ON THE OBJECT ITSELF.
+ADDRESSES: 0x54f40, 0x54f4a, 0x54f54, 0x54f62, 0x54f6a, 0x54f6f,
+  0x54f74-0x54f78, 0x54f7b, 0x54f90, 0x54fab, 0x54fc8, 0x54fcb,
+  0x23aa0, 0x23aa5-0x23abf (the element getter walk), 0x53e40,
+  0x53e63-0x53e70 (the flip getter), 0x42980, 0x429d0 (via the
+  PR-362/363/364 reads), 0x229c0 (list accessor, called, not read),
+  0x45c50/0x23870 (PR-321/PR-319, cited).
+NAMES: lock, unlock, anchor_shift, anchor_ctx, ll_seq_anchor_land,
+  ll_seq_anchor_leave, ll_player_frame, ll_mov_frame_ref,
+  ll_player_mirror_of, play_anchor_shift, st_anchor_shift, LK-S,
+  A_PODCIAG, A_SCIAG, A_DRAP, A_LOOKUP, A_JUMP_S, LIFT.SEQ,
+  LOOK_UP.SEQ, f2-f6, f0-f4, ly_climb, ly_chang, OI-073, OI-078.
+CODE: yes: ll_player's anchor_shift/anchor_ctx pair, the guarded
+  trio at the row-word apply (shift ONLY on the transition edge -
+  `!p->lock` before LAND, `p->lock` before LEAVE, exactly the
+  engine's `jne`/`je` guards), ll_level.c's play_anchor_shift (the
+  state's seqkey resolved exactly as play_draw/play_contact resolve
+  it, the element indexed through PR-49's frame grammar, facing =
+  the draw-flip sign through ll_player_mirror_of), and its re-arm
+  in play_spawn after ll_player_start's memset.
+HOOKS: none.
+MEASURED: (a) THE TRIO AND ITS GUARDS, read this session: 0x54f40
+  opens with the class +0xbc guard (lion 0x23870, the attachment
+  verb PR-319 counted), then `test BYTE PTR [ecx+0xb6],0x1; jne
+  0x54f7b` - if value 1 is SET the trio is SKIPPED - and the trio
+  is `[vt+0x48]` (lion: 0x23aa0, esi = the element record),
+  `[vt+0x50]` (0x53e40, ebx = the flip sign), `edi = [element+0x33]`,
+  `call [edi+4]` with eax = the element and edx = THE OBJECT; both
+  paths reach 0x54f7b `or BYTE PTR [ecx+0xb6],0x1`. 0x54f90
+  guards the other way (`test ...; je 0x54fcb` - no LEAVE while
+  clear), calls `[edi+8]`, then `and ...,0xfe`. The 0x23aa0 walk:
+  [obj+0x5c] state index -> the state array [obj+0x50] -> the
+  state record -> its current-row word at +0x2e -> the frame list
+  at [rec+0x4] -> the row record's element list -> 0x229c0 ->
+  [eax]: THE CURRENT ROW'S ELEMENT, the same 1-based, sign-mirrored
+  grammar PR-49 pinned and ll_mov_frame_ref implements. 0x53e40
+  walks the same row record and answers -1 iff its flip word
+  [rec+0x14] is set, +1 otherwise. (b) THE CORRECTION: PR-273's
+  sketch "read x via [vt+0x48] (lion 0x23aa0), y via [vt+0x50]
+  (0x53e40)" was wrong in kind - +0x48 is the element getter and
+  +0x50 the flip sign; the position pair is edx, unchanged. (c)
+  THE AUTHORED NUMBERS: ZARIA's LIFT.SEQ (CD ANIMACJE, 9 elements,
+  tools/seq_parse.py): f2-f6 = +40,+41,+38,+33,+29,-9,-19,-22,-26
+  and f0-f4 = +7,-2,-6,-3,0,+11,+9,+4,-2 for elements 0..8; A_PODCIAG
+  is `seq=lift` with `1,300,lock` (element 0: 40 px UP) and
+  `8,300,unlock` (element 7: LEAVE re-adds element 7's -22), the
+  row times 300/300/300/200/200/200/500/300 closing on PR-110's
+  feed. (d) LK-S (--play-selftest, RED first - six pins failed
+  before the model shipped): rows `1,100,lock / 3,100,lock /
+  4,100,unlock / 5,100,unlock` with a hook carrying element 0/3's
+  REAL LIFT fields (40/7, 33/4): 300,100 -> LAND once at the row-1
+  close (293,60) -> row 3's second `lock` SKIPPED by the bit guard
+  (the central pin) -> LEAVE once at row 4's close (297,93) ->
+  row 5's `unlock` skipped; facing -1 mirrors x (307, 303) exactly
+  as 0x429bd/0x42a0d. (e) THE LEGS. ly_climb, new pins: entry
+  207,559 at 237 unchanged; row 1 closes at 239: LAND ->
+  200,519, held through row 7 at 255; row 8 closes at 258: LEAVE
+  -> 204,497; the ground pass (PR-272/PR-97 law, UNTOUCHED) seats
+  INSIDE A_PODCIAG at 261: ZARIA_A.PLT line 2 segment (98,514)-
+  (288,520), seg_y_at at x 204 = 514 + 6*106/190 = 517, minus the
+  LIFT art's own 34 px contact (max ll_seq_shape_contact over the
+  nine elements - a contact_probe on the ported ll_seq.c, same
+  method as PR-97's WALK 32) = 204,483 grounded; the wrap's
+  A_DRAP(1)=AC_BREAK_NEXT runs at 263 and re-seats on the IDLE
+  art's documented 28 (PR-97): 204,489. K_UP still held, the ask
+  still PASSES the authored (213,507) contact point, but the box
+  overlaps the authored rectangle only ABOVE its top edge (540),
+  the answer is the edge band `set 100` and AC_DRAB_CATCH never
+  rises - NO re-catch: A_DRAP's own `A_LOOKUP(1)=K_UP` runs at
+  264, seated at 517 minus look_up's own 30 px (contact_probe) =
+  204,487 grounded, WAIT !K_UP cycling the pose frames through the
+  release at 290 to tick 340. ly_chang: the same seat chain, then
+  its own 264 JUMP press runs A_DRAP's `A_JUMP_S(1)=K_JUMP` from
+  real ground for the first time - its re-catch line never matches,
+  the launch rows run, and the HOP LANDS ON THE BIG-TREE CANOPY:
+  line 3 (149,395)-(274,419), seg_y_at at x 204 = 395 + 24*55/125
+  = 405, minus the fall_dn art's 33 px (the same 33 that seats
+  its entry at 517-33 = 484, two authored lines agreeing) =
+  204,372 grounded at 307; A_DRAP seated at 405-28 = 204,377 to
+  the sampled tick 400. (f) THE ATTEMPTED LIVE CHECK: the pr525b
+  QEMU re-capture with a scripted ladder approach died at "no
+  playable level within 700 s" - that boot's menu chain runs far
+  slower than pr516i's (chapter map detected at 418 s) - so no
+  live-engine y-step sample for the shift exists yet; counted in
+  OPENS.
+OPENS: the live-engine capture of the lock/unlock y-step (pr525b
+  failed before gameplay; the law stands on the machine-code read
+  and the authored data); the A_SCIAG descent (`8,300,lock` then
+  `1,300,unlock`, the SAME lift art inverted) and the A_WPAD/
+  A_WYJSCIE lock windows now shift too but no leg reaches any of
+  those states, so their shifts are unmeasured in the port; the
+  I-row impulse unit re-fit (OI-015) - not load-bearing for the
+  canopy LANDING (the authored line fixes it) but load-bearing for
+  the hop's 112 px apex against the video's 24-30 band.
+CLOSES: none as a row; the named sub-items - OI-073's "A_PODCIAG
+  lift-motion source" and OI-078/PR-524's "top-of-climb seat" -
+  are answered in those rows' PR-525 notes.
+CORRECTS: PR-286's summary line "no state in the climb family
+  rises 71 px; the 30 px at the top is LIFT.SEQ art" - the
+  arithmetic of that record holds (no row position-write or pull
+  rises anyone: PR-286 scoped the WRITES), but LIFT.SEQ art IS a
+  mover, through the anchor-shift path it never read; and
+  PR-273's +0x48/+0x50 sketch, corrected in MEASURED (b).
+```
+
+- WHY. "ZARIA.01 playable" was the session objective and PR-524 had
+  just narrowed the whole traversal to one law: the climb entry
+  worked, the seat did not. This is that law - and the shape of it
+  is the lesson: a directive word's apply is not one bit, it is a
+  guarded CALL CHAIN into the element the actor is standing on, and
+  the engine's own "art" numbers (LIFT.SEQ's +40) are the physics
+  constant the route was waiting for. With it the authored ladder
+  route runs end to end in two pinned legs, up onto the canopy and
+  off the big tree, and what ZARIA.01 still lacks is now one
+  subsystem, not a chain of guesses: the level end (0x5d1f5 stage
+  re-entry, no end_level text exists to pin it).
+
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+      (both rc=0; counts are grep -o '(ok)' and the named
+      `verify-*: SKIP` lines of /tmp/opencode/pr525_gate1.log and
+      /tmp/opencode/pr525_gate2.log - same counts as PR-523's,
+      coverage unchanged.)

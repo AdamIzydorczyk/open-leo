@@ -1504,6 +1504,38 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     Nothing in the shipped ZARIA texts ends the level (no
     end_level row in lew_zar.mov - the engine's stage re-entry,
     0x5d1f5, has no port counterpart; §1's level-flow gap).
+    PR-525 ANSWERS the A_PODCIAG lift-motion source named above,
+    and with it the top-of-climb seat of PR-273/PR-285/PR-524, and
+    SHIPS it. The lift is the element anchor shift the `lock`/
+    `unlock` words carry: 0x54f40, behind its bit guard, reads the
+    CURRENT element through [vt+0x48] - for the lion that getter is
+    0x23aa0: [obj+0x5c] state, the state array [obj+0x50], the
+    CURRENT ROW's element record, the SAME frame grammar PR-49
+    pinned for drawing (frame N -> element N-1, sign = mirror);
+    the [vt+0x50] getter is 0x53e40 - minus one while the current
+    frame record's flip word [rec+0x14] is set, plus one
+    otherwise - and the element block's own +0x33 table slot +4/+8
+    are 0x42980/0x429d0 (ll_seq_anchor_land/ll_seq_anchor_leave,
+    PR-362/PR-363's byte-exact reads), whose write target is
+    edx = the object: [obj+0x0]/[obj+0x4], the LIVE position. The
+    trio runs ONLY behind the bit guards (0x54f40 `test ...,1; jne`
+    skips the second LAND; 0x54f90's `je` skips a second LEAVE) -
+    the pair is exactly once per lock transition. ZARIA's LIFT.SEQ
+    anchors (CD ANIMACJE ZAR leaf, 9 elements) measure f2-f6 =
+    +40 at element 0 - A_PODCIAG's row is `1,300,lock` - and -22
+    at element 7 (`8,300,unlock`): the pair moves 207,559 ->
+    200,519 at the row-1 close and 204,497 at row 8's, and the
+    ground pass (the already-pinned PR-272/PR-97 law, untouched)
+    seats him on the terrace at line 517 - art contact 34. The
+    leg sits at ly_climb and ly_chang (both re-pinned); the
+    climb's straddle needs no new contact law at all. This row
+    itself is NOT closed: the grounded-y instruction inside
+    0x54c00/0x54d0c, the [obj+0xa9] list, and bit2/3/6/7 remain.
+    (PR-273's sketch "read x via [vt+0x48] (lion 0x23aa0) and y
+    via [vt+0x50] (0x53e40)" was wrong in kind: +0x48 is the
+    current-ELEMENT getter and +0x50 the draw-flip sign - the
+    position pair comes from edx, unchanged, and 0x53e40 reads
+    [rec+0x14] of the current frame record.)
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -3601,6 +3633,39 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     video's measured 24-30 px band - with the x law closed, the
     `I` pair's units are the remaining vertical-constants item
     PR-135 left open (the ESTIMATE row `jump impulse unit`).
+    PR-525 RUNS THE TOP OF THIS ROW END TO END and ships the law
+    PR-524 narrowed to it. With the `lock`/`unlock` element anchor
+    shift in (0x54f40/0x54f90 -> 0x42980/0x429d0 on [obj+0x0]/
+    [obj+0x4], element per PR-49's frame grammar, LIFT.SEQ anchors
+    +40 at element 0 and -22 at element 7), the ly_climb leg reads
+    the whole authored route: ladder ask, A_WSP climb to 559,
+    A_PODCIAG LAND at the row-1 close (207,559 -> 200,519), hold
+    through row 7, LEAVE at row 8's close (204,497), the ground
+    pass SEATS him on the canopy terrace (ZARIA_A.PLT line 2 at
+    x 204 = 517 through seg_y_at, minus the lift art's 34 px
+    contact) at 483 grounded INSIDE A_PODCIAG, the wrap's
+    A_DRAP(1)=AC_BREAK_NEXT seats him on the IDLE art's 28 at
+    204,489; the ask above the authored rectangle answers only
+    the edge band `set 100`, AC_DRAB_CATCH never rises, and there
+    is NO re-catch cycle any more. ly_chang then shows the top
+    being USED: the leg's own 264 JUMP press runs A_DRAP's
+    A_JUMP_S line from the seated terrace, its launch rows run for
+    the first time, and the hop LANDS ON THE BIG-TREE CANOPY -
+    line 3 at x 204 = 405 minus the fall_dn art's 33 px =
+    204,372 grounded - A_DRAP seated at 377 to the sampled tick.
+    The route OI-073/OI-078 named open (ladder, climb, lift,
+    terrace, down the big tree) is now driven by the authored
+    words in both legs. What stays open here is the rest of this
+    row's counted items, plus the I-row unit ESTIMATE (OI-015) -
+    load-bearing for the CANOPY hop's apex (112 px against the
+    video's 24-30 band) though not for the landing line, which
+    the authored .plt fixes independently. The ground-truth QEMU
+    re-capture aimed at the live engine's lock/unlock steps
+    (pr525b, scripted ladder approach) died at "no playable level
+    within 700 s" - the menu chain boots slower than pr516i's -
+    so no live-engine y-step sample exists for the shift yet; the
+    law stands on the machine-code read and the authored data,
+    and a capture attempt stays open.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)

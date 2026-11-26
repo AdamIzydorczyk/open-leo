@@ -2971,11 +2971,38 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
              * (the class +0xbc verb, 0x23870 for the lion,
              * `cmp [obj+0xa9],0x0; setne`) has no port counterpart
              * because attachment - PR-319's opcode 0x1b block - is not
-             * modelled, so the word applies unconditionally here. */
-            if (st->fr[p->fi].lockcmd > 0)
+             * modelled, so the word applies unconditionally here.
+             * PR-525: the word is not ONLY a bit. 0x54f40 puts its
+             * trio - current-element getter 0x23aa0, the element's own
+             * land method 0x42980 (through the element block's [el+0x33]
+             * table, slot +0x4), flip getter 0x53e40 - BEHIND a
+             * `test BYTE PTR [ecx+0xb6],0x1; jne`, and both paths land
+             * on the `or ...,0x1`; 0x54f90 guards the other way (`je`,
+             * LEAVE 0x429d0 runs only while the bit is set) and then
+             * `and ...,0xfe`. The methods' write target is edx = the
+             * object itself: [obj+0x0]/[obj+0x4], the live position.
+             * The port reaches the .SEQ element through the driver hook
+             * (the loaded blobs are ll_level.c's); no element for the
+             * row answers 0, the sentinel case at 0x4298d/0x429dd. */
+            if (st->fr[p->fi].lockcmd > 0) {
+                if (!p->lock && p->anchor_shift) {
+                    int sdx = 0, sdy = 0;
+                    if (p->anchor_shift(p->anchor_ctx, p, 1, &sdx, &sdy)) {
+                        p->x += sdx;
+                        p->y += sdy;
+                    }
+                }
                 p->lock = 1;
-            else if (st->fr[p->fi].lockcmd < 0)
+            } else if (st->fr[p->fi].lockcmd < 0) {
+                if (p->lock && p->anchor_shift) {
+                    int sdx = 0, sdy = 0;
+                    if (p->anchor_shift(p->anchor_ctx, p, 0, &sdx, &sdy)) {
+                        p->x += sdx;
+                        p->y += sdy;
+                    }
+                }
                 p->lock = 0;
+            }
             if (st->fr[p->fi].dircmd)
                 p->dirword = st->fr[p->fi].dircmd;
             /* PR-323: the cursor step. The engine's advance
@@ -3163,6 +3190,32 @@ static const char ST_PLT[] =
             rc = 1;                                                    \
         }                                                              \
     } while (0)
+
+/* PR-525, leg LK-S hook: a stand-in for the driver's anchor resolver,
+ * carrying the REAL LIFT.SEQ element 0 anchor fields (f2-f6 = 40,
+ * f0-f4 = 7) and element 3's (33, 4), through the arithmetic that
+ * 0x42980/0x429d0 pin (ll_seq_anchor_land/ll_seq_anchor_leave): land
+ * `*y -= (f2-f6)`, x minus for facing > 0 (0x429a0) plus for the
+ * other sign (0x429bd); leave the pair exchanged (0x429ec/0x429fb/
+ * 0x42a0d). A row with no element answers 0, like the 0x7fff
+ * sentinel at 0x4298d/0x429dd. */
+static int st_anchor_shift(void *ctx, const ll_player *p, int land,
+                           int *dx, int *dy)
+{
+    static const short dyf[4] = { 40, 0, 0, 33 };   /* the f2-f6 fields */
+    static const short dxf[4] = { 7, 0, 0, 4 };     /* the f0-f4 fields */
+    int fr = ll_player_frame(p);
+    ll_frame_ref r = ll_mov_frame_ref(fr);
+    (void)ctx;
+    if (fr == 0 || r.blank || r.idx > 3)
+        return 0;
+    *dy = land ? -(int)dyf[r.idx] : (int)dyf[r.idx];
+    if (!ll_player_mirror_of(p, r.mirror))
+        *dx = land ? -(int)dxf[r.idx] : (int)dxf[r.idx];
+    else
+        *dx = land ? (int)dxf[r.idx] : -(int)dxf[r.idx];
+    return 1;
+}
 
 int ll_play_selftest(void)
 {
@@ -6532,6 +6585,74 @@ long long pv = 100, pd = 0;          /* A_PULL's own arithmetic,
         CHECK(x2[3] == 298 && x2[4] == 299);         /* the state entry    */
                                                      /* rewrote the word  */
         free(d2);
+    }
+
+    /* PR-525, leg LK-S: THE ANCHOR SHIFT THE `lock`/`unlock` PAIR
+     * CARRIES. 0x54f40 is not only the bit: behind its
+     * `test BYTE PTR [ecx+0xb6],0x1; jne` guard it reads the current
+     * element (the lion's getter [vt+0x48] is 0x23aa0, walking
+     * [obj+0x5c] and the state array [obj+0x50] to the CURRENT ROW's
+     * element record), takes the draw-flip sign ([vt+0x50] is
+     * 0x53e40, -1 when the current frame record's flip word is set),
+     * and calls that element's own land method 0x42980 with edx =
+     * the object - the write target is [obj+0x0]/[obj+0x4], the live
+     * position. 0x54f90 guards the OTHER way (`je`, LEAVE runs only
+     * while the bit is set) and calls 0x429d0.
+     * DERIVED on PR-110's 100-a-iteration row clock and PR-317's
+     * chain timing (a row's directive chain runs when THAT row
+     * CLOSES, and p->fi is still the closing row there, so the
+     * shift takes the CLOSING row's element): rows 1..6 are T=100,
+     * so row k closes at the end of iteration index k-1. Row 1
+     * closes at index 0: LAND on element 0 - y -= 40, x -= 7 at
+     * facing +1 - and the bit goes up. Row 3 closes at index 2 with
+     * its own `lock`: the bit guard SKIPS the second LAND - this is
+     * the leg's central pin, without that guard a chain re-run on a
+     * locked row would walk the body off with it. Row 4 closes at
+     * index 3: LEAVE on element 3, y += 33, x += 4, and the bit
+     * clears. Row 5's `unlock` at index 4 is skipped the same way.
+     * Net: 300,100 -> 293,60 -> 297,93, and the same fixture at
+     * facing -1 takes x 307 then 303 (0x429bd/0x42a0d). */
+    {
+        static const char LKSF[] =
+            "[A_LKS]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\nseq=a\n"
+            "1,100,lock\n2,100\n3,100,lock\n4,100,unlock\n"
+            "5,100,unlock\n6,100\n";
+        ll_mov_t *ls = calloc(1, sizeof *ls);
+        ll_player sp, sq;
+        ll_play_keys skk = { 0 };
+        double sy[6], sx[6], mx[6];
+        int sb[6];
+        CHECK(ls);
+        CHECK(ll_mov_parse(LKSF, ls) == 1);
+        CHECK(ls->st[0].fr[0].lockcmd == 1 &&
+              ls->st[0].fr[2].lockcmd == 1 &&
+              ls->st[0].fr[3].lockcmd == -1 &&
+              ls->st[0].fr[4].lockcmd == -1);
+        ll_player_start(&sp, ls, 300, 100, 0);
+        sp.anchor_shift = st_anchor_shift;
+        sp.anchor_ctx = NULL;
+        for (int t = 0; t < 6; t++) {
+            ll_player_step(&sp, NULL, &skk, 0, 2000, LL_ITER_MS);
+            sy[t] = sp.y; sx[t] = sp.x; sb[t] = sp.lock;
+        }
+        CHECK(sy[0] == 60 && sy[1] == 60 && sy[2] == 60);  /* LAND once,  */
+                                                           /* guard holds */
+        CHECK(sy[3] == 93 && sy[4] == 93 && sy[5] == 93);  /* LEAVE once  */
+        CHECK(sx[0] == 293 && sx[2] == 293);               /* facing +:   */
+        CHECK(sx[3] == 297 && sx[5] == 297);               /* 0x429a0 /   */
+                                                           /* 0x429fb     */
+        CHECK(sb[0] == 1 && sb[1] == 1 && sb[2] == 1);     /* the bit     */
+        CHECK(sb[3] == 0 && sb[4] == 0 && sb[5] == 0);     /* stays put   */
+        ll_player_start(&sq, ls, 300, 100, 0);             /* the mirror  */
+        sq.face = -1;                                      /* half: the   */
+        sq.anchor_shift = st_anchor_shift;                 /* flipped x   */
+        for (int t = 0; t < 6; t++) {
+            ll_player_step(&sq, NULL, &skk, 0, 2000, LL_ITER_MS);
+            mx[t] = sq.x;
+        }
+        CHECK(mx[0] == 307 && mx[2] == 307);
+        CHECK(mx[3] == 303 && mx[5] == 303);
+        free(ls);
     }
 
     /* PR-323: the answer-6 protocol of PR-322 - `goto N` /
