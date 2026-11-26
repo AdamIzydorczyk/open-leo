@@ -68027,3 +68027,146 @@ MEASURED: (a) 9 intent-onset windows, 7 with A_WALK's parameters; in
   row cursor and accumulator left alone at entry.
 
 GATE: light: verify-index verify-docs rc=0 (ok);
+
+## PR-523 - THE ROW-ADMIT FLIP SHIPS: INTENT-EDGE AND REGISTER-ZERO
+## SEEDS, THE KEYBOARD'S 20 IN THE CONSTANT, DEFAULT-ON ROW PHYSICS WITH
+## A CLAUSE-PARK EXCEPTION, AND EVERY GAIT RE-DERIVED FROM THE SHIPPED
+## F/T/G ARITHMETIC
+
+```
+KIND: port
+SUBSYSTEM: ported/ll_play.c's physics cadence (ll_player_step's row
+  gate), the player's intent constant in ll_play.h, and every gait pin
+  in --play-selftest, verify-play and verify-endlevel. This is the
+  flip PR-518/519/521/522 deferred as ONE step, and it is four things:
+  (1) THE CONSTANT. LL_PLAY_INTENT_FULL 10 -> 20, the keyboard's word
+  every live sample carries (946 samples at 20, none at 10, PR-520;
+  PR-522's closed form: the walk only cold-starts at s >= 14).
+  OI-011's discrepancy is answered in the constant, not beside it.
+  (2) THE SEED. The gate runs one ordinary physics pass at the rising
+  edge of the port's own intent word (new p->intent_on tracks the last
+  iteration's answer - the engine's entry seed, PR-522, NOT an admit:
+  no row cursor move, no accumulator feed) and again whenever a held
+  intent meets a ZERO x register (zero_restart). The second arm is
+  forced by real data, not theory: 0x5430a-0x54337 zeroes the register
+  at a sign cross - the turn in PR-85's left-walk leg - a BY_X feed of
+  0 then admits nothing forever, and RAN.01's real F=400/T=90 turn
+  deadlocks standing at x 248 without it. With both arms: seed -400,
+  then -440, -444, -445, and the walk resumes. (3) THE DEFAULT.
+  ll_play_row_physics() now answers ON unless LEO_PLAY_ROW_PHYSICS
+  begins with '0'; the README paragraph states it. The per-iteration
+  model is a comparison switch only: at =0 the suite reads 82 checks
+  red, because every leg now carries row-cadence arithmetic.
+  (4) THE PARK EXCEPTION, the finding of the flip. PR-518's gate read
+  literally - physics only at an admit - freezes ZARIA.01: its real
+  [A_JUMP] row 10 is `8,0,WAIT AC_DUP`, AC_DUP being the surface link
+  the state is falling TOWARD, so gating the BODY on the clause parks
+  the lion at y 586 / vy -747 on tick 59 for the rest of the run. The
+  row half of PR-333's reading says the opposite anyway: a refused
+  clause exits the row step at 0x522ed, which is the ROW path's exit
+  and has no power over the motion path - the same reason the nfr==0
+  arm already steps physics. So the gate carries row_park: a row whose
+  clause is answered NO keeps the cursor parked and runs the ordinary
+  pass. With it the whole authored flow runs: the landing, the
+  `A_TURN_BACK(1)=AC_DUP,K_DOWN` line OI-121 said could never fire,
+  and A_DRAP's `5,300,WAIT !K_DOWN` park at the ladder foot. The
+  data-free A_PARK selftest leg pins the arm's arithmetic: fixture
+  F=0,0 T=20,0 G=100,0, rows 1,100 / 2,100,WAIT AC_EDGE / 3,100;
+  the cursor stands on row 2 for the whole leg (row_t 900, frame 2's
+  own art) while the register walks 100,180,244,296,337,370,396,417,
+  434,448 and x walks 501..527 - every number the closed form of the
+  authored pair, re-computed by a loop inside the leg, and named
+  vwant/xwant, not read off any run.
+  THE PRICE, PAID IN FULL: the 90 + 69 red checks PR-518 counted are
+  now re-derived leg by leg from the shipped F/T/G words - walk
+  gaits (fixed point 650 = (F*s + 20*G_x)/T_x, one 6-unit row per
+  6 px, a pass per row pitch), the BY_TY climb pair, the PR-87 fight
+  leg, the ladder legs, and down to the real levels: TUNGA.11's own
+  [A_WALK] (F=100,0 T=20,5 G=30,350) gives the pass ladder 130/234/
+  318/385 from the step word its own rows feed (idiv: 1/2/3/3 px),
+  admits at ticks 1/7/10/12, x 51/53/56/59, and the y 369 leg is
+  traced to the 7th polyline of TUNGA.PLT (`1 13,405;67,400` - floor
+  401 to feet 370 up to x 56, 400 to 369 from x 57); RAN.01's
+  endlevel leg re-derives to the intent-edge pass at 400 raw, its
+  row 1 admitting at tick 3 and the exit at tick 4 of 60. Coverage
+  moved once, and is named: at the 4 px gait the RAN.01 gap leg now
+  CATCHES the far lip instead of dying, so the `below lew_rect ->
+  respawn` path rides the ZARIA.01 traverse leg instead (two pit
+  deaths pinned there, (430,1010) at 127 and (434,1011) at 255), and
+  the K_NEVER clause-row park rides the --mov-selftest A_DOWN legs.
+ADDRESSES: 0x522ed (the refused-clause exit of the row step - the
+  reading behind row_park; no motion path inside it), 0x5430a-0x54337
+  (the sign-cross zero - why a held intent must re-seed a zeroed
+  register).
+NAMES: A_JUMP, A_JUMP_S, A_PARK, A_WALK, A_WALK_FWD, A_DRAP,
+  A_FALL_DOWN, A_LOOKUP, A_WSP, AC_DUP, AC_ONAIR, LL_PLAY_INTENT_FULL,
+  LEO_PLAY_ROW_PHYSICS, row_park, intent_on, obj_walk, LEW.MOV,
+  LEW.TUN, TUNGA.PLT, ZARIA.01, RAN.01, TUNGA.11, OI-011, OI-013,
+  OI-015, OI-018, OI-073, OI-121.
+CODE: yes: ll_play.h LL_PLAY_INTENT_FULL 10 -> 20 and a new
+  p->intent_on field; ll_play_row_physics() defaults ON (the env
+  value only disables with a leading 0); ll_player_step seeds one
+  ordinary pass at the intent edge and at a held intent meeting a
+  zero x register, and adds the row_park arm for refused clause
+  rows; a new data-free A_PARK leg pins the arm in closed form;
+  obj_walk spells out the object side's literal 10.0 so the lion's
+  constant cannot move it (the object model has no register;
+  PR-79/134's measured scale stays); every gait, distance, frame
+  and endlevel pin in the hermetic suite and the Makefile legs is
+  re-derived from the authored F/T/G arithmetic and the shipped
+  .MOV/.PLT texts, with the derivation beside the leg.
+HOOKS: LEO_PLAY_ROW_PHYSICS - default flipped to ON; the hook is now
+  the off-switch (=0 restores the per-iteration comparison model).
+  README's hook paragraph updated.
+OPENS: OI-018 (the surface query and AC_ONAIR ride the admitting pass
+  - what is open is their CADENCE, not their raisers), OI-013 (the
+  entry HOLD is still not modelled - the port seeds on the edge
+  iteration - and one pr516i window at ~80 ms iterations with the
+  accumulator running and NOTHING admitting is counted there)
+CLOSES: OI-011 (s = 20 is the keyboard's word, now in the constant),
+  OI-121 (both of its shipped consequences run under the row-admit
+  law + the attach-raised AC_DUP, with no surface-identity record),
+  OI-015's flip half (the default is the measured cadence, every pin
+  re-derived)
+CORRECTS: none. PR-518's literal gate candidate (physics ONLY at an
+  admit) is refuted on real data - ZARIA.01's [A_JUMP] row 10 hangs
+  the lion forever, mut run below - but no record claimed it as the
+  original's law; it stayed a gated candidate until this PR paid
+  for it.
+MEASURED: (a) the row_park mutation: forcing the arm's condition off
+  turns exactly ONE check red in --play-selftest - line 5347 then,
+  5350 now, the A_PARK register-and-position CHECK
+  (/tmp/opencode/mut_ps2.log), every other leg green - and on real
+  data it turns ZARIA.01's jump leg red the same way: no landing
+  transition, frame 8 pos 161,586 v 1780,-14940 unmoved ticks 59-96
+  (/tmp/opencode/mut_zjump.log); (b) the comparison switch:
+  LEO_PLAY_ROW_PHYSICS=0 --play-selftest rc=1, 82 FAILED;
+  (c) TUNGA.11's real [A_WALK]: passes 130/234/318/385 = log v
+  2600/4680/6360/7700 at ticks 1/7/10/12, x 51/53/56/59, frames
+  10/11/12/1, y 370 then 369 from x 57 off TUNGA.PLT; (d) RAN.01
+  endlevel: seed pass 400 raw (4 px), row 1 admits tick 3 drawing
+  its own frame 2, exit tick 4 of 60; (e) the A_PARK tables are
+  re-computed from the closed form inside the leg, so a drift in
+  the arithmetic fails even if a run agrees.
+```
+
+- WHY. ZARIA.01 is the objective, and every chain in it ran through
+  "the walk must start, at the authored speed, and the body must keep
+  moving while its row list waits." This PR is where those become the
+  port's default: the constant the capture carries, the seed PR-522
+  measured, the row-admit cadence PR-517/520 closed, and the one law
+  only the real level exposed - a parked clause row parks the cursor,
+  never the body. The whole suite now speaks that arithmetic, which
+  makes the remaining ZARIA gaps nameable: the ladder-top route
+  (OI-073/OI-078), the AC_ONAIR cadence question (OI-018), and the
+  name-map audit (OI-130).
+
+GATE: make 0 warnings; verify-all fixtures rc=0 71 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs
+      (both rc=0; counts are grep -o '(ok)' and the named
+      `verify-*: SKIP` lines of /tmp/opencode/va523_c.log and
+      /tmp/opencode/va523_d.log. One (ok) fewer than PR-521: the
+      standalone RAN gap-fall lew_rect leg's death path now rides
+      inside the ZARIA.01 traverse leg, and that leg's own
+      K_NEVER-park pin rode to --mov-selftest - coverage moved,
+      nothing was dropped.)

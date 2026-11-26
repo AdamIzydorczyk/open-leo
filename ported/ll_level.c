@@ -1421,7 +1421,8 @@ static void obj_arm_atak(lvl_obj *o, int lx, int ly, int verbose, int tick)
  * instead of units/s: each iteration the drag takes T/100 of the speed
  * and the force adds F*s/100 with s the intent, so the steady state is
  * F*s/T velocity units = F*s*LL_ITER_MS/(1000*T) px per iteration =
- * F/(2T) at LL_ITER_MS = 50 and s = LL_PLAY_INTENT_FULL = 10. An
+ * F/(2T) at LL_ITER_MS = 50 and the object scale 10 spelled out in
+ * obj_walk below. An
  * object's walk is at the full intent while its state runs (a scene
  * object has no keys; PR-98's obj_walk always walked), which is why s
  * is not gated here. This reproduces PR-134's table exactly: the worm
@@ -1444,7 +1445,15 @@ static void obj_walk(lvl_obj *o, const ll_mov_st *s)
 
     if (s->tx > 0) {
         int td = s->tx > 130 ? 130 : s->tx;   /* 0x52590 caps T at parse */
-        dist = dist * LL_PLAY_INTENT_FULL * (double)LL_ITER_MS /
+        /* PR-523 moved the LION's intent word to 20 - the register
+         * seed evidence is all on the lion's side. This object model
+         * does NOT follow it: its rate is pinned to PR-79/134's
+         * measured object pitches (the worm F=100, T=40 at 1.25 px
+         * per iteration), every one of which is a mid-walk video
+         * measurement at this scale, and this side models no register
+         * at all (HANDOFF 7). 10.0 is that measured scale, spelled
+         * out here so the lion's constant moving cannot move it. */
+        dist = dist * 10.0 * (double)LL_ITER_MS /
                (1000.0 * (double)td);
     } else {
         dist = dist * (double)LL_ITER_MS / 4000.0;
@@ -6669,9 +6678,11 @@ static void play_collide(play_ctx *pl, const lvl_obj *objs, int nobj,
                            o->sc->mov->st[o->sti].block_pos)) {
                 pl->p.sig |= 1ull << LL_SIG_AC_DRAB;
                 if (verbose)
-                    printf("ll_level: play tick %d: ladder contact"
+                    printf("ll_level: play tick %d: ladder %s/%s"
+                           " contact"
                            " raises AC_DRAB on the lion (state IDs"
                            " %d/%d)\n", tick,
+                           o->sc->leaf, o->sc->movname,
                            pl->mov->st[pl->p.sti].block_pos,
                            o->sc->mov->st[o->sti].block_pos);
             }
@@ -6770,9 +6781,11 @@ static void play_collide(play_ctx *pl, const lvl_obj *objs, int nobj,
                                o->sc->mov->st[o->sti].block_pos)) {
                     pl->p.sig |= 1ull << LL_SIG_AC_DRAB;
                     if (verbose)
-                        printf("ll_level: play tick %d: ladder contact"
-                               " raises AC_DRAB on the lion (state"
+                        printf("ll_level: play tick %d: ladder %s/%s"
+                               " contact raises AC_DRAB on the lion"
+                               " (state"
                                " IDs %d/%d, non-solid)\n", tick,
+                               o->sc->leaf, o->sc->movname,
                                pl->mov->st[pl->p.sti].block_pos,
                                o->sc->mov->st[o->sti].block_pos);
                 }

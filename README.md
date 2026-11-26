@@ -258,6 +258,22 @@ solid objects push the lion (ll_seq_shape_push, the game's FUN_00053ae0),
 enemies hurt him by their authored damage= (HUD energy/lives follow) and
 balloons heal him. Default: ON for every level except RAN.01 (the
 balloon-flight level, whose walking start is not what the game plays).
+`LEO_PLAY_ROW_PHYSICS=0` (play mode; the hook is PR-518's, its default
+is PR-523's) is the physics-cadence switch. Default — unset, or any value
+without a leading `0` — is the engine's own cadence, measured off the live
+capture: the row clock is fed every 50 ms iteration, while the velocity
+registers, the position, the ground queries and the bounds run ONLY when
+the authored row step answers (a threshold crossed in a BY_X/BY_TIME state,
+or a `Wait` clause matched), plus exactly one pass at the rising edge of
+the intent word and one at a row whose clause refuses (a parked row parks
+the cursor, not the body). `=0` restores the older per-iteration model for
+comparison only: every selftest and play leg now carries the row-admit
+arithmetic, so that path reads red against them (82 checks) and is not a
+supported mode. The same PR moved the player's intent word
+(`LL_PLAY_INTENT_FULL`) from 10 to the keyboard's 20 — the walk's row feed
+is `v//100`, so below 14 no BY_X walk cold-starts at all. Scene objects
+keep the measured object scale (PR-79/134) spelled out in `obj_walk`; it
+does not follow the lion's constant.
 `ll_level --mov-selftest` runs
 the hermetic .MOV duration/cycle + per-state art-selection + patch-codec
 + anchored-draw + element shape-geometry checks (no data needed).

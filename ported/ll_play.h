@@ -1068,16 +1068,18 @@ typedef struct { int k_fwd, k_bkwd, k_up, k_down, k_jump,
  * arithmetic gives ~16 px/s, matching nothing. So the constant is the keyboard's word, 20 - the decision
  * OI-011 asked for, made on three independent measurements (live
  * word, live register equilibrium, live px/s) with the video band as
- * the bound. OI-011's decision is therefore recorded as 20, but the
- * constant is NOT flipped by this PR: with the corrected cadence
- * already in the tree, 20 turns 69 of the --play-selftest checks red
- * (the gait, walk-distance and BY_TY legs carry s=10 numbers), and
- * those pins must be re-derived on the live trace's numbers, not
- * scaled. The flip plus its re-pinned legs is PR-519. PR-99's 10 and
- * PR-134's fitted band stay cited where they were measured; partial
- * intents remain an open item, not modeled. */
+ * the bound. PR-523 FLIPS THE CONSTANT to that recorded answer, 20,
+ * together with the row-admit default and the entry register-seed:
+ * PR-522 proved this is not merely a speed question - a BY_X walk
+ * cannot cold-start at all below s>=14, so 10 and the corrected
+ * physics cannot coexist as the default. The 69 --play-selftest
+ * checks 20 turns red (the gait, walk-distance and BY_TY legs), and
+ * the ~90 the row-admit order turns red, are re-derived here on the
+ * closed-form F/T/G arithmetic, not scaled. PR-99's 10 and PR-134's
+ * fitted band stay cited where they were measured; partial intents
+ * remain an open item, not modeled. */
 #define LL_PLAY_DRAG_DEN 100
-#define LL_PLAY_INTENT_FULL 10
+#define LL_PLAY_INTENT_FULL 20
 /* PR-135: one unit of the engine's velocity register. That register is
  * an INTEGER in hundredths of a px per iteration (PR-98 read the /100
  * at 0x5435d and the sub-pixel scale of `I 150,-1200` = 1.5 px per
@@ -1191,6 +1193,15 @@ typedef struct {
                                  * mode-0 row feed reads this word; it
                                  * survives between admits because the
                                  * object's words do. */
+    int intent_on;              /* PR-523: last iteration's answer to
+                                 * "is this state's x-intent word
+                                 * non-zero". The rising edge of that
+                                 * word ([obj+0xba], the live trigger
+                                 * PR-522 measured at every cold walk
+                                 * start) arms the one register-seed
+                                 * pass; the port tracks its own s so
+                                 * both the key path and the auto-walk
+                                 * path produce the same edge. */
     int grounded;
     int walkdir;                /* -1/1, set by K_BKWD/K_FWD transitions
                                  * (the real CH_DIR flag's effect)        */

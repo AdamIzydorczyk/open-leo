@@ -26,7 +26,7 @@ What exists and works (all verified by `make verify-all`, section 3):
 | title menu + chapter map | drawn from data (11 chapters, titles from `LEVELnn.SEQ`, arrow colours); progress/"start" variants not done |
 | level scene | 320x200 world view shown 2x; world size from `back_rect` or the reference layer; per-layer parallax (`speed=`, `main_back=`) for PCM layers, the PCX backdrop and every object; HUD from `BELKA*.DES` |
 | objects | 827+ placements, art by each state's `seq=`, `.MOV` state machines (loop until a transition fires; `GEN K_GENn`, `AC_BREAK_NEXT`); PR-93: the 3-comma static image lines (`<LEAF>,<name>.seq,x,y` -> that CD leaf's `.SEQ`, drawn at the authored x,y behind the actors) and the 0,0 entries = attached children (joined+counted, never instantiated at the world origin); PR-107: a `TARGET(N)=<cond>` line carries an authored START ROW and the target state is entered at that row (same rule for the lion and scene objects) |
-| lion (play mode) | walks on the level's own ground (`.PLT`) with his current ANIMATION's shape-box bottom as the contact line (PR-97: `ll_player.contact`, `ll_seq_shape_contact`, `mov_state_contact`), runs the engine's OWN velocity law once per 50 ms iteration - `v -= T*v/100` then `v += F*s/100` with the key intent `s` = ±10 (PR-135, replacing the fitted target-velocity model) - and his row list admits AT MOST ONE row per iteration, fed by travelled distance in a BY_X state and by the engine's constant 100 otherwise; jumps (ESTIMATED units), keys facing-relative (Model M, PR-85), camera follows (lead 100/220 - PR-136's absolute camera read CONFIRMS the right lead at 95-108; PR-137 APPLIED the grounded anchor at 128 + the world clamp (the 175..180 band was the clamp, not the anchor), pinned hermetically by `ll_level --follow-selftest`), HUD shows energy/lives |
+| lion (play mode) | walks on the level's own ground (`.PLT`) with his current ANIMATION's shape-box bottom as the contact line (PR-97: `ll_player.contact`, `ll_seq_shape_contact`, `mov_state_contact`), steps the engine's OWN velocity law at the engine's OWN cadence (PR-523, default): the row clock is fed every 50 ms iteration - the constant 100, or for a BY_X state the persisted whole-px step word - while the velocity registers, the position step at register//100, the ground queries and the bounds run only when the authored row step answers (a threshold crossed, or a `Wait` clause matched), plus exactly one seed pass at the rising edge of the intent word and at a zeroed register met by a held intent (PR-522's cold start), and the ordinary pass at a row whose clause refuses (a parked row parks the cursor, not the body); `v -= T*v/100` then `v += F*s/100` with the key intent `s` = ±20, the keyboard's word the live capture carries (PR-520/PR-523, replacing PR-135's fitted ±10; `LEO_PLAY_ROW_PHYSICS=0` restores the old per-iteration model for comparison only); jumps (ESTIMATED units), keys facing-relative (Model M, PR-85), camera follows (lead 100/220 - PR-136's absolute camera read CONFIRMS the right lead at 95-108; PR-137 APPLIED the grounded anchor at 128 + the world clamp (the 175..180 band was the clamp, not the anchor), pinned hermetically by `ll_level --follow-selftest`), HUD shows energy/lives |
 | collision | push-out ported from the machine code (`FUN_00042de0/42cf0`), solid/semi-solid response, damage from an enemy ONLY through its own ATC window (the authored `atc_on` rows) and the 0x550c0 clash rule - a bare touch never hurts the lion (PR-139 deleted the port's unconditional contact damage); the enemy's own ATC-window attack when armed (PR-90, off unless `LEO_PLAY_DANGER=1`), balloon pickup; ON by default except RAN.01 |
 
 What does NOT exist yet (the real gap to "a playable game"): combat
@@ -1021,20 +1021,32 @@ ESTIMATE: The unit of the row clock, and the BY_* mode feed (0 BY_X / 1 BY_Y /
 
 ESTIMATE: The player's OWN velocity register, and the three numbers in it that
     bytes do not give
-  where: ll_play.h `LL_PLAY_DRAG_DEN` 100, `LL_PLAY_INTENT_FULL` 10,
+  where: ll_play.h `LL_PLAY_DRAG_DEN` 100, `LL_PLAY_INTENT_FULL` 20,
     `LL_PLAY_V_EPS` 0.2, `LL_ITER_MS` 50; ll_play.c sections 2 and 7;
     ll_level.c `obj_walk`
-  value: per iteration `v -= clamp(T,.,130)*v/100` (sign flip or a remainder
-    under one register unit -> 0), then `v += F*s/100` with s = +/-10 only
-    while a facing-relative direction key is held in a BY_X state, or for an
-    auto_walk state; NO lower clamp on `T`; NO register on the object side,
-    which steps straight to the steady rate
+  value: the raw register (hundredths of a px per pass) steps ONLY at the
+    row-admit cadence PR-523 made the default: `v -= idiv(v*clamp(T,.,130),
+    100)` (sign flip or a remainder under one register unit -> 0), then
+    `v += idiv(F*s,20) + G_x*[dir]` with s = +/-20 (PR-520's census: 946
+    samples carry 20, none carry 10; PR-522: the walk cold-starts only
+    at s >= 14) only while a facing-relative direction key is held in a
+    BY_X state, or for an auto_walk state; plus exactly one seed pass at
+    the intent rising edge and at a zero register met by a held intent;
+    NO lower clamp on `T`; NO register on the object side, which steps
+    straight to the steady rate at the measured object scale spelled out
+    in `obj_walk` (PR-79/134's 10.0, deliberately NOT moved with the
+    lion's constant); the entry HOLD (gate_95, 0.06-0.16 s) is measured
+    but NOT modelled - the port seeds on the edge iteration (OI-013)
   evidence: PR-129/130 read the chain, PR-133 the passes and PR-134 the clock;
     the steady state F*s/T units/s reproduces PR-134's measured lion (50 u/s at
     ZARIA's F=100 T=20) and worm (25 u/s at F=100 T=40) inside those brackets;
-    the epsilon, the partial-intent values of s, the engine's raise of T to >=
-    20, the object register and 50 ms as PR-134's video-chosen edge of PR-109's
-    28-33 ms code bracket are all named in the PR-135 record
+    PR-520's live walk window is matched register-for-register and step-for-
+    step at s=20 with the G_x term (18/18 + 18/18), and PR-523 re-derived
+    every gait, distance and frame pin in the suite from the authored F/T/G
+    words on that cadence; the epsilon, the partial-intent values of s, the
+    engine's raise of T to >= 20, the object register and 50 ms as PR-134's
+    video-chosen edge of PR-109's 28-33 ms code bracket are all named in the
+    PR-135 record
 
 ESTIMATE: jump key
   where: ll_level.c
@@ -3411,6 +3423,45 @@ record.
   is measured but its set/reset writer is unread (OI-013 stays open);
   the port seeds on the entry iteration, it does not reproduce the hold.
   The name-map audit (OI-130) is the one remaining T3 reading task.
+
+  PR-523 STATUS (the flip SHIPPED, in one step, and the real level
+  corrected the gate on the way in). LL_PLAY_INTENT_FULL is 20;
+  ll_play_row_physics() defaults ON (the env hook only turns it off,
+  leading 0); the gate seeds exactly one ordinary pass at the rising
+  edge of the intent word (new p->intent_on) and again at a zero x
+  register met by a held intent - the second arm is not theory, it is
+  RAN.01's real turn: 0x5430a-0x54337 zeroes the register at the sign
+  cross, a BY_X feed of 0 admits nothing, and without the re-seed the
+  authored F=400/T=90 pair deadlocks standing. THE FINDING THE CAPTURE
+  COULD NOT GIVE: PR-518's literal gate - physics ONLY at an admit -
+  hangs ZARIA.01. Its real [A_JUMP] row 10 is `8,0,WAIT AC_DUP`, and
+  AC_DUP is the surface link that state is falling TOWARD: gate the
+  body on the clause and the lion freezes at y 586 / vy -747 forever.
+  PR-333's own row reading says the same from the machine-code side -
+  a refused clause exits at 0x522ed, a row-path exit with no power
+  over the motion path - so the gate now carries row_park: a refused
+  clause row parks the CURSOR and runs the ordinary pass. With it the
+  authored flow runs end to end: the landing, A_WSP's
+  `A_TURN_BACK(1)=AC_DUP,K_DOWN` at the ladder foot (OI-121's
+  never-can-fire line, closed), A_DRAP's `5,300,WAIT !K_DOWN` hold.
+  THE PRICE WAS PAID IN FULL, by derivation not by fit: every gait,
+  distance, frame and endlevel leg - hermetic and real-data - now
+  carries the row-cadence arithmetic off the shipped F/T/G words and
+  the real .MOV texts (TUNGA.11's own [A_WALK] pass ladder
+  130/234/318/385, RAN.01's endlevel exit at tick 4 of 60). At
+  LEO_PLAY_ROW_PHYSICS=0 the suite reads 82 checks red: the
+  per-iteration model is a comparison switch, not a supported mode.
+  OI-011 and OI-121 CLOSED; OI-018 OPENED (the surface query and
+  AC_ONAIR now ride the admitting pass - the open question is their
+  cadence, and one pr516i window at ~80 ms iterations with the
+  accumulator running and NOTHING admitting is counted at OI-013).
+  What T3 still holds: the OI-130 name-map audit, and a live window
+  for OI-018 if one exists. What ZARIA.01 playability still names:
+  the water/pit at x~400 and the ladder-top route - OI-073 sharpened
+  the geometry (the ladder answers only while its 42x48 art box, top
+  y 558, is met, so the ground route is the authored A_FALL_DOWN/
+  A_DRAP/A_LOOKUP cycle, and reaching the climb is a ROUTE question,
+  OI-078's half).
 
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`

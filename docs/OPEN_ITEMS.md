@@ -149,7 +149,7 @@ OI-010: the `.MOV` parser clamps `T=` to 130 while 172 authored
 OI-011: shipped discrepancy: the port drives the player walk to
   T=20 (= 20 px/s) while the measured walk is ~25 px/s; the worm's
   4-unit poses reproduce at 25 (PR-135) but the lion leg disagrees
-  status: OPEN
+  status: CLOSED BY PR-523
   origin: PR-79/99/131/135 (HANDOFF 13.88); G-1 referee windows
     (PR-131/134: LEWPL has no A_RUN state - the A_WALK->A_RUN entry
     is an .MOV row question, answer it from data not video)
@@ -223,6 +223,31 @@ OI-011: shipped discrepancy: the port drives the player walk to
   under the row-admit path at all. The constant and the entry-seed
   flip as one step. (See OI-015's PR-522 note for the seed.)
 
+  PR-523 CLOSES IT: THE CONSTANT IS 20 AND THE ROW-ADMIT LAW IS THE
+  DEFAULT, IN ONE COMMIT. The header's word is now the keyboard's 20,
+  ll_play_row_physics() defaults ON, and the entry seed PR-522 asked
+  for is there - not an admit, just the ordinary pass run once at the
+  rising edge of the port's own intent word (p->intent_on), plus the
+  same seed when a held intent meets a zero register (the reversal
+  case: the engine's own sign-cross rule zeroes the register, a BY_X
+  feed of 0 admits nothing, and the walk would deadlock mid-run).
+  Every red pin was RE-DERIVED from the shipped .MOV arithmetic, never
+  scaled: the walk gaits, the BY_TY climb pair, the PR-87 fight leg,
+  and the play legs down to the real TUNGA.11 and RAN.01 scripts.
+  TUNGA.11's own [A_WALK] (F=100,0 T=20,5 G=30,350, rows of 6 px)
+  is now the closed form in the leg's own comment: seed pass 130,
+  then 234, 318, 385 at the admits its own step word feeds
+  (idiv(130,100)=1 px a tick against a 6-unit row = an admit at
+  ticks 7, 10, 12; x 51, 53, 56, 59), and the frames advance as one
+  quantity with the distance, because they ARE the same counter.
+  The rate question this row opened is answered in that form: the
+  walk's steady register is (F*s + 20*G_x)/T_x = 650 raw, but the
+  gait only reaches it at one pass per 6 px travelled - the row
+  pitch, not the drag, is what sets the walk rate. Scene objects are
+  explicitly NOT moved: obj_walk keeps PR-79/134's measured 10.0
+  scale, spelled out at the call so the lion's constant cannot move
+  it (that side models no register at all).
+
 OI-012: does the PLAYER object go through the 0x54250 step at all?
   PR-135 applies the law to both actors as the model; the three
   call sites do not check class
@@ -263,6 +288,26 @@ OI-013: the [obj+0x95] flag that turns `I`/`IC` rows on; the
     flag, measured from pr516i; the flag's SET/RESET writer is still
     unread, so the model stays a measurement and the port seeds on the
     entry iteration rather than reproducing the hold.
+
+    PR-523 ADDS THE OTHER HALF OF THAT COUNTER-EVIDENCE, AND THE PORT
+    NOW CARRIES IT. The same live windows show a state whose ROWS hold
+    while its velocity registers keep stepping: the real A_DOSTAL is
+    `20,200 / 5,200,WAIT !AC_ENEMY_ATC`, and its registers step at
+    ~100-unit intervals through the whole reaction while its row cursor
+    stays where its clause parks it. Read the other way - the row
+    admit gating the physics - that state's registers would freeze at
+    the clause row and never reach the pullback the port measures. So
+    PR-523's row-admit gate carries an explicit exception (row_park):
+    a row whose clause REFUSES parks the row cursor and runs the
+    ordinary physics pass, because 0x522ed - the exit PR-333 reads for
+    a refused clause - is the row path's exit and nothing in it stops
+    the motion path. The counter-evidence in the port's own data is
+    ZARIA.01's real [A_JUMP] row 10, `8,0,WAIT AC_DUP`: with the body
+    gated on the admit as well, the lion stops at y 586 with vy -747
+    and the ground that would raise AC_DUP is never reached, for the
+    rest of the run. What stays open here is the flag itself - its
+    set/reset writer, and the 0.06-0.16 s entry hold that the port
+    does not reproduce (it seeds on the edge iteration instead).
 
 OI-014: ds:0xcef40 +0x388 as a frame-advance distance accumulator
   status: CLOSED BY PR-100
@@ -494,6 +539,54 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     gate_95 hold itself stays open at OI-013 (its set/reset writer is
     unread); the port should seed on the entry iteration, not model the
     hold.
+    PR-523 FLIPS THE DEFAULT AND PAYS THE COST. The row-admit pass is
+    now the default (ll_play_row_physics() answers ON unless
+    LEO_PLAY_ROW_PHYSICS begins with '0'), the intent word is 20
+    (OI-011's answer, now in the constant), and the entry seed PR-522
+    measured is in: exactly one ordinary pass at the rising edge of
+    the port's own intent word, plus the same one pass when a held
+    intent meets a zero register - the reversal case, where
+    0x5430a-0x54337's sign-cross zero leaves a BY_X feed of 0, no
+    row ever admits again, and the literal gate would freeze the lion
+    standing mid-run (RAN.01's authored F=400/T=90 pair is the case
+    the real level hits). PR-522's entry HOLD is still NOT modelled -
+    the port seeds on the edge iteration, OI-013. What PR-518/521
+    counted as "90 red at the gate" plus the 69 the s-move turns red
+    is now paid in full: every gait, walk-distance, BY_TY and climb
+    check in the hermetic selftest, and every leg of verify-play and
+    verify-endlevel, carries the row-cadence arithmetic, derived from
+    the shipped F/T/G words and written beside the leg. The hermetic
+    suite is green at the default; the historical
+    LEO_PLAY_ROW_PHYSICS=0 path reads red against it (82 checks) and
+    is a comparison switch, not a supported mode.
+    THIS ROW'S OTHER ITEMS ARE UNTOUCHED: partial `s`, the object's
+    own velocity register (PR-523 deliberately did NOT move the
+    object side - obj_walk spells out PR-79/134's measured 10.0 so
+    the lion's constant cannot drag it), velocity across a state
+    change, state-change feed consumption, the nfr == 0 guard (still
+    the standing exception inside the gate), LL_PLAY_V_EPS, the
+    `vy >= 0` ground-snap guard and the 50 ms clock. ONE NEW HALF,
+    from this flip: the ground query, and with it AC_ONAIR, lives
+    INSIDE the pass, so it runs only at an admitting pass - the
+    question is named at OI-018.
+    ONE WINDOW THIS RE-DERIVATION TURNED UP, NOT RESOLVED, AND IT
+    BEARS ON THE CLOCK ITEM IN THIS ROW'S HEADER. pr516i, lion
+    0x524400, t=339.46-339.77 (named A_WSP by the rec+0x3c vector,
+    which PR-520 showed mis-names states, and its steps are NOT the
+    A_WALK pair's, so it names nothing): four samples at gate_95=1
+    with the row accumulator at 0 and the x register at exactly 130 -
+    the A_WALK intent-edge seed PR-522 measured - then gate_95 -> 0
+    and from there the accumulator (+100, NEVER consumed, so no row
+    admits in this window), BOTH registers (130,350 -> 211,402 ->
+    268,453) and the POSITION (51,643 -> 53,647 -> 55,651) advance in
+    perfect lockstep, one step per 80 ms, at 20 ms sampling. Two
+    things sit in that one window: the engine's iteration there is
+    ~80 ms, not the 50 ms the port ships (PR-109's 28-33 ms bracket
+    and PR-134's 50 ms edge are both in this row's header), and the
+    feed and the physics step on the SAME tick, which is what the
+    port's row-admit gate does when a row admits - but here nothing
+    admits. One window, a state it does not name: counted, not
+    modelled, and no pin in this PR depends on it.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
@@ -632,6 +725,37 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     authored anywhere (PR-391: 0 of 1749 separators), which makes the
     flag-2 branch of 0x54766 dead in shipped data. What stays open here
     is only AC_EDGE's semantics and the identity question at OI-121.
+    PR-523 ADDS A QUESTION ABOUT AC_ONAIR'S CADENCE, NOT ITS RAISER.
+    With the physics pass now running at row admits (OI-015), the
+    surface query - and the surface-link tail that posts AC_ONAIR and
+    AC_DUP (0x54760-0x54803) - sits INSIDE the pass, so it answers
+    only at an admitting iteration. Two shipped runs show what that
+    costs, and neither is decided: (a) ZARIA.01's [A_JUMP_S] rows
+    `1,225,F 0,350` means its first pass comes three iterations in,
+    and in the two iterations before it the registers sit exactly
+    still and AC_ONAIR is NOT posted - its own
+    `A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR` row then takes the state at
+    the third iteration, before its `I 120,-1200` launch rows are
+    ever admitted, so no hop arc runs over a ladder column at all
+    (the hang-and-hop leg, PR-286 re-pinned); (b) a state whose row
+    clock has stopped - A_WSP holding with no vertical intent,
+    PR-148's mode-4 feed arm - runs no pass, so the body freezes
+    where the row left it, register and all (the climb leg holds
+    207,591 with v -3440 unchanged for 50+ ticks). An engine that
+    queried the ground on every frame would keep falling; the port
+    does not. WHAT WOULD DECIDE IT: a live window of a state with a
+    STOPPED row clock and a moving body. PR-523 looked for exactly
+    that in pr516i (the probe is at /tmp/opencode/pr523_oi018_probe
+    .py) and the answer so far is: no such window. The only two
+    >=6-sample climb windows with no vertical intent sampled both
+    show the row accumulator RUNNING anyway (+100 per ~80 ms, never
+    consumed, no row admit) with both registers and the position
+    stepping in lockstep with it - see OI-015's PR-523 note for the
+    numbers. So the premise (b) has no capture support: where the
+    port freezes a body on a parked row clock, the original has no
+    recorded counter-case yet, and where the original's rows park
+    (a refused `Wait`, PR-333) the body demonstrably keeps moving.
+    This stays counted, not fitted.
 
 OI-019: what the object-side AC_ENEMY consumers do (A_DEAD(1)/
   A_AWAY/A_SHOW class conditions)
@@ -1339,6 +1463,23 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     is PR-321's; bit2/3/6/7, `op`'s reader (0x23860's bit5
     law stands), and the grounded-y instruction stay open
     here.
+    PR-523 SHARPENS WHAT THE ZARIA.01 LADDER ACTUALLY IS, from the
+    real level under the row-admit physics. With the jump flow now
+    landing (the A_JUMP row-park fix), a lion that walks into the
+    ZARIA.01 ladder column answers a CYCLE, not a climb: the
+    authored A_FALL_DOWN / A_DRAP / A_LOOKUP / A_WSP(3) chain, over
+    and over, never reaching the top. The reason is geometric and
+    it is in the shipped data, not in a missing instruction: the
+    ladder object only answers AC_DRAB while its own 42x48 art box
+    is met, and that box tops out at y 558 (the .SEQ art extent of
+    the ZARIA ladder element from its .des placement) - a lion
+    standing on the main ground (feet 586) never meets it, so no
+    A_WSP is ever entered from the ground, only the fall/look
+    chain its near-miss signals select. Reaching the climb is a
+    ROUTE question (get the feet above 558 - a hop onto the
+    ladder-top route), which is OI-078's gameplay half, not a
+    grounded-y question; this row's remaining instruction items are
+    untouched by PR-523.
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -5145,7 +5286,7 @@ OI-121: the ground query has no SURFACE IDENTITY in this port, so
   only the two edges of the engine's surface-link tail are
   modelled - and the authored rows that wait on the rest stay
   unrun
-  status: OPEN
+  status: CLOSED BY PR-523
   origin: PR-331 (the AC_ONAIR/AC_DUP surface-link raises)
   notes: The engine's physics body 0x54250 ends with a tail at
     0x54760-0x54803 that reads the query result [obj+0xe6] and the
@@ -5191,6 +5332,32 @@ OI-121: the ground query has no SURFACE IDENTITY in this port, so
     detach and +0xb8 verbs, and the [obj+0xe2] kind word read from
     the shipped data; then the ladder-foot landing, the A_SCIAG
     route and the AC_DUP_CD and fast-fall rules become testable.
+    PR-523 CLOSES IT ON ITS OWN TERMS, and the terms turned out to
+    be narrower than the header guessed. This row's closure test
+    was the two shipped consequences, and both now run end to end
+    under the row-admit law, WITHOUT any identity record:
+    (a) CLOSED, exactly as written here. The attach edge raises
+    AC_DUP, and A_WSP's OWN `A_TURN_BACK(1)=AC_DUP,K_DOWN` line
+    now wins at the foot of the ZARIA.01 ladder - the PR-86
+    fallback never fires, because the authored line is admitted
+    before any row close can reach it. The state it hands over to
+    is then held by its own `5,300,WAIT !K_DOWN` clause row, which
+    PR-523's row_park arm parks correctly: the row cursor stands,
+    the body keeps its physics, the authored cycle (A_FALL_DOWN /
+    A_DRAP / A_LOOKUP / A_WSP(3)) runs. What PR-331 read as
+    "needs the identity model" was actually two separate laws -
+    the ASK-raised AC_DUP, and the refused-clause park - and
+    neither needs a surface object.
+    (b) The A_SCIAG window question is NOT closed by identity
+    either: under the row-admit physics the jump states' own
+    `A_WSP(3)=AC_DRAB_CATCH,AC_ONAIR` rows and A_JUMP_S's
+    `1,225,F 0,350` entry row answer on their own cadence, and
+    what decides that window now is AC_ONAIR's CADENCE inside the
+    physics pass - named as OI-018, not a surface-identity gap.
+    WHAT STAYS UNIMPLEMENTED, with no shipped line waiting on it:
+    the SWITCH arm, AC_DUP_CD, the kind-2 fast-fall exception and
+    the detach/+0xb8 verbs. Those are a data-model gap, recorded
+    here so the machine-code reading PR-331 did is not lost.
 
 OI-122: the three class tables that hold the seat verbs are named
   by no pointer and no immediate in the image, so no shipped
