@@ -9300,13 +9300,17 @@ OI-131: the object class's +0x90 verb is a STATE-REQUEST FILTER, and
 
 OI-132: the death LINE is the main_back LAYER'S OWN HEIGHT WORD
   ([desc+0x2], the tlo controller's descriptor array) plus 0x1f4 -
-  READ in full (PR-532), a per-level table settled; the port still
-  tests the authored lew_rect bottom, which matches NO shipped level
+  READ in full (PR-532), a per-level table settled, and SHIPPED
+  (PR-533: death_line() + --line-selftest, every falling ZARIA leg
+  re-derived against the real line)
   status: PARTIAL (PR-531 SHIPPED the cost, the zero exit at loop
     code 2 and the 0x5d2f0 reset-and-stop consumer; PR-532 READ the
-    LINE end to end; PR-533 owes the port - ydead := desc height +
-    500 with a named fallback for the NULL desc (JUNCTION) - and the
-    engine's own state-2 + wrap trigger stays open)
+    LINE end to end; PR-533 SHIPPED it - ydead := sx16(layer height)
+    + 500, back_rect height + 500 on the NULL desc (0x572f5, the
+    JUNCTION shape), lew_rect y1 only with neither; what stays open
+    is the engine's own trigger - the state-2 cmp at 0x54482, the
+    AC_BREAK_NEXT row-wrap pulse, the request-2 arm and the
+    0x53410 plumbing)
   origin: PR-530
   notes: WHAT IS READ (PR-530, all bytes). The lion family's class
     verb at +0x90 (0x54450, held at +0x90 by 37 of the 189 class

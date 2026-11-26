@@ -8971,6 +8971,161 @@ static void par_parse(par_t *pp, const char *speed, const char *mainback,
         pp->ref = 0;
 }
 
+/* PR-533: THE DEATH LINE. PR-532 read the engine's: 0x54452-0x5446e
+ * compare the object's y against sx16(WORD [desc_R+0x2]) + 0x1f4,
+ * desc_R = [[tlo ctrl +0x44] + main_back*4] - the R-th tlo LAYER
+ * DESCRIPTOR, whose +0x2 word the loader 0x56d40 copies from the
+ * .PCM: the layer HEIGHT (the u16 H at the head of the file,
+ * ll_pcm.h) - the same word the capture-verified PR-57/66 parallax
+ * law reads at -0xc8 in 0x5747f/0x5749e. The port's decoded layers
+ * ARE those descriptors. Where the engine's descriptor is NULL (a
+ * tlo whose art is absent, e.g. JUNCTION's .pcx-only stack: the
+ * engine reads WORD [2], the DOS4GW low page), the port falls back
+ * to the back_rect height + 0x1f4 - the cross-check PR-532 measured
+ * byte for byte on ALL EIGHT levels that have both - and only then
+ * to the lew_rect bottom (the PR-531 stand-in, named in the print).
+ * RED NOTE: the function is first shipped AS THE OLD STAND-IN, and
+ * ll_line_selftest below asserts the read law - it FAILS until the
+ * law is implemented (PR-529/531 RED-first discipline). */
+#define LL_DEATH_LINE_PAD 500   /* the add ecx,0x1f4 at 0x5446e */
+
+static double death_line(const par_t *pp, const ll_pcm *lay,
+                         const int *lay_tix, int nlay, int have_br,
+                         double br_h, int have_lr, double lr_y1)
+{
+    if (pp && pp->n > 0)
+        for (int k = 0; k < nlay; k++)
+            if (lay_tix[k] == pp->ref)
+                /* THE ENGINE'S LINE: sx16([desc_R+0x2]) + 0x1f4.
+                 * desc_R+0x2 is the .PCM header's u16 H (ll_pcm.h),
+                 * so the decoded layer's h IS the word; 0x54467 is
+                 * movsx - a height above 32767 reads NEGATIVE, and
+                 * the line follows. */
+                return (double)(int16_t)lay[k].h + LL_DEATH_LINE_PAD;
+    if (have_br)
+        return br_h + LL_DEATH_LINE_PAD;    /* measured cross-check */
+    if (have_lr)
+        return lr_y1;                       /* lew_rect bottom */
+    return 1e30;                            /* no line */
+}
+
+/* PR-533: hermetic death-line selftest (no game data): the line is
+ * the main_back layer's height + 0x1f4 wherever that art exists -
+ * over the authored lew_rect y1 too (0x54452-0x5446e, the ZARIA and
+ * RAN numbers of the PR-532 census); back_rect height + 0x1f4 when
+ * the descriptor is NULL (0x572f5 keeps a NULL at the tlo index;
+ * the eight-level byte-for-byte cross-check); the lew_rect bottom
+ * only with neither; and the engine's movsx (0x54467) on the word. */
+int ll_line_selftest(void)
+{
+    int bad = 0;
+
+    /* (1) ZARIA.01's shape: tlo plan3.pcx,plan2.pcm,plan1.pcm,
+     * main_back=2 = 700 rows of art, lew_rect y1 = 1000. The engine
+     * line is 700 + 500 = 1200 (PR-532 census), NOT the 1000 the
+     * level authors. */
+    {
+        par_t par;
+        ll_pcm lay[3];
+        int tix[3] = { 0, 1, 2 };
+        memset(&par, 0, sizeof par);
+        memset(lay, 0, sizeof lay);
+        par.n = 3;
+        par.ref = 2;
+        lay[0].h = 200;   /* the .PCX backdrop never gets a desc */
+        lay[1].h = 600;
+        lay[2].h = 700;
+        double got = death_line(&par, lay, tix, 3, 0, 0.0, 1, 1000.0);
+        if (got != 1200.0) {
+            fprintf(stderr, "line selftest: FAILED the main_back layer"
+                            " leg (line %.0f, want 1200 = 700 + 0x1f4"
+                            " per 0x54467/0x5446e)\n", got);
+            bad = 1;
+        }
+    }
+    /* (2) RAN.01's shape: the art exists AND lew_rect y1 = back_rect
+     * h = 400; the engine still adds 500 - 900, not 400. */
+    {
+        par_t par;
+        ll_pcm lay[1];
+        int tix[1] = { 2 };
+        memset(&par, 0, sizeof par);
+        memset(lay, 0, sizeof lay);
+        par.n = 3;
+        par.ref = 2;
+        lay[0].h = 400;
+        double got = death_line(&par, lay, tix, 1, 1, 400.0, 1, 400.0);
+        if (got != 900.0) {
+            fprintf(stderr, "line selftest: FAILED the RAN leg (line"
+                            " %.0f, want 900: the engine test ignores"
+                            " both authored rects)\n", got);
+            bad = 1;
+        }
+    }
+    /* (3) JUNCTION's shape: tlo is one .pcx, NO descriptor at index
+     * 0 (0x572f5 wrote a NULL and 0x57302 skipped the build), no
+     * art decoded, but back_rect 0,0,320,200 exists: the port's
+     * fallback is the height + 500 = 700 (the eight-level
+     * cross-check); the engine reads WORD [2] there, and the port
+     * does not pretend to know that number. */
+    {
+        par_t par;
+        memset(&par, 0, sizeof par);
+        par.n = 1;
+        par.ref = 0;
+        double got = death_line(&par, NULL, NULL, 0, 1, 200.0, 1, 300.0);
+        if (got != 700.0) {
+            fprintf(stderr, "line selftest: FAILED the NULL-desc leg"
+                            " (line %.0f, want 700 = back_rect h +"
+                            " 0x1f4)\n", got);
+            bad = 1;
+        }
+    }
+    /* (4) neither the art nor a back_rect: the lew_rect bottom
+     * stays, named; with neither rect at all, no line. */
+    {
+        par_t par;
+        memset(&par, 0, sizeof par);
+        par.n = 3;
+        par.ref = 2;
+        double got = death_line(&par, NULL, NULL, 0, 0, 0.0, 1, 300.0);
+        double got2 = death_line(&par, NULL, NULL, 0, 0, 0.0, 0, 0.0);
+        if (got != 300.0 || got2 < 1e29) {
+            fprintf(stderr, "line selftest: FAILED the no-art leg"
+                            " (lines %.0f / %.0f, want the lew_rect"
+                            " stand-in 300, then no line)\n", got, got2);
+            bad = 1;
+        }
+    }
+    /* (5) the engine's movsx (0x54467): the word is SIGNED. A
+     * 40000-row layer is a negative line: sx16(0x9C40) = -25536. */
+    {
+        par_t par;
+        ll_pcm lay[1];
+        int tix[1] = { 0 };
+        memset(&par, 0, sizeof par);
+        memset(lay, 0, sizeof lay);
+        par.n = 1;
+        par.ref = 0;
+        lay[0].h = 40000;
+        double got = death_line(&par, lay, tix, 1, 0, 0.0, 0, 0.0);
+        if (got != (double)(int16_t)40000 + 500.0) {
+            fprintf(stderr, "line selftest: FAILED the movsx leg (line"
+                            " %.0f, want %.0f per 0x54467)\n", got,
+                    (double)(int16_t)40000 + 500.0);
+            bad = 1;
+        }
+    }
+    if (bad)
+        return 1;
+    printf("line selftest: the line is the main_back layer height +"
+           " 0x1f4 (0x54467/0x5446e, 1200 ZARIA / 900 RAN shapes) +"
+           " back_rect height + 0x1f4 on a NULL desc (0x572f5,"
+           " 700 JUNCTION shape) + lew_rect bottom only with neither"
+           " + the word read is movsx (ok)\n");
+    return 0;
+}
+
 /* PR-208: `plany=` is the level's own statement of WHICH CLASSES RIDE WHICH
  * PARALLAX PLANE - the other half of the object-layer law PR-61 left open
  * ("probably the entry index i of the key's list" was never proven). Format,
@@ -13412,11 +13567,16 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
      * back_rect is absent on SADES/TUNGA2/ZARIA* (CD hole) -> no camera
      * (world = one view). */
     int world_x0 = 0, world_y0 = 0, world_w = 0, world_h = 0;
+    int have_br = 0;                        /* PR-533: the raw key     */
+    double br_h = 0.0;                      /* back_rect's OWN height  */
     {
         const char *br = des_get(kvs, nk, "back_rect");
-        if (br && *br)
+        if (br && *br) {
             sscanf(br, "%d,%d,%d,%d", &world_x0, &world_y0,
                    &world_w, &world_h);
+            have_br = 1;
+            br_h = world_h;
+        }
     }
 
     /* 2) level block in ETAPY: exact, stem, then dir= from the .DES */
@@ -14066,22 +14226,26 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
          * ports the real line. */
         const char *lr = des_get(kvs, nk, "lew_rect");
         int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-        if (lr && sscanf(lr, "%d,%d;%d,%d", &x0, &y0, &x1, &y1) == 4 &&
-            x1 > x0) {
+        int have_lr = lr && sscanf(lr, "%d,%d;%d,%d", &x0, &y0, &x1, &y1)
+                      == 4 && x1 > x0;
+        if (have_lr) {
             pl.xmin = x0;
             pl.xmax = x1;
-            pl.ydead = y1;
         } else if (world_w > 0) {
             printf("ll_level: play: no lew_rect= in %s: using back_rect"
                    " bounds\n", level);
             pl.xmin = world_x0;
             pl.xmax = world_x0 + world_w;
-            pl.ydead = world_h > 0 ? world_h : 1e30;
         } else {
             pl.xmin = -1e30;
             pl.xmax = 1e30;
-            pl.ydead = 1e30;
         }
+        /* PR-533: the LINE is not a rect's bottom; the engine's own
+         * value and its fallbacks are in death_line (0x54452-0x5446e,
+         * PR-532). The rect test above stays exactly as it was for
+         * the x-clamp. */
+        pl.ydead = death_line(&par, lay, lay_tix, nlay, have_br, br_h,
+                              have_lr, (double)y1);
 
         if (pl.mov && pl.mov->nst > 0 && pl.nart > 0 && pl.plt.n > 0) {
             pl.have = 1;

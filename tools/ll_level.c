@@ -33,6 +33,9 @@ int main(int argc, char **argv)
     /* PR-531: life-chain selftest, hermetic */
     if (argc == 2 && strcmp(argv[1], "--lives-selftest") == 0)
         return ll_lives_selftest() ? 1 : 0;
+    /* PR-533: death-line selftest, hermetic */
+    if (argc == 2 && strcmp(argv[1], "--line-selftest") == 0)
+        return ll_line_selftest() ? 1 : 0;
     if (argc < 3) {
         fprintf(stderr,
                 "usage: %s DATA_DIR LEVEL [-t SECONDS] [--no-audio] "

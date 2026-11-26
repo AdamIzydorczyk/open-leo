@@ -828,6 +828,12 @@ verify-play: ll_level
 # counter to 5 (0x5d2f9) and stops through its empty-queue leg
 # (0x5d38e). Synthetic script, no game data.
 	@timeout 30 ./ll_level --lives-selftest
+# data-free leg (PR-533): the death LINE - the main_back layer's
+# height + 0x1f4 (0x54452-0x5446e), the back_rect-height fallback on
+# a NULL desc (0x572f5), the movsx word read (0x54467). RED-FIRST:
+# this leg FAILS while death_line still returns the authored rects;
+# it is the assertion the flip of the law must turn green.
+	@timeout 30 ./ll_level --line-selftest
 ifeq ($(PX_DATA),1)
 # PR-135 RE-PIN NOTE (applies to every "play tick N" and every
 # LEO_PLAY_SCRIPT / LEO_LEVEL_PPM_TICK value in this target): LEO_LEVEL_PPM
@@ -1329,7 +1335,7 @@ ifeq ($(PX_DATA),1)
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=12 LEO_PLAY_SOLID=1 \
 	  LEO_PLAY_SCRIPT="1:FWD" \
-	  LEO_LEVEL_PPM=/tmp/opencode/ly_trv.ppm LEO_LEVEL_PPM_TICK=340 \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_trv.ppm LEO_LEVEL_PPM_TICK=380 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_trv.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play traverse probe FAILED (rc=$$rc)"; \
@@ -1477,6 +1483,24 @@ ifeq ($(PX_DATA),1)
 # (454,1010) tick 309, not (455,1010) at 308. Two deaths cost two
 # lives of five (4, then 3) and nothing else; the SEMI count moved
 # with the drift (62 here) and the energy and state negatives stand.
+# PR-533 RE-PINS the two deaths and everything after the first, and
+# the change is the death LINE itself: ydead is no longer lew_rect's
+# y1 but the ref-layer art height + 0x1f4 (0x54452-0x5446e, PR-532),
+# which on ZARIA.01's 700-high ref .PCM is 1200, not 1010. The old
+# death steps are now ordinary air: the descent cycle runs THROUGH
+# y 1010 (pinned at 337 - the A_DRAP step at (456,1010), the very
+# line this leg used to die on, grounded 0 and alive), and the fatal
+# step comes ~200 px lower: first death at (468,1223) - the draw at
+# 188, the energy -1 one step earlier, the spawn snap at 189. The
+# SECOND pass starts 29 ticks later than PR-531's, so its walk-off
+# sits at a different phase of the same 6 px gait: 406 grounded at
+# 265, 412 grounded 0 at 266 - the polyline end at 408 is still what
+# it steps past, exactly the phase-not-law point PR-531 made. The
+# cycle then repeats to the second death at (470,1223) (draw at 366,
+# snap at 367, '4 live(s) left' then '3 live(s) left'), which is why
+# the probe runs to 380; the third death (469,1223) is at ~583,
+# outside this budget. The SEMI count rose with the longer run (>=30
+# is all the leg pins) and the energy and state negatives stand.
 	@grep -q 'obj DRABINKA/drab.mov\[mov\]: art DRAB.SEQ, 3 state(s), bbox 42x48 at (180,510)' \
 	  /tmp/opencode/ly_trv.log \
 	  && grep -q 'play tick 26: solid LICHA/licha3.mov SEMI at 151,669 push -1,0 (ret -9) lion 116,649' \
@@ -1498,31 +1522,47 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play tick 93: state A_WALK seq walk frame 10 pos 417,653 grounded 0' \
 	  /tmp/opencode/ly_trv.log \
 	  && test "$$(grep -c 'play: A_WALK -> A_FALL_DOWN' /tmp/opencode/ly_trv.log)" -ge 10 \
-	  && grep -q 'play tick 237: state A_WALK seq walk frame 3 pos 404,651 grounded 1' \
+	  && grep -q 'play tick 265: state A_WALK seq walk frame 2 pos 406,651 grounded 1' \
 	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play tick 238: state A_WALK seq walk frame 4 pos 410,651 grounded 0' \
+	  && grep -q 'play tick 266: state A_WALK seq walk frame 3 pos 412,651 grounded 0' \
 	  /tmp/opencode/ly_trv.log \
-	  && test "$$(grep -c 'below lew_rect at (454,1010) -> energy -1' \
+	  && grep -q 'play tick 337: state A_DRAP seq idle frame 1 pos 456,1010 grounded 0' \
+	  /tmp/opencode/ly_trv.log \
+	  && test "$$(grep -c 'below lew_rect at .* -> energy -1' \
 	         /tmp/opencode/ly_trv.log)" -eq 2 \
-	  && grep -q 'play tick 160: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
+	  && grep -q 'play: below lew_rect at (468,1223) -> energy -1' \
 	  /tmp/opencode/ly_trv.log \
-	  && grep -q 'play tick 309: state A_DRAP seq idle frame 1 pos 454,1010 grounded 0' \
+	  && grep -q 'play tick 188: state A_FALL_DOWN seq fall_dn frame 1 pos 468,1223 grounded 0' \
 	  /tmp/opencode/ly_trv.log \
+	  && grep -q 'play: below lew_rect at (470,1223) -> energy -1' \
+	  /tmp/opencode/ly_trv.log \
+	  && grep -q 'play tick 366: state A_FALL_DOWN seq fall_dn frame 1 pos 470,1223 grounded 0' \
+	  /tmp/opencode/ly_trv.log \
+	  && grep -q 'play tick 189: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
+	  /tmp/opencode/ly_trv.log \
+	  && grep -q 'play tick 367: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
+	  /tmp/opencode/ly_trv.log \
+	  && grep -q 'energy gone -> respawn, 4 live(s) left' /tmp/opencode/ly_trv.log \
 	  && grep -q 'energy gone -> respawn, 3 live(s) left' \
 	  /tmp/opencode/ly_trv.log \
+	  && ! grep -q 'respawn, 2 live(s) left' /tmp/opencode/ly_trv.log \
 	  && ! grep -qE 'hit by|ATTACKS through|lion energy' /tmp/opencode/ly_trv.log \
 	  && ! grep -qE 'state A_(DOSTAL|JUMP|SITW)' /tmp/opencode/ly_trv.log \
 	  && echo "play traverse probe: the walk follows the authored" \
 	     "slope (680->684) to the polyline END at x=408 - at the PR-523" \
 	     "6 px step the first pass steps 404 (grounded, tick 87) past it" \
 	     "to 410 (grounded 0, 88), and the run after the first death" \
-	     "walks off at the SAME column - 404 grounded at 237, 410" \
-	     "grounded 0 at 238: PR-529's 405/411 pass was a PHASE of the" \
-	     "drift at the old respawn tick, not a second law" \
-	     "(ZARIA_A.PLT) - the pit is still lethal ((454,1010) at ~157" \
-	     "and again at 309, each death an energy -1 first (0x54478)," \
-	     "then the 0x503d0 stand-in one step later costing a life of" \
-	     "the five - 4, then 3, spawn snap 160/310);" \
+	     "walks off at a different PHASE of that same gait - 406" \
+	     "grounded at 265, 412 grounded 0 at 266 - because PR-533" \
+	     "moved its respawn tick, not its law (ZARIA_A.PLT)." \
+	     "The pit kills BELOW THE LAYER LINE, not at lew_rect y1:" \
+	     "ydead = the ref-layer .PCM height + 0x1f4 = 1200 here" \
+	     "(0x54452-0x5446e, PR-532), so the old (454,1010) steps are" \
+	     "ordinary air - the A_DRAP at (456,1010) at 337 is pinned" \
+	     "ALIVE - and each death is the energy -1 at (468,1223) /" \
+	     "(470,1223) (draws 188/366) then the 0x503d0 stand-in one" \
+	     "step later costing a life of the five - 4, then 3, spawn" \
+	     "snap 189/367;" \
 	     " AC_ONAIR drives the authored A_WALK -> A_FALL_DOWN exit" \
 	     "(PR-331) and the descent then runs the authored line chain:" \
 	     " the state's own self-target `A_FALL_DOWN(3)=!AC_ONAIR`" \
@@ -1532,12 +1572,12 @@ ifeq ($(PX_DATA),1)
 	     "raise lands, and `A_WALK(1)=K_FWD` takes the held key back at" \
 	     "93 - the cycle is 10 ticks wide from the second one" \
 	     "on (six A_WALK rows between the falls, the +2 step on" \
-	     "its frame-11 row), sixteen of them in this run, because the" \
+	     "its frame-11 row), twenty-two of them in this run, because the" \
 	     "surface query and its AC_ONAIR post are inside the gated" \
 	     "pass and the signal bits are one-tick pulses (the open" \
 	     "question PR-523's record names at OI-018). The ladder object" \
 	     "is placed at its authored (180,510); the worms answer with" \
-	     "SEMI push-out ALONE (>=30 lines, 62 here - the" \
+	     "SEMI push-out ALONE (>=30 lines, 56 here - the" \
 	     "airborne drift carries the lion past fewer worms), costing" \
 	     "DELAY" \
 	     "not a stop; no damage line appears; the lion leaves A_WALK" \
@@ -2608,12 +2648,22 @@ ifeq ($(PX_DATA),1)
 # energy -1 (0x54478), and the NEXT step is spent - one life of the
 # five, '4 live(s) left' printed, energy back to 100 - so the spawn
 # snap pin moves 472 to 473. The fall itself is byte-identical.
+# PR-533 RE-PINS the fall half again, and it is the death LINE: with
+# ydead = the ref-layer .PCM height + 0x1f4 = 1200 here (PR-532's
+# read, 0x54452-0x5446e) the old line at lew_rect y1=1010 is crossed
+# ALIVE - the descent cycle keeps running at (643,969)/(648,1049),
+# pinned by the A_DRAP draw at 473 - and the fatal step lands at
+# (658,1215), ~29 px east and ~190 px below the old death point, the
+# energy -1 mid-493, the draw at 493/494 and the spawn snap at 494.
+# The walk and step-off through tick 383 are UNTOUCHED; the budget
+# moves PPM_TICK 480 -> 510 to see the later death, and the A_LOOKUP
+# negative over the 4xx window stands.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=10 \
 	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE 295:FWD" \
 	  LEO_PLAY_ASK=1 \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_revwalk.ppm \
-	  LEO_LEVEL_PPM_TICK=480 \
+	  LEO_LEVEL_PPM_TICK=510 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_revwalk.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA reverse-walk FAILED (rc=$$rc)"; \
@@ -2626,9 +2676,11 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play tick 360: state A_WALK seq walk frame 8 pos 462,475 grounded 1' /tmp/opencode/ly_revwalk.log \
 	  && grep -q 'play tick 375: state A_WALK seq walk frame 11 pos 552,511 grounded 1' /tmp/opencode/ly_revwalk.log \
 	  && grep -q 'play tick 383: state A_FALL_DOWN seq fall_dn frame 1 pos 594,533 grounded 0' /tmp/opencode/ly_revwalk.log \
-	  && grep -q 'play: below lew_rect at (647,1023) -> energy -1' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 473: state A_DRAP seq idle frame 1 pos 648,1049 grounded 0' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play: below lew_rect at (658,1215) -> energy -1' /tmp/opencode/ly_revwalk.log \
 	  && grep -q 'energy gone -> respawn, 4 live(s) left' /tmp/opencode/ly_revwalk.log \
-	  && grep -q 'play tick 473: state A_WALK seq walk frame 10 pos 50,648 grounded 1' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 493: state A_DRAP seq idle frame 1 pos 658,1215 grounded 0' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 494: state A_WALK seq walk frame 10 pos 50,648 grounded 1' /tmp/opencode/ly_revwalk.log \
 	  && ! grep -q 'state A_LOOKUP' <(grep 'play tick 4[0-9][0-9]: state' /tmp/opencode/ly_revwalk.log) \
 	  && echo "play reverse walk (PR-527): the top of the ZARIA.01" \
 	     "climb is no longer a dead end - A_LOOKUP's `rev` row walks" \
@@ -2636,11 +2688,12 @@ ifeq ($(PX_DATA),1)
 	     "302, K_FWD takes A_WALK on the canopy at 303 and the walk" \
 	     "reaches the branch end (594,533 off the platform at 383)," \
 	     "376 px further east than any run before this PR; the step" \
-	     "off ends in the 408..624 chasm - PR-529's airborne intent" \
-	     "word drifts the fall to (647,1023) at tick 471, past the" \
-	     "bank edge it is already below; the death writes ONLY" \
-	     "energy -1 (0x54478) and the next step spends one life of" \
-	     "the five and respawns (the snap at 473) - that crossing" \
+	     "off ends in the 408..624 chasm - the descent cycle runs" \
+	     "through the OLD lew_rect line alive (A_DRAP at 473, y" \
+	     "1049 > the old 1010) because PR-533 set ydead to the" \
+	     "ref-layer .PCM height + 0x1f4 = 1200 (0x54452-0x5446e)," \
+	     "and the energy -1 lands at (658,1215), the life spent one" \
+	     "step later, the spawn snap at 494 - that crossing" \
 	     "is the level's remaining half (ok)" \
 	  || { echo "play ZARIA reverse-walk grep FAILED"; \
 	       grep -E 'play: A_|state A_(WALK|DRAP|LOOKUP|FALL_DOWN) ' \
@@ -2975,60 +3028,84 @@ ifeq ($(PX_DATA),1)
 # still 986, the DRECT answer is still (991,655)/0x80000. The two
 # pit falls now also cost lives (4, then 3) - the cost itself and
 # the five-life start are pinned by the life-chain leg below.
+# PR-533 RE-PINS every death-line number in this leg, for the engine
+# reason: ydead is the ref-layer .PCM height + 0x1f4 = 1200 here, not
+# lew_rect's y1=1010 (0x54452-0x5446e, PR-532). The two pit deaths
+# move to (468,1223)/188 and (470,1223)/366 with snaps at 189/367,
+# and the whole third pass - the phase the JUMP press rides - shifts
+# ~170 ticks later, so the press moves 377 -> 478 and the release
+# 428 -> 529 to catch it at the same place on the ground: the walk
+# rides the 6 px gait with its worm-phase delays (a visible slow
+# crawl near 771 with the register draining and RE-starting is the
+# same authored rows, not a second law), and from x=369 grounded at
+# 477 the leap takes the same flight shape - apex y 551 at ~507
+# (exactly 100 px over the 651 line again), 49 admits in the air,
+# GROUNDED on the east bank at (696,617) at 527, x 5 px east of the
+# old pin's 691 because the takeoff sits 5 px later in the gait. The
+# pier walk, the step-off (985 at 605), the DRECT answer at 608, the
+# wet end and exit 3 (629) all stand at their new ticks. The probe
+# runs to 700 to see the end.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
-	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=22 \
-	  LEO_PLAY_SCRIPT="1:FWD 377:FWD,JUMP 428:FWD" \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=30 \
+	  LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_pool.ppm \
-	  LEO_LEVEL_PPM_TICK=540 \
+	  LEO_LEVEL_PPM_TICK=700 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_pool.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA pool crossing FAILED (rc=$$rc)"; \
 	    cat /tmp/opencode/ly_pool.log; exit 1; fi
-	@grep -q 'play tick 376: state A_WALK seq walk frame 4 pos 364,651 grounded 1' \
+	@grep -q 'play tick 477: state A_WALK seq walk frame 12 pos 369,651 grounded 1' \
 	  /tmp/opencode/ly_pool.log \
 	  && grep -q 'play: A_WALK -> A_JUMP' /tmp/opencode/ly_pool.log \
-	  && grep -q 'play tick 408: state A_JUMP seq jump frame 8 pos 529,551 grounded 0' \
+	  && grep -q 'play tick 508: state A_JUMP seq jump frame 8 pos 525,551 grounded 0' \
 	  /tmp/opencode/ly_pool.log \
-	  && grep -q 'play tick 426: state A_JUMP seq jump frame 8 pos 691,617 grounded 1' \
+	  && grep -q 'play tick 527: state A_JUMP seq jump frame 8 pos 696,617 grounded 1' \
 	  /tmp/opencode/ly_pool.log \
-	  && grep -q 'play tick 428: state A_WALK seq walk frame 5 pos 708,617 grounded 1' \
+	  && grep -q 'play tick 529: state A_WALK seq walk frame 5 pos 713,617 grounded 1' \
 	  /tmp/opencode/ly_pool.log \
-	  && grep -q 'play tick 505: state A_WALK seq walk frame 1 pos 986,655 grounded 0' \
+	  && grep -q 'play tick 605: state A_WALK seq walk frame 12 pos 985,655 grounded 0' \
 	  /tmp/opencode/ly_pool.log \
-	  && grep -q 'play tick 508: DRECT box 988,645;1340,750 answered the player at (991,655): 0x80000' \
+	  && grep -q 'play tick 608: DRECT box 988,645;1340,750 answered the player at (990,655): 0x80000' \
 	  /tmp/opencode/ly_pool.log \
 	  && grep -q 'play: A_FALL_DOWN -> A_WPAD' /tmp/opencode/ly_pool.log \
-	  && grep -q 'play tick 529: state A_WYJSCIE seq dry frame 0 pos 991,682 grounded 0' \
+	  && grep -q 'play tick 629: state A_WYJSCIE seq dry frame 0 pos 990,682 grounded 0' \
 	  /tmp/opencode/ly_pool.log \
-	  && grep -q 'stage driver: exit 3 at tick 529' /tmp/opencode/ly_pool.log \
-	  && grep -q 'play: below lew_rect at (454,1010) -> energy -1' /tmp/opencode/ly_pool.log \
-	  && grep -q 'play tick 160: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
+	  && grep -q 'stage driver: exit 3 at tick 629' /tmp/opencode/ly_pool.log \
+	  && grep -q 'play: below lew_rect at (468,1223) -> energy -1' /tmp/opencode/ly_pool.log \
+	  && grep -q 'play tick 189: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
 	  /tmp/opencode/ly_pool.log \
-	  && echo "play pool crossing (PR-529, PR-531 re-pin): ZARIA.01 runs" \
-	     "end to end under keys - the walk, the leap that crosses the" \
-	     "408..624 chasm (apex y=551, exactly 100 px over the takeoff" \
-	     "line, grounded on the east bank at 691,617), the walk off" \
-	     "the pier at 986, the DRECT answer 0x80000 inside" \
-	     "988,645;1340,750 at 508, the authored A_WPAD -> A_WYJSCIE" \
-	     "wet end, and the stage driver's exit 3 at 529. The run's" \
-	     "first pass takes the traverse leg's death (454,1010, the" \
-	     "spawn snap one step after the energy -1, at 160) and now" \
-	     "pays it (4, then 3 lives) - this is one key press, not a" \
-	     "platonic run; the second pass is the one above (ok)" \
+	  && echo "play pool crossing (PR-529; PR-533 re-pin of the line):" \
+	     "ZARIA.01 runs end to end under keys - the walk, the leap" \
+	     "that crosses the 408..624 chasm (apex y=551, exactly 100 px" \
+	     "over the takeoff line, grounded on the east bank at" \
+	     "696,617), the walk off the pier at 985, the DRECT answer" \
+	     "0x80000 inside 988,645;1340,750 at 608, the authored" \
+	     "A_WPAD -> A_WYJSCIE wet end, and the stage driver's exit 3" \
+	     "at 629. The run's first pass takes the traverse leg's" \
+	     "death - BELOW THE LAYER LINE at (468,1223): ydead is the" \
+	     "ref-layer .PCM height + 0x1f4 = 1200 here (PR-532) - and" \
+	     "pays it (4, then 3 lives); the spawn snap is one step" \
+	     "after the energy -1, at 189 - this is one key press, not a" \
+	     "platonic run; the pass that crosses is the one above (ok)" \
 	  || { echo "play ZARIA pool crossing grep FAILED"; \
-	       grep -E 'play: A_|play tick (37[0-9]|4[0-9][0-9]|5[0-4][0-9]): state' \
+	       grep -E 'play: A_|play tick (4[7-9][0-9]|5[0-9][0-9]|6[0-3][0-9]): state' \
 	         /tmp/opencode/ly_pool.log | tail -12; exit 1; }
 # PR-531: THE LIFE CHAIN, MEASURED ON THE PIT. The traverse leg's
-# own one-key run falls into the 408..624 chasm at (454,1010) just
-# as PR-530 counted it, but the chain now rides what the engine's
-# chain rides: the below-line step writes ONLY energy -1 (0x54478),
+# own one-key run falls into the 408..624 chasm - since PR-533 the
+# fatal step is the LAYER LINE, ydead = the ref-layer .PCM height +
+# 0x1f4 = 1200 here (0x54452-0x5446e): five falls at (468,1223),
+# (470,1223), (469,1223), (468,1223), (467,1223), each ~200 px
+# below the lew_rect y1 this leg used to die at, and each ~190 ticks
+# later than PR-531's - the chain now rides what the engine's chain
+# rides: the below-line step writes ONLY energy -1 (0x54478),
 # the NEXT step is spent by the consumer - the 0x503d0 stand-in:
 # one life (0x503fb), energy 100 (0x503fc), the respawn (0x5042b) -
 # and every fall costs one, five in a row, because the engine's run
 # start is 5 (0x5d2f9): had the counter started at 6 a "respawn, 5
 # live(s) left" line would exist and is pinned ABSENT. The fifth
 # zero arms loop code 2 (0x4ae82-0x4ae8b) and the level ends at
-# tick 782 through the queue runner's own empty-queue answer
+# tick 952 (the deeper line costs ~170 ticks per fall on top of
+# PR-531's 782) through the queue runner's own empty-queue answer
 # (0x5d2f9 first, then 0x5d38e). PR-530 measured this very script
 # under the old port: nine falls, ZERO life lines, no end.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
@@ -3040,7 +3117,7 @@ ifeq ($(PX_DATA),1)
 	  > /tmp/opencode/ly_lives.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA life chain FAILED (rc=$$rc)"; \
 	    cat /tmp/opencode/ly_lives.log; exit 1; fi
-	@grep -q 'below lew_rect at (454,1010) -> energy -1' \
+	@grep -q 'below lew_rect at (468,1223) -> energy -1' \
 	  /tmp/opencode/ly_lives.log \
 	  && grep -q 'energy gone -> respawn, 4 live(s) left' \
 	  /tmp/opencode/ly_lives.log \
@@ -3053,17 +3130,20 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'energy gone -> respawn, 0 live(s) left' \
 	  /tmp/opencode/ly_lives.log \
 	  && ! grep -q 'respawn, 5 live(s) left' /tmp/opencode/ly_lives.log \
-	  && grep -q 'stage driver: exit 2 at tick 782: queue leg with an' \
+	  && grep -q 'stage driver: exit 2 at tick 952: queue leg with an' \
 	  /tmp/opencode/ly_lives.log \
-	  && grep -q 'the play leg ended at tick 782 of 1500' \
+	  && grep -q 'the play leg ended at tick 952 of 1500' \
 	  /tmp/opencode/ly_lives.log \
-	  && echo "play ZARIA life chain (PR-531): the pit fall writes ONLY" \
-	     "energy -1 first (0x54478) and is spent ONE STEP later by the" \
-	     "consumer (0x503fb-0x5042b stand-in); five falls cost five" \
-	     "lives 4,3,2,1,0 (start 5 per 0x5d2f9 - the 6-line is pinned" \
-	     "ABSENT); the zero arms loop code 2 (0x4ae82-0x4ae8b) and the" \
-	     "run ENDS at tick 782 through the queue runner's empty-queue" \
-	     "stop, which first reset the lives to 5 (0x5d2f9/0x5d38e) (ok)" \
+	  && echo "play ZARIA life chain (PR-531; PR-533 re-pin of the" \
+	     "line): the pit fall writes ONLY energy -1 first (0x54478)" \
+	     "and is spent ONE STEP later by the consumer" \
+	     "(0x503fb-0x5042b stand-in); five falls at y=1223 - below" \
+	     "the layer line ydead = the ref .PCM height + 0x1f4 = 1200" \
+	     "(0x54452-0x5446e) - cost five lives 4,3,2,1,0 (start 5" \
+	     "per 0x5d2f9 - the 6-line is pinned ABSENT); the zero arms" \
+	     "loop code 2 (0x4ae82-0x4ae8b) and the run ENDS at tick" \
+	     "952 through the queue runner's empty-queue stop, which" \
+	     "first reset the lives to 5 (0x5d2f9/0x5d38e) (ok)" \
 	  || { echo "play ZARIA life chain grep FAILED"; \
 	       grep -E 'live\(s\) left|energy -1|stage driver' \
 	         /tmp/opencode/ly_lives.log | tail -12; exit 1; }
