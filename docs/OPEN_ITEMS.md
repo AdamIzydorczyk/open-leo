@@ -9624,6 +9624,33 @@ OI-134: the fruit chain - no fruit object is ever placed in a
     channel and a ground-support half for scene objects are ONE
     port, not two, and doing the first alone drops every walker
     in the level through the floor.
+    (4) AND THE ROUTE IS BLOCKED, MEASURED (PR-540). The
+    same-step rule is settled - OI-017 is closed, PR-151 read
+    0x749a0 clearing the set after the match - so AC_KILOF has to
+    be live IN the step that matches `A_KILOF(1)=...`: the lion
+    must stand in the KILOF_PL box 1760,590;1832,620 (the only
+    raiser this level has, PR-329) AND be in A_DRAP AND hold
+    FIRE+F4. A_DRAP is entered by 26 authored lines in LEW.ZAR
+    (counted by awk over the file: AC_BREAK_NEXT from the climb
+    and the up-states, AC_BREAK_PREV from A_LOOKUP, `A_WALK(1)=
+    AC_TIME` at 134, `A_FIGHT_DOWN(1)=K_GEN1` at 723 and
+    `A_FG_PACKA_DN(1)=K_GEN1` at 749 - and those two states
+    GEN K_GEN1 on their own rows 9/8, so a fight can roll the
+    lion into A_DRAP on open ground). The `time=` gate that
+    feeds AC_TIME is authored ONLY on [A_DEAD] 220, [A_WYJSCIE]
+    295 (`50,150`) and [A_DRAP] 478 (`350`) in this script -
+    NOT on A_WALK - so the walk-to-hang route is not authored
+    here, while the fight-to-hang one is. Where it would have to
+    happen: the rhino NOSOROG is placed at 1700,600 with
+    bounds=1680,1950 (ZWIERZ1.DES) - i.e. its patrol covers the
+    whole KILOF_PL box - and a run walking east from the spawn
+    stops at pos 1000,613 (feet 645) on the shelf
+    `953,654;994,644;1007,646;1051,633`, x never past 1000 in
+    1750 ticks, and a JUMP pressed there peaks at pos 513,
+    39 px short of the 506 terrace (pos 474). The first thing
+    to settle is therefore whether the stop at x 1000 is an
+    authored wall or this port's step limit on the 13 px rise at
+    x 1007..1051 - a question about the port, not the data.
     WHAT WOULD CLOSE THIS ROW, in order: (a) read the GRABG /
     GRABOBJ family and the .grp members and place the two
     fruit; (b) read AC_KILOF/AC_STONE's raiser with its parent

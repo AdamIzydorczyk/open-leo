@@ -70425,3 +70425,101 @@ GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named
   then build the object velocity channel together with the
   CHECK_LN support. The balloon clause (OI-133) and the palm
   clause (OI-125/OI-128) stay as PR-537 and PR-538 left them.
+
+## PR-540 - WHERE THE COCONUT THROW WOULD HAPPEN, AND WHY IT
+## CANNOT YET: THE ASK BOX, THE HANG AND A WALL AT X 1000
+KIND: docs
+SUBSYSTEM: the fruit clause's reachability - the one-step
+  lifetime of the live signal set (OI-017, closed by PR-151)
+  applied to `A_KILOF(1)=K_FIRE,AC_KILOF,K_F4`; the authored
+  entries of the A_DRAP hang; the east-bound walk of ZARIA.01.
+  No code, no legs: a measurement pass with two probe runs.
+ADDRESSES: 0x749a0, 0x44589, 0x44590, 0x49580, 0x52000, 0x523f0,
+  0x53365, 0x53374, 0x53520, 0x53531, 0x53559, 0x53583, 0x536f0,
+  0x53705, 0x5370c, 0x5371c, 0x53725.
+NAMES: AC_KILOF, A_KILOF, A_KILOF_PR, A_KAMIEN, A_DRAP, AC_TIME,
+  AC_BREAK_NEXT, AC_BREAK_PREV, K_GEN1, time=, KILOF_PL, NOSOROG,
+  ZWIERZ1.DES, ZARIA_A.PLT, gen_bus_raise, OI-017, OI-134.
+CODE: no: none. The record is the measurement and the OI-134 note
+  it writes.
+HOOKS: none.
+OPENS: none.
+CLOSES: none.
+CORRECTS: none.
+GATE: light: verify-index verify-docs rc=0 (ok);
+
+- THE RULE THAT MAKES THIS HARD, READ ALREADY AND NOW APPLIED.
+  OI-017 is CLOSED (PR-151): the live set is cleared after the
+  transition match. The pump now shows the whole frame shape:
+  0x536f0 merges the class's own set ([class+0x8c], merged into
+  [obj+0x60] at 0x53705-0x5370c through the set verb 0x49580) and
+  the record step's answer (0x523f0 called at 0x5371c, merged at
+  0x53725), then 0x53520 COPIES the 13-byte set
+  (0x53531-0x53557) for the matcher 0x52000 and, at
+  0x53583-0x5358e, hands the LIVE set itself to 0x749a0 with
+  edx = 0 and ecx = 0xc: cleared. The set is zeroed at
+  construction only (0x44589/0x44590) and copied across a state
+  change (0x53365-0x53374). So a raised AC_* is worth exactly one
+  frame, and PR-69's raise-then-test-then-clear ordering is the
+  engine's ordering, not a stand-in. That is what pins the fruit
+  requirement to one instant: the KILOF_PL answer, the A_DRAP
+  state and the FIRE+F4 keys must all be true in the SAME step.
+
+- THE HANG'S OWN ENTRY CENSUS, FROM THE AUTHORED TEXT. awk over
+  ZARIA.01_LEW.ZAR_LEW.MOV for lines of the form `A_DRAP(1)=`:
+  26 of them, from A_JUMP_S 60, A_FALL_DOWN 108, A_WALK 134,
+  A_TURN 221/222, A_WYJSCIE 293, A_TURN_BACK 327, A_DOSTAL 343,
+  A_PODCIAG 437, A_TO_BOR 553, A_BOR_END 602, A_LOOKUP 615,
+  A_LOOKDOWN 639, A_FIGHT_END 703, A_FIGHT_DOWN 723,
+  A_FG_PACKA_DN 749, A_FIGHT_UP 769, A_RZUT_UP 789,
+  A_FG_PACKA_UP 807, A_FG_PACKA 829, A_RZUT 863, A_KAMIEN 882,
+  A_KAMIEN_PR 905/906, A_KILOF_PR 921/922. Their conditions
+  split into three kinds: the climb chain's AC_BREAK_NEXT /
+  AC_BREAK_PREV, the up-states' AC_DUP, and TWO ground routes
+  that matter here - `A_WALK(1)=AC_TIME` at 134, and
+  `A_FIGHT_DOWN(1)=K_GEN1` at 723 with `A_FG_PACKA_DN(1)=K_GEN1`
+  at 749, both of which their own states self-feed (the census
+  in OI-133 lists A_FIGHT_DOWN row 9 and A_FG_PACKA_DN row 8 as
+  K_GEN1 raisers). So a fight can roll the lion into the hang on
+  open ground, with no ladder in sight. The AC_TIME route is
+  NOT authored in this script: `time=` appears on exactly three
+  states - [A_DEAD] 220 (`220`), [A_WYJSCIE] 295 (`50,150`) and
+  [A_DRAP] 478 (`350`) - and not on A_WALK, so the gate at 134
+  has no raiser here.
+
+- WHERE THE LEVEL WOULD LET IT HAPPEN. The only AC_KILOF raiser
+  this level has is the rectangle class ANI2.DES line 20 places
+  as `KILOF_PL,1760,590;1832,620` (PR-329 runs its +0x78 answer
+  with the gates 0x40d50/0x40dc0/0x40cf0/0x1e3a0/0x286a0/0x28710
+  - those six verbs RETURN TEventSets, which the asker merges;
+  none of them writes a field on the asked object, so the port's
+  shape is right). ZWIERZ1.DES places the rhino NOSOROG at
+  1700,600 with `bounds=1680,1950`, i.e. its whole patrol
+  covers that box, with `damage=10 scope=40,150 energy=60`.
+  The authored scene is therefore readable: fight the rhino while
+  standing in the coconut-palm box, let the fight's own K_GEN1
+  row roll the lion into A_DRAP, and FIRE+F4 throws the coconut.
+
+- AND WHERE IT STOPPED IN THE PORT, MEASURED. Two probe runs (NOT
+  legs - /tmp/opencode/ly_rhino_a.log, ly_rhino_b.log): walking
+  east on the shipped route (ly_pal_top's script, then FWD) the
+  lion never gets past pos 1000,613 - feet 645 on the shelf
+  `3 953,654;994,644;1007,646;1051,633` - x stays 1000 for 1750
+  ticks, including in the air while a JUMP is pressed there, and
+  that jump peaks at pos 513, which is 39 px short of the
+  terrace `1 993,506;1141,507` (a landing there needs pos 474).
+  The open question is named rather than guessed: the shelf rises
+  13 px over x 1007..1051, and the stop sits ~7 px before that
+  rise, so this is either an authored wall or THIS PORT's step
+  limit on a slope - the second would be a port bug on the
+  ground-following path, and it is the first thing to settle
+  before any fruit leg on the east bank can exist.
+
+- NO CHANGE, AND WHAT FOLLOWS. No code, no legs: this record's
+  job was to find out whether the coconut throw is reachable, and
+  it is one measurement away, not five. The order in OI-134 now
+  starts with that measurement - the step/slope question, then a
+  leg that stands the lion in the KILOF_PL box, fights, rolls
+  into A_DRAP and throws; the GRABG family stays the second step
+  (it is what would make the coconut an OBJECT rather than a
+  state), and the object-side F/G channel the third.
