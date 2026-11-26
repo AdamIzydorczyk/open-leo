@@ -4408,6 +4408,77 @@ ifeq ($(PX_DATA),1)
 	  && echo "play throw fruit (PR-539): FIRE+F4 in the hang reaches the authored wind-up A_KILOF_PR (seq=use) at 204,484 and its pose cycle is exactly the authored rows 1,2,3,4,3,2 - frame 4 at 272, back to frame 1 at 281 and HELD there to 299 by its 1,300,WAIT K_NEVER row (PR-333: a clause that never matches never consumes the threshold); releasing both keys at 300 runs the negative exit A_DRAP(1)=!K_FIRE back to the hang. Zero A_KILOF, zero A_KAMIEN, zero AC_KILOF: ANI2.DES authors the two pickables as GRABG,2113,350,kilof.grp and GRABG,190,210,kij.grp, and a GRABG line is a group header, never an entry (PR-93), so no fruit object exists to raise it - OI-134" \
 	  && echo " (ok)" \
 	  || { echo "play throw fruit grep FAILED"; cat /tmp/opencode/ly_thr_fruit.log; exit 1; }
+# PR-543 (the .GRP READ half of OI-134 item 1): the GRABG group line and
+# the .GRP member it names, measured on the real ZARIA.01 scene. ANI2.DES
+# lines 21-22 author `GRABG,2113,350,kilof.grp` and `GRABG,190,210,
+# kij.grp`; field 0 names an ANIMACJE LEAF TABLE of the level and field 3
+# one of its id=1 records - the HD install carries 52 .GRP members (16
+# under GRABG leaves), the CD's ANIMACJE carries NONE, and the .DES texts
+# themselves live in the HD ETAPY, so this census only exists with the HD
+# fixture. KILOF.GRP (115 B) = `3` + GRABOBJ lines + `sample=10` +
+# `FKey=4` (the engine's own keys, 0x9142c/0x9143a, read by the +0x2c
+# verb 0x3db00; FKey is ONE-BASED and 0x3db32 decrements it); KIJ.GRP
+# (114 B) carries FKey=3. ZARIA.01 also shows the token family is NOT
+# one grammar: ANI1.DES authors three `ZWODOSPD,x,y,wodospad.grp` lines
+# whose member (120 B, first class STRUMIEN) carries `offset=`/`speed=`
+# instead, and this reader counts those names without inventing a model
+# for them. The census numbers below match the independent python survey
+# of the shipped containers: 86 group lines over the 14 level blocks,
+# 84 resolving; the 2 that do not are KADMAR.07 ANI1.DES lines 15-16
+# (`GRUPA2,0,0,drzwi1.grp`/`drzwi2.grp` - that ANIMACJE block has no
+# GRUPA2 leaf), which is exactly what the second run pins as the port's
+# own data-hole report. KADMAR.07 also holds the stale-count case: 27 of
+# its 46 resolved members declare a count different from their lines
+# (all 16 GRABG members declare 3 and hold 3; KILOF.GRP's declared 3 is
+# pinned by the --mov-selftest grammar leg).
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=1 \
+	  timeout 120 ./ll_level $(DATA) ZARIA.01 \
+	  > /tmp/opencode/ly_grabg.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "grabg census FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_grabg.log; exit 1; fi
+	@grep -q 'the group header at 2113,350 reads GRABG/kilof.grp (115 B): its own text places 3 member line(s) (the first is class GRABOBJ) and carries 2 property line(s) - sample = 10, FKey = 4' /tmp/opencode/ly_grabg.log \
+	  && grep -q 'the group header at 190,210 reads GRABG/kij.grp (114 B): its own text places 3 member line(s) (the first is class GRABOBJ) and carries 2 property line(s) - sample = 10, FKey = 3' /tmp/opencode/ly_grabg.log \
+	  && grep -q 'the group header at 992,610 reads ZWODOSPD/wodospad.grp (120 B): its own text places 3 member line(s) (the first is class STRUMIEN) and carries 2 property line(s) - no `sample =` line, no ` FKey =` line' /tmp/opencode/ly_grabg.log \
+	  && grep -q 'authored scene ZARIA.01: 5 group header line(s)' /tmp/opencode/ly_grabg.log \
+	  && grep -q '5 resolved to a member that WAS read here (15 member line(s), 10 property line(s), 2 `sample=`, 2 `FKey=`' /tmp/opencode/ly_grabg.log \
+	  && grep -q '0 named a member this container does not hold (a data hole), 0 named something that is not a .grp member; 0 member(s) declared a count that is not the number of their lines' /tmp/opencode/ly_grabg.log \
+	  && test "$$(grep -c 'the group header at' /tmp/opencode/ly_grabg.log)" -eq 4 \
+	  && echo "grabg census (PR-543): ZARIA.01's five group lines are read, not skipped - the two GRABG members ANI2.DES names resolve through the ANIMACJE leaf of the same name (kilof.grp 115 B with sample=10 FKey=4, kij.grp 114 B FKey=3 - the engine's own keys at 0x9142c/0x9143a, FKey authored ONE-BASED), the three ZWODOSPD lines resolve to wodospad.grp whose property names this reader counts without inventing a model, and nothing is instantiated (ok)" \
+	  || { echo "grabg census grep FAILED"; grep 'group header' /tmp/opencode/ly_grabg.log; exit 1; }
+# control: with no HD install there is no .DES text at all (the level's
+# placement files live in the HD ETAPY) and no .GRP member either (the
+# CD ANIMACJE has none): the port names both holes and counts ZERO group
+# lines - it does not invent a coconut from the level's name.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=/tmp/opencode/nope LEO_HELP_SECS=0 LEO_LEVEL_SECS=1 \
+	  timeout 120 ./ll_level $(DATA) ZARIA.01 \
+	  > /tmp/opencode/ly_grabg_no.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "grabg census no-HD control FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_grabg_no.log; exit 1; fi
+	@grep -q 'no HD ETAPY block for ZARIA.01: the level'"'"'s own placement files are unreachable (data hole)' /tmp/opencode/ly_grabg_no.log \
+	  && grep -q 'no HD ANIMACJE for ZARIA.01' /tmp/opencode/ly_grabg_no.log \
+	  && test "$$(grep -c 'group header' /tmp/opencode/ly_grabg_no.log)" -eq 0 \
+	  && echo "grabg census no-HD control (PR-543): without the HD install the .DES texts and every .GRP member are data holes the port NAMES, and zero group lines are counted or invented (ok)" \
+	  || { echo "grabg no-HD control grep FAILED"; grep -E 'group header|no HD' /tmp/opencode/ly_grabg_no.log; exit 1; }
+# the unresolved half of the 86-line census: KADMAR.07 ANI1.DES lines
+# 15-16 name GRUPA2/drzwi1.grp and drzwi2.grp, and that level's
+# ANIMACJE block carries no GRUPA2 leaf - the only two of the 86 that
+# do not resolve. This run pins the port reports them as data holes,
+# and the stale-count count (27 of 46) is reported, not hidden.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=1 \
+	  timeout 120 ./ll_level $(DATA) KADMAR.07 \
+	  > /tmp/opencode/ly_grabg_kadmar.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "grabg kadmar control FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_grabg_kadmar.log; exit 1; fi
+	@grep -q 'the group header at 0,0 names the member GRUPA2/drzwi1.grp, which is NOT a record of this level'"'"'s ANIMACJE block: the group'"'"'s own text is unreachable (a data hole)' /tmp/opencode/ly_grabg_kadmar.log \
+	  && grep -q 'the group header at 0,0 names the member GRUPA2/drzwi2.grp' /tmp/opencode/ly_grabg_kadmar.log \
+	  && grep -q 'authored scene KADMAR.07: 48 group header line(s)' /tmp/opencode/ly_grabg_kadmar.log \
+	  && grep -q '46 resolved to a member that WAS read here (189 member line(s), 104 property line(s), 1 `sample=`, 1 `FKey=`' /tmp/opencode/ly_grabg_kadmar.log \
+	  && grep -q '2 named a member this container does not hold (a data hole), 0 named something that is not a .grp member; 27 member(s) declared a count that is not the number of their lines' /tmp/opencode/ly_grabg_kadmar.log \
+	  && echo "grabg kadmar control (PR-543): KADMAR.07 is where the census's 2 unresolved lines live - the port reports the missing GRUPA2 leaf as exactly two named data holes and counts the 27 stale member count lines instead of trusting them (ok)" \
+	  || { echo "grabg kadmar grep FAILED"; grep 'group header' /tmp/opencode/ly_grabg_kadmar.log; exit 1; }
 else
 	@echo "verify-play: SKIP data legs (needs $(DATA) + LEO_HD_DIR fixtures; see NEXT_STEPS.md)"
 endif

@@ -70859,3 +70859,160 @@ GATE-FIXTURE-FREE: rc=0 16 (ok) + 22 named verify-SKIP
   shifts. The fight machinery is not the problem - that probe
   is a hit landing - it is that this leg pins one deterministic
   route.
+
+## PR-543 - THE .GRP TEXTS EXIST IN SHIP NUMBERS, AND THIS PORT
+## NOW READS THEM: ZARIA.01's two coconut groups resolve through
+## the ANIMACJE leaf table of the same name
+KIND: read
+SUBSYSTEM: the fourth grammar of the .DES placement texts - the
+  GROUP HEADER line `<TOKEN>,x,y,member.grp`, whose field 0 names
+  an ANIMACJE LEAF TABLE of the level and field 3 one of its
+  id=1 records, a .GRP member text (count line, member lines,
+  property lines); and the member's own text, including the
+  engine's ` sample = %d ` / ` FKey = %d ` keys. Three
+  verify-play legs (ly_grabg, ly_grabg_no, ly_grabg_kadmar) and
+  one --mov-selftest grammar leg.
+ADDRESSES: 0x3db00, 0x3db19, 0x3db32, 0x3db50, 0x3db90,
+  0x4e4ee, 0x4e4fe, 0x52860, 0x52b10, 0x9142c, 0x9143a,
+  0x919ec, 0x91fc3, 0xa1880, 0xcef8c.
+NAMES: GRABG, GRUPA, GRUPA2, SKOCZNIE, ZWODOSPD, KILOF.GRP,
+  KIJ.GRP, WODOSPAD.GRP, SIEKIERA.GRP, GRABOBJ, STRUMIEN,
+  PLATF, WSPRECT, FKey, sample=, AC_KOREK, AC_KILO,
+  place_group_header, grp_member_report, place_group_selftest,
+  ly_grabg, ly_grabg_no, ly_grabg_kadmar, OI-134.
+CODE: yes: ported/ll_level.c. place_group_header() - the
+  four-field grammar, taken in the 3-comma branch of
+  des_place_file right after place_rect_class; grp_member_report
+  () - reads the member through leaf_record from the HD or CD
+  ANIMACJE of that level; place_group_selftest() wired into
+  ll_mov_selftest; ten obj_stats counters; the "authored scene
+  %s: N group header line(s)" census print; the "not act on"
+  census field for leftovers RELABELLED to "3-comma line(s)
+  matching no placement grammar" (real group headers are no
+  longer leftovers); test-only place_ctx fields ac_grp_text /
+  ac_grp_len; PR-93's place_grammar_selftest expectations moved
+  (its GRABG fixture line is now a group header, not a
+  leftover).
+HOOKS: none new. No LEO_* name is added; the legs run the
+  shipped loader with the two fixture prefixes only.
+OPENS: none new.
+CLOSES: none - OI-134 item (1) turns PARTIAL: the group line
+  and its member are now READ by this port; the INSTANTIATE
+  half (a fruit object among the scene objects) is not.
+CORRECTS: PR-539's sentence "no .grp member is read by this port
+  at all" carried the wrong implication: the members are not
+  missing from the data - the HD ANIMACJE carries 52 of them and
+  the CD's carries none; only this port had never read them. And
+  PR-143's "signal-record TYPE numbers" paragraph ("the 0x21 arm
+  treats type 33 = AC_KILO"): AC_KILO is not a signal name in
+  either table - the port's enum has no such entry (grep: 0) and
+  the engine's 73-name block at 0x919ec has none either. In the
+  bit-number space the engine itself uses (K_GEN1 = 0x36, table
+  index = bit + 4 with the four specials AC_K_ANY/K_ANY/
+  AC_K_NEVER/K_NEVER first - re-measured from the image here),
+  type 0x21 is index 33 = AC_KOREK: port LL_SIG_AC_KOREK, engine
+  table 37.
+GATE: make 0 warnings; verify-all fixtures rc=0 92 (ok);
+GATE-FIXTURE-FREE: rc=0 16 (ok) + 22 named verify-SKIP
+      lines
+      (/tmp/opencode/pr543_make.log and pr543_make2.log both
+      EXIT=0 zero warnings; pr543_ga1.log .. pr543_ga4.log all
+      EXIT=0 at 92 (ok), zero FAILED - against PR-542's 89,
+      this leg's three ok-lines are the difference;
+      pr543_gnf1.log, pr543_gnf2.log and pr543_gnf3.log all
+      EXIT=0 at 16 (ok) and the same 22 SKIP lines
+      PR-541/PR-542 logged; pr543_st.log is --mov-selftest
+      GREEN with the new grammar leg; pr543_vp1.log is
+      verify-play GREEN at 43 legs; pr543_docs.log rc=0 - the
+      width ratchet unchanged (HANDOFF 41/41, NEXT_STEPS
+      62/62, README 12/12), the register at 135 rows with 0
+      unresolved OI ids, RE_INDEX regenerated at 528 records.
+      The legs' own logs are ly_grabg.log, ly_grabg_no.log and
+      ly_grabg_kadmar.log; the census probes that set the
+      pinned numbers are grp_census.py, grp_dump.py,
+      grp_grammar.py and grabg_census.py over the staged
+      containers, with the 52-member text dump in
+      grp_hd.txt.)
+
+- THE SHIP NUMBERS, COUNTED OVER THE CONTAINERS (python over
+  tools/llrs_unpack reads, /tmp/opencode/grp_census.py). The
+  HD ETAPY .DES texts carry 86 four-field lines whose last
+  field ends `.grp`: GRUPA x50, GRABG x17, SKOCZNIE x14,
+  ZWODOSPD x3, GRUPA2 x2 - and 84 of the 86 name a record
+  that EXISTS in that level's ANIMACJE block under a leaf
+  table of the SAME name as the line's first field. The 2
+  that do not are KADMAR.07 ANI1.DES lines 15-16,
+  `GRUPA2,0,0,drzwi1.grp`/`drzwi2.grp`: that level's ANIMACJE
+  block has no GRUPA2 leaf. The HD ANIMACJE holds 52 .GRP
+  member records (16 under GRABG leaves, 21 GRUPA, 14
+  SKOCZNIE, 1 ZWODOSPD); the CD's ANIMACJE holds ZERO. ZARIA.
+  01's two GRABG members are 115 B and 114 B.
+- A MEMBER TEXT IS A PLACEMENT TEXT AGAIN (grammar census over
+  all 52): a first line with a COUNT, comma member lines
+  (297 of them - `GRABOBJ,kilof.seq,0,0` - the first line
+  names a class this port already knows: GRABOBJ is PR-94/96's
+  +0x8c handler), and property lines (224 across 13 distinct
+  names). The two names the GRABG object reads are parsed with
+  the ENGINE's own whitespace-skipping sscanf shapes, ` sample =
+  %d ` at 0x9142c and ` FKey = %d ` at 0x9143a - the same
+  shapes 0x3db00 runs, and the same reading style this repo's
+  `damage=` parser already uses. sample/FKey occur together in
+  exactly 18 of the 52 texts: 16 under GRABG leaves and 2
+  under LONA.05/GRUPA (CEBRZYK.GRP, RAKI.GRP). KILOF.GRP
+  (ANIMACJE/ZARIA.01/GRABG, 115 B) is `3` + `GRABOBJ,kilof.
+  seq,0,0` + `sample=10` + `FKey=4` + two `GWIAZDKI,dummy,
+  zaria01.mov` lines; KIJ.GRP carries FKey=3. All 16 GRABG
+  members declare 3 and hold 3 - the 18 other member texts'
+  count lines are stale, which is why the reader reads every
+  line regardless (KADMAR.07: 27 of its 46 resolved members
+  mismatch; counted, not trusted).
+- THE GRABG OBJECT ITSELF, AT INSTRUCTION LEVEL (from
+  /tmp/opencode/vis/text.asm + build/leo/leo.img). There is
+  no `.GRP` string literal anywhere: the container comes from
+  the PLACEMENT. The factory chain matches the token GRABG at
+  the string 0x91fc3 -> 0x4e4ee, which allocates 0x44 bytes
+  at 0x4e4fe and runs the ctor 0x52860. Its vtable 0xa1880
+  carries: +0x2c = 0x3db00, which scans the member text for
+  the two keys - sample into [desc+0x44], -1 when absent
+  (0x3db19), FKey into [desc+0x40] with ONE DECREMENT
+  (0x3db2f-0x3db36, so the authored FKey=4 indexes 3); +0x24
+  = 0x3db50, which reads the row [desc+0x40]*4 + 0xcef8c of
+  the player-key table and, while it is held, raises record
+  type 0x21 on [desc+0x30] - the object this one was made for
+  - through 0x52b10; +0x8c = 0x3db90, the GRABOBJ handler
+  this repo already ports (PR-94/96). Which key row 0xcef8c
+  +12 IS is not claimed here - the row's identity is the next
+  read.
+- THE FAMILY IS NOT ONE GRAMMAR, AND NOTHING IS INVENTED FOR
+  THE OTHERS. ZARIA.01 itself shows it: ANI1.DES lines 14-16
+  author three `ZWODOSPD,x,y,wodospad.grp` headers whose
+  member (120 B, first class STRUMIEN) carries `offset=5`/
+  `speed=6` and NO sample/FKey line at all. The port takes
+  every `<TOKEN>,x,y,member.grp` shape - it does not filter
+  the token - reads the two keys it has measured, and COUNTS
+  the other property names without modelling them. The header
+  itself places no object and binds no properties.
+- THE LEGS. ly_grabg runs the plain ZARIA.01 scene with the HD
+  fixture and pins the four detail prints (the print caps at
+  four: kilof.grp 115 B sample = 10 FKey = 4, kij.grp 114 B
+  FKey = 3, wodospad.grp 120 B with the two "no ... line"
+  forms) and the census line: 5 headers, 5 resolved, 15 member
+  lines, 10 property lines, 2 sample / 2 FKey, 0 holes, 0
+  stale counts. ly_grabg_no is the no-HD control: without the
+  HD install the .DES texts themselves are gone (they live in
+  the HD ETAPY) and the CD ANIMACJE has no .GRP either - the
+  port NAMES both data holes and counts ZERO group lines; it
+  does not invent a coconut. ly_grabg_kadmar runs KADMAR.07,
+  the only place where the census's 2 unresolved lines live,
+  and pins exactly those two named holes (48 headers, 46
+  resolved, 2 holes, 27 stale counts). place_group_selftest
+  feeds the shipped KILOF.GRP bytes through the member reader
+  with no container: 1 member text, 3 member lines, 2 property
+  lines (1 sample, 1 FKey), declared 3 == 3 lines.
+- WHAT IS STILL MISSING. No fruit OBJECT exists yet: the
+  members are read, not instantiated (OI-134 item 1's second
+  half - the GRABOBJ/child members as scene objects), and the
+  fruit's own `1,1,F 1200,-300` under `G=0,80` still needs
+  the object-side velocity channel WITH a ground-support half,
+  as ONE port (item 3). Nothing about the FKey KEY was
+  assumed: no numeric model of 0xcef8c is built yet.

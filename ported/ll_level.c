@@ -2193,6 +2193,9 @@ static void obj_touch_enemy(lvl_obj *o, int verbose, int tick);
  * counts and placement are exercised). */
 static int place_grammar_selftest(void);
 static int place_rectclass_selftest(void);   /* PR-328 */
+static int place_group_selftest(void);       /* PR-543: the group header
+                                              * grammar + the .GRP member's
+                                              * own text */
 static int rect_class_ask_selftest(void);         /* PR-329 */
 
 static int obj_contact(const lvl_obj *o);   /* defined below, with the shape
@@ -5088,6 +5091,7 @@ int ll_mov_selftest(void)
         plany_selftest() != 0 ||
         ladder_answer_selftest() != 0 || place_grammar_selftest() != 0 ||
         place_rectclass_selftest() != 0 ||
+        place_group_selftest() != 0 ||
         rect_class_ask_selftest() != 0 ||
         seat_motion_selftest() != 0 || surface_ask_selftest() != 0 ||
         seq_landshift_selftest() != 0 || seat_sample_selftest() != 0) {
@@ -5123,6 +5127,19 @@ int ll_mov_selftest(void)
            " anchor point, BRECT the AC_RECT bit; the channel bit of the"
            " requester's state and the plane gate 0x4b5a1 decide who is"
            " asked at all)"
+           " + PR-543 the GROUP HEADER line `GRABG,x,y,member.grp` and the"
+           " .GRP member it names: field 0 is an ANIMACJE leaf table of"
+           " the level and field 3 one of its id=1 records (measured: 52"
+           " .GRP members in the HD ANIMACJE, 16 under GRABG leaves, 17"
+           " group headers in the 14 HD ETAPY .DES texts and all 17"
+           " resolve; the CD ANIMACJE carries NONE of them), the member's"
+           " own text is a placement text again (a count line, member lines"
+           " like `GRABOBJ,kilof.seq,0,0`, and the engine's two property"
+           " keys `sample`/`FKey` of 0x3db00 at 0x9142c/0x9143a, FKey"
+           " authored ONE-BASED and decremented at 0x3db32), the header"
+           " itself places nothing and binds no properties, and the token"
+           " match is exact - a line whose member is not a .grp name stays"
+           " unclassified"
            " + PR-107 authored"
            " start row ((3) enters a 3-row state at its THIRD row, (1),"
            " (9) and (x) at the top, and that row list's wrap still"
@@ -9953,6 +9970,23 @@ typedef struct {                    /* counted while reading, never guessed */
      * at [obj+0x3c]. Counted apart from the polyline noise they used to be
      * counted as. */
     int rectclass;
+    /* PR-543: the GROUP HEADER line, `<TOKEN>,x,y,member.grp` - the
+     * ZARIA.01 ANI2.DES shape `GRABG,2113,350,kilof.grp`. It is neither
+     * an entry nor a static nor a polyline: field 0 names an ANIMACJE
+     * LEAF TABLE of the level and field 3 names one of its id=1 records,
+     * a .GRP member, which is itself a CRLF placement text. Measured over
+     * the shipped HD texts: 86 such lines in the 14 level blocks, five
+     * tokens (GRUPA 50, GRABG 17, SKOCZNIE 14, ZWODOSPD 3, GRUPA2 2),
+     * 84 of them resolving; 52 .GRP members exist in the HD ANIMACJE (16
+     * under GRABG leaves) and NONE in the CD's. Resolved = the header's
+     * member was found in that leaf; ungrp = a header whose member is not
+     * a .grp name; members counts the member lines inside the texts that
+     * WERE read, props/samples/fkeys their property lines, declared the
+     * sum of their count lines, badcount how many texts declared a count
+     * different from their line count. */
+    int group_hdr, group_resolved, group_unresolved, group_ungrp,
+        group_members, group_props, group_samples, group_fkeys,
+        group_declared, group_badcount;
     /* PR-93: the two placement grammars the census proved. Static image
      * lines ("<LEAF>,<name>.seq,<x>,<y>", 3 commas) place one image whose
      * .SEQ is named by the line itself; attached children are the five-
@@ -9978,6 +10012,11 @@ typedef struct {                    /* the scene being built for one level */
     const char *level;
     int world_w;
     obj_stats st;
+    /* PR-543 test-only: the text of a .GRP member, held in memory, for the
+     * selftest, which has no containers. Never set on a real path: the
+     * member's record always comes from the level's ANIMACJE block. */
+    const char *ac_grp_text;
+    size_t ac_grp_len;
 } place_ctx;
 
 /* record of an exact name inside a level's ANIMACJE leaf table (leaf tables
@@ -12273,12 +12312,22 @@ static const char *place_rect_class(place_ctx *pc, const char *p, size_t len)
     return eol;
 }
 
+/* PR-543: the group header line and the .GRP member it names, both defined
+ * below with the placement reader that calls them. */
+static const char *place_group_header(place_ctx *pc, const char *line,
+                                     size_t ll, const char *fname,
+                                     int *resolved);
+static void grp_member_report(place_ctx *pc, const char *leaf,
+                              const char *member, int px, int py,
+                              const char *fname);
+
 static void des_place_file(place_ctx *pc, const char *fname,
                            const char *txt, size_t len)
 {
     obj_stats *st = &pc->st;
     const char *p = txt, *end = txt + len;
     int declared = -1, entries = 0;
+    int grp_resolved = 0;             /* PR-543: set by a taken group header */
     const char *skip_to = NULL;         /* PR-243: set when a line belongs
                                          * to the entry before it (the
                                          * contact-point list) and has been
@@ -12481,6 +12530,16 @@ static void des_place_file(place_ctx *pc, const char *fname,
                     if (nx) {
                         last_obj = -1;      /* nothing below it belongs
                                              * to a box-only object */
+                        after_prop = 0;
+                    }
+                    else if (place_group_header(pc, line, ll, fname,
+                                                &grp_resolved)) {
+                        /* PR-543: a GRABG group header. It places nothing
+                         * and carries no properties of its own - the
+                         * member's own text does, and that text binds to
+                         * the member's first line, never to the object
+                         * above the header. */
+                        last_obj = -1;
                         after_prop = 0;
                     }
                     else if (strchr(line, ';'))
@@ -12697,6 +12756,217 @@ next:
     st->files++;
 }
 
+/* PR-543: the group header line. It is a FOUR-field line whose last field
+ * names a .grp member: `GRABG,2113,350,kilof.grp` (ZARIA.01 ANI2.DES
+ * line 21) is one of 86 such lines in the shipped HD texts - the five
+ * family tokens are GRABG x17, GRUPA x50, GRUPA2 x2, SKOCZNIE x14,
+ * ZWODOSPD x3 - and 84 of the 86 name a record that EXISTS in the level's
+ * ANIMACJE leaf of the same name (the 2 that do not are KADMAR.07 ANI1
+ * lines 15-16, `GRUPA2,0,0,drzwi1.grp` / `drzwi2.grp`: that level's
+ * ANIMACJE block has no GRUPA2 leaf, a data hole, measured). So field 0
+ * is an ANIMACJE LEAF TABLE of the level (measured: ZARIA.01/GRABG holds
+ * KIJ.GRP 114 B and KILOF.GRP 115 B) and field 3 is the member. The
+ * token itself is not filtered: a group line is recognised by its shape,
+ * exactly as the engine's factory chain recognises the tokens (GRUPA/
+ * GRABG at 0xa1924, GRABG at 0x91fc3 -> 0x4e4ee, ZWODOSPD at 0x91f75).
+ * Returns the end of the line it took, or NULL to let the caller classify
+ * it as before. Nothing is guessed by stem. */
+static const char *place_group_header(place_ctx *pc, const char *line,
+                                      size_t ll, const char *fname,
+                                      int *resolved)
+{
+    obj_stats *st = &pc->st;
+    char leaf[16];
+    int px = 0, py = 0;
+    const char *eos = line + ll;
+    const char *c1 = place_field(line, eos, leaf, sizeof leaf);
+    const char *c2 = c1 ? place_int(c1, eos, &px) : NULL;
+    const char *c3 = c2 ? place_comma(c2, eos) : NULL;
+    const char *c4 = c3 ? place_int(c3, eos, &py) : NULL;
+    const char *c5 = c4 ? place_comma(c4, eos) : NULL;
+    if (!c5)
+        return NULL;
+    /* the member name is the LAST field: there is no separator after it,
+     * so place_field (which requires one) cannot take it. Read the tail
+     * directly, trimmed, and reject any field with a space inside it -
+     * the same rule place_field applies to the others. */
+    const char *b = c5;
+    while (b < eos && (*b == ' ' || *b == '\t'))
+        b++;
+    const char *e = eos;
+    while (e > b && (e[-1] == ' ' || e[-1] == '\t'))
+        e--;
+    size_t mn = (size_t)(e - b);
+    char mname[32];
+    if (!mn || mn >= sizeof mname || memchr(b, ' ', mn) ||
+        memchr(b, '\t', mn))
+        return NULL;
+    memcpy(mname, b, mn);
+    mname[mn] = '\0';
+    st->group_hdr++;
+    const char *dot = mname + mn;
+    while (dot > mname && (dot[-1] == ' ' || dot[-1] == '\t'))
+        dot--;
+    if (dot - mname < 5 || strncasecmp(mname + (dot - mname) - 4, ".grp",
+                                       4) != 0) {
+        st->group_ungrp++;
+        if (st->group_ungrp <= 4)
+            printf("ll_level: placement %s: a group header names \"%s\","
+                   " which is not a .grp member: nothing can be read for"
+                   " it\n", fname, mname);
+        *resolved = 0;
+        return e;
+    }
+    grp_member_report(pc, leaf, mname, px, py, fname);
+    *resolved = 1;
+    return e;
+}
+
+/* PR-543: read one .GRP member. Its payload is the SAME line grammar the
+ * .DES placement texts use (a decimal count, then class-token lines and
+ * name=value property lines) - measured over all 52 shipped members:
+ * 297 comma lines, 224 property lines, 13 property names. The GRABG
+ * family's shape, verbatim from ANIMACJE/ZARIA.01/GRABG/KILOF.GRP:
+ *     3
+ *     GRABOBJ,kilof.seq,0,0
+ *     sample=10
+ *     FKey=4
+ *     GWIAZDKI,dummy,zaria01.mov,-20,-12
+ *     GWIAZDKI,dummy,zaria01.mov,0,-12
+ * The two property keys are the engine's own: 0x3db00 (the GRABG object's
+ * +0x2c verb, reached from the factory chain that matches the token
+ * GRABG at 0x91fc3 and allocates 0x44 bytes at 0x4e4fe) scans them with
+ * the formats at 0x9142c " sample = %d " and 0x9143a " FKey = %d ",
+ * storing into [desc+0x44] (a sample id, -1 when the key is absent,
+ * 0x3db19) and [desc+0x40] with ONE DECREMENT (0x3db2f-0x3db36: an
+ * authored FKey=4 becomes the index 3). Its +0x24 verb 0x3db50 then
+ * reads [desc+0x40]*4+0xcef8c - that player-key state row - and while
+ * the player holds it raises record type 0x21 on [desc+0x30], the object
+ * this one was made for. The other 13 property names of the family are
+ * counted, never invented. */
+static void grp_member_report(place_ctx *pc, const char *leaf,
+                              const char *member, int px, int py,
+                              const char *fname)
+{
+    obj_stats *st = &pc->st;
+    llrs_slot sl;
+    const llrs *c = NULL;
+    unsigned char *raw = NULL;
+    long n = -1;
+    if (pc->ac_grp_text && pc->ac_grp_len > 0) {
+        /* PR-543 selftest path only (see place_ctx): the member's text is
+         * already in hand, so no container is asked for it. */
+        raw = (unsigned char *)malloc(pc->ac_grp_len);
+        if (raw) {
+            memcpy(raw, pc->ac_grp_text, pc->ac_grp_len);
+            n = (long)pc->ac_grp_len;
+        }
+        c = NULL;
+    }
+    if (n <= 0 && leaf_record(pc->ac.hd, pc->ac.hd_blk, leaf, member, &sl)) {
+        c = pc->ac.hd;
+        n = llrs_read(c, &sl, &raw);
+    } else if (n <= 0 &&
+               leaf_record(pc->ac.cd, pc->ac.cd_blk, leaf, member, &sl)) {
+        c = pc->ac.cd;
+        n = llrs_read(c, &sl, &raw);
+    } else if (n <= 0) {
+        st->group_unresolved++;
+        if (st->group_unresolved <= 4)
+            printf("ll_level: placement %s: the group header at %d,%d names"
+                   " the member %s/%s, which is NOT a record of this level's"
+                   " ANIMACJE block: the group's own text is unreachable"
+                   " (a data hole)\n", fname, px, py, leaf, member);
+        return;
+    }
+    if (!raw || n <= 0) {
+        free(raw);
+        st->group_unresolved++;
+        return;
+    }
+    st->group_resolved++;
+    int declared = -1, entries = 0, props = 0, sample = -2, fkey = -2;
+    char first[64] = "";
+    const char *p = (const char *)raw, *end = (const char *)raw + n;
+    while (p < end) {
+        const char *eol = p;
+        while (eol < end && *eol != '\n' && *eol != '\r')
+            eol++;
+        const char *b = p;
+        while (b < eol && (*b == ' ' || *b == '\t'))
+            b++;
+        const char *e = eol;
+        while (e > b && (e[-1] == ' ' || e[-1] == '\t'))
+            e--;
+        size_t ll = (size_t)(e - b);
+        char line[256];
+        if (ll && ll < sizeof line) {
+            memcpy(line, b, ll);
+            line[ll] = '\0';
+            if (declared < 0 && strspn(line, "0123456789") == ll) {
+                declared = atoi(line);
+            } else if (strchr(line, '=')) {
+                int v;
+                props++;
+                if (sscanf(line, " sample = %d", &v) == 1) {
+                    sample = v;
+                    st->group_samples++;
+                } else if (sscanf(line, " FKey = %d", &v) == 1) {
+                    fkey = v;
+                    st->group_fkeys++;
+                }
+            } else if (strchr(line, ',')) {
+                entries++;
+                if (!first[0]) {
+                    const char *cm = strchr(line, ',');
+                    size_t k = (size_t)(cm - line);
+                    if (k >= sizeof first)
+                        k = sizeof first - 1;
+                    memcpy(first, line, k);
+                    first[k] = '\0';
+                }
+            }
+        }
+        while (eol < end && (*eol == '\n' || *eol == '\r'))
+            eol++;
+        p = eol;
+    }
+    free(raw);
+    st->group_members += entries;
+    st->group_props += props;
+    st->group_declared += declared > 0 ? declared : 0;
+    if (declared >= 0 && declared != entries)
+        st->group_badcount++;
+    if (st->group_resolved <= 4) {
+        char sval[24], fval[24], note[200];
+        snprintf(sval, sizeof sval, "sample = %d", sample);
+        snprintf(fval, sizeof fval, "FKey = %d", fkey);
+        if (sample == -2)
+            strcpy(sval, "no `sample =` line");
+        if (fkey == -2) {
+            strcpy(fval, "no ` FKey =` line");
+            snprintf(note, sizeof note, "this member carries a different"
+                     " property set: of the 52 shipped member texts 18"
+                     " carry an FKey line, 16 of them under GRABG"
+                     " leaves; this text's property names are counted,"
+                     " never invented");
+        } else {
+            snprintf(note, sizeof note, "an authored ONE-BASED key index"
+                     " which the GRABG object's +0x24 verb 0x3db50 polls"
+                     " against the player's held keys (0x3db32 decrements"
+                     " it once)");
+        }
+        printf("ll_level: placement %s: the group header at %d,%d reads"
+               " %s/%s (%ld B): its own text places %d member line(s)"
+               " (the first is class %s) and carries %d property line(s)"
+               " - %s, %s: %s; the member's declared count is"
+               " %d. Nothing is instantiated from it yet."
+               " (0x3db00, 0x3db50, 0x4e4fe)\n",
+               fname, px, py, leaf, member, n, entries,
+               first, props, sval, fval, note, declared);
+    }
+}
+
 /* PR-93: the placement grammar legs. Lines are the shipped shapes, verbatim
  * in structure (ZARIA.01: `SEP,dummy,sep.mov,300,450` + its
  * `POCISK,jajo.ani,jajo.mov,0,0` child + `PICT,plan4.seq,70,480` /
@@ -12707,7 +12977,10 @@ next:
  * instantiated (no world object at 0,0 - that was the fruit in the
  * corner), static images placed at their authored positions, an x outside
  * the level's own world not placed, the 6-parameter KAMIEN line still an
- * ordinary entry, the GRABG line still only a group header. */
+ * ordinary entry, the GRABG line read as a GROUP HEADER with its member a
+ * data hole here (PR-543 corrected this sentence: the line is no longer
+ * only counted, place_group_header now reads it - see
+ * place_group_selftest below for what a header does and does not do). */
 static int place_grammar_selftest(void)
 {
     static const char txt[] =
@@ -12769,7 +13042,13 @@ static int place_grammar_selftest(void)
         { "statics outside the world", st->static_out, 1 },
         { "static art holes", st->static_missing, 4 },
         { "attached statics", st->static_attached, 1 }, /* only the rhino's mat */
-        { "group lines", st->group, 1 },          /* GRABG: not a static */
+        { "group lines", st->group, 0 },          /* PR-543: the GRABG line
+                                                   * is now READ as a group
+                                                   * header, not noise; its
+                                                   * member is a data hole
+                                                   * here (no containers) */
+        { "group header lines", st->group_hdr, 1 },
+        { "members named but absent", st->group_unresolved, 1 },
         { "objects total", own.nobj, 8 },         /* 4 entries + 4 statics */
         { "static instances", nstatic, 4 },
         { "instances at 0,0", natzero, 0 },
@@ -12985,6 +13264,81 @@ static int place_rectclass_selftest(void)
         fprintf(stderr, "mov selftest: FAILED rectangle-class grammar: only"
                 " %d of %d authored boxes stand\n", (int)nfound,
                 (int)(sizeof want / sizeof want[0]));
+        fail = 1;
+    }
+    scene_owner_free(&own);
+    return fail;
+}
+
+/* PR-543: the GROUP HEADER grammar and what a header can and cannot do
+ * with no containers attached (the selftest has none, exactly like the
+ * other placement-grammar legs). The lines are the shipped texts verbatim:
+ * ZARIA.01 ANI2.DES lines 21-22, and ZARIA.02 ANI2.DES line 51, whose
+ * members ANIMACJE/<level>/GRABG/{KILOF,KIJ,KONEWKA}.GRP all exist in the
+ * HD install (measured: 17 group headers in the 14 HD ETAPY .DES texts,
+ * 17 of 17 resolving). The member text is pinned here as data - it is
+ * read in the verify-play legs, where LEO_HD_DIR points at the install. */
+static int place_group_selftest(void)
+{
+    static const char txt[] =
+        "3\n"
+        "GRABG,2113,350,kilof.grp\n"      /* ZARIA.01_ANI2 line 21 */
+        "GRABG,190,210,kij.grp\n"        /* ZARIA.01_ANI2 line 22 */
+        "GRABG,1250,670,konewka.grp\n";  /* ZARIA.02_ANI2 line 51 */
+    static const char member[] =        /* ANIMACJE/ZARIA.01/GRABG/KILOF.GRP,
+                                         * verbatim, CRLF as authored */
+        "3\r\nGRABOBJ,kilof.seq,0,0\r\nsample=10\r\nFKey=4\r\n"
+        "GWIAZDKI,dummy,zaria01.mov,-20,-12\r\n"
+        "GWIAZDKI,dummy,zaria01.mov,0,-12\r\n";
+    place_ctx pc;
+    scene_owner own;
+    memset(&pc, 0, sizeof pc);
+    memset(&own, 0, sizeof own);
+    pc.own = &own;
+    pc.level = "PR543.TEST";
+    pc.world_w = 2300;
+    des_place_file(&pc, "PR543.DES", txt, sizeof txt - 1);
+    const obj_stats *st = &pc.st;
+    int fail = 0;
+    struct { const char *what; int got, want; } chk[] = {
+        { "group header lines", st->group_hdr, 3 },
+        { "group members read", st->group_resolved, 0 },  /* no container */
+        { "members named but absent", st->group_unresolved, 3 },
+        { "not-a-.grp names", st->group_ungrp, 0 },
+        { "entry lines", st->entries, 0 },        /* a header is not an entry */
+        { "static lines", st->statics, 0 },       /* nor a static */
+        { "polyline lines", st->poly, 0 },        /* nor polyline noise */
+        { "3-comma lines matching no grammar", st->group, 0 },
+        { "objects total", own.nobj, 0 },         /* nothing is placed */
+    };
+    for (unsigned k = 0; k < sizeof chk / sizeof chk[0]; k++)
+        if (chk[k].got != chk[k].want) {
+            fprintf(stderr, "mov selftest: FAILED group-header grammar:"
+                    " %s counted %d, expected %d\n",
+                    chk[k].what, chk[k].got, chk[k].want);
+            fail = 1;
+        }
+    /* and the member's own text: its count line, its member lines and its
+     * two property keys (0x9142c/0x9143a) are read as authored. The
+     * member is handed in through the test-only field (no container here),
+     * which is exactly the state the verify-play legs reach from the HD
+     * ANIMACJE: ANIMACJE/ZARIA.01/GRABG/KILOF.GRP, 115 bytes. */
+    memset((void *)st, 0, sizeof *st);
+    pc.ac_grp_text = member;
+    pc.ac_grp_len = sizeof member - 1;
+    grp_member_report(&pc, "GRABG", "kilof.grp", 2113, 350, "INLINE.GRP");
+    if (st->group_resolved != 1 || st->group_members != 3 ||
+        st->group_props != 2 || st->group_samples != 1 ||
+        st->group_fkeys != 1 || st->group_declared != 3 ||
+        st->group_badcount != 0) {
+        fprintf(stderr,
+                "mov selftest: FAILED .grp member grammar: %d member text"
+                "(s) with %d member lines, %d property lines, %d sample"
+                " lines, %d FKey lines, %d declared, %d bad; expected 1 3"
+                " 2 1 1 3 0 - the shipped KILOF.GRP text\n",
+                st->group_resolved, st->group_members, st->group_props,
+                st->group_samples, st->group_fkeys, st->group_declared,
+                st->group_badcount);
         fail = 1;
     }
     scene_owner_free(&own);
@@ -13254,12 +13608,39 @@ static void des_placement(place_ctx *pc, llrs *hd_ety,
                " and the authored box at [obj+0x3c]; nothing asks them yet,"
                " so they draw and step as nothing (the rectangle ask is the"
                " next step)\n", pc->level, st->rectclass);
+    if (st->group_hdr)
+        printf("ll_level: authored scene %s: %d group header line(s)"
+               " (`<TOKEN>,x,y,member.grp`: field 0 names an ANIMACJE leaf"
+               " table of this level, field 3 one of its id=1 records, a"
+               " .GRP member, which is itself a placement text - 86 such"
+               " lines exist in the shipped HD texts, tokens GRUPA 50,"
+               " GRABG 17, SKOCZNIE 14, ZWODOSPD 3, GRUPA2 2, and 84 of"
+               " them resolve; 0x4e4ee matches the token GRABG and 0x4e4fe"
+               " allocates its 0x44-byte object, and 0x3db00 reads the"
+               " member's `sample`/`FKey` keys into [desc+0x44]/"
+               " [desc+0x40]): %d resolved to a member that WAS read here"
+                " (%d member line(s), %d property"
+               " line(s), %d `sample=`, %d `FKey=` - an authored ONE-BASED"
+               " key index, decremented at 0x3db32, polled against the"
+               " player's held keys by the object's +0x24 verb 0x3db50,"
+               " which raises record type 0x21 on [desc+0x30]), %d named a"
+               " member this container does not hold (a data hole), %d"
+               " named something that is not a .grp member; %d member(s)"
+               " declared a count that is not the number of their lines."
+               " Nothing is instantiated from any of them yet (OI-134"
+               " item 1)\n",
+               pc->level, st->group_hdr, st->group_resolved,
+               st->group_members, st->group_props, st->group_samples,
+               st->group_fkeys, st->group_unresolved, st->group_ungrp,
+               st->group_badcount);
     if (st->prop || st->group || st->comment || st->class_hint ||
         st->poly || st->shortline || st->param_extra || st->field_space ||
         st->entry_noext || st->attached || st->longline)
         printf("ll_level: placement data the scene model does not act on"
                " (counted, never invented): %d per-entry property line(s)"
-               " (damage/energy/bounds/scope), %d group header line(s),"
+               " (damage/energy/bounds/scope), %d 3-comma line(s) matching"
+               " no placement grammar (PR-543 took the real group headers"
+               " out of this count - they have their own census line),"
                " %d comment line(s) (';' or '//'), %d object-class token(s)"
                " (no .ANI record exists in any container), %d polyline"
                " line(s) outside an entry (the .PLT shape written inside"

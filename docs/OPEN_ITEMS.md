@@ -9581,19 +9581,35 @@ OI-134: the fruit chain - no fruit object is ever placed in a
     `1,300,WAIT K_NEVER` row, and releasing both keys runs
     `A_DRAP(1)=!K_FIRE`. THREE GAPS, each measured, none of
     them the transition tables:
-    (1) NO FRUIT OBJECT EXISTS. ANI2.DES lines 21-22 author
-    `GRABG,2113,350,kilof.grp` and `GRABG,190,210,kij.grp`;
-    PR-93's place_grammar_selftest pins that a GRABG line is a
-    GROUP HEADER, never an entry, and no .grp member is read by
-    this port at all. Nothing can therefore raise AC_KILOF or
-    AC_STONE, and PR-539's fruit leg counts ZERO `state
-    A_KILOF`, ZERO `A_KAMIEN` and ZERO `AC_KILOF` lines: the
-    authored release states are unreachable in the shipped game
-    data, not merely unported. The raisers the repo did read
-    (the AC_KILOF/AC_STONE gates at 0x40d50/0x40dc0, and the
-    parent-and-K_FIRE gate recorded in this file's own row on
-    them) need the [obj+0x30] parent field PR-241 counted as
-    not modelled.
+    (1) NO FRUIT OBJECT EXISTS - PARTIAL SINCE PR-543 (the
+    READ half is done, the object is not). ANI2.DES lines 21-22
+    author `GRABG,2113,350,kilof.grp` and `GRABG,190,210,
+    kij.grp`; PR-93's place_grammar_selftest pins that a GRABG
+    line is a GROUP HEADER, never an entry. PR-543 READS that
+    grammar and its member: the HD ANIMACJE carries 52 .GRP
+    members (16 under GRABG leaves - KILOF.GRP 115 B with
+    `sample=10`/`FKey=4`, KIJ.GRP FKey=3; the CD's carries
+    none), the member text is parsed with the engine's own key
+    shapes, and ZARIA.01's five group lines all resolve. But
+    NOTHING IS INSTANTIATED from a member, so no fruit object
+    exists and nothing can raise AC_STONE; AC_KILOF does have
+    a raiser now (PR-542: the KILOF_PL box answer, the only
+    one this level has), and PR-539's fruit leg counts ZERO
+    `state A_KILOF`, ZERO `A_KAMIEN` and ZERO `AC_KILOF`
+    lines: the authored release states are reachable (PR-542
+    proved A_KILOF) but the stone half stays unproved - the
+    rectangle verbs PR-329 read raise only AC_RECT, AC_DRECT,
+    AC_DRECT2 and AC_KILOF, and AC_STONE's raiser is still
+    unnamed. The raisers the repo did read (the AC_KILOF/
+    AC_STONE gates at 0x40d50/0x40dc0, and the parent-and-
+    K_FIRE gate recorded in this file's own row on them) need
+    the [obj+0x30] parent field PR-241 counted as not
+    modelled - and note the SECOND raiser the .GRP read names:
+    the GRABG object's +0x24 verb 0x3db50 polls the player-key
+    row [desc+0x40]*4 + 0xcef8c and raises record type 0x21
+    on [desc+0x30] while it is held (PR-543; the row's key
+    identity is unread, and type 0x21 is the AC_KOREK bit, not
+    a coconut signal).
     (2) THE FRUIT THAT IS PLACED IS TOLD TO FLY AND NEVER
     MOVES. ANI2.DES places 16 POCISK (15 `kokos.ani` + one
     `dummy`) and ZWIERZ1.DES puts a `POCISK,jajo.ani,jajo.mov,

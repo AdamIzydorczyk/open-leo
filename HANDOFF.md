@@ -6476,6 +6476,26 @@ OI-134 carries it: no coconut exists - the GRABG/.grp members
 are never read and the fruit's own `F 1200,-300` + `G=0,80` arc
 needs the object-side velocity channel.
 
+PR-543 (same owner goal) read that never-read half, and it was
+never a data hole: the .GRP texts are in the ship. The HD
+ANIMACJE carries 52 .GRP member records under ANIMACJE leaf
+tables (16 GRABG), the CD's carries none, and the HD .DES
+texts carry 86 group-header lines over five tokens - 84
+resolve, the only 2 holes at KADMAR.07, which the new legs
+name. ZARIA.01's coconut group resolves exactly as the engine
+makes it: the factory matches the GRABG token (0x4e4ee), the
+member's own text is parsed with the engine's key shapes -
+`sample=10`/`FKey=4` (KILOF.GRP, 115 B) - and the GRABG
+object's +0x24 verb 0x3db50 polls the player-key row
+[desc+0x40]*4 + 0xcef8c and raises type 0x21 on [desc+0x30]
+while held (0x52b10). The fruit's key row at 0xcef8c +12 is
+not yet read, no member is instantiated, and OI-134 (1) stays
+open for exactly that. The correction carried: "type 33 =
+AC_KILO" named a signal that exists in neither table - in the
+bit-number space the engine's own constants use (K_GEN1 0x36;
+the 73-name block at 0x919ec has four specials first, so
+table = bit + 4), type 0x21 is AC_KOREK.
+
 **T6. Level flow.** `end_level` directive, `AC_LEAVE`, the vulture ride of
 ZARIA I, the map -> level -> map loop, TUNGA I <-> II exchange
 (`AC_XCHG_LEVEL`), lives/energy persistence, game over. STATUS.LEO progress is
