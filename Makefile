@@ -2470,7 +2470,13 @@ ifeq ($(PX_DATA),1)
 	  && grep -q 'play tick 263: state A_DRAP seq idle frame 1 pos 204,489 grounded 1' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play: A_TURN_BACK -> A_WSP' /tmp/opencode/ly_climb.log \
 	  && grep -q 'play tick 264: state A_LOOKUP seq look_up frame 2 pos 204,487 grounded 1' /tmp/opencode/ly_climb.log \
-	  && grep -q 'play tick 340: state A_LOOKUP seq look_up frame 4 pos 204,487 grounded 1' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 291: state A_LOOKUP seq look_up frame 7 pos 204,487 grounded 1' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 293: state A_LOOKUP seq look_up frame 6 pos 204,487 grounded 1' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 295: state A_LOOKUP seq look_up frame 5 pos 204,487 grounded 1' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 300: state A_LOOKUP seq look_up frame 1 pos 204,487 grounded 1' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play: A_LOOKUP -> A_DRAP' /tmp/opencode/ly_climb.log \
+	  && grep -q 'play tick 302: state A_DRAP seq idle frame 1 pos 204,489 grounded 1' /tmp/opencode/ly_climb.log \
+	  && ! grep -qE 'play tick (340|400|500|700): state A_LOOKUP' /tmp/opencode/ly_climb.log \
 	  && echo "play climb chain (PR-274/PR-285/PR-287, PR-333/PR-523 +" \
 	     "PR-525 re-pin): the authored ladder climb runs end to end and" \
 	     "ENDS ON THE CANOPY NOW - A_UP's WAIT K_GEN1 row holds until" \
@@ -2491,12 +2497,71 @@ ifeq ($(PX_DATA),1)
 	     "edge band answers (the box overlaps the authored rectangle" \
 	     "above its top), so NO re-catch - A_DRAP's own K_UP line" \
 	     "runs A_LOOKUP, seated at 517 minus its 30 px contact," \
-	     "204,487 grounded, the pose frames cycling through the" \
-	     "release at 290 (its WAIT !K_UP clause) to the sampled tick" \
+	     "204,487 grounded; its `8,200,WAIT !K_UP` row holds the" \
+	     "pose until the release at 290, the two GOTO rows then" \
+	     "cycle 7 and 6, and PR-527's `rev` on row 11 REVERSES the" \
+	     "walk right there: pose frames 5,4,3,2,1 walking BACKWARD" \
+	     "to the underflow, whose AC_BREAK_PREV runs A_LOOKUP's own" \
+	     "`A_DRAP(1)=AC_BREAK_PREV` at 302 - the state A_LOOKUP has" \
+	     "no other non-key exit, and before PR-527 it never ended" \
 	     "(ok)" \
 	  || { echo "play ZARIA climb chain grep FAILED"; \
 	       grep -E 'play: A_|ANSWERS|state A_(TURN_BACK|WSP|PODCIAG|DRAP|LOOKUP) ' \
 	         /tmp/opencode/ly_climb.log | tail -12; exit 1; }
+# PR-527 / OI-078: THE TOP OF THE CLIMB LETS HIM GO. ly_climb ends
+# seated in A_LOOKUP at 204,487, and every probe through PR-526 ended
+# there: a 900-tick run with FWD held from 295 never left the state
+# (max x 218). WHY: A_LOOKUP's row list ends `7,200,GOTO_REL 2` /
+# `5,200,GOTO 4` / `6,200,REV`, so the forward walk always lands on
+# the GOTO rows and wraps, and only AC_BREAK_NEXT ever arms; the
+# state's ONLY non-key exit is `A_DRAP(1)=AC_BREAK_PREV` (mask bit 3,
+# the name 0x91a2e), and PR-262's reading shows the forward wrap
+# raises bit 2, never bit 3. The `rev` word is the producer of bit 3:
+# its apply 0x459b0 negates the row-direction word [obj+0x99], and
+# the step 0x5219a-0x521b1 then walks the cursor DOWN and raises
+# `orb $0x8` at the underflow. Held from 295:
+# A_LOOKUP exits at 302 (the frames walked back 5,4,3,2,1 - the same
+# ly_climb trace) into A_DRAP, and A_DRAP's own `A_WALK(1)=K_FWD`
+# runs at 303 ON THE CANOPY: 205,485, then 213 at 315, 282 at 330,
+# 372 at 345, 462 at 360, 552 at 375, walking the authored kind-5
+# branch 98,514;589,566 east at the settled 13000 register. The
+# branch ends at 589: he steps off at 594,533 at 382 and the fall
+# into the 408..624 chasm carries him only to (618,1023), under
+# lew_rect -> respawn. THAT CHASM CROSSING is the level's open half
+# (OI-078): the two authored candidates are the KATAPULT seat pad
+# (307,633)-(340,633) and the LINA rope at 525,525, and neither
+# class is bound in the port (OI-122/OI-123).
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=10 \
+	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE 295:FWD" \
+	  LEO_PLAY_ASK=1 \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_revwalk.ppm \
+	  LEO_LEVEL_PPM_TICK=430 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_revwalk.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play ZARIA reverse-walk FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_revwalk.log; exit 1; fi
+	@grep -q 'play: A_LOOKUP -> A_DRAP' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play: A_DRAP -> A_WALK' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 303: state A_WALK seq walk frame 10 pos 205,485 grounded 1' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 315: state A_WALK seq walk frame 1 pos 213,485 grounded 1' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 330: state A_WALK seq walk frame 2 pos 282,487 grounded 1' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 360: state A_WALK seq walk frame 8 pos 462,475 grounded 1' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 375: state A_WALK seq walk frame 11 pos 552,511 grounded 1' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play tick 383: state A_FALL_DOWN seq fall_dn frame 1 pos 594,533 grounded 0' /tmp/opencode/ly_revwalk.log \
+	  && grep -q 'play: below lew_rect at (618,1023) -> respawn' /tmp/opencode/ly_revwalk.log \
+	  && ! grep -q 'state A_LOOKUP' <(grep 'play tick 4[0-9][0-9]: state' /tmp/opencode/ly_revwalk.log) \
+	  && echo "play reverse walk (PR-527): the top of the ZARIA.01" \
+	     "climb is no longer a dead end - A_LOOKUP's `rev` row walks" \
+	     "its cursor back to the underflow, AC_BREAK_PREV runs at" \
+	     "302, K_FWD takes A_WALK on the canopy at 303 and the walk" \
+	     "reaches the branch end (594,533 off the platform at 383)," \
+	     "376 px further east than any run before this PR; the step" \
+	     "off ends in the 408..624 chasm at (618,1023) - that" \
+	     "crossing is the level's remaining half (ok)" \
+	  || { echo "play ZARIA reverse-walk grep FAILED"; \
+	       grep -E 'play: A_|state A_(WALK|DRAP|LOOKUP|FALL_DOWN) ' \
+	         /tmp/opencode/ly_revwalk.log | tail -12; exit 1; }
 # PR-277, FOCUS 1 / OI-078: JUMPING OFF THE LADDER AND RE-CATCHING
 # IT - the authored mid-climb exit chain, end to end. A_WSP's own
 # row `A_PRE_JUMP(1)=K_JUMP` is key-only, so pressing JUMP at 200

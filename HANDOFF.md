@@ -3491,6 +3491,31 @@ record.
   OI-053/OI-131), the fresh-object stage re-entry 0x5d1f5/0x5d233,
   and the I-row impulse unit re-fit (OI-015, now load-bearing for the
   canopy hop's apex).
+  PR-527 SHIPPED THE ROW-WALK DIRECTION LAW (NEXT_STEPS PR-527):
+  the climb top was not a physics dead end but an unnamed SIGNAL
+  PRODUCER. A_LOOKUP's only non-key exit is `A_DRAP(1)=
+  AC_BREAK_PREV` (mask bit 3) and PR-262 showed the forward wrap
+  only ever arms bit 2. PR-230's [obj+0x99] row-order word is now
+  modelled: the row carrying `rev` negates the direction at its
+  OWN close (the advance calls the row's own +0x4 verb 0x520e1
+  before stepping at 0x52195), the cursor walks DOWN, and its
+  underflow IS AC_BREAK_PREV (0x521a1, cursor = count-1); every
+  state start and the object build block write +1 again
+  (0x52377/0x5388f). ly_climb is re-pinned to A_LOOKUP ENDING at
+  302, and the new ly_revwalk leg walks A_WALK east on the kind-5
+  canopy to its authored end: 594,533 off the platform at 383,
+  the fall reaching (618,1023) under lew_rect - the furthest
+  ground under keys, max x 218 -> 618. THE CHASM IS NOT A JUMP,
+  measured on both sides: the port's running jump carries under
+  20 px, the live-capture A_JUMP carried 82 px, the gap is 216,
+  and the captured player never crossed it either (max x 486).
+  The remaining named middle of the map is now exactly ONE
+  crossing: the KATAPULT seat pad 307,633;340,633 with its three
+  PALMA launchers (class unread, OI-122) or the LINA rope at
+  525,525 and its AC_LINA_CATCH raiser (OI-123); the shore to
+  the pool and the dive are measured halves. The SEQ_REV terms of
+  the step's parity gate (getter 0x239f0, [obj+0x71]) stay at
+  OI-113.
 
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`

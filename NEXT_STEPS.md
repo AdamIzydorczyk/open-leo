@@ -68606,3 +68606,193 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
       /tmp/opencode/pr526_gate2.log - one (ok) more than PR-525's
       71: the new ly_dive leg. The fixture-free counts are the same
       as PR-525's, coverage unchanged.)
+
+## PR-527 - THE ROW-WALK DIRECTION LAW: `rev` NEGATES [obj+0x99], THE
+## ADVANCE APPLIES THE ROW'S OWN VERBS BEFORE STEPPING, AND THE
+## UNDERFLOW IS AC_BREAK_PREV - ZARIA'S A_LOOKUP HAS NO OTHER EXIT
+
+```
+KIND: port
+SUBSYSTEM: the row-cursor step inside the engine's row-advance verb
+  and its model: ll_player's new rowdir word and broke_prev pulse and
+  the ll_mov_fr.revcmd row tail (ported/ll_play.h, ll_play.c - the
+  parser arm beside `lock`/`ldir`, the flip at the row close, the
+  reverse cursor walk, the AC_BREAK_PREV bit in the mask builder),
+  the new --play-selftest leg RV-S, the new verify-play leg
+  ly_revwalk, and the re-pinned ly_climb. PR-262 showed the forward
+  wrap raises ONLY bit 2 and left bit 3 unnamed; PR-524/525/526
+  carried ZARIA.01's climb INTO A_LOOKUP and every probe died there.
+ADDRESSES: 0x520c0-0x521e1 (the row advance, PR-99/PR-107/PR-323),
+  0x520d7, 0x520da-0x520e1 (the CURRENT row and its class +0x4
+  verb, PR-218's clone call), 0x52124-0x52145 (the row class +0x10
+  verb: edx = 6, ebx = &[rec+4], ecx = &answer, `cmp [esp+0xc],6` +
+  `je 0x521da` = PR-323's skip), 0x5214b-0x52193 (the step's parity
+  gate: 0x52150 `call *[edx+0x70]`, 0x52153, 0x52158,
+  0x52169-0x52175, 0x52184 `cmpl $-1,0x99(%eax)`, 0x52193 `xor`),
+  0x52195-0x521b4 (the step), 0x5219a-0x521b1 (the reverse walk),
+  0x521a1 `orb $0x8,0x0(%ebp)`, 0x521a5-0x521a9 (cursor = count-1),
+  0x521b6-0x521d7 (the forward twin: 0x521c1 `orb $0x4`, 0x521c5
+  cursor 0), 0x52360 with 0x5236b/0x52377/0x523cb (the state-start
+  block: zero [obj+0xa1], write +1 at 0x99, write the row index),
+  0x5387a/0x53883/0x5388f/0x5389e (the object build block, method
+  table 0x961fc), the `rev` parse arm 0x45e7d-0x45eb7
+  (keyword 0x91852, 8-byte node 0x5c320,
+  ctor 0x45770, 0x45ea1 `movl $0xa0f28,0x4(%eax)`), 0x459b0-0x459c9
+  (the apply: binder 0x457e0, read [obj+0x99] 0x459ba, `neg`
+  0x459c0), 0x458e0 (class 0xa0f28's +0x10 chain walk over
+  [node+0]), 0x239f0 (the +0x70 getter in ALL THREE lion class
+  records 0x96960/0x97a98/0x96874), 0x92196/0x921a0 (SEQ_REV_X/Y
+  keywords) with their writes 0x51bf1 `orb $0x10` / 0x51c0b
+  `orb $0x20` into [rec+0x12], 0x91847, 0x91852, 0x91901, 0x91936,
+  0x91a2e, the PR-323 GOTO verbs 0x45d90/0x45dc0, PR-262's clear
+  0x5358e, and the other [obj+0x99] sites 0x45b66 (a compare) and
+  0x5338d-0x53393 (an object-to-object copy).
+NAMES: rev, revcmd, rowdir, broke_prev, LL_SIG_AC_BREAK_PREV,
+  [obj+0x99], [obj+0x71], [rec+0x12], AC_BREAK_PREV, AC_BREAK_NEXT,
+  SEQ_REV_X, SEQ_REV_Y, A_LOOKUP, A_BLOW_END, A_BLOW_DOWN_END,
+  GOTO, GOTO_REL, RV-S, ly_revwalk, ly_climb, LEW.ZAR, LEWPL,
+  LEW.TUN, 0x961fc, OI-078, OI-113, OI-122, OI-123.
+CODE: yes: ll_mov_fr.revcmd - the one-word `rev` tail parsed beside
+  `lock`/`ldir`; ll_player.rowdir (signed char; 0 stands for the
+  engine's +1) written +1 by ll_player_start (0x5388f), by every
+  state change (0x52377) and by the landing-recovery state start;
+  the flip applied at the row CLOSE of the row that carries the word
+  (before the cursor step, as the advance's own verb order demands);
+  the cursor step is now two-way - the forward branch is unchanged
+  (bit 2 + cursor 0 at the top end), the reverse branch walks fi--
+  and at 0 writes fi = nfr-1 and raises p->broke_prev, with no
+  row-entry pull on either wrap, exactly as before; ll_mov_tr_mask
+  turns broke_prev into 1 << LL_SIG_AC_BREAK_PREV and the iteration
+  head zeroes both break pulses (0x5358e's one-iteration law).
+HOOKS: none new.
+MEASURED: (a) THE STEP, byte-exact, in the one row-advance method
+  (a byte search of the image finds its underflow copy exactly
+  once): the gate 0x52184 `cmpl $0xffffffff,0x99(%eax)` XORed at
+  0x52193 with the two SEQ_REV terms; when the parity is non-zero
+  0x5219a `mov 0x4(%esi),%edx`, `test`, non-zero cursor -> 0x521ae
+  `lea -0x1(%edx),%ebx` writes cursor-1, and at cursor 0 the list
+  UNDERflows: 0x521a1 `orb $0x8,0x0(%ebp)` - mask bit 3, the name
+  0x91a2e is AC_BREAK_PREV - and 0x521a5-0x521a9 write count-1.
+  The forward branch 0x521b6-0x521d7 is the twin the port already
+  modelled. (b) WHY THE WORD FLIPS ITS OWN ROW'S CLOSE: 0x520da-
+  0x520e1 load the CURRENT row `edi = [rec+0x2e][cursor]` and call
+  its class's +0x4 verb (PR-218's clone call) BEFORE the step;
+  0x52124-0x5213d then call that class's +0x10 verb with edx = 6,
+  ebx = &[rec+4] and ecx = &answer, and 0x52140 skips the whole
+  step when the answer is 6 (PR-323's GOTO protocol). The class the
+  `rev` parse arm writes at [node+4] (0x45ea1) is 0xa0f28: its
+  +0x4 verb IS 0x459b0 - bind through the shared 0x457e0, then
+  `mov ebx,[eax+0x99]`, `neg ebx`, write back - and its +0x10
+  verb 0x458e0 only walks the row's next chain. So the row that
+  carries `rev` negates the direction and the step a few
+  instructions later walks THAT close backward. Whether the node is
+  the row-table entry itself or chained behind it is not settled -
+  both readings apply the +0x4 verb at the same close, and no
+  shipped row pairs `rev` with another tail word. (c) THE WORD'S
+  WRITERS, exhaustive over the image (`0x99(%e` sites): +1 at the
+  object build block 0x5388f beside [obj+0x6d]/[obj+0x71] = 1 and
+  [obj+0xa1] = 0; +1 again at every state start 0x52377, in the
+  block that zeroes the row accumulator 0x5236b and writes the row
+  index 0x523cb (PR-95's method) - a `rev` therefore belongs to
+  the state that authored it; `neg` 0x459b0; and one object-to-
+  object copy 0x5338d-0x53393, plus one read in a compare 0x45b66,
+  both unread here. (d) THE SEQ_REV HALF IS DATA, NOT HYPOTHESIS:
+  ZARIA's lion spells SEQ_REV_X in A_TURN and SEQ_REV_Y in
+  A_TURN_BACK/A_WSP/A_WSP_LIN (LEW.MOV lines 215/323/357/378),
+  8 of the 777 extracted .MOV texts are lion scripts spelling it,
+  and all three lion class records answer +0x70 with 0x239f0 - but
+  neither flag term has a reader in this port (PR-99/100/101 read
+  the flags only), A_LOOKUP and the RV-S fixtures spell NEITHER
+  flag, and every leg here runs on the word alone: that half
+  stays at OI-113. (e) CENSUS: 21 `rev` rows in 15 scripts of the
+  777; the lion ones are ALL in A_LOOKUP (ZARIA.01 LEW.ZAR line
+  629 + LEWPL 626, ZARIA.02 x2, TUNGA.11, TUNGA2.12) and TUNGA's
+  A_BLOW_END/A_BLOW_DOWN_END (TUNGA.11 line 138 `8,500,REV`); the
+  rest are object scripts (WODA1, GORYL, BUTLA, MALPA, KADMAR 0).
+  A_LOOKUP's shipped row tail is `8,200,WAIT !K_UP` / `7,200,
+  GOTO_REL 2` / `5,200,GOTO 4` / `6,200,REV`, and its only
+  non-key exit line is `A_DRAP(1)=AC_BREAK_PREV` (line 615) -
+  forward walking can only ever arm bit 2, which is why every
+  probe through PR-526 ended seated in A_LOOKUP: probe3 held FWD
+  from 295 to tick 900 and never left the state, max x 218.
+  (f) RV-S (--play-selftest, RED first): fixture A rows
+  `1..5,100` with `rev` on row 2 - the cursor walks 1,2, then
+  BACK 1,0, then the underflow writes 4 with bit 3 armed and bit 2
+  NOT (afi 1,2,1,0,4; rowdir 1,1,-1,-1,-1; broke_prev only on the
+  underflow iteration), then the authored `A_RV_B(1)=AC_BREAK_PREV`
+  hand-off runs and the state start rewrites rowdir +1; fixture C
+  has `rev` on rows 0 and 2 - reverse at once (cfi 4,3,2), the
+  second `rev` restores the forward walk (3,4) and the TOP wrap
+  arms bit 2 only. Parser pins hold the word on its own row only,
+  and `ll_mov_tr_mask` resolves `AC_BREAK_PREV` to bit 3.
+  MUTATION: with the row-close flip deleted, exactly the 15 leg
+  A/C checks fail (afi/ard, the underflow pulse, the hand-off,
+  cfi/crd and its bit-2 check) and rc=1; the parser pins and every
+  other leg are unchanged. (g) ly_climb RE-PINNED: after the
+  290 release the two GOTO rows cycle frames 7 and 6, and the
+  `rev` row reverses the walk right there - frames 5,4,3,2,1
+  walking BACK to the underflow and `play: A_LOOKUP -> A_DRAP` at
+  302, with `! grep` pins that A_LOOKUP is gone at 340/400/500/
+  700. (h) ly_revwalk (NEW, the same climb to 290 then FWD from
+  295 to the sampled tick): AC_BREAK_PREV runs at 302, A_DRAP's
+  own `A_WALK(1)=K_FWD` starts at 303 ON THE CANOPY at 205,485,
+  and the walk takes the authored kind-5 branch 98,514;589,566
+  east - 213 at 315, 282 at 330, 462 at 360, 552 at 375 - until
+  the branch ENDS: 594,533 off the platform at 383, and the fall
+  into the 408..624 chasm reaches (618,1023) under lew_rect ->
+  respawn. Max x of any run: 218 -> 618. (i) THE CHASM IS NOT A
+  JUMP: the port's own running jump carries under 20 px (probe6:
+  A_JUMP x 380 -> 397 while the authored T-drag drops the
+  register 10400 -> 80), and the ORIGINAL's live-capture A_JUMP
+  carried 82 px (pr516i.jsonl: v_raw_x held near 400 while the
+  intent is held) - neither crosses 216 px, and the captured
+  player never crossed the pit either (max x 486, died in it at
+  464). The authored candidates are the KATAPULT seat pad
+  307,633;340,633 with three PALMA launchers and the LINA rope at
+  525,525; neither class is bound in the port (OI-122/OI-123).
+OPENS: the chasm half of OI-078, now sharply named: cross 408..624
+  through the KATAPULT/PALMA seat class or the LINA raiser; the
+  SEQ_REV_X/SEQ_REV_Y terms of the step gate - the [class+0x70]
+  getter 0x239f0 and [obj+0x71] - are still unmodelled (OI-113),
+  and with them the A_TURN/A_TURN_BACK/A_WSP rows that spell those
+  flags; what the compare 0x45b66 reads and what the object copy
+  0x5338d propagates; the other 17 `rev` rows - TUNGA's
+  A_BLOW_END/A_BLOW_DOWN_END and the object scripts have no legs;
+  and the rest of the same row-tail family (`zero_v/zero/zero_t/
+  chdir/pos/MOVE/end_level`) is still unmodelled.
+CLOSES: none as a row; PR-262's "the forward wrap raises bit 2
+  only - who raises bit 3?" is answered in the OI-078/OI-113 note
+  and the A_LOOKUP dead-end sub-question is gone with it.
+CORRECTS: PR-526's OPENS phrase "walking the 938 px east to the
+  pool under keys" implied walkable ground the whole way: the walk
+  now runs to the branch END at 589 and the fall to 618 is the
+  furthest ground the lion can reach under keys; the crossing is
+  not a longer walk (nor a jump, MEASURED (i)).
+```
+
+- WHY. The session objective is "ZARIA.01 playable", and since
+  PR-524 the level had been dying in one state. The reason was not
+  physics and not geometry: A_LOOKUP's authored exit names a signal
+  the shipped row walk could NEVER raise. That made the missing law
+  a playability law - if bit 3 has no producer, the state is a
+  trap and the level cannot be finished from its own top. The
+  engine's producer is a direction WORD, [obj+0x99], not a flag in
+  the row: the same advance method that PR-99/107/323 read walks
+  backward while it is -1, and its underflow is exactly the signal
+  the authored exit names. And the row that carries `rev` flips the
+  direction BEFORE its own step, because the verb order does that:
+  the close calls the row's own verbs first, the cursor step comes
+  last. That is also why every earlier attempt to make A_LOOKUP end
+  - waiting for a timer, a wrap, a key release - could not work:
+  the state ends by WALKING ITS ROW LIST BACKWARD off the top.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 73 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+      (both rc=0; counts are grep -o '(ok)' and the named
+      `verify-*: SKIP` lines of /tmp/opencode/pr527_gate4.log and
+      /tmp/opencode/pr527_gate5.log, re-run on the final tree -
+      one (ok) more than PR-526's 72: the new ly_revwalk leg.
+      The fixture-free counts are the same as PR-526's, coverage
+      unchanged. gate1.log, made before the ly_climb re-pin,
+      failed ONLY on the old "stays in A_LOOKUP" pin, and the
+      mutant of MEASURED (f) was taken in between.)

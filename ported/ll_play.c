@@ -1070,6 +1070,7 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                         mf->has_fc = mf->fcx = mf->fcy = 0;
                         mf->has_pos = mf->posx = mf->posy = 0;
                         mf->lockcmd = mf->dircmd = 0;  /* PR-321 words */
+                        mf->revcmd = 0;                /* PR-527 `rev` */
                         mf->gotocmd = mf->gotoval = 0; /* PR-323 words */
                         mf->endlv = 0;
                         mf->gsig_id = -1;   /* PR-217: no `Wait` tail */
@@ -1311,6 +1312,42 @@ int ll_mov_parse(const char *text, ll_mov_t *m)
                                     mf->dircmd =
                                         (word[0] == 'l' || word[0] == 'L')
                                         ? -1 : 1;
+                                    continue;
+                                }
+                                if (strcasecmp(word, "rev") == 0) {
+                                    /* PR-527: the one-word `rev` tail -
+                                     * the engine's own ROW-WALK
+                                     * REVERSAL. Its parse arm
+                                     * 0x45e7d-0x45eb7 matches the
+                                     * keyword at 0x91852 (the same
+                                     * table as `lock` 0x91901 and
+                                     * `ldir` 0x91936) and builds a
+                                     * directive node whose class word
+                                     * 0xa0f28 is stored at [node+4];
+                                     * the apply is that class's +0x4
+                                     * verb 0x459b0 - bind through the
+                                     * shared 0x457e0, then read
+                                     * [obj+0x99], `neg ebx`, write it
+                                     * back: NEGATE the row direction
+                                     * word (ll_player.rowdir). The
+                                     * cursor step 0x52195-0x521b4 is
+                                     * what reads it, and its
+                                     * underflow sets mask
+                                     * bit 3 = AC_BREAK_PREV. Census
+                                     * of the 777 extracted .MOV texts:
+                                     * 21 `rev` rows in 15 scripts -
+                                     * the lion's are all in A_LOOKUP
+                                     * (ZARIA.01/ZARIA.02 LEW.ZAR +
+                                     * LEWPL, TUNGA.11/TUNGA2.12
+                                     * LEW.TUN) and in TUNGA's
+                                     * A_BLOW_END/A_BLOW_DOWN_END; the
+                                     * rest are object scripts (WODA1,
+                                     * GORYL, BUTLA, MALPA, 0). The
+                                     * shipped spelling is upper case
+                                     * (`REV`), so the match is
+                                     * case-insensitive like the arms
+                                     * here. */
+                                    mf->revcmd = 1;
                                     continue;
                                 }
                                 if (strcasecmp(word, "goto") == 0 ||
@@ -1690,6 +1727,10 @@ void ll_player_start(ll_player *p, const ll_mov_t *mov, double x, double y,
     p->grounded = grounded;
     p->walkdir = 1;
     p->face = 1;
+    p->rowdir = 1;   /* PR-527: the object ctor 0x5388f writes the row
+                      * direction word [obj+0x99] = 1 (forward), beside
+                      * its [obj+0x6d] = 1, [obj+0x71] = 1,
+                      * [obj+0xa1] = 0 and [obj+0x95] = 1. */
     /* PR-83 (user-reported, ZARIA.01 started crouched in state index 0):
      * the .MOV grammar's declared state list is authoritative for the
      * starting state - its first name (ll_mov_parse's start_st; measured
@@ -1815,6 +1856,7 @@ static unsigned long long live_bits_with(const ll_player *p,
     if (p->vert_intent < 0) m |= 1ull << LL_SIG_K_UP;
     if (p->vert_intent > 0) m |= 1ull << LL_SIG_K_DOWN;
     if (p->broke)     m |= 1ull << LL_SIG_AC_BREAK_NEXT;
+    if (p->broke_prev) m |= 1ull << LL_SIG_AC_BREAK_PREV;
     if (p->ac_time)   m |= 1ull << LL_SIG_AC_TIME;
     return m;
 }
@@ -2190,6 +2232,13 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
                                        /* (0x50442); 0 here is that        */
                                        /* rewrite: no authored value in    */
                                        /* force.                           */
+            p->rowdir = 1;             /* PR-527: the state start also     */
+                                       /* writes the row direction word    */
+                                       /* [obj+0x99] = 1 at 0x52377, in    */
+                                       /* the same block that zeroes the   */
+                                       /* row accumulator [obj+0xa1]       */
+                                       /* (0x5236b) - so a `rev` belongs   */
+                                       /* to the state that authored it.   */
             ev |= LL_PLAY_EV_STATE;
             apply_row_pull(p, nt, p->fi);
         }
@@ -2212,6 +2261,12 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
     row_live = live_bits_with(p, keys, p->sig);      /* PR-333, above  */
     p->sig = 0;                                      /* one-tick pulses */
     p->broke = 0;
+    p->broke_prev = 0;          /* PR-527: both list-break pulses are
+                                 * one-iteration flags - the engine's
+                                 * mask bytes are zeroed by the
+                                 * transition pass at 0x5358e (PR-262),
+                                 * the same clearance that `p->sig = 0`
+                                 * mirrors. */
     p->ac_time = 0;
 
     /* PR-518: THE PHYSICS PASS RUNS AT ROW ADMITS. The live trace
@@ -2805,6 +2860,8 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
                     if (idle >= 0 && idle != p->sti) {
                         p->sti = idle;
                         p->fi = 0;
+                        p->rowdir = 1;        /* PR-527: a state start, */
+                                              /* 0x52377                */
                         p->row_t = 0;
                         p->facc = 0.0;
                         p->vx = 0;
@@ -3018,6 +3075,15 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
             }
             if (st->fr[p->fi].dircmd)
                 p->dirword = st->fr[p->fi].dircmd;
+            /* PR-527: `rev` belongs to the same directive family and
+             * runs at the same point. The engine's advance verb 0x520c0
+             * walks the row chain BEFORE it steps (0x5213d, dl = 6 -
+             * PR-323's own note), so a row's `rev` flips the
+             * direction of that SAME close: its apply 0x459b0 negates
+             * [obj+0x99] and the step a few instructions later
+             * (0x52195) reads it. */
+            if (st->fr[p->fi].revcmd)
+                p->rowdir = (signed char)(p->rowdir < 0 ? 1 : -1);
             /* PR-323: the cursor step. The engine's advance
              * verb 0x520c0 walks the row chain's +0x10 verbs
              * (ebx = &[rec+4], dl = 6) BEFORE stepping, and a
@@ -3046,6 +3112,39 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
                     nf = st->nfr - 1;                /* ... and here too */
                 p->fi = nf;
                 apply_row_pull(p, st, p->fi);
+            } else if (p->rowdir < 0) {
+                /* PR-527: THE REVERSE WALK, 0x5219a-0x521b1. With
+                 * the direction word at -1 the cursor goes -1, and at
+                 * 0 the list UNDERflows: `orb $0x8,0x0(%ebp)` on the
+                 * mask byte - mask bit 3 = AC_BREAK_PREV, the name
+                 * 0x91a2e - and the cursor is set to count-1
+                 * (0x521a5-0x521a9), the twin of the forward wrap's
+                 * `orb $0x4` + `movl $0x0` at 0x521c1-0x521c5. Like
+                 * the forward wrap, neither underflow applies a
+                 * row-entry pull, and the engine clamps nothing.
+                 * (The step's gate is the parity PR-99/100/101 read
+                 * at 0x5214b-0x52193: [obj+0x99] == -1 XOR (the
+                 * owner class's +0x70 verb answering -1 while the
+                 * state record's control byte [rec+0x12] carries
+                 * SEQ_REV_X, the 0x92196 keyword, written 0x10 at
+                 * 0x51bf1) XOR ([obj+0x71] == -1 while it carries
+                 * SEQ_REV_Y, 0x921a0, written 0x20 at 0x51c0b).
+                 * ZARIA's lion DOES spell those flags - SEQ_REV_X in
+                 * A_TURN, SEQ_REV_Y in A_TURN_BACK/A_WSP/A_WSP_LIN
+                 * (LEW.MOV lines 215/323/357/378) - and all three
+                 * lion classes answer +0x70 with the same getter
+                 * 0x239f0, but NEITHER term is modelled here: this
+                 * port has no reader of that verb or of [obj+0x71].
+                 * A_LOOKUP, the state this leg runs, sets NEITHER
+                 * flag, so for it the word is the whole law; the
+                 * flag half stays at OI-113.) */
+                if (p->fi > 0) {
+                    p->fi--;
+                    apply_row_pull(p, st, p->fi);
+                } else {
+                    p->fi = st->nfr - 1;
+                    p->broke_prev = 1;
+                }
             } else if (p->fi + 1 >= st->nfr) {
                 p->fi = 0;
                 p->broke = 1;
@@ -6740,6 +6839,113 @@ long long pv = 100, pd = 0;          /* A_PULL's own arithmetic,
         CHECK(es_sti[2] == 1);                /* and the authored      */
                                               /* transition still runs */
         free(es);
+    }
+
+    /* PR-527, leg RV-S: THE ROW WALK RUNS BACKWARD, AND ITS UNDERFLOW
+     * IS AC_BREAK_PREV (bit 3). The row advance is the one method
+     * PR-99/PR-107 read at 0x520c0-0x521e1 (a byte search of the
+     * image finds its underflow copy exactly once). Its step
+     * (0x52195-0x521b4) is gated on a parity of THREE terms:
+     * `[obj+0x99] == -1` XOR (the class's +0x70 getter answering -1
+     * while the state sets SEQ_REV_X - the 0x92196 keyword, bit 0x10
+     * of [st+0x12], written by the control parser at 0x51bf1) XOR
+     * ([obj+0x71] == -1 while the state sets SEQ_REV_Y - 0x921a0, bit
+     * 0x20, 0x51c0b). When that parity is NOT zero the cursor goes
+     * -1, and at cursor 0 the list UNDERflows: `orb $0x8,0x0(%ebp)`
+     * on the mask byte - bit 3, the name at 0x91a2e is AC_BREAK_PREV -
+     * and the cursor is written count-1. The forward branch is the
+     * twin the port already had (0x521b6-0x521d7: bit 2 + cursor 0 at
+     * the top end). All three lion classes answer +0x70 with the SAME
+     * getter 0x239f0; ZARIA's lion spells SEQ_REV_X in A_TURN and
+     * SEQ_REV_Y in A_TURN_BACK/A_WSP/A_WSP_LIN (LEW.MOV lines
+     * 215/323/357/378) but neither flag term is modelled here
+     * (OI-113), and A_LOOKUP and the RV-S fixtures spell NEITHER, so
+     * for them the word [obj+0x99] is the whole law: the object ctor
+     * writes +1 (0x5388f, beside [obj+0x6d]=1, [obj+0x71]=1,
+     * [obj+0xa1]=0), every state start writes +1 again (0x52377, in
+     * the block that zeroes the row accumulator at 0x5236b), and the
+     * `rev` row word NEGATES it - parse arm 0x45e7d on the keyword
+     * 0x91852, node class 0xa0f28 written at [node+4] by 0x45ea1,
+     * apply = that class's +0x4 verb 0x459b0: bind through the shared
+     * 0x457e0 then read [obj+0x99], `neg ebx`, write it back. The
+     * apply runs in the row chain, which the advance walks BEFORE
+     * stepping (0x52140: the step is skipped whole when that walk
+     * answers 6, so the walk - and every plain row's directive
+     * apply - has already run), so a row's `rev` flips the
+     * direction of that SAME row's close - that is why the flip sits
+     * beside `lock`/`ldir` in this port, not at the row's entry.
+     * WHY THIS IS A PLAYABILITY LAW, NOT ARITHMETIC: the shipped lion
+     * scripts put their `rev` rows in exactly four states - A_LOOKUP
+     * (ZARIA.01 LEW.ZAR + LEWPL, ZARIA.02, TUNGA.11, TUNGA2.12) and
+     * TUNGA's A_BLOW_END/A_BLOW_DOWN_END - and A_LOOKUP is the state
+     * ZARIA.01's climb route ENDS in (ly_climb: `A_DRAP -> A_LOOKUP`
+     * at 264, seated at 204,487). A_LOOKUP's only non-key exit is
+     * `A_DRAP(1)=AC_BREAK_PREV`. Measured before this fix: a 900-tick
+     * run with FWD held after the climb never left A_LOOKUP.
+     * Both legs run on the row clock PR-323 established: a row of
+     * duration 100 closes on EVERY iteration. MUTATION (RED): with the
+     * `revcmd` apply deleted, leg A never reverses (fi 3 at iteration
+     * 2, no underflow, no bit 3, the transition never fires) and leg C
+     * walks forward - exactly these pins, nothing else. */
+    {
+        static const char RVS[] =
+            "A_RV_A\nA_RV_B\n\n[A_RV_A]\ncontrol=BY_TIME\nF=0,0\n"
+            "T=0,0\nG=0,0\nA_RV_B(1)=AC_BREAK_PREV\n1,100\n2,100\n"
+            "3,100,rev\n4,100\n5,100\n\n[A_RV_B]\ncontrol=BY_TIME\n"
+            "F=0,0\nT=0,0\nG=0,0\n1,100\n";
+        static const char RVC[] =
+            "A_RV_C\n\n[A_RV_C]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\n"
+            "1,100,rev\n2,100\n3,100,rev\n4,100\n5,100\n";
+        /* leg A: rows 0..4, the `rev` authored on row index 2. The
+         * cursor walks 1,2, then the flip, then BACK 1,0, then the
+         * underflow writes nfr-1 = 4 with bit 3 armed and bit 2 NOT. */
+        static const int afi[] = { 1, 2, 1, 0, 4 };
+        static const int ard[] = { 1, 1, -1, -1, -1 };
+        /* leg C: `rev` on rows 0 and 2 - the walk reverses, underflows
+         * at once, walks back 3,2, then the second `rev` restores the
+         * FORWARD walk: 3,4, and the top-end wrap arms bit 2 only. */
+        static const int cfi[] = { 4, 3, 2, 3, 4, 0 };
+        static const int crd[] = { -1, -1, -1, 1, 1, 1 };
+        ll_mov_t *rva = calloc(1, sizeof *rva), *rvc = calloc(1, sizeof *rvc);
+        ll_player q;
+        ll_play_keys qk = { 0 };
+        CHECK(rva && rvc);
+        CHECK(ll_mov_parse(RVS, rva) == 2 && ll_mov_parse(RVC, rvc) == 1);
+        CHECK(rva->st[0].nfr == 5 && rva->st[0].fr[2].revcmd == 1 &&
+              rva->st[0].fr[0].revcmd == 0 &&   /* the word is stored on */
+              rva->st[0].fr[1].revcmd == 0);    /* its own row only      */
+        CHECK(rvc->st[0].fr[0].revcmd == 1 && rvc->st[0].fr[2].revcmd == 1 &&
+              rvc->st[0].fr[1].revcmd == 0 && rvc->st[0].fr[3].revcmd == 0);
+        CHECK(ll_mov_tr_mask(&rva->st[0].tr[0]) ==
+              (1ull << LL_SIG_AC_BREAK_PREV));  /* the name resolves to
+                                                 * bit 3, 0x91a2e        */
+        ll_player_start(&q, rva, 300, 100, 0);
+        CHECK(q.rowdir == 1);                   /* the ctor's +1 (0x5388f)*/
+        for (int t = 0; t < 5; t++) {
+            ll_player_step(&q, NULL, &qk, 0, 2000, LL_ITER_MS);
+            CHECK(q.sti == 0 && q.fi == afi[t] && q.rowdir == ard[t]);
+            if (t == 4) {                       /* the UNDERFLOW is live */
+                CHECK(q.broke_prev == 1);        /* only on that iteration */
+                CHECK(q.broke == 0);             /* and never bit 2 here  */
+            } else {
+                CHECK(q.broke_prev == 0 && q.broke == 0);
+            }
+        }
+        ll_player_step(&q, NULL, &qk, 0, 2000, LL_ITER_MS);
+        CHECK(q.sti == 1 && q.fi == 0);          /* A_LOOKUP's authored   */
+        CHECK(q.rowdir == 1);                    /* AC_BREAK_PREV exit,   */
+                                                 /* and the state start   */
+                                                 /* rewrote the word (1) */
+        ll_player_start(&q, rvc, 300, 100, 0);
+        CHECK(q.rowdir == 1);
+        for (int t = 0; t < 6; t++) {
+            ll_player_step(&q, NULL, &qk, 0, 2000, LL_ITER_MS);
+            CHECK(q.fi == cfi[t] && q.rowdir == crd[t]);
+            CHECK(q.broke_prev == (t == 0 ? 1 : 0));
+            CHECK(q.broke == (t == 5 ? 1 : 0));
+        }
+        free(rva);
+        free(rvc);
     }
 
     /* PR-323: the answer-6 protocol of PR-322 - `goto N` /

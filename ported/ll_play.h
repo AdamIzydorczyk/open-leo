@@ -481,6 +481,12 @@ typedef struct { int frame; unsigned thresh; int dx, dy;
                  int has_pos, posx, posy;   /* PR-317 row `pos x,y` tail   */
                  signed char lockcmd, dircmd; /* PR-321 row `lock`/`unlock`
                                                * and `ldir`/`rdir` words */
+                 signed char revcmd;         /* PR-527 row `rev` word: the
+                                              * one-word tail whose node
+                                              * apply 0x459b0 NEGATES the
+                                              * row-walk direction word
+                                              * [obj+0x99] (see
+                                              * ll_player.rowdir) */
                  signed char gotocmd;  /* PR-323: the `goto` family tail.
                                         * 0 none, 1 absolute (gotoval is the
                                         * 0-based row index: the engine's
@@ -1217,6 +1223,31 @@ typedef struct ll_player {           /* tagged for the anchor_shift hook */
                                  * Whether the key-walk path also writes
                                  * that word in the engine is unread -
                                  * the stand-in stays named at OI-015. */
+     signed char rowdir;         /* PR-527: the engine's ROW-WALK
+                                 * DIRECTION word [obj+0x99]. The row advance
+                                 * PR-99/PR-107 read at 0x520c0-0x521e1 steps
+                                 * the cursor -1 and wraps at the UNDERflow
+                                 * while this word is -1, and +1 with the
+                                 * wrap at the top end otherwise; the reverse
+                                 * wrap raises mask bit 3 = AC_BREAK_PREV
+                                 * (0x521a1 `orb $0x8`) and leaves the cursor
+                                 * at count-1 (0x521a5-0x521a9), the twin of
+                                 * the forward wrap's bit 2 (0x521c1). The
+                                 * `rev` row word NEGATES it (0x459b0: read
+                                 * [obj+0x99], `neg`, write it back), and the
+                                 * word is written +1 by the object ctor
+                                 * 0x5388f and again at every state start
+                                 * 0x52377 - the same instruction block that
+                                 * zeroes the row accumulator [obj+0xa1].
+                                 * Two more terms join that parity: SEQ_REV_X
+                                 * with the owner class's +0x70 getter (all
+                                 * three lion classes answer 0x239f0) and
+                                 * SEQ_REV_Y with [obj+0x71]. PR-99/100/101
+                                 * read the flags; neither word has a reader
+                                 * in this port and that half stays at OI-113.
+                                 * 0 here stands for the engine's +1: a
+                                 * zero-initialised model walks forward like a
+                                 * fresh object, and `rev` writes -1. */
     int lock;                   /* PR-321: mirror of VALUE 1 of the
                                  * engine's [obj+0xb6]: set by the `lock`
                                  * row word through 0x54f40, cleared by
@@ -1326,6 +1357,16 @@ typedef struct ll_player {           /* tagged for the anchor_shift hook */
                                  * gen_bus_raise), never read here. */
     int broke;                  /* AC_BREAK_NEXT pending (frame list just
                                  * completed)                             */
+    int broke_prev;             /* PR-527: AC_BREAK_PREV pending - the
+                                  * row walk ran BACKWARD (rowdir < 0)
+                                  * and stepped off the BOTTOM of the
+                                  * list: 0x521a1/0x521a1 `orb $0x8` on
+                                  * the mask byte, then the cursor goes
+                                  * to count-1 (0x521a5-0x521a9). The
+                                  * forward wrap's twin is `broke`
+                                  * (bit 2, 0x521c1/0x521c1 `orb $0x4`).
+                                  * ZARIA's A_LOOKUP exits only through
+                                  * this one: `A_DRAP(1)=AC_BREAK_PREV`. */
     int ac_time;                /* PR-83: AC_TIME pending - raised by a
                                  * frame's `GEN AC_TIME` tail (measured:
                                  * ZARIA's player .MOV names it on 11

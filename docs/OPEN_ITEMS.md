@@ -3724,6 +3724,29 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     has not got (OI-053). ly_dive enters the dive through the
     LEO_PLAY_STATE test hook for exactly that reason, so the
     level-end half is measured and the reach-the-water half is not.
+    PR-527 KILLED THE DEAD END AT THE TOP: A_LOOKUP, where the
+    climb has ended since PR-524, never left its state because its
+    ONLY non-key exit is `A_DRAP(1)=AC_BREAK_PREV` and the forward
+    row walk can never raise bit 3 (PR-262). The producer is the
+    row-word law of this PR: `rev` on the state's last row negates
+    the row-direction word [obj+0x99], the advance walks the cursor
+    DOWN, and its underflow IS that signal (0x521a1). ly_climb is
+    re-pinned to the state ENDING at 302, and the new ly_revwalk
+    leg walks A_WALK east on the kind-5 canopy to the branch END:
+    594,533 off the platform at 383, the fall reaching (618,1023)
+    under lew_rect - max x of any run 218 -> 618. THE CHASM
+    408..624 REMAINS, and it is NOT a jump: the port's running
+    jump carries under 20 px (A_JUMP x 380 -> 397, register
+    10400 -> 80), and the live-capture A_JUMP carried 82 px
+    (pr516i - where the real player never crossed either, max x
+    486, dying in the pit at 464); neither crosses 216 px. What
+    remains for this row is exactly one named gap: cross the chasm
+    through the authored crossing - the KATAPULT seat pad
+    307,633;340,633 with its three PALMA launchers (class
+    unread, OI-122) or the LINA rope at 525,525 and its
+    AC_LINA_CATCH raiser (class unread, OI-123) - then walk the
+    shore to the pool DRECT, whose end-rule half PR-526 already
+    measures.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -4895,7 +4918,8 @@ OI-113: the engine control bit table is read (PR-230) and the
   verbs writing the +/-1 direction word [obj+0x6d] are
   unmodelled - ZARIA.01's lion [A_WALK] uses bare CHECK_ALL
   and its A_DEAD row 181 and A_LOOKUP row 629 use rdir/rev
-  status: OPEN (opened by PR-230)
+  status: PARTIAL (opened by PR-230; the [obj+0x99] half shipped
+    by PR-527)
   origin: PR-230
   notes: half one IS DONE (PR-231): ctrl_flag now sets the
     CHECK_LN rule bit from CHECK_ALL (engine 0x1c0), and the
@@ -4933,6 +4957,24 @@ OI-113: the engine control bit table is read (PR-230) and the
     the class groups at [ds:0xa94ec]/[ds:0xcef44] through the
     shared walk 0x4b500. CHECK_BASE_LN is 0x4000 (0x51ca9),
     not 0x400000; CHECK_ALL_PLANE is 0x8000 (0x51d2b).
+    PR-527 SHIPS PR-230's half-two WORD: ll_player.rowdir models
+    [obj+0x99] (+1 at the ctor block 0x5388f and every state start
+    0x52377), the parser arm models the `rev` node (0x45e7d, class
+    0xa0f28, apply 0x459b0 neg), the flip lands at the row close
+    BEFORE the step exactly where 0x520e1/0x5213d put it, and the
+    backward walk with its underflow (0x521a1 `orb $0x8` =
+    AC_BREAK_PREV, cursor = count-1) is modelled and raised into
+    the signal mask - ZARIA.01's A_LOOKUP now ends, ly_revwalk
+    walks the canopy east. `ldir`/`rdir` were already shipped by
+    PR-321. WHAT THIS ROW STILL OWNS: the two SEQ_REV terms of the
+    parity gate 0x5214b-0x52193 - the class +0x70 getter (all
+    three lion classes answer 0x239f0) against SEQ_REV_X,
+    [obj+0x71] against SEQ_REV_Y - which ZARIA's lion DOES spell
+    (A_TURN line 215, A_TURN_BACK/A_WSP/A_WSP_LIN 323/357/378)
+    and the port has no reader for; the chdir apply verb 0x459d0
+    (the CH_DIR-gated flip 0x53670); the compare 0x45b66 and the
+    object-copy 0x5338d reads of the word; and the
+    CHECK_BASE_LN/INV_V/BY_TX ctrl-table entries.
 
 OI-114: the OPERATION byte of a compiled transition condition was
   read end to end (PR-261), its K_ANY half ported (PR-263),
