@@ -67934,3 +67934,96 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 23 named verify-SKIPs (both rc=0;
   the play-selftest leg is 0 FAILED gate-off and 90 gate-on; the (ok)
   and SKIP counts are `grep -c '(ok)'` / `grep -c SKIP` of the two
   run logs)
+
+## PR-522 - THE COLD-START IS AN ENTRY REGISTER-SEED, NOT AN ADMIT, AND IT
+## ONLY MOVES A WALK AT s=20: AT THE PORT'S s=10 THE SEEDED REGISTER IS 81
+## (< 100), SO v//100 FEEDS 0 AND THE WALK NEVER ADMITS - CLOSING OI-015'S
+## COLD-START AND BINDING IT TO OI-011
+
+```
+KIND: read
+SUBSYSTEM: the row-admit cold start (a BY_X state entered at a
+  standstill) and what its entry step does to the velocity register and
+  the row accumulator. PR-519 left this open ("the cold-start feed ...
+  stays open"); this is the capture read it asked for, over
+  /tmp/opencode/pr516i.jsonl (player 0x524400, 50 Hz). (1) WHAT A COLD
+  START IS. Nine intent-free -> intent windows open a walk from a
+  register held at ~1 (a brake tail carried across the transition, not a
+  reset - PR-519's "v_raw_x carried across untouched"). Seven are
+  ZARIA's A_WALK parameters (PR-520 showed the [rec+0x3c] vector mis-
+  names them A_DEAD; the parameters, not the name, decide). In each the
+  entry does the same thing: both registers FROZEN and the accumulator
+  at 0 for 3-6 samples (0.06-0.12 s, the gate_95 arm), THEN exactly ONE
+  register step: v -> v + idiv(F*s,20) + G_x - idiv(v*T_x,100), with
+  idiv(v*20,100)=0 for the tiny v, i.e. a full force add. The step
+  flips gate_95 1->0; the accumulator at that instant is 0 or 1 (only
+  the new v//100 fed AFTER the step), never >= the authored threshold 6,
+  so this step is NOT a row-accumulator admit. It is the entry seed, and
+  it is what OI-013's [obj+0x95] one-shot gates: armed = physics held,
+  then one step, then the per-admit loop. The port's row-admit path has
+  NO seed, so it deadlocks exactly where PR-519 found it. (2) THE
+  CLOSED FORM THAT BINDS IT TO OI-011. The walk only starts if the
+  seeded register reaches 100 or more, because the accumulator is fed by
+  v//100 and a register below 100 feeds 0 forever. The seed is
+  idiv(F*s,20)+G_x (F=100, G_x=30), so the walk starts iff
+  5*s + 30 >= 100, i.e. s >= 14. At the port's LL_PLAY_INTENT_FULL =
+  10 the seed is idiv(1000,20)+30 = 80, register 81 from the carried v=1
+  -> v//100 = 0 -> it NEVER admits -> the walk is dead at position 0
+  (simulated 25 iterations, position 0). At s=20 the seed is 130,
+  register 131, which feeds 1 per iteration, crosses threshold 6 on the
+  6th, and the walk ramps 131,235,318,385,438,481,515,542,564,582,
+  596,607 - value for value PR-520's live A_WALK ramp. So the cold-
+  start feed and the intent constant are the SAME open question: the
+  flip must seed the register at entry AND carry the keyboard's 20, or a
+  ZARIA walk never begins. (3) WHAT THE FLIP MUST DO, and NOT do. It
+  must NOT treat entry as a full admit (PR-519's reverted patch, 94 vs
+  90): the entry advances no row cursor and leaves the accumulator at 0;
+  it runs only the register step + the position write at the new
+  register//100 (the capture's first step moved +1 = 131//100). The
+  seed's own physics uses the same closed form PR-521 already implements
+  - nothing new in the force arithmetic, only the trigger (entry, not
+  accumulator) and the constant (20). The entry HOLD (gate_95 armed for
+  3-6 samples) is measured but not modelled here - that is OI-013's
+  remaining half (no writer of the [obj+0x95] reset has been read), and
+  the port should seed on the entry iteration rather than reproduce the
+  hold.
+ADDRESSES: 0xba (intent_x), 0xc2 (the x register), 0xa1 (accum_a1),
+  0x95 (gate_95, the physics-hold one-shot), 0xca (row_dx, the v//100
+  feed), 0x54250 (the register step), 0x521f0 (the admit test, which
+  the entry does NOT run).
+NAMES: A_WALK, A_DEAD, A_WSP, A_DOSTAL, LL_PLAY_INTENT_FULL,
+  LEO_PLAY_ROW_PHYSICS, pr516i.jsonl, OI-011, OI-013, OI-015.
+CODE: no: a capture read over pr516i.jsonl plus a closed-form
+    simulation (/tmp/opencode, the s=10 deadlock / s=20 ramp printed in
+    this record); no port file is touched.
+HOOKS: none.
+OPENS: OI-013 (gate_95's set/reset writer still unread - the entry
+  hold is measured but its mechanism is not), OI-011 (now bound to the
+  cold-start: s=10 cannot cold-start a walk at all)
+CLOSES: OI-015's cold-start-feed half (the entry-seed mechanism and its
+  s>=14 condition are measured, not assumed)
+CORRECTS: none. PR-519's "the cold-start feed ... stays open" and
+  "the live walk entries all carry a non-zero x register, so this
+  capture cannot say" is answered by this capture: it CAN say, and the
+  carried value is ~1, not a walk-ready register.
+MEASURED: (a) 9 intent-onset windows, 7 with A_WALK's parameters; in
+  all 7 the first register step is exactly +130 (= idiv(100*20,20)+30,
+  drag 0) from a carried v in [-1,2], gate_95 1->0 at that step,
+  accumulator 0 or 1 at that instant (< threshold 6), entry hold 3-6
+  samples, position +1 = 131//100; the two other windows (A_WSP +81,
+  A_DOSTAL +30) are different states and excluded; (b) the closed form:
+  s=10 seed 81 -> 25 iterations -> position 0 (deadlock); s=20 seed 131
+  -> ramp 131,235,318,385,438,481,515,542,564,582,596,607 (matches
+  (a)); s>=14 is the start condition.
+```
+
+- WHY. The whole ZARIA playability chain runs through "pressing right
+  starts a walk at the authored speed." PR-519 could not tell whether
+  that ever cold-starts; this capture settles it: it seeds the register
+  once at entry and the walk only lives at the keyboard's 20, which is
+  the same 20 OI-011 already established. That turns "the flip and the
+  constant" from two deferred threads into one arithmetic the next PR can
+  implement against: entry-seed + s=20 + the PR-521 force law, with the
+  row cursor and accumulator left alone at entry.
+
+GATE: light: verify-index verify-docs rc=0 (ok);

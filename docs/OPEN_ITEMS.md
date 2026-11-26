@@ -213,6 +213,16 @@ OI-011: shipped discrepancy: the port drives the player walk to
   key-release pair. OI-011's constant is NOT touched: the s=20 in that
   arithmetic is the live word, the port's stays 10 until the legs move.
 
+  PR-522 BINDS THIS CONSTANT TO THE COLD START. The walk cannot begin
+  below s=14: the entry seed is idiv(F*s,20)+G_x (F=100, G_x=30) and
+  the row accumulator only feeds once that seed reaches 100 (v//100),
+  so s>=14 is the hard start condition (5*s+30>=100). At s=10 the seed
+  is 81 -> feeds 0 -> the walk is dead at position 0; at s=20 the seed
+  is 131 and the walk ramps PR-520's 131,235,318,... So keeping the
+  constant at 10 is not just a wrong speed - a ZARIA walk never starts
+  under the row-admit path at all. The constant and the entry-seed
+  flip as one step. (See OI-015's PR-522 note for the seed.)
+
 OI-012: does the PLAYER object go through the 0x54250 step at all?
   PR-135 applies the law to both actors as the model; the three
   call sites do not check class
@@ -243,6 +253,16 @@ OI-013: the [obj+0x95] flag that turns `I`/`IC` rows on; the
   status: OPEN
   origin: PR-98/99 (HANDOFF 13.90); the [obj+0x95] reader was
     re-counted by PR-142/161/164 - still no reader found
+    PR-522 MEASURES WHAT gate_95 DOES WITHOUT NAMING ITS WRITER. Live,
+    the cold start holds BOTH registers frozen with the accumulator at 0
+    for 3-6 samples while [obj+0x95]=1, then a single register step
+    runs as the flag flips 1->0 and the per-admit loop begins (7/7
+    ZARIA A_WALK windows). So armed = physics held, and its first clear
+    is the entry seed, NOT an accumulator admit (the accumulator is
+    under threshold at that step). This is a behavioural role for the
+    flag, measured from pr516i; the flag's SET/RESET writer is still
+    unread, so the model stays a measurement and the port seeds on the
+    entry iteration rather than reproducing the hold.
 
 OI-014: ds:0xcef40 +0x388 as a frame-advance distance accumulator
   status: CLOSED BY PR-100
@@ -456,6 +476,24 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     no-op there and the 90 red checks are the row-admit ORDER's cost,
     not this term's. The nfr==0 degenerate case and the s-constant
     move (OI-011) stay the open halves of the flip.
+    PR-522 CLOSES THE COLD-START-FEED HALF AND BINDS IT TO OI-011. The
+    cold start is now measured, not open: a BY_X walk entered at a
+    carried ~1 register holds BOTH registers and the accumulator at 0
+    for 3-6 samples (gate_95 armed), then runs EXACTLY ONE register
+    step - a full idiv(F*s,20)+G_x (drag 0 for the tiny v) - that flips
+    gate_95 and is NOT an accumulator admit (accum is 0/1 there, under
+    the authored threshold 6); only AFTER it does the new v//100 feed
+    the accumulator. 7/7 A_WALK-parameter windows in pr516i show the
+    step is +130. The closed form makes the s link exact: the walk
+    starts iff the seed reaches 100 (else v//100 feeds 0 forever), i.e.
+    5*s+30 >= 100, s >= 14. At the port's s=10 the seed is 81 -> no
+    feed -> 25 iterations, position 0, dead; at s=20 the seed is 131 ->
+    the ramp 131,235,318,... = PR-520's live walk. So entry-seed +
+    s=20 is ONE thing, not two. The entry must NOT run the row cursor
+    or touch the accumulator (PR-519's reverted 94-vs-90 patch). The
+    gate_95 hold itself stays open at OI-013 (its set/reset writer is
+    unread); the port should seed on the entry iteration, not model the
+    hold.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178

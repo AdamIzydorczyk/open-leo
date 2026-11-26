@@ -3390,6 +3390,28 @@ record.
   answer the cold-start feed, audit the name map, then flip the
   constant and the default together.
 
+  PR-522 STATUS (the cold-start is answered, and it is the SAME
+  question as the constant). pr516i settles what PR-519 left open: a
+  BY_X walk entered at a carried ~1 register HOLDS both registers and
+  the accumulator at 0 for 3-6 samples while gate_95 is armed, then runs
+  exactly ONE register step - a full idiv(F*s,20)+G_x (drag 0 for the
+  tiny v) - which flips gate_95 and is NOT an accumulator admit (the
+  accumulator is 0/1 there, under the authored threshold 6); only after
+  it does the new v//100 feed the accumulator. 7/7 A_WALK windows show
+  the step is exactly +130. The closed form then forces the s=20 answer:
+  the walk only begins if the seed reaches 100, i.e. 5*s+30 >= 100,
+  s >= 14. At the port's s=10 the seed is 81, v//100 feeds 0, and the
+  walk is dead at position 0 (25 simulated iterations, zero travel); at
+  s=20 the seed is 131 and the walk ramps PR-520's 131,235,318,... So
+  T3's "answer the cold-start" and "move LL_PLAY_INTENT_FULL to 20" are
+  one arithmetic step: seed the register at entry (register step + the
+  position write at new register//100, and the row cursor and
+  accumulator left alone - NOT PR-519's full-admit patch) AND carry the
+  keyboard's 20, or a ZARIA walk never begins. gate_95's own arm/hold
+  is measured but its set/reset writer is unread (OI-013 stays open);
+  the port seeds on the entry iteration, it does not reproduce the hold.
+  The name-map audit (OI-130) is the one remaining T3 reading task.
+
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`
 (conditions `K_FIRE`+`K_F1`/`K_F2`, `K_ALT`); enemy `.MOV` death states;
