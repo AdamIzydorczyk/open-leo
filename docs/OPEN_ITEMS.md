@@ -969,6 +969,9 @@ OI-035: the engine's compiled per-class AI DRIVER: the [obj+0x106]
   status: PARTIAL
   notes: the port ships the pinned LICHA box (|dx|<40, |dy|<50) as
     a stand-in behind LEO_PLAY_DANGER. PR-90/91/92/94 counts.
+    PR-534: the stand-in is ON by default now (owner goal -
+    ZARIA.01 must fight); =0 stays the comparison. Nothing here
+    about the DRIVER changes - this is still the unread compiled AI.
 
 OI-036: which factory-template instance is which .des TYPE (class
   vtables -> type numbers)

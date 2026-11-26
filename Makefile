@@ -796,6 +796,18 @@ endif
 # CONSTANTS), so it runs in EVERY configuration; the scripted demo legs
 # run on the real RAN.01 / TUNGA.11 player data (LEW.* leaves).
 verify-play: ll_level
+# PR-534 CONVENTION (the fight-on default): the enemy-attack stand-in is
+# ON by default now (the owner goal 2026-11-26 - ZARIA.01 must FIGHT; see
+# obj_arm_atak and README). The two legs that PROVE the default -
+# "play lion attack" (ly_atk) and "play enemy attack" (ly_dgr) - carry NO
+# LEO_PLAY_DANGER hook at all. Every OTHER leg in this target whose
+# subject is not the fight sets LEO_PLAY_DANGER=0, the named off switch,
+# so its pins stay the clean-law derivation its comments derive, tick for
+# tick. The default-mode counterpart of any such walk is visible in the
+# probes kept for the record: with the hook unset the same legs print the
+# DANGER arm at the class-box tick and an ATTACKS window hit (see the
+# PR-534 record for /tmp/opencode/pr534_trv_default.log).
+
 # PR-97 RE-PIN NOTE (applies to every y in this target): the player's x,y
 # is the POSITION POINT; what stands on the .plt line is the animation's
 # shape-box bottom (ll_seq_shape_contact -> ll_player.contact, and the same
@@ -1073,8 +1085,10 @@ ifeq ($(PX_DATA),1)
 # From the touch onward his logged x is the SEMI push-back, not the law
 # (the solid lines from tick 26 on), so no later position in this leg is a
 # pure-law number - what stays derived is the row phase (fed by TRAVELLED
-# distance, which no push changes). This leg's script arms no A_ATAK
-# (LEO_PLAY_DANGER is off), and the worm's A_RUN rows carry no ATC flag,
+# distance, which no push changes). This leg is PR-534's named
+# COMPARISON run - it sets LEO_PLAY_DANGER=0, the off switch, so it arms
+# no A_ATAK (a default run DOES arm at this same tick 26: the ly_dgr
+# leg below carries that), and the worm's A_RUN rows carry no ATC flag,
 # so since PR-139 the touch answers with the push-out and the AC_ENEMY
 # raise ONLY - no damage: the engine's only authored-damage path from an
 # object to the lion is answer-C 0x55130, reached exclusively behind the
@@ -1085,7 +1099,7 @@ ifeq ($(PX_DATA),1)
 # 0x50eef (`test ebx,ebx je`) drops the moment it is 0. Energy stays 100.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 LEO_PLAY_SOLID=1 \
-	  LEO_PLAY_SCRIPT="1:FWD" LEO_LEVEL_PPM=/tmp/opencode/ly_hit.ppm \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD" LEO_LEVEL_PPM=/tmp/opencode/ly_hit.ppm \
 	  LEO_LEVEL_PPM_TICK=80 ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_hit.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play hit FAILED (rc=$$rc)"; exit 1; fi
@@ -1098,8 +1112,9 @@ ifeq ($(PX_DATA),1)
 	  && echo "play enemy contact: PR-139's G-5 reality at the first bump -" \
 	       "the meeting at 26 is the two position laws above (116,649 vs" \
 	       "151,669), and it answers with the SEMI push and the AC_ENEMY" \
-	       "raise and NO damage: no window is open here (LEO_PLAY_DANGER" \
-	       "off), and the engine has no other authored-damage path (the" \
+	       "raise and NO damage: no window is open here (this leg sets" \
+	       "LEO_PLAY_DANGER=0, the off switch PR-534 keeps), and the" \
+	       "engine has no other authored-damage path (the" \
 	       "DANGER branch's level danger_power is un-authored in this level" \
 	       "and 0x50ed0 drops a 0-damage hit at 0x50eef); the energy stays" \
 	       "100 to the end (RE-PIN NOTE: this leg's two 'hit by ... damage" \
@@ -1126,34 +1141,67 @@ ifeq ($(PX_DATA),1)
 # (0x4c8b7, ll_play.c) and admits AT MOST ONE row per iteration
 # (0x521f0 / 0x5232b) - and the state's row clock feeds its current row
 # from the entry iteration itself, so those six admits land at entry+2,
-# +5, +8, +11, +14: the ATC_ON row admits at t=74 (the run draws that
-# row's authored frame 8 from 74), and the `9,300,FC 100,0` row three
-# ticks later is the +100 pull the v column shows from t=80 and the
-# 254 -> 255 one-px creep; the ATC_OFF row closes the window further
-# down the list. The punch key sits at tick 60, the window opens at 74 -
-# but the kill is NOT at the opening here: the meeting itself is a model
-# pin (the lion's velocity law is the one the walk legs derive, the
-# worm's is the 1.25 px per iteration of the enemy-contact leg; which
-# pose reaches first is shape data, and after the first contact the SEMI
-# push-back owns both positions, as that leg says), and the first shape
-# meeting inside the window is tick 84.
+# +5, +8, +11, +14: with the punch key at 26 the ATC_ON row admits at
+# t=40 (the run draws that row's authored frame 8 from 40); the
+# ATC_OFF row closes the window further down the list.
+# PR-534 RE-PINS this leg to the FIGHT-ON default (the owner goal:
+# ZARIA.01 must FIGHT; see the ly_dgr leg below, which now runs with no
+# hook at all). The old script pressed FIRE at 60, by which time the
+# walk had carried the lion to the SECOND worm, and at this gait that
+# run became a mutual one: the worm's own window opened at 74, its hit
+# threw the lion into A_DOSTAL mid-punch, and no KILLS line exists - a
+# real fight, but this leg's proof is the kill, so the press moves to
+# the first worm, tick 26, walking at x 110. Both sides arm from the
+# SAME box law, and that arithmetic decides the whole race:
+#   - the worm walks its bounds 100..180 at 1.25 px a step from 120
+#     (the contact leg above): at 27 it is at 152, dx 42 - OUTSIDE the
+#     strict |dx| < 40 gate by two units; at 28 it is at 153, dx 39 -
+#     the box, exactly as in the ly_dgr derivation, one tick of one
+#     arithmetic. The lion's x there (114) is A_FIGHT's own FC ladder,
+#     a model pin, not re-derived here.
+#   - the arm at 28 is a non-BY_X transition, so the port's PR-90 rule
+#     applies its base reset and the worm stands its attack from its
+#     authored spot (120,669) - the same move the ly_dgr window depends
+#     on; its [A_ATAK] rows are eight of 400 = four iterations each, so
+#     its ATC_ON row admits at arm+16 = 44.
+#   - the lion's window opened at 40, four ticks EARLIER. The first
+#     shape meeting in the whole run is the tick-44 solid line (the
+#     worm's attack-pose box reaching the lion's - the meeting tick and
+#     the shape boxes stay model pins exactly as the old text said); at
+#     that tick the lion's hit answers FIRST: hp 20-30 = -10 forces
+#     A_DEAD by name, and the worm's window, opened on the SAME tick,
+#     never fires - zero ATTACKS lines and energy stays 100 to the end.
+#     That is PR-89's dead-object rule (a dead object never hurts the
+#     lion) pinned on a DEFAULT run for the first time: the fight is on
+#     in every run now, and the punch that is in first wins it.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=4 LEO_PLAY_SOLID=1 \
-	  LEO_PLAY_SCRIPT="1:FWD 60:FIRE,F1 61:NONE" \
+	  LEO_PLAY_SCRIPT="1:FWD 26:FIRE,F1 27:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_atk.ppm LEO_LEVEL_PPM_TICK=128 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_atk.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play attack FAILED (rc=$$rc)"; exit 1; fi
 	@grep -q 'play: A_WALK -> A_FIGHT' /tmp/opencode/ly_atk.log \
-	  && grep -q 'play tick 84: lion KILLS LICHA/licha3.mov: damage 30 -> hp -10 (dead)' \
+	  && grep -q 'play tick 28: LICHA/licha3.mov DANGER: lion within the class' \
 	      /tmp/opencode/ly_atk.log \
+	  && grep -q 'play tick 40: state A_FIGHT seq fight frame 8 pos 121,647' \
+	      /tmp/opencode/ly_atk.log \
+	  && grep -q 'play tick 44: lion KILLS LICHA/licha3.mov: damage 30 -> hp -10 (dead)' \
+	      /tmp/opencode/ly_atk.log \
+	  && test "$$(grep -c 'lion KILLS' /tmp/opencode/ly_atk.log)" -eq 1 \
+	  && test "$$(grep -c 'DANGER: lion' /tmp/opencode/ly_atk.log)" -eq 1 \
 	  && ! grep -q 'lion hits LICHA' /tmp/opencode/ly_atk.log \
-	  && echo "play lion attack: the A_FIGHT window opens at the ATC_ON" \
-	       "row admit, entry+14 = 74, and the first meeting inside it" \
-	       "lands exactly one hit (one per opened window), the" \
-	       "engine-forced A_DEAD gate answers" \
-	       "at hp < 0, and the killed worm never attacks again (ok)" \
-	  || { echo "play lion attack grep FAILED"; grep -E 'lion (hits|KILLS)|hit by|A_FIGHT' \
+	  && ! grep -q 'ATTACKS through' /tmp/opencode/ly_atk.log \
+	  && ! grep -q 'hit by' /tmp/opencode/ly_atk.log \
+	  && echo "play lion attack: with the fight ON by default the two windows" \
+	       "race - the worm arms at its 28-tick box entry and its ATC_ON row" \
+	       "admits at arm+16 = 44, the lion enters A_FIGHT at 26 and his" \
+	       "ATC_ON row admits at entry+14 = 40. The first shape meeting" \
+	       "(44, a model pin) lands exactly one hit (one per opened window)" \
+	       "BEFORE the worm's window can fire: the engine-forced A_DEAD" \
+	       "gate answers at hp < 0, the dead worm never attacks, and the" \
+	       "lion's energy stays 100 (ok)" \
+	  || { echo "play lion attack grep FAILED"; grep -E 'lion (hits|KILLS)|hit by|A_FIGHT|ATTACKS' \
 	       /tmp/opencode/ly_atk.log | head -6; exit 1; }
 # PR-90 (T3 stage 1): the ENEMY attacks. There is no transition INTO
 # A_ATAK in any .MOV because the engine's enemy AI is COMPILED PER
@@ -1163,8 +1211,10 @@ ifeq ($(PX_DATA),1)
 # "MAIN"/"WALK"/"ATACK"/"TURN" 0x93238..0x93248 carry state-name tables
 # hardcoding "A_RUN"/"A_ATAK"). LICHA's MAIN check is pinned: jump
 # table 0x61b40 case 0 (0x61b6e) = |dx| < 0x28 (40) && |dy| < 0x32 (50)
-# of the CURRENT positions. The port's stand-in (LEO_PLAY_DANGER=1, OFF
-# by default like the PR-59 solid gate): a DANGER-flagged current state
+# of the CURRENT positions. The port's stand-in: ON by default since
+# PR-534 (the owner goal 2026-11-26 - ZARIA.01 must FIGHT; LEO_PLAY_-
+# DANGER=0 restores the off mode, and the ly_hit leg above runs on that
+# switch as the control). A DANGER-flagged current state
 # arms the script's OWN A_ATAK by name when the lion enters that box;
 # the enemy then lands its authored damage= through its OWN frames'
 # ATC_ON window - the engine's answer-C path (0x50ff1 -> 0x51003 ->
@@ -1252,7 +1302,7 @@ ifeq ($(PX_DATA),1)
 # worm's push, which is why the logged hop here is 3 px.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 LEO_PLAY_SOLID=1 \
-	  LEO_PLAY_DANGER=1 LEO_PLAY_SCRIPT="1:FWD 30:NONE" \
+	  LEO_PLAY_SCRIPT="1:FWD 30:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_dgr.ppm LEO_LEVEL_PPM_TICK=152 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_dgr.log 2>&1; rc=$$?; \
@@ -1301,8 +1351,10 @@ ifeq ($(PX_DATA),1)
 	       "as a count. No bump without a window ever hurt the lion (the" \
 	       "'hit by' negative - G-5), the same contact raises AC_ENEMY on" \
 	       "the worm (PR-92, the engine packet's or-dh-0x80 bit; this" \
-	       "script consumes nothing so it stays); the default runs are" \
-	       "unaffected (ok)" \
+	       "script consumes nothing so it stays); this leg carries NO" \
+	       "LEO_PLAY_DANGER hook at all - it IS the default-mode fight" \
+	       "proof PR-534 ships, and the ly_hit log (which sets =0) stays" \
+	       "the off-switch control (ok)" \
 	  || { echo "play enemy attack grep FAILED"; \
 	       grep -E 'DANGER:|ATTACKS|hit by|A_DOSTAL|A_DRAP' /tmp/opencode/ly_dgr.log \
 	       | head -8; exit 1; }
@@ -1310,6 +1362,14 @@ ifeq ($(PX_DATA),1)
 # 12-second walk (300 iterations at the 25/s iteration clock) runs from
 # the spawn to x=685 - past the worm zone, past the ladder column,
 # across the second screen's ground - at ZERO energy cost. A plain walk
+# (PR-534 SCOPE NOTE: this leg sets LEO_PLAY_DANGER=0, the off switch.
+# With the fight ON by default, walking this corridor costs energy after
+# all - each worm the lion passes arms A_ATAK and its window hit lands
+# (this run with the hook unset prints TWO `DANGER:` arms and one
+# `ATTACKS through`, at the ly_dgr leg's arm+16 arithmetic). The walk,
+# pit-edge and death-line law this leg derives is unrelated to the
+# fight, so it stays pinned in comparison mode and the negatives below
+# are read as scoped to it.)
 # all - the PR-131 stage audit could not run this probe, "the probe was
 # blocked by the worm at x~153 (G-9)". The positions/ticks below are the
 # port's OWN walk law output (PR-135's engine F/T register), not fitted
@@ -1334,7 +1394,7 @@ ifeq ($(PX_DATA),1)
 # those damage negatives.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=12 LEO_PLAY_SOLID=1 \
-	  LEO_PLAY_SCRIPT="1:FWD" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_trv.ppm LEO_LEVEL_PPM_TICK=380 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_trv.log 2>&1; rc=$$?; \
@@ -1790,9 +1850,12 @@ ifeq ($(PX_DATA),1)
 #    entry+3 = 55, frame 3, exactly what the pin below reads. The
 #    hand-off back through A_DRAP into the walk is the left-walk leg
 #    below.
+# (PR-534: the press/release gait below is unrelated to the fight, and
+# the fight-on default would arm the worm at 26 and land a window hit at
+# 46 mid-sequence - so this leg runs the LEO_PLAY_DANGER=0 comparison.)
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:NONE 52:BKWD" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:NONE 52:BKWD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zkeys.ppm \
 	  LEO_LEVEL_PPM_TICK=55 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
@@ -1865,7 +1928,7 @@ ifeq ($(PX_DATA),1)
 	    grep 'tick 55' /tmp/opencode/ly_zkeys.log; exit 1; }
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 \
-	  LEO_PLAY_SCRIPT="1:FWD" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zcam.ppm LEO_LEVEL_PPM_TICK=54 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zcam.log 2>&1; rc=$$?; \
@@ -1925,7 +1988,7 @@ ifeq ($(PX_DATA),1)
 # pins below read are the run's own; the LAW they ride is the one above.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:NONE 52:BKWD" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:NONE 52:BKWD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zwalk.ppm LEO_LEVEL_PPM_TICK=82 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zwalk.log 2>&1; rc=$$?; \
@@ -2062,7 +2125,7 @@ ifeq ($(PX_DATA),1)
 # 94. The x drift stays the worms' SEMI push-outs.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=4 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 52:NONE" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 52:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zjump.ppm LEO_LEVEL_PPM_TICK=96 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zjump.log 2>&1; rc=$$?; \
@@ -2075,7 +2138,7 @@ ifeq ($(PX_DATA),1)
 # run's log is what the arc and its clause park are measured on.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=4 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 52:NONE" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 52:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zland.ppm LEO_LEVEL_PPM_TICK=100 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zland.log 2>&1; rc=$$?; \
@@ -2215,7 +2278,7 @@ ifeq ($(PX_DATA),1)
 # at the same tick; every one of them is data, not collateral.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_PLAY_ASK=1 LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 \
-	  LEO_PLAY_SCRIPT="1:FWD 51:JUMP 70:NONE" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 51:JUMP 70:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zask.ppm LEO_LEVEL_PPM_TICK=96 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zask.log 2>&1; rc=$$?; \
@@ -2266,7 +2329,7 @@ ifeq ($(PX_DATA),1)
 # numbers.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_PLAY_ASK=1 LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 \
-	  LEO_PLAY_SCRIPT="1:FWD 45:BKWD 50:JUMP 62:NONE" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 45:BKWD 50:JUMP 62:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zask2.ppm LEO_LEVEL_PPM_TICK=64 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zask2.log 2>&1; rc=$$?; \
@@ -2541,7 +2604,7 @@ ifeq ($(PX_DATA),1)
 #    canopy top is reachable end to end by the authored words.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_climb.ppm \
 	  LEO_LEVEL_PPM_TICK=340 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
@@ -2660,7 +2723,7 @@ ifeq ($(PX_DATA),1)
 # negative over the 4xx window stands.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=10 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE 295:FWD" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE 295:FWD" \
 	  LEO_PLAY_ASK=1 \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_revwalk.ppm \
 	  LEO_LEVEL_PPM_TICK=510 \
@@ -2724,7 +2787,7 @@ ifeq ($(PX_DATA),1)
 # chain, and names what it does not close.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=10 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE 295:FWD 372:FWD,DOWN 385:NONE 410:UP 445:NONE" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE 295:FWD 372:FWD,DOWN 385:NONE 410:UP 445:NONE" \
 	  LEO_PLAY_ASK=1 \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_rope.ppm \
 	  LEO_LEVEL_PPM_TICK=445 \
@@ -2872,7 +2935,7 @@ ifeq ($(PX_DATA),1)
 #    262, 263 there); the A_SCIAG down-chain stays this file's next leg.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP \
 180:UP,JUMP 181:UP" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_cjump.ppm \
 	  LEO_LEVEL_PPM_TICK=318 \
@@ -2956,7 +3019,7 @@ ifeq ($(PX_DATA),1)
 # stays at OI-015.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP \
 180:FWD,UP,JUMP 181:FWD,UP" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_cjump_fwd.ppm \
 	  LEO_LEVEL_PPM_TICK=318 \
@@ -3047,7 +3110,7 @@ ifeq ($(PX_DATA),1)
 # runs to 700 to see the end.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=30 \
-	  LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_pool.ppm \
 	  LEO_LEVEL_PPM_TICK=700 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
@@ -3110,7 +3173,7 @@ ifeq ($(PX_DATA),1)
 # under the old port: nine falls, ZERO life lines, no end.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=60 \
-	  LEO_PLAY_SCRIPT="1:FWD" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_lives.ppm \
 	  LEO_LEVEL_PPM_TICK=1500 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
@@ -3266,7 +3329,7 @@ ifeq ($(PX_DATA),1)
 #    exactly where the pose put it.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 200:FWD,DOWN" \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 200:FWD,DOWN" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_cdown.ppm \
 	  LEO_LEVEL_PPM_TICK=318 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
@@ -3424,7 +3487,7 @@ ifeq ($(PX_DATA),1)
 # the canopy.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=20 \
-	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP \
 263:NONE 264:JUMP 266:NONE" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_chang.ppm \
 	  LEO_LEVEL_PPM_TICK=400 \

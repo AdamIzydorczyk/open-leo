@@ -278,6 +278,14 @@ solid objects push the lion (ll_seq_shape_push, the game's FUN_00053ae0),
 enemies hurt him by their authored damage= (HUD energy/lives follow) and
 balloons heal him. Default: ON for every level except RAN.01 (the
 balloon-flight level, whose walking start is not what the game plays).
+`LEO_PLAY_DANGER=0|1` (play mode; the hook is PR-90's, its ON default is
+PR-534's owner ruling - the goal "ZARIA.01 must FIGHT"): a scene object
+whose CURRENT state carries the authored DANGER flag enters the script's
+own `A_ATAK` by name when the lion comes inside the pinned LICHA class
+box (`|dx| < 40 && |dy| < 50`, 0x61b6e), and the enemy then lands its
+authored `damage=` through its own `ATC_ON` window. This is the port's
+named stand-in for the engine's per-class attack AI (which stays open);
+`=0` restores the pre-534 off mode for comparison.
 `LEO_PLAY_ROW_PHYSICS=0` (play mode; the hook is PR-518's, its default
 is PR-523's) is the physics-cadence switch. Default — unset, or any value
 without a leading `0` — is the engine's own cadence, measured off the live

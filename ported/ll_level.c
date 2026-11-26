@@ -1282,8 +1282,9 @@ static int obj_hit(lvl_obj *o, int damage)   /* 0 = no hit, 1 = hurt,
  * state by name (the PR-89 A_DEAD pattern) when the lion enters the
  * pinned LICHA MAIN box; only that pinned stage, no invented extras.
  * The engine's per-class AI stays open; this gate is the port's
- * stand-in, off unless LEO_PLAY_DANGER=1, exactly like the PR-59 solid
- * gate. What the armed attack drives (charge motion, TURN behaviors) is
+ * stand-in - ON by default since PR-534's owner goal (ZARIA.01 must
+ * FIGHT), with LEO_PLAY_DANGER=0 kept as the named comparison switch.
+ * What the armed attack drives (charge motion, TURN behaviors) is
  * T3 stage 2.
  * PR-139 names where the engine reads that same authored flag:
  * [obj.vt+0x44] is 0x23920, which returns the flag word of the object's
@@ -6829,7 +6830,8 @@ static void play_collide(play_ctx *pl, const lvl_obj *objs, int nobj,
              * still has to be ARMED: LICHA's A_RUN rows carry no
              * atc_on; only A_ATAK's do (opened by its row -4, closed
              * by -8), and the port arms A_ATAK only through the PR-90
-             * DANGER stand-in (LEO_PLAY_DANGER), never by default. */
+             * DANGER stand-in (LEO_PLAY_DANGER, ON by default since
+             * PR-534). */
             pl->energy -= o->damage;
             pl->lock = 30;
             o->atc_hit = 1;
@@ -13841,9 +13843,12 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
         /* PR-90: the DANGER + class MAIN box arming stand-in is a MODEL
          * (the pinned box applied to DANGER-flagged states), not a
          * recovered driver (the engine's real per-class AI is open, see
-         * obj_arm_atak) - OFF unless LEO_PLAY_DANGER=1 asks for it. */
+         * obj_arm_atak). PR-534 (owner goal 2026-11-26: ZARIA.01 must
+         * FIGHT) makes it ON by default, the way PR-523 defaulted the
+         * row-admit physics on; LEO_PLAY_DANGER=0 restores the
+         * pre-534 off mode as the named comparison switch. */
         pl.danger = getenv("LEO_PLAY_DANGER")
-                        ? atoi(getenv("LEO_PLAY_DANGER")) != 0 : 0;
+                        ? atoi(getenv("LEO_PLAY_DANGER")) != 0 : 1;
     }
     pl.cam_ox = CAM_LEAD_R;
     /* PR-84: the follow-cam-y state (play_ctx camy_v/camy_set) starts
