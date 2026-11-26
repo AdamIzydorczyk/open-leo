@@ -3933,6 +3933,73 @@ ifeq ($(PX_DATA),1)
 	  && ! grep -q 'pos 324,601 grounded 1' /tmp/opencode/ly_seat_off.log \
 	  && echo "play seat off-switch (PR-535 control): the SAME script with LEO_PLAY_SEAT=0 flies the identical line (324,580 at 115) and passes straight THROUGH the seat line - 324,606 grounded 0 at 119 - landing on the grass at 324,651 at 124. Nothing but the seat ground differs between the two legs (ok)" \
 	  || { echo "play seat off-switch grep FAILED"; cat /tmp/opencode/ly_seat_off.log; exit 1; }
+# PR-536 (the goal's BALOON clause, first evidence): what the authored
+# data puts between the lion and a balloon. (1) THE GEOMETRY, measured
+# from the level's own bytes: ANI2.DES lines 23-28 place six
+# `BAL,balonik.ani,balonik.mov` - 1542,272 / 1270,460 / 1880,310 /
+# 78,460 / 990,608 / 1600,113 - and the hit test (PR-521's reading of
+# the balloon's own touch method) is the point (x+10,y+10) inside the
+# lion's CURRENT shape box, whose y-window with the lion standing on
+# line L is L-32 .. L (the WALK contact, PR-97). Three of the six ARE
+# spanned from ordinary .plt ground: (990,608)'s point (1000,618) by
+# the east-bank line `3 953,654;994,644;1007,646;1051,633`, (1880,310)'s
+# by the terrace `1 1838,371;1925,347` and (1542,272)'s by
+# `1 1577,456;1599,456`; (1270,460), (78,460) and (1600,113) are
+# spanned by NO line the level authors - those need a perch (the climb
+# terrace, ANIPL2's seat lines). So the blocker is the ROUTE: the only
+# one of the three a walk could reach is (990,608), and the way there
+# crosses the 216 px chasm at 408..624, which in this port means
+# A_JUMP - and A_JUMP is exactly what pops every balloon. That is
+# OI-124's carrier question with its consequence measured: no balloon
+# leg is possible in ZARIA.01 until a crossing exists that raises no
+# K_GEN1 (the seat chain PR-535 made standable; OI-125/OI-128 own the
+# missing halves).
+# (2) THE POP IS ONE-WAY: balonik.mov line 6 is `A_DEAD(1)=K_GEN1`, its
+# A_DEAD block runs `seq=dym` (smoke) with `sample=14` and ends
+# `6,100,GEN K_GEN2` - no transition leads back, and the pickup test
+# skips any object no longer in its start state (ll_level.c
+# `o->sti != o->sc->mov->start_st`), so ONE K_GEN1 removes every balloon
+# from the level for good. ly_bal_pop runs it: the A_JUMP rows
+# `4,150,GEN K_GEN1`.. `7,225,GEN K_GEN1` (LEW.ZAR lines 93-96) raise
+# the bus 6 ticks after the press - at 48 exactly SIX `BAL ... A_DEAD`
+# lines, and the same bus wakes 16 POCISK/kokos.mov into A_RZUT, both
+# LINA and the DRABINKA into A_DROP, the KORONA into A_TWIST and the
+# WODA into A_RUN_AF; the second JUMP at 90 raises it again and NO
+# balloon line follows. (3) THE PICKUP IS UNEXERCISED: the +32-with-cap
+# branch (play_collide, `pl->energy += 32` clamped at 100, then the
+# picked balloon raising K_GEN1 itself) has never run in any leg - these
+# two legs pin the absence, so the claim is counted, not hidden. The
+# climb/palm legs that would exercise it are the next steps; the
+# geometry above is why they must be climb/palm legs.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_SEAT=0 LEO_PLAY_SCRIPT="1:FWD" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_ballive.ppm LEO_LEVEL_PPM_TICK=150 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_ballive.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play balloons live FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_ballive.log; exit 1; fi
+	@test "$$(grep -c 'BAL/balonik' /tmp/opencode/ly_ballive.log)" -eq 0 \
+	  && ! grep -q 'balloon at .* picked' /tmp/opencode/ly_ballive.log \
+	  && grep -q 'play tick 150: state A_WALK' /tmp/opencode/ly_ballive.log \
+	  && echo "play balloons live (PR-536): a 150-tick walk raises no K_GEN1 - the lion walks, meets the worms (SEMI pushes), and ZERO BAL lines appear in his log: A_WALK's rows carry no GEN K_GEN1 (LEW.ZAR's raisers are A_JUMP lines 93-96, A_JUMP_S 67-69, A_DRAP 8/9, A_KILOF, A_DEAD 1/2), so the six balloons stay in their start state and stay collectable-in-principle (the pickup itself never fires: no balloon point is anywhere near his box, see the block above) (ok)" \
+	  || { echo "play balloons live grep FAILED"; cat /tmp/opencode/ly_ballive.log; exit 1; }
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_SEAT=0 LEO_PLAY_SCRIPT="1:FWD 40:NONE 42:JUMP 44:FWD 50:NONE 90:JUMP" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_balpop.ppm LEO_LEVEL_PPM_TICK=130 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_balpop.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play balloon pop FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_balpop.log; exit 1; fi
+	@test "$$(grep -c 'BAL/balonik.mov takes its own K_GEN1 line: state A_DEAD' /tmp/opencode/ly_balpop.log)" -eq 6 \
+	  && test "$$(grep -c 'play tick 48: BAL/balonik' /tmp/opencode/ly_balpop.log)" -eq 6 \
+	  && test "$$(grep -c 'BAL/balonik' /tmp/opencode/ly_balpop.log)" -eq 6 \
+	  && grep -q 'play: A_WALK -> A_JUMP' /tmp/opencode/ly_balpop.log \
+	  && test "$$(grep -c 'POCISK/kokos.mov takes its own K_GEN1 line: state A_RZUT' /tmp/opencode/ly_balpop.log)" -eq 16 \
+	  && ! grep -q 'balloon at .* picked' /tmp/opencode/ly_balpop.log \
+	  && echo "play balloon pop (PR-536): ONE jump's K_GEN1 (A_JUMP row 4, press 42 + 6 = 48) takes ALL SIX balloons' A_DEAD line on the same tick and nothing after - the second jump at 90 raises the bus again and no BAL line follows (A_DEAD(1)=K_GEN1 has no inverse); the same bus is the level's one wake for everything else that moves at a jump - 16 POCISK/kokos.mov A_RZUT (the fruit THROWS itself), both LINA and DRABINKA A_DROP, KORONA A_TWIST, WODA A_RUN_AF - and no balloon is picked in this run (the +32 branch needs energy < 100 AND a shape-box meet with a point >= 114 px above any walkable line)" \
+	  || { echo "play balloon pop grep FAILED"; cat /tmp/opencode/ly_balpop.log; exit 1; }
 else
 	@echo "verify-play: SKIP data legs (needs $(DATA) + LEO_HD_DIR fixtures; see NEXT_STEPS.md)"
 endif

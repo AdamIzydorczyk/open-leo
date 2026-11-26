@@ -9441,3 +9441,60 @@ OI-132: the death LINE is the main_back LAYER'S OWN HEIGHT WORD
     on a list wrap - so the port's cost rides the line-crossing
     instead, and the agreement with the engine (one fall, one life)
     is measured on the pit, not assumed.
+
+OI-133: a ZARIA.01 balloon pickup needs a crossing WITHOUT a
+  jump - the code path is shipped, no run reaches it, and the pop
+  that ends a balloon is one-way
+  status: OPEN
+  origin: PR-536 (the goal clause "collecting baloons to restore
+    health")
+  notes: THE CODE PATH EXISTS AND HAS NEVER RUN. The pickup sits
+    in play_collide (PR-521's reading of the BAL class's own
+    touch method): it tests the point (x+10,y+10) inside the
+    lion's CURRENT shape box, skips any object no longer in its
+    start state and any object on another layer, ignores the
+    message when energy is already 100, else adds 32 clamped to
+    100 and raises K_GEN1 on the picked object. ly_ballive and
+    ly_bal_pop pin the ABSENCE of that line in both a walk-only
+    and a jumping run, so the +32 branch is counted, not proven.
+    WHY NO ROUTE REACHES IT (measured from the level's own
+    bytes, and after correcting this row's first arithmetic): the
+    box test is `by0 <= p.y < by0 + h` with by0 = pos_y + the
+    element's f2 margin, and for the walk art the box BOTTOM is
+    the contact line (PR-97), so a lion standing on line L spans
+    y = L-32 .. L. ANI2.DES places BAL six times - (1542,272)
+    (1270,460) (1880,310) (78,460) (990,608) (1600,113) - tested
+    at (x+10,y+10). THREE of the six ARE spanned by ground the
+    level authors: (990,608) by the east-bank line `3 953,654;
+    994,644;1007,646;1051,633`, (1880,310) by the terrace
+    `1 1838,371;1925,347`, (1542,272) by `1 1577,456;1599,456`.
+    THREE are spanned by nothing - (1270,460), (78,460),
+    (1600,113) - and the only things high enough are the climb
+    terrace (ly_climb seats the lion at 483 grounded) and
+    ANIPL2's seat lines (PR-335, PR-535). So the blocker is the
+    ROUTE, not the height: the one ground-reachable balloon is
+    (990,608), and the way to it crosses the chasm at 408..624,
+    which in this port is an A_JUMP - and A_JUMP pops all six. A
+    balloon leg is impossible until a crossing exists that raises
+    no K_GEN1: OI-124's carrier, and the seat chain's wake and
+    ride halves OI-125/OI-128. THE POP IS TERMINAL:
+    balonik.mov `A_DEAD(1)=K_GEN1` with an A_DEAD block `seq=dym`
+    `sample=14` ending `6,100,GEN K_GEN2` and NO way back; ly_bal_
+    pop pins ONE jump's K_GEN1 (A_JUMP row 4: press 42, bus at 48)
+    taking all six A_DEAD lines on that tick and NOTHING after the
+    second jump at 90, while the same bus wakes 16 POCISK/kokos.
+    mov into A_RZUT, both LINA and the DRABINKA into A_DROP, the
+    KORONA into A_TWIST and the WODA into A_RUN_AF - one K_GEN1 is
+    the level's single "throw the coconuts, drop the ladders, pop
+    the balloons" moment. THE RAISERS, read off this level's own
+    LEW.ZAR: A_JUMP lines 93-96 (rows 4-7), A_JUMP_S 67-69,
+    A_DRAP rows 8/9, A_KILOF, A_DEAD rows 1/2, A_BORRING 11-13,
+    A_FIGHT_DOWN 9, A_FG_PACKA_DN 8, A_FIGHT_END 4, and A_FALL_
+    DOWN's alternate `s idle` row; A_WALK has none, and ly_bal-
+    live / ly_lives (150 and 1500 ticks of walking with falls and
+    respawns) show ZERO balloon lines - the walk is pop-free, the
+    jump is not. WHAT WOULD CLOSE THIS ROW: a leg that stands the
+    lion on a palm seat or the climb terrace with energy < 100 and
+    no jump on the way there (the worm column at 120,250 gives the
+    damage for free - PR-534's default fight), which then lands
+    the +32 and the cap.

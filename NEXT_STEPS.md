@@ -69938,3 +69938,143 @@ GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named verify-SKIPs
   bank - ZARIA_A.PLT already carries the climb (the 649,623 /
   623,587 / 555 lines) and the first PALMA table top is 475 -
   and the seat's own motion, the missing half OI-125 names.
+
+## PR-536 - THE BALLOON RULES, MEASURED: A PICKUP NEEDS A PERCH
+AND ONE K_GEN1 ENDS ALL SIX (owner goal 2026-11-26: "…collecting
+baloons to restore health…" - the balloon half, first evidence)
+KIND: read
+SUBSYSTEM: the BAL (balloon) class's touch method and the K_GEN1
+  bus in ZARIA.01 play mode - the goal's balloon clause.
+ADDRESSES: none read in this PR. The touch method and its
+  (x+10,y+10) point are PR-521's; the layer the ANI2 placements
+  carry is PR-207/208's (OZ `planies` cell letters, the A of
+  `.TALAB.` = the lion's plane); the WALK contact 32 is PR-97's
+  re-pin; the 100 px apex is PR-253's closed form; the seat and
+  terrace lines are PR-335/342/274-287's. What this PR adds is
+  the DATA census of the six placements against those lines, and
+  the port's own measured behaviour.
+NAMES: BAL, balonik.mov, A_DEAD, dym, sample=14, K_GEN1,
+  K_GEN2, POCISK, kokos.mov, A_RZUT, LINA, DRABINKA, A_DROP,
+  KORONA, A_TWIST, WODA, A_RUN_AF, ANI2.DES, ZARIA_A.PLT,
+  A_JUMP, A_JUMP_S, A_DRAP, A_KILOF, A_BORRING, A_FIGHT_END,
+  ly_ballive, ly_bal_pop, ZARIA.01.
+CODE: no: Makefile only - two verify-play legs, ly_ballive and
+  ly_bal_pop, both scoped LEO_PLAY_DANGER=0 LEO_PLAY_SEAT=0 per
+  the standing convention, so they measure the balloon and the
+  bus with nothing else in the run.
+HOOKS: none new.
+OPENS: OI-133 - the pickup path is shipped but unreachable by
+  any route the port can drive; its closing condition is named in
+  that row. OI-124's seat/palm half is the same precondition.
+CLOSES: none.
+CORRECTS: PR-535 - the working note that "any jump >= 6 ticks or a
+  long idle raises K_GEN1" overstates the idle half, and this
+  record's own first arithmetic on the balloon heights. The
+  working note said "any idle raises K_GEN1"; read off this
+  level's own LEW.ZAR, the raisers are A_JUMP lines
+  93-96 (rows 4-7), A_JUMP_S 67-69, A_DRAP rows 8/9, A_KILOF,
+  A_DEAD rows 1/2, A_BORRING 11-13, A_FIGHT_DOWN 9,
+  A_FG_PACKA_DN 8, A_FIGHT_END 4 and A_FALL_DOWN's alternate
+  `s idle` row; a 1500-tick walk with falls and respawns
+  (ly_lives) and the 150-tick ly_ballive raise NO balloon line.
+  A_WALK is clean and an ordinary run does not pop the balloons;
+  the JUMP does, at press+6. It also corrects THIS record's
+  first arithmetic, which claimed a >= 114 px gap to every
+  balloon: the box test is `top <= p < top + h` in y (the
+  element's own f0/f2 margins shift only its x), so with pos =
+  line - 32 a balloon whose y+10 lands on a walkable line IS
+  spanned. Re-derived below: the east-bank line 953,654;...;
+  1051,633 spans (990,608), (1805,652) spans (1880,310) and
+  1880,278;1960,290 spans (1542,272); only (1270,460),
+  (78,460) and (1600,113) are out of reach of every .plt line.
+  The blocker is therefore the ROUTE, not the height.
+GATE: make 0 warnings; verify-all fixtures rc=0 82 (ok);
+GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named verify-SKIPs
+      (/tmp/opencode/pr536_gateA.log, pr536_gatefreeA.log and
+      pr536_gateB.log, the final tree; the two new legs' own
+      logs are the re-generated ly_ballive.log / ly_balpop.log.)
+
+- WHY. The goal asks for collecting balloons to restore health.
+  The port has carried the pickup since PR-521 and no leg has
+  ever produced one, so before porting anything the question is
+  what the DATA requires. That measurement is this record.
+
+- THE GEOMETRY, re-derived after the first arithmetic was
+  wrong (see CORRECTS). ANI2.DES lines 23-28 place BAL six
+  times: (1542,272) (1270,460) (1880,310) (78,460) (990,608)
+  (1600,113); the tested point is (x+10,y+10) = 282/470/320/
+  470/618/123. The box test is `by0 <= p.y < by0 + h` with
+  by0 = pos_y + the element's f2 margin. For the walk art the
+  box BOTTOM is the contact line (PR-97): with the lion standing
+  on line L the box spans y = L-32 .. L. So a balloon whose
+  point falls on a walkable LINE is spanned by a lion standing
+  there, if his box overlaps in x too:
+    (990,608) -> point (1000,618): the east-bank line
+      `3 953,654;994,644;1007,646;1051,633` covers it - at
+      x 1007 the line is 646, the box y-window is 614..646, and
+      the point is inside; the DRECT pool box 988,645;1340,750
+      (PR-533's wet end) sits under the same spot.
+    (1880,310) -> point (1890,320): line `1 1805,652;1875,642`
+      ends at 1875,642 and the point x 1890 needs the lion a
+      little further east; line `2 1880,278;1960,290;2240,290`
+      (top 278-290) spans the point 320 - the box from 258 to
+      290 does NOT, so the real answer for this one is the
+      `1 1838,371;1925,347` terrace: pos 339..315, box 315..371
+      - point 320 INSIDE at x 1838..1925. In reach.
+    (1542,272) -> point (1552,282): `1 1427,180;1658,190` gives
+      box 158..190 - no; `1 1578,633;1601,625` / `1605,618;
+      1646,618` - no. The only span is a perch: the PALMA line
+      at 320 (the ANIPL2 table 930,320;992,320 is the west one;
+      the fruit/kokos table at 1542 is not a seat). OUT.
+    (1270,460) and (78,460) -> points 470: no .plt line at
+      470..502; the reachable perches are ANIPL2's PALMA 380
+      seat line (box 348..380 - no, 470 is BELOW it) and the
+      climb terrace at 517 (ly_climb seats at 483 grounded, box
+      451..483): (78,460)'s point 470 IS inside that box at
+      x 88 only if the lion stands at x ~70..106 on the canopy,
+      whose line runs 98,514;... - the canopy WEST end is x 98,
+      so the box there starts at x ~80: marginal, and the
+      terrace the climb ends on is at x 204, 116 px east. OUT
+      for (1270,460), marginal for (78,460).
+    (1600,113) -> point (1610,123): no line anywhere near. OUT.
+  So three of the six ARE spanned from ordinary ground and the
+  blocker is the ROUTE, not the height: the only one of those
+  three the level can WALK to is (990,608), and the path to it
+  crosses the 216 px chasm at 408..624, which in the port means
+  A_JUMP - and the jump is exactly what pops every balloon.
+  That is OI-124's carrier question, now with its consequence
+  measured: until a crossing exists that does not raise K_GEN1
+  (the seat chain PR-535 made standable, OI-125/OI-128), no
+  balloon leg can exist in ZARIA.01.
+
+- THE POP, measured. balonik.mov: `A_DEAD(1)=K_GEN1`, and
+  `[A_DEAD]` is `seq=dym` (smoke art) `sample=14` with rows to
+  `6,100,GEN K_GEN2` - no transition back out. ly_bal_pop
+  (`1:FWD 40:NONE 42:JUMP 44:FWD 50:NONE 90:JUMP`): the bus is
+  raised at 48 - A_JUMP row 4 `4,150,GEN K_GEN1` admit at
+  press+6 - and on that single tick the log carries EXACTLY SIX
+  `BAL/balonik.mov takes its own K_GEN1 line: state A_DEAD`,
+  plus 16 `POCISK/kokos.mov ... A_RZUT`, one KORONA A_TWIST, one
+  DRABINKA A_DROP, two LINA A_DROP and one WODA A_RUN_AF. The
+  second jump at 90 raises the bus again and produces NO further
+  BAL line: total 6, all at 48. One K_GEN1 is the level's single
+  "pop the balloons, throw the coconuts, drop the ladders"
+  moment, and the fruit clause of the goal is the SAME bus.
+
+- THE CLEANNESS, measured. ly_ballive (a 150-tick walk): ZERO
+  `BAL` lines in the whole log, the lion walks into the worm
+  columns and takes SEMI pushes only, and no `picked` line
+  appears - A_WALK's rows author no GEN. Together with the
+  existing ly_lives (1500 ticks of walking, five falls and the
+  respawn chain) that is the negative half: a balloon route does
+  not have to be jump-free by luck, it is jump-free by law.
+
+- NO CHANGE, AND WHY. Nothing was ported here: the mechanism the
+  goal describes is already in the code, and what blocks it is
+  the ROUTE plus the pop rule, both now pinned. The next steps
+  are therefore the crossing that raises no K_GEN1 - the seat
+  chain PR-535 made standable, OI-125's wake and OI-128's ride -
+  and the perch legs (T5's climb, the PALMA seats). With the
+  damage the fight PR-534 ships already on the way, the +32 and
+  its cap become a pinnable number the moment such a leg exists:
+  that is OI-133's closing condition, named there.
