@@ -9682,12 +9682,37 @@ OI-134: the fruit chain - no fruit object is ever placed in a
     carries), not a missing half of the engine. What IS missing
     from the port is the walls themselves - see OI-135: the
     same probe reaches x 2422, past the authored 2240 edge.
+    PR-542 CLOSED THE ROUTE QUESTION AND GOT THE PICK ITSELF.
+    verify-play's ly_kilof walks the east bank, jumps from the
+    low ground at 1517,656 onto the platform
+    `1 1755,626;1814,619` that zaria_a.plt authors UNDER the
+    box, lands INSIDE it (866: pos 1788,591 - the walk contact
+    is 32 px, so the pick window is that line's x 1760..~1789
+    and nothing else), and the same tick prints `KILOF_PL box
+    1760,590;1832,620 answered the player at (1788,591):
+    0x100000000`. He hangs off its east end (874: A_DRAP at
+    1828,590, still inside) and FIRE+F4 spends that one-frame
+    answer: 875 `A_DRAP -> A_KILOF`, 259 rows, the whole authored
+    palm climb - the `m 9,-40` M pairs, the GOTO_REL 3 loop, up
+    to pos 1929,387, out through its own
+    `A_JUMP_S(2)=AC_BREAK_NEXT` at 1136. Its controls are the
+    two halves of the rule: no keys = FIVE answers and ZERO
+    picks (0x4b500's rectangle pass is unconditional;
+    LEO_PLAY_ASK gates only the ladder contact-point asks);
+    LEO_PLAY_LRCLAMP=1 = ZERO answers and the WIND-UP
+    A_KILOF_PR instead, 267 rows. So item (b) below is ANSWERED
+    for AC_KILOF - the raiser is the box, no [obj+0x30] parent
+    field needed - while AC_STONE is still raised by nothing (the
+    six rectangle verbs give only AC_RECT/AC_DRECT/AC_DRECT2/
+    AC_KILOF), and the run has ZERO A_KAMIEN rows. What is still
+    missing is a COCONUT, not a pick: A_KILOF's rows move only
+    the lion.
     WHAT WOULD CLOSE THIS ROW, in order: (a) read the GRABG /
     GRABOBJ family and the .grp members and place the two
-    fruit; (b) read AC_KILOF/AC_STONE's raiser with its parent
-    gate and raise it on contact; (c) build the object velocity
-    channel WITH the CHECK_LN support, then a leg that hangs,
-    collects and reaches A_KILOF, and a coconut that flies the
+    fruit; (b) CLOSED by PR-542 for AC_KILOF (the KILOF_PL box
+    answer, measured end to end); (c) build the object velocity
+    channel WITH the CHECK_LN support, then a coconut that flies
+    the
     `F 1200,-300` + `G=0,80` arc and lands its ATC_ON window on
     the lion. The window is authored (`A_DOSTAL(1)=AC_ENEMY_ATC`
     at LEW.ZAR 857 and the [A_DOSTAL] block at 338: seq=hit,

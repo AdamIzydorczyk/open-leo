@@ -4184,6 +4184,139 @@ ifeq ($(PX_DATA),1)
 	  && echo "play east bank walk (PR-541): the stop at x 1000 is the PORT, not the level - with the lew_rect x stand-in off (the default; the engine writes those four integers at 0x4d3ba and reads them nowhere) the walk CROSSES x 1000 at 1002,613, follows the authored east shelf `3 953,654;...;1051,633` line-for-line to the foot (1038,605 = feet 637 on the line), steps off its END at x 1051 into the water and arrives in the same pool PR-529's dive reached from x 990 - this time under its own feet, walking: A_WPAD wet at 1073,676 inside DRECT,988,645;1340,750, its A_WYJSCIE line and the stage re-entry (the PR-526 dive end) at 735; max grounded x is the shelf's own end, 1049. LEO_PLAY_LRCLAMP=1 is the named control: the same script stays at 1000,613 with v 0,0, ZERO A_WPAD (ok)" \
 	  || { echo "play east bank walk grep FAILED"; \
 	         tail -8 /tmp/opencode/ly_east_walk.log /tmp/opencode/ly_east_clamp.log; exit 1; }
+# PR-542 (the goal's "collecting fruits" clause): THE PICK RUNS.
+# ZARIA.01 authors the AC_KILOF raiser as a rectangle, ANI2.DES
+# line 20 `KILOF_PL,1760,590;1832,620`, and the physics step asks
+# it for the player every step (0x4b500 -> the rectangle class's
+# +0x78 verb; KILOF_PL's is 0x1e3a0: the askable probe, then the
+# facing verb must be POSITIVE - 0x239f0 reads [obj+0x6d] - then
+# the point test of 0x1e405 on the PRESENTED point, the position
+# block). It raises AC_KILOF, bit 0x100000000, which only ONE
+# line in the shipped data consumes: `A_KILOF(1)=K_FIRE,AC_KILOF,
+# K_F4` in the [A_DRAP] block, LEW.MOV 462. So the question is
+# geometry: can the lion's position point ever sit inside that
+# 72x30 box while he is in the hang? The level answers YES and
+# the port had never walked there. Two authored .plt lines run
+# UNDER the box - `1 1755,626;1814,619` and `1 1805,652;1875,
+# 642` - and the WALK contact keeps the feet 32 px below the
+# position point, so standing on the first line puts the point at
+# 587..594 and the box's own floor 590 leaves x 1760..~1789: a
+# 29 px window of authored ground. Below it the east-bank ground
+# is at feet 683..691 (point 651) - 60 px under the box floor -
+# so the ONLY way in is the air route. This leg walks the
+# ly_east_walk prefix to the far bank (742: pos 1357,628
+# grounded 1, east along it to 1499,657 at 816) and a JUMP at
+# 822 from the low ground at 1517,656 rises through the whole
+# 60 px and LANDS on the platform: tick 866 pos 1788,591
+# grounded 1, INSIDE the box - and the box says so in the same
+# tick ("answered the player at (1788,591): 0x100000000"). He
+# then steps off its east end and hangs: A_FALL_DOWN -> A_DRAP
+# at 874, pos 1828,590, still inside, and with FIRE+F4 held the
+# next step spends the one-frame answer: the FIRST A_KILOF line
+# this repo has ever printed, 875 (seq=use frame 1 pos
+# 1829,593, frame 1 held over 875-876 by its `1,100,rdir` +
+# `1,200,lock` pair). The state IS the palm climb - seq=use,
+# frames 1..10, the authored `m 9,-40` M pairs moving him (878:
+# 1852,627) and its `1,300,GOTO_REL 3` row looping him up: 1096
+# at pos 1920,427, 1132 at 1929,387 - two hundred px above the
+# ground he picked from - until the row list's end raises
+# AC_BREAK_NEXT and its authored exit in that same block,
+# `A_JUMP_S(2)=AC_BREAK_NEXT`, takes him: 1136 A_JUMP_S. Counted
+# over the 1150-tick run: 259 A_KILOF rows, 1 pick, 1 exit,
+# ZERO A_KILOF_PR. Fifteen rectangle answers in all: the five
+# KILOF_PL ones (866, 867, 874, 875, 876) and TEN from the
+# other box ANI2.DES line 19 authors, `RECT,1820,380;1970,410` -
+# the climb carries the lion's own point straight through it and
+# raises AC_RECT, which this very block consumes on another line
+# (`A_KILOF(25)=AC_RECT,K_GEN1`); this run never reached that
+# row and went out through AC_BREAK_NEXT instead.
+# TWO CONTROLS, same script. Stop the script at 867 (no FIRE+F4)
+# and the box still answers FIVE times while he stands and hangs
+# inside it, with ZERO A_KILOF rows: the question is asked every
+# step regardless of the keys (LEO_PLAY_ASK only gates the ladder
+# contact points, the rectangle pass is unconditional as 0x4b500
+# is), and it is the keys that spend the answer. And with
+# LEO_PLAY_LRCLAMP=1 - PR-541's switch, the pre-541 world - the
+# walk never gets past 1000,613, the box answers ZERO times, and
+# the same FIRE+F4 in the same hang gives the authored WIND-UP
+# instead of the pick: 874 A_JUMP at 1000,612, 267 A_KILOF_PR
+# rows and one A_DRAP -> A_KILOF_PR (PR-539's state). The
+# difference between A_KILOF and A_KILOF_PR, measured, is exactly
+# the box answer.
+# WHAT THIS STILL DOES NOT DO, and OI-134 stays open for it: no
+# coconut appears anywhere. A_KILOF's rows move only the LION (the
+# `m` pairs are the lion's own body); the fruit's own flight -
+# POCISK/KOKOS [A_RZUT] `1,1,F 1200,-300` under `G=0,80` - is the
+# object-side velocity channel of OI-134 item (3), and the fruit
+# OBJECT itself is item (1), the never-read GRABG group lines. The
+# leg sets LEO_PLAY_DANGER=0 to pin ONE deterministic route: with
+# the PR-534 fight default ON the same script diverges at once
+# (the probe ly_kilof_a.log never passes x 1278 and runs 68
+# A_DOSTAL rows on the west bank). The fight is not the problem,
+# and it is live IN this leg too: at 879, three ticks after the
+# pick, `NOSOROG/nos.mov ATTACKS through its window: damage 10 ->
+# lion energy 90` - the rhino's authored damage=10. What the data
+# says about that hit is in the pick's own block: [A_KILOF] has NO
+# `A_DOSTAL(1)=AC_ENEMY_ATC` line, unlike [A_FIGHT] (658),
+# [A_FIGHT_DOWN] (717) and [A_FG_PACKA_DN] (741) - the climb is
+# NOT interruptible, and the leg shows exactly that: the damage
+# lands and there are ZERO A_DOSTAL rows while A_KILOF runs.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=46 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_ASK=1 \
+	  LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD 533:JUMP 600:FWD 686:FWD,JUMP 742:FWD 822:FWD,JUMP 867:FWD 874:FIRE,F4" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_kilof.ppm LEO_LEVEL_PPM_TICK=1150 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_kilof.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play coconut pick FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_kilof.log; exit 1; fi
+	@grep -q 'play tick 866: state A_JUMP seq jump frame 8 pos 1788,591 grounded 1' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play tick 866: KILOF_PL box 1760,590;1832,620 answered the player at (1788,591): 0x100000000' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play tick 874: state A_DRAP seq idle frame 1 pos 1828,590 grounded 0' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play: A_DRAP -> A_KILOF$$' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play tick 876: state A_KILOF seq use frame 1 pos 1829,593 grounded 0' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play tick 878: state A_KILOF seq use frame 2 pos 1852,627 grounded 0' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play tick 1096: state A_KILOF seq use frame 5 pos 1920,427 grounded 0' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play tick 1132: state A_KILOF seq use frame 2 pos 1929,387 grounded 0' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play: A_KILOF -> A_JUMP_S$$' /tmp/opencode/ly_kilof.log \
+	  && grep -q 'play tick 1136: state A_JUMP_S seq fall_dn frame 3 pos 1929,385 grounded 0' /tmp/opencode/ly_kilof.log \
+	  && test "$$(grep -cE 'state A_KILOF seq' /tmp/opencode/ly_kilof.log)" -eq 259 \
+	  && test "$$(grep -cE 'state A_KILOF_PR seq' /tmp/opencode/ly_kilof.log)" -eq 0 \
+	  && test "$$(grep -c 'play: A_DRAP -> A_KILOF$$' /tmp/opencode/ly_kilof.log)" -eq 1 \
+	  && test "$$(grep -c 'answered the player' /tmp/opencode/ly_kilof.log)" -eq 15 \
+	  && echo "play coconut pick (PR-542): the pick state A_KILOF runs for the first time - the walk lands on the authored platform 1755,626;1814,619 INSIDE the KILOF_PL box (866: pos 1788,591, and the box answers AC_KILOF 0x100000000 in the same tick), the lion hangs off its east end (874: A_DRAP at 1828,590, still inside), FIRE+F4 spends that one-frame answer, and the palm climb runs to its authored end (259 rows, up to pos 1929,387, out through A_JUMP_S at 1136) (ok)" \
+	  || { echo "play coconut pick grep FAILED"; tail -12 /tmp/opencode/ly_kilof.log; exit 1; }
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=46 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_ASK=1 \
+	  LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD 533:JUMP 600:FWD 686:FWD,JUMP 742:FWD 822:FWD,JUMP 867:FWD" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_kilof_no.ppm LEO_LEVEL_PPM_TICK=1150 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_kilof_no.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play coconut pick no-key control FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_kilof_no.log; exit 1; fi
+	@test "$$(grep -c 'answered the player' /tmp/opencode/ly_kilof_no.log)" -eq 5 \
+	  && test "$$(grep -cE 'state A_KILOF seq' /tmp/opencode/ly_kilof_no.log)" -eq 0 \
+	  && test "$$(grep -cE 'state A_KILOF_PR seq' /tmp/opencode/ly_kilof_no.log)" -eq 0 \
+	  && env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	     LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=46 LEO_PLAY_DANGER=0 \
+	     LEO_PLAY_ASK=1 LEO_PLAY_LRCLAMP=1 \
+	     LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD 533:JUMP 600:FWD 686:FWD,JUMP 742:FWD 822:FWD,JUMP 867:FWD 874:FIRE,F4" \
+	     LEO_LEVEL_PPM=/tmp/opencode/ly_kilof_clamp.ppm LEO_LEVEL_PPM_TICK=1150 \
+	     ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	     > /tmp/opencode/ly_kilof_clamp.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play coconut pick clamp control FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_kilof_clamp.log; exit 1; fi
+	@grep -q '(x clamp ON, LEO_PLAY_LRCLAMP=1)' /tmp/opencode/ly_kilof_clamp.log \
+	  && grep -q 'play tick 874: state A_JUMP seq jump frame 8 pos 1000,612 grounded 1' /tmp/opencode/ly_kilof_clamp.log \
+	  && test "$$(grep -c 'answered the player' /tmp/opencode/ly_kilof_clamp.log)" -eq 0 \
+	  && test "$$(grep -cE 'state A_KILOF seq' /tmp/opencode/ly_kilof_clamp.log)" -eq 0 \
+	  && test "$$(grep -cE 'state A_KILOF_PR seq' /tmp/opencode/ly_kilof_clamp.log)" -eq 267 \
+	  && test "$$(grep -c 'play: A_DRAP -> A_KILOF_PR' /tmp/opencode/ly_kilof_clamp.log)" -eq 1 \
+	  && echo "play coconut pick controls (PR-542): the same script stopped at 867 gets FIVE box answers and ZERO pick rows - the rectangle pass is unconditional, the keys spend the answer; with LEO_PLAY_LRCLAMP=1 the walk never passes 1000,613, the box answers ZERO times and the SAME FIRE+F4 in the same hang gives the WIND-UP A_KILOF_PR instead (267 rows, one A_DRAP -> A_KILOF_PR): the difference between the pick and the wind-up is exactly the box answer (ok)" \
+	  || { echo "play coconut pick control grep FAILED"; \
+	         tail -12 /tmp/opencode/ly_kilof_no.log /tmp/opencode/ly_kilof_clamp.log; exit 1; }
+
 # PR-539 (owner goal 2026-11-26, the "collecting fruits and throwing"
 # clause): the lion's OWN throw chain, measured end to end. No code
 # changed - what these two legs add is that the throw was never once

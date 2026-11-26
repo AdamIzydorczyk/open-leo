@@ -6452,6 +6452,30 @@ what the port now lacks on that route is the walls themselves -
 new OI-135: ZAR.BLK's 0,0,700 and 2240,0,700 are the real
 edges, and the same probe runs to x 2422 and dies there.
 
+PR-542 (same owner goal) got the third clause its first PICK.
+verify-play's ly_kilof walks the east bank with the free x,
+jumps from the low ground at 1517,656 onto the platform
+`1 1755,626;1814,619` that zaria_a.plt authors under the
+KILOF_PL box, lands INSIDE it (866: pos 1788,591 - the walk
+contact is 32 px, so the pick window is that line's x
+1760..~1789), hangs off its east end (874: A_DRAP at 1828,590,
+still inside) and spends the one-frame AC_KILOF answer: 875
+`A_DRAP -> A_KILOF`, then the whole authored palm climb - 259
+rows, the `m 9,-40` M pairs, the GOTO_REL 3 loop, up to pos
+1929,387, out through the block's own
+`A_JUMP_S(2)=AC_BREAK_NEXT` at 1136. The two controls are the
+rule's two halves: press nothing and the box still answers five
+times with ZERO picks; run PR-541's LEO_PLAY_LRCLAMP=1 and the
+same keys in the same hang give the wind-up A_KILOF_PR instead
+(267 rows) - the difference between the pick and the wind-up is
+exactly the box answer. The rhino hits the lion mid-climb (879:
+`damage 10 -> lion energy 90`) and the climb does not stop,
+because [A_KILOF] authors no `A_DOSTAL` exit while [A_FIGHT],
+[A_FIGHT_DOWN] and [A_FG_PACKA_DN] all do. Still open, and
+OI-134 carries it: no coconut exists - the GRABG/.grp members
+are never read and the fruit's own `F 1200,-300` + `G=0,80` arc
+needs the object-side velocity channel.
+
 **T6. Level flow.** `end_level` directive, `AC_LEAVE`, the vulture ride of
 ZARIA I, the map -> level -> map loop, TUNGA I <-> II exchange
 (`AC_XCHG_LEVEL`), lives/energy persistence, game over. STATUS.LEO progress is

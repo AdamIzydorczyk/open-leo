@@ -70697,3 +70697,165 @@ GATE-FIXTURE-FREE: rc=0 16 (ok) + 22 named verify-SKIP
   the next half, and it is the same query the seat-carry
   (OI-128) and the object velocity channel (OI-134 item 3)
   need.
+
+## PR-542 - THE COCONUT PICK RUNS: the lion stands inside the
+## KILOF_PL box, hangs, and A_KILOF - the palm climb - executes
+## for the first time in this repo
+KIND: gate
+SUBSYSTEM: ZARIA.01's authored pick: the KILOF_PL rectangle's
+  AC_KILOF answer (ANI2.DES line 20 `KILOF_PL,1760,590;1832,
+  620`) spent by the one line that consumes it,
+  `A_KILOF(1)=K_FIRE,AC_KILOF,K_F4` at LEW.MOV 462 in the
+  [A_DRAP] block (450); the state A_KILOF itself (LEW.MOV
+  510-545). Three verify-play legs - ly_kilof plus its no-key
+  and clamp controls - and no code changed.
+ADDRESSES: 0x1e3a0, 0x1e405, 0x23e00, 0x239f0, 0x3f1c0,
+  0x44ec0, 0x4a050, 0x4b500, 0x523f0, 0x98274.
+NAMES: KILOF_PL, AC_KILOF, A_KILOF, A_KILOF_PR, A_DRAP,
+  A_JUMP_S, AC_BREAK_NEXT, K_F4, GOTO_REL, m 9,-40,
+  LEO_PLAY_ASK, LEO_PLAY_LRCLAMP, ly_east_walk, ly_kilof,
+  ly_kilof_no, ly_kilof_clamp, OI-134.
+CODE: no: none. The legs read the shipped build; the record's
+  findings are the legs and the OI-134 row.
+HOOKS: none new. The legs use the shipped LEO_PLAY_SCRIPT,
+  LEO_PLAY_ASK, LEO_PLAY_DANGER and PR-541's LEO_PLAY_LRCLAMP=1
+  as controls.
+OPENS: none new.
+CLOSES: none - OI-134 stays open (its items (1) and (3) are
+  what a coconut still needs), but its item (4)'s "is the route
+  blocked" question is now answered in the positive and the
+  measured route is written into that row.
+CORRECTS: PR-539's "the authored release states are
+  unreachable in the shipped game data, not merely unported" for
+  the A_KILOF half of that sentence. They are reachable: the
+  KILOF_PL box PR-329 read is a raiser the level DOES place,
+  the port DOES ask it every step, and a walk now stands the
+  lion inside it. (The stone half is untouched: this run still
+  prints ZERO A_KAMIEN, A_KAMIEN_PR and AC_STONE lines, and the
+  six rectangle verbs PR-329 read raise only AC_RECT, AC_DRECT,
+  AC_DRECT2 and AC_KILOF - AC_STONE's raiser is still unnamed.)
+GATE: make 0 warnings; verify-all fixtures rc=0 89 (ok);
+GATE-FIXTURE-FREE: rc=0 16 (ok) + 22 named verify-SKIP
+      lines
+      (/tmp/opencode/pr542_build.log BUILD_EXIT=0 zero
+      warnings; pr542_ga1.log, pr542_ga2.log and pr542_ga3.log
+      - three runs, all EXIT=0 at 89 (ok), zero FAILED,
+      against PR-541's 87: this leg's two ok-lines are the
+      difference; pr542_gnf.log and pr542_gnf2.log EXIT=0 at
+      16 (ok) and the same 22 SKIP lines PR-539/PR-541
+      logged; pr542_vp1.log is verify-play GREEN at 40 legs;
+      pr542_docs.log rc=0 - the width ratchet unchanged
+      (HANDOFF 41/41, NEXT_STEPS 62/62, README 12/12), the
+      register at 135 rows with 0 unresolved OI ids,
+      RE_INDEX byte-identical at 527 records. The legs' own
+      logs are ly_kilof.log, ly_kilof_no.log and
+      ly_kilof_clamp.log; the probes that found the route are
+      ly_kpl_82[246].log, ly_kpl2_82[24].log, ly_kpl3.log,
+      ly_kpl4.log, ly_kpl_long.log, and the fight-default
+      probe is ly_kilof_a.log / ly_kilof_b.log.)
+
+- THE QUESTION PR-541 LEFT, AND THE ANSWER IS GEOMETRY. The
+  pick needs three things in ONE step (the one-frame rule,
+  OI-017 closed by PR-151): the lion in A_DRAP, K_FIRE and
+  K_F4 held, and AC_KILOF raised by the box. The last is a
+  point test: 0x4b500 asks the placement, KILOF_PL's verb
+  0x1e3a0 requires the askable probe then the facing verb
+  0x239f0 ([obj+0x6d]) POSITIVE then the point test of 0x1e405
+  against the box 0x4a050 builds into a temporary of class
+  0x98274 - the PRESENTED point, which in this port is the
+  position point (PR-321). So: can (x,y) ever sit inside
+  1760..1832 x 590..620? The level says yes and the port had
+  never walked there. zaria_a.plt authors TWO lines under the
+  box - `1 1755,626;1814,619` and `1 1805,652;1875,642` - and
+  the WALK contact law keeps the feet 32 px below the position
+  point (measured again here: feet 623 on that line reads pos
+  591), so standing on the first line puts the point at
+  587..594 and the box's own floor 590 leaves the window
+  x ~1760..1789: 29 px of authored ground, entirely inside the
+  box's x-range. The east-bank ground under it is at feet
+  683..691 - point 651, sixty px below the box floor - so the
+  way in is the air route, exactly as OI-134 (4) guessed and
+  PR-541 made possible.
+- THE ROUTE, TICK BY TICK. The leg starts with ly_east_walk's
+  script (walk, two jumps over the 408..624 chasm, east along
+  the mid-water stones, the pool cycle) and PR-541's free x lets
+  it cross the water: 740 `A_JUMP pos 1340,630 grounded 1`,
+  then the far bank under its own feet - 742: 1357,628, 808:
+  1491,657, 816: 1499,657. A JUMP at 822 from pos 1517,656
+  (feet 688, the low east ground) rises through the whole 60 px
+  and LANDS on the box's own platform: 866 `A_JUMP pos 1788,591
+  grounded 1` - inside 1760..1832 x 590..620 - and the same
+  tick prints the answer the engine has been asking for all
+  along: `KILOF_PL box 1760,590;1832,620 answered the player at
+  (1788,591): 0x100000000`. The lion walks two steps east, runs
+  off the platform's end at 1814, and hangs: 874
+  `A_FALL_DOWN -> A_DRAP`, pos 1828,590 - still inside. FIRE
+  and F4 are held from 874, so the very next step spends the
+  one-frame bit: 875 `play: A_DRAP -> A_KILOF` and the first
+  A_KILOF row at pos 1829,593, frame 1 held across 875-876 by
+  its `1,100,rdir` + `1,200,lock` pair. Counted over the
+  1150-tick run: ONE pick, 259 A_KILOF rows, ZERO A_KILOF_PR.
+  Fifteen rectangle answers in all - the five KILOF_PL ones
+  (866, 867, 874, 875, 876) and TEN from the OTHER box
+  ANI2.DES line 19 authors, `RECT,1820,380;1970,410`: the climb
+  carries the lion's own point straight through that box and
+  raises AC_RECT, which this same block consumes on a different
+  line (`A_KILOF(25)=AC_RECT,K_GEN1`); this run never reached
+  that row.
+- THE STATE IS THE CLIMB, AND IT ENDS AS AUTHORED. A_KILOF
+  (LEW.MOV 510-545, control=BY_TIME|CHECK_ALL, T=50,50, G=0,0,
+  seq=use) walks its rows: frames 1..10 at 300 raw (3 ticks a
+  row at the 100 feed of 0x4c8b7), the authored `m 9,-40` M
+  pairs MOVING him as the frames end (878: pos 1852,627 - the
+  port has applied `M` since PR-89, and this is the first run
+  where an authored M pair moves the lion through a pick), then
+  `1,300,GOTO_REL 3` (532) loops him up the palm: 1096 at pos
+  1920,427, 1132 at 1929,387 - two hundred px above the ground
+  he picked from. The list's end raises AC_BREAK_NEXT, and this
+  block's own exit line `A_JUMP_S(2)=AC_BREAK_NEXT` (518) takes
+  him: 1136 `A_KILOF -> A_JUMP_S`, pos 1929,385. Nothing here
+  was invented: every frame, move and exit is the authored row
+  list running.
+- THE RHINO HITS DURING THE CLIMB, AND THE CLIMB DOES NOT STOP.
+  Three ticks after the pick, 879: `NOSOROG/nos.mov ATTACKS
+  through its window: damage 10 -> lion energy 90` - the rhino's
+  authored `damage=10` (ZWIERZ1.DES), its window open, the
+  lion's energy down to 90. And the pick keeps running: this
+  leg has ZERO A_DOSTAL rows. That is authored, not a gap -
+  [A_KILOF] carries no `A_DOSTAL(1)=AC_ENEMY_ATC` line, while
+  [A_FIGHT] (658), [A_FIGHT_DOWN] (717) and [A_FG_PACKA_DN]
+  (741) all do. The fight machinery of PR-534/PR-531 is
+  therefore live on the east bank in both directions; the leg
+  sets LEO_PLAY_DANGER=0 only to pin ONE deterministic route,
+  because with the fight default ON the same script diverges at
+  once (the probe ly_kilof_a.log never passes x 1278 and runs
+  68 A_DOSTAL rows on the west bank).
+- TWO CONTROLS, BOTH THE SAME SCRIPT, AND THEY ARE THE POINT.
+  (a) Stop the script at 867 and press nothing: the box ANSWERS
+  FIVE TIMES while the lion stands and hangs inside it (866,
+  867, 874, 875, 876) and the pick count is ZERO. The
+  rectangle pass is unconditional - LEO_PLAY_ASK gates the
+  ladder contact-point asks (0x3f1c0/0x44ec0), not 0x4b500's
+  rectangle list - so the question is asked every step and it
+  is the KEYS that spend the answer. (b) Run the full script
+  with LEO_PLAY_LRCLAMP=1, PR-541's switch: the walk never
+  gets past 1000,612, the box answers ZERO times, and the same
+  FIRE+F4 in the same hang gives the WIND-UP instead of the
+  pick - 267 A_KILOF_PR rows and one `A_DRAP -> A_KILOF_PR`,
+  PR-539's state. Measured side by side, the difference between
+  A_KILOF and A_KILOF_PR is exactly the box answer.
+- WHAT IS STILL MISSING, AND OI-134 STAYS OPEN FOR IT. No
+  coconut appears anywhere in this run. A_KILOF's rows move
+  only the LION; the fruit's own flight (`POCISK`/KOKOS
+  [A_RZUT] `1,1,F 1200,-300` under `G=0,80`) is the
+  object-side velocity channel of item (3), and the fruit
+  OBJECT itself is item (1) - the GRABG group lines and the
+  never-read .grp members. Also measured, and named so the leg
+  is not mistaken for a lucky run: the leg sets
+  LEO_PLAY_DANGER=0 on purpose, because with the PR-534 fight
+  default ON the rhino hits the lion at about x 1800 (the
+  probe ly_kilof_a.log walks the same script and shows
+  `A_DOSTAL seq=hit` at 882) and the whole east-bank timeline
+  shifts. The fight machinery is not the problem - that probe
+  is a hit landing - it is that this leg pins one deterministic
+  route.
