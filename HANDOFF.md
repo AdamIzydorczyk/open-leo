@@ -3326,9 +3326,21 @@ record.
   gate on, 90 checks red in 12 legs (grouped in the record); plus 69
   more if
   LL_PLAY_INTENT_FULL moves to the keyboard's 20 (OI-011's answer is
-  recorded in the header, the constant is NOT moved). T3 is PR-519:
-  re-derive those legs on the live A_JUMP/A_WALK numbers, then flip
-  the constant and the default in one step.
+  recorded in the header, the constant is NOT moved). PR-519 then
+  tested a tempting reading of the law and killed it with data: the
+  gate-on path cannot start a BY_X walk entered at v=0 (the row feed
+  reads the word the last physics pass left), so "state entry is an
+  admit" was wired and measured (gate off 0 FAILED; gate on 94 vs 90,
+  the red MOVING between legs) - and the four A_JUMP entries in
+  pr516i show the entry instead HOLDS the row clock at 0 for
+  0.08-0.16 s, ARMS the one-shot pull without firing it, carries the
+  x register and clears the y one, and runs no physics: the pull and
+  the physics belong to the same ROW admit (first flight sample
+  -1145 = the authored -1200 dragged once). The patch is reverted;
+  the cold-start question stays open at OI-015 with the capture or
+  RE call that would settle it named. T3 is PR-520: re-derive the
+  gate-on legs on the authored F/T/G and the live numbers, answer the
+  cold-start feed, then flip the constant and the default together.
 
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`

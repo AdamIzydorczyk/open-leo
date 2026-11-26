@@ -379,6 +379,27 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     physics, since with no rows nothing would ever admit) stays open
     here too.
 
+    PR-519 MEASURED THE STATE ENTRY and withdrew its own guess. The
+    gate-on path deadlocks a BY_X state entered at v=0 (its feed
+    reads the word the last physics pass left, so 0 feeds nothing and
+    nothing admits - the PR-110/PR-114 A_PUSH leg cannot build any
+    velocity), and "entering a state is an admit" was tried in the
+    code (gate on: 94 red checks vs 90, the red MOVING between legs)
+    and reverted: the four A_JUMP entries in pr516i (380.31, 384.61,
+    389.12, 397.18 s) show the entry sample with accum_a1 = 0 HELD
+    at 0 for 4-8 samples (0.08-0.16 s) before the first +100,
+    gate_95 = 1 armed but UNFIRED through that hold, v_raw_x carried
+    across untouched (1, 2, -12, 1) while v_raw_y is 0 at every entry
+    (389.10 held 250 before it), and the position unmoved. So the
+    entry is NOT an admit; the pull and the physics pass belong to the
+    same ROW admit (the first flight sample is -1145 = the authored
+    -1200 dragged once), which is what PR-518's "the entry register
+    is mid-decay" sentence had mistaken. STILL OPEN HERE: the
+    cold-start feed (a walk entered from a true stop has no feed in
+    the literal reading, and the live walk entries all carry a
+    non-zero x register, so this capture cannot say), the entry's
+    accumulator HOLD and y-clear, and the 90 gate-on red checks.
+
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
   notes: the same constant 100 behind a `cmp [obj+0xbe],0` gate;

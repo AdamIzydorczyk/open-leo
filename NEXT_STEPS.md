@@ -67652,3 +67652,99 @@ GATE: make 0 warnings; verify-all fixtures rc=0 73 (ok);
 GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - the 21 in
   PR-517's line under-counted by one, that run's log lists 22 SKIP
   target names too
+
+## PR-519 - THE STATE-ENTRY STEP IS MEASURED, NOT ASSUMED: THE ENTRY
+## ZEROES THE ROW ACCUMULATOR AND HOLDS IT AT 0 FOR 0.08-0.16 s, ARMS THE
+## ONE-SHOT PULL WITHOUT FIRING IT, KEEPS THE X REGISTER AND CLEARS THE Y
+## REGISTER - AND THE I ROW'S PULL AND ITS FIRST PHYSICS STEP ARE THE SAME
+## ADMIT, NOT THE ENTRY
+
+```
+KIND: read
+SUBSYSTEM: pr516i's four A_JUMP entries - the state-entry semantics
+  PR-518's gated path needs, and one reading of it that this PR tried
+  in the code and withdrew. (1) THE TRY, AND WHY IT FELL. PR-518's
+  gate-on path deadlocks a BY_X state entered at v=0: its row feed
+  reads the word the last physics pass left, so with that word 0 it
+  never admits and never runs the pass that would fill it - the
+  PR-110/PR-114 A_PUSH leg (F=1000,T=40, one row `1,1000`) cannot
+  build any velocity. Wiring "entering a state is an admit" changed
+  the shape of the red (gate off 0 FAILED unchanged; gate on 94,
+  with PR-82's walk-distance legs and PR-85's turn going green and
+  the PR-259 BY_TY climb picking up 7) but it is NOT what the engine
+  does, so the code is reverted here and only the measurement stays.
+  (2) WHAT THE ENTRY SAMPLES SAY. Four entries into A_JUMP (380.31,
+  384.61, 389.12, 397.18 s, all from A_DOSTAL): at the entry sample
+  accum_a1 is 0 - the transition zeroes it, the rule PR-110 took from
+  obj_transition and the port keeps - and it STAYS 0 for 4 to 8
+  samples (0.08-0.16 s) before the first +100 feed appears; gate_95
+  is 1 at the entry and stays 1 through that hold, so the one-shot
+  I/F pull is ARMED at the entry and NOT fired there; v_raw_x carries
+  across the transition untouched (1, 2, -12, 1), while v_raw_y is 0
+  at every entry although the state before one of them held 250
+  (389.10) - on this entry the y word is cleared and the x word is
+  kept; the position does not move. (3) THE PULL AND THE PHYSICS ARE
+  ONE STEP. The first sample with a flight y register already shows
+  the dragged value: the authored I pair is (150,-1200) and the first
+  observed v_raw_y is -1145, exactly -1200 dragged once by the
+  T2=1/G=0,55 law. So the admit that takes the I row runs the pull
+  and the physics pass together. That had been read as "the register
+  is mid-decay at the entry, so the entry step carries physics" - it
+  is not: it is the first sample AFTER the row's admit. Corrected at
+  OI-015. (4) THE DEADLOCK STAYS OPEN, AND THE TRACE CANNOT CLOSE IT.
+  Because the x word carries across an entry (paragraph 2), the
+  engine's mode-0 feed is never 0 in these four cases; but a walk
+  entered from a true stop - a spawn, or a lion whose x register
+  reached the sign-cross 0 - has no feed and no admit under the
+  literal reading. The live game's walk entries all carry a non-zero
+  x register, so this capture cannot answer: it needs a spawn-plus-
+  first-key capture, or RE of 0x543a0's mode-0 arm and whoever writes
+  [obj+0xca] on a transition.
+ADDRESSES: 0x543a0 (the dispatcher's per-mode row feed, the mode-0
+    arm), 0xca ([obj+0xca], the word that feed reads), 0x95
+    ([obj+0x95], gate_95, the one-shot pull flag the entries show
+    armed and unfired), 0xa1 (the row accumulator, accum_a1, zeroed
+    at the entry and held at 0), 0x521f0 (the record step whose
+    compare the entry does not reach), 0xc2 and 0xc6 (the two
+    velocity registers: x kept across the entry, y cleared),
+    0x52381 (the row-set method the transition's seek goes through).
+NAMES: A_JUMP, A_DOSTAL, A_PUSH, ll_play_row_physics,
+  LEO_PLAY_ROW_PHYSICS, entry_admit (tried and reverted),
+  apply_row_pull, obj_transition, pr516i.jsonl, OI-015, OI-011,
+  OI-012.
+CODE: no: the only code touched was an experiment in ported/ll_play.c
+  (an entry_admit flag and its use in the gated row clock), measured,
+  then reverted; the tree is PR-518's. The measurement lives in
+  OI-015 and this record; the analysis script is
+  /tmp/opencode/pr519_entries.py over the existing capture.
+HOOKS: none.
+OPENS: OI-015 (the cold-start feed question; the entry's 0.08-0.16 s
+  accumulator HOLD and the y-register clear at entry, both measured
+  and not modelled; the 90 gate-on red checks), OI-011 (the constant
+  still 10, the answer recorded), OI-012 (the nfr==0 states)
+CLOSES: none
+CORRECTS: no published claim - this PR's own first reading, recorded
+  before it was withdrawn: "the register is mid-decay at the entry
+  sample, so the
+  engine runs one physics step on the entry admit": the mid-decay
+  value is the first sample after the ROW's admit, and the entry
+  samples themselves carry no physics (registers carried or cleared,
+  position unmoved, accumulator 0).
+MEASURED: the four A_JUMP entry windows above, printed sample by
+  sample from pr516i.jsonl (174,852 samples, the lion 0x524400);
+  the withdrawn experiment's counts: gate off rc=0 0 FAILED
+  (/tmp/opencode/pr519_st_off.txt), gate on 94 FAILED
+  (/tmp/opencode/pr519_st_on.txt) against PR-518's 90, grouped by
+  leg.
+```
+
+- WHY. PR-518 left a law that could not start a walk, and the
+  tempting one-line fix was a reading of the trace rather than a
+  reading. Checking it against the entry samples cost one script and
+  killed the reading: the entry is not an admit - it holds the row
+  clock, arms the pull and leaves the registers alone. That is worth
+  more than the reverted patch, because PR-520 now knows the real
+  shape of the entry and exactly which capture or RE call would
+  settle the cold case.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
