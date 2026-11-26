@@ -4091,6 +4091,97 @@ ifeq ($(PX_DATA),1)
 	  && echo "play palms window (PR-537): the air route reaches the authored terrace 922,509;968,508 at 927,477 grounded 1, and the SAME jump crosses the 475-height inside the seat's x-bracket (855,470 / 879,472) WITHOUT a catch - the landing test needs the descent (ll_play.c: p->vy >= 0 together with ground_y >= hit.y - 1.0) - while the next jump peaks above the 380 seat line at exactly one x, 1000, six ticks wide and 53 px outside the seat's own bracket 885..947: zero rows at pos 348 or 443. The PALMA seat is unreachable in x, not in height, and only A_JUMP (from A_WALK/A_RUN) has the reach - a JUMP pressed in A_DRAP gives the smaller A_JUMP_S pull" \
 	  && echo " (ok)" \
 	  || { echo "play palms window grep FAILED"; cat /tmp/opencode/ly_pal_top.log; exit 1; }
+# PR-539 (owner goal 2026-11-26, the "collecting fruits and throwing"
+# clause): the lion's OWN throw chain, measured end to end. No code
+# changed - what these two legs add is that the throw was never once
+# observed. ZARIA.01 LEW.ZAR's [A_DRAP] transition table (the state the
+# ly_climb leg reaches at 204,489, lines 456-471 of the authored text)
+# is the ONLY place in that whole script where the throw lines appear -
+# measured over the file, A_KILOF_PR/A_KAMIEN_PR/A_RZUT are named as
+# targets in exactly one state block each, and the declared-state list
+# (lines 35-36) apart:
+#     A_KILOF(1)=K_FIRE,AC_KILOF,K_F4    A_KILOF_PR(1)=K_FIRE,K_F4
+#     A_KAMIEN(1)=K_FIRE,AC_STONE,K_F3   A_KAMIEN_PR(1)=K_FIRE,K_F3
+#     A_RZUT(1)=K_ALT
+# so the authored throw is a HANGING action: the lion must be in A_DRAP
+# (off a ledge, the ly_climb route) and hold FIRE with F4/F3, or ALT.
+# Both legs therefore start from ly_climb's own script and differ only
+# after the hang at 263: 262:NONE releases UP so A_LOOKUP's K_UP line
+# cannot win, and the keys under test are pressed at 264.
+#
+# ly_thr_spit presses ALT. A_RZUT is control=BY_TIME|CHECK_ALL|FRAME_REV,
+# G=0,130, sample=7, seq=throw and its row list is eight rows of 300
+# (thresholds in 1/100-iteration units, PR-109/PR-110; the feed is the
+# 100 of 0x4c8b7 one iteration per tick, PR-135) = 3 ticks a row, so
+# frames 1..8 must appear at 264,266,269,272,275,278,281,284 and the
+# list must end 24 ticks later, at 287/288. The exit IS authored:
+# `A_DRAP(1)=AC_BREAK_NEXT`, and AC_BREAK_NEXT is the bit the port arms
+# when the row list wraps (PR-162 F1b, the port's brk_arm), which is why
+# the state returns on its own at 288 and runs again at 289 while ALT is
+# held - one complete throw, then a second entry, per the counts below.
+# The seat moves with the art: the state entry re-seats by the new art's
+# own documented contact (PR-97), idle 28 -> pos 489 and throw -> pos
+# 491, and back to 489 on the exit; the 2 px difference is the two
+# .SEQ contacts, measured from the run, never assumed.
+#
+# ly_thr_fruit presses FIRE+F4. Without AC_KILOF the authored line that
+# can win is A_KILOF_PR, the wind-up: control=BY_TIME|CHECK_ALL|
+# FRAME_REV, seq=use, rows 1,2,3,4,3,2 of 300 then `1,300,WAIT K_NEVER`
+# - and PR-333's rule (a WAIT clause that never matches leaves the row
+# current with its threshold never consumed) is what holds frame 1 from
+# 281 on, so the pose cycle is 1,2,3,4,3,2 and then holds. Releasing
+# both keys at 300 runs the authored negative exit `A_DRAP(1)=!K_FIRE` /
+# `A_DRAP(1)=!K_F4` (PR-265: a !X row is TRUE on a clean step). The
+# negatives are the point of the leg and of OI-134: zero state A_KILOF
+# (the release itself - its line needs AC_KILOF, which NOTHING in this
+# level raises: ANI2.DES places the two pickable things as
+# GRABG,2113,350,kilof.grp and GRABG,190,210,kij.grp, and PR-93's
+# grammar leg pins that a GRABG line is a GROUP HEADER, never an entry,
+# so no fruit object exists to be collected), and zero A_KAMIEN.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SEAT=0 LEO_PLAY_ASK=1 \
+	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 262:NONE 264:ALT" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_thr_spit.ppm LEO_LEVEL_PPM_TICK=300 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_thr_spit.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play throw spit FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_thr_spit.log; exit 1; fi
+	@grep -q 'play tick 263: state A_DRAP seq idle frame 1 pos 204,489 grounded 1' /tmp/opencode/ly_thr_spit.log \
+	  && grep -q 'play: A_DRAP -> A_RZUT' /tmp/opencode/ly_thr_spit.log \
+	  && grep -q 'play tick 264: state A_RZUT seq throw frame 1 pos 204,491 grounded 1' /tmp/opencode/ly_thr_spit.log \
+	  && grep -q 'play tick 284: state A_RZUT seq throw frame 8 pos 204,491 grounded 1' /tmp/opencode/ly_thr_spit.log \
+	  && grep -q 'play: A_RZUT -> A_DRAP' /tmp/opencode/ly_thr_spit.log \
+	  && grep -q 'play tick 288: state A_DRAP seq idle frame 1 pos 204,489 grounded 1' /tmp/opencode/ly_thr_spit.log \
+	  && grep -q 'play tick 289: state A_RZUT seq throw frame 1' /tmp/opencode/ly_thr_spit.log \
+	  && test "$$(grep -c 'play: A_RZUT -> A_DRAP' /tmp/opencode/ly_thr_spit.log)" -eq 1 \
+	  && test "$$(grep -c 'play: A_DRAP -> A_RZUT' /tmp/opencode/ly_thr_spit.log)" -eq 2 \
+	  && test "$$(grep -cE 'state A_RZUT seq throw frame [1-8]' /tmp/opencode/ly_thr_spit.log)" -eq 36 \
+	  && echo "play throw spit (PR-539): from the authored hang A_DRAP at 204,489 one ALT press runs the whole A_RZUT throw - seq=throw, its eight rows of 300 give frames 1..8 at 264,266,269,...,284 (3 ticks a row at the 100 feed), the row list ends at 287 and the authored A_DRAP(1)=AC_BREAK_NEXT line takes it back to the hang at 288, where the idle art re-seats him at 489, and the throw starts again at 289 while ALT is held: 2 entries, 1 complete exit, 36 frame rows to tick 300" \
+	  && echo " (ok)" \
+	  || { echo "play throw spit grep FAILED"; cat /tmp/opencode/ly_thr_spit.log; exit 1; }
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=16 \
+	  LEO_PLAY_DANGER=0 LEO_PLAY_SEAT=0 LEO_PLAY_ASK=1 \
+	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 262:NONE 264:FIRE,F4 300:NONE" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_thr_fruit.ppm LEO_LEVEL_PPM_TICK=320 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_thr_fruit.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play throw fruit FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_thr_fruit.log; exit 1; fi
+	@grep -q 'play: A_DRAP -> A_KILOF_PR' /tmp/opencode/ly_thr_fruit.log \
+	  && grep -q 'play tick 264: state A_KILOF_PR seq use frame 1 pos 204,484 grounded 1' /tmp/opencode/ly_thr_fruit.log \
+	  && grep -q 'play tick 272: state A_KILOF_PR seq use frame 4 pos 204,484 grounded 1' /tmp/opencode/ly_thr_fruit.log \
+	  && grep -q 'play tick 281: state A_KILOF_PR seq use frame 1 pos 204,484 grounded 1' /tmp/opencode/ly_thr_fruit.log \
+	  && test "$$(grep -cE 'play tick 29[0-9]: state A_KILOF_PR seq use frame 1' /tmp/opencode/ly_thr_fruit.log)" -eq 10 \
+	  && grep -q 'play: A_KILOF_PR -> A_DRAP' /tmp/opencode/ly_thr_fruit.log \
+	  && grep -q 'play tick 300: state A_DRAP seq idle frame 1 pos 204,489 grounded 1' /tmp/opencode/ly_thr_fruit.log \
+	  && test "$$(grep -c 'state A_KILOF seq' /tmp/opencode/ly_thr_fruit.log)" -eq 0 \
+	  && test "$$(grep -c 'A_KAMIEN' /tmp/opencode/ly_thr_fruit.log)" -eq 0 \
+	  && test "$$(grep -c 'AC_KILOF' /tmp/opencode/ly_thr_fruit.log)" -eq 0 \
+	  && echo "play throw fruit (PR-539): FIRE+F4 in the hang reaches the authored wind-up A_KILOF_PR (seq=use) at 204,484 and its pose cycle is exactly the authored rows 1,2,3,4,3,2 - frame 4 at 272, back to frame 1 at 281 and HELD there to 299 by its 1,300,WAIT K_NEVER row (PR-333: a clause that never matches never consumes the threshold); releasing both keys at 300 runs the negative exit A_DRAP(1)=!K_FIRE back to the hang. Zero A_KILOF, zero A_KAMIEN, zero AC_KILOF: ANI2.DES authors the two pickables as GRABG,2113,350,kilof.grp and GRABG,190,210,kij.grp, and a GRABG line is a group header, never an entry (PR-93), so no fruit object exists to raise it - OI-134" \
+	  && echo " (ok)" \
+	  || { echo "play throw fruit grep FAILED"; cat /tmp/opencode/ly_thr_fruit.log; exit 1; }
 else
 	@echo "verify-play: SKIP data legs (needs $(DATA) + LEO_HD_DIR fixtures; see NEXT_STEPS.md)"
 endif

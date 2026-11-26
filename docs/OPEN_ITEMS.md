@@ -9556,3 +9556,85 @@ OI-133: a ZARIA.01 balloon pickup needs the PALMA seat line -
     no jump on the way there (the worm column at 120,250 gives the
     damage for free - PR-534's default fight), which then lands
     the +32 and the cap.
+
+OI-134: the fruit chain - no fruit object is ever placed in a
+  shipped level, the POCISK children are never instantiated, and
+  no scene object applies a row F/I or a state-header G
+  status: OPEN
+  origin: PR-539 (the goal clause "collecting fruits and
+    throwing")
+  notes: THE LION'S HALF NOW RUNS, AND RUNS END TO END. PR-539's
+    ly_thr_spit and ly_thr_fruit legs are the first runs ever to
+    reach a throw line. ZARIA.01 LEW.ZAR names those targets in
+    exactly ONE state block - [A_DRAP], the hang, lines 462-466:
+    `A_KILOF(1)=K_FIRE,AC_KILOF,K_F4`, `A_KILOF_PR(1)=K_FIRE,
+    K_F4`, `A_KAMIEN(1)=K_FIRE,AC_STONE,K_F3`, `A_KAMIEN_PR(1)=
+    K_FIRE,K_F3`, `A_RZUT(1)=K_ALT` (measured with awk over the
+    whole text: the only other mentions are the declared-state
+    list at lines 35-36). From the ly_climb hang at 204,489 one
+    ALT press runs A_RZUT whole (seq=throw, 8 rows of 300 = 3
+    ticks a row, frames 1..8 at 264,266,269,...,284, then the
+    row-list end feeds the authored `A_DRAP(1)=AC_BREAK_NEXT`
+    exit at 288 and the throw re-enters at 289 while ALT is
+    held); FIRE+F4 runs the wind-up A_KILOF_PR (seq=use) with
+    its pose cycle 1,2,3,4,3,2 held at frame 1 by its
+    `1,300,WAIT K_NEVER` row, and releasing both keys runs
+    `A_DRAP(1)=!K_FIRE`. THREE GAPS, each measured, none of
+    them the transition tables:
+    (1) NO FRUIT OBJECT EXISTS. ANI2.DES lines 21-22 author
+    `GRABG,2113,350,kilof.grp` and `GRABG,190,210,kij.grp`;
+    PR-93's place_grammar_selftest pins that a GRABG line is a
+    GROUP HEADER, never an entry, and no .grp member is read by
+    this port at all. Nothing can therefore raise AC_KILOF or
+    AC_STONE, and PR-539's fruit leg counts ZERO `state
+    A_KILOF`, ZERO `A_KAMIEN` and ZERO `AC_KILOF` lines: the
+    authored release states are unreachable in the shipped game
+    data, not merely unported. The raisers the repo did read
+    (the AC_KILOF/AC_STONE gates at 0x40d50/0x40dc0, and the
+    parent-and-K_FIRE gate recorded in this file's own row on
+    them) need the [obj+0x30] parent field PR-241 counted as
+    not modelled.
+    (2) THE FRUIT THAT IS PLACED IS TOLD TO FLY AND NEVER
+    MOVES. ANI2.DES places 16 POCISK (15 `kokos.ani` + one
+    `dummy`) and ZWIERZ1.DES puts a `POCISK,jajo.ani,jajo.mov,
+    0,0` CHILD under SEP2 and under SEP - the egg each of those
+    two animals throws - which PR-93 joined but did NOT
+    instantiate. kokos.mov's only transition anywhere is
+    `A_RZUT(1)=K_GEN1` from A_WISI, so PR-536's ly_bal_pop
+    already shows all 16 taking one jump's bus into A_RZUT, and
+    that state is `control=BY_TIME|CHECK_ZW`, `G=0,80`, row 1
+    `1,1,F 1200,-300` plus `ATC_ON` (jajo.mov: the same shape,
+    `G=0,90`, `control=BY_TIME|CHECK_LEW`). Nothing follows:
+    obj_advance applies only a row's `M` pair (ported/ll_level.c
+    1720-1721, `o->x += f->dx; o->y += f->dy`).
+    (3) THE OBJECT-SIDE VELOCITY CHANNEL IS NOT BUILT. The row
+    F/I merge (PR-250/PR-253) and the header G (PR-259/PR-260)
+    exist ONLY on the lion's side: `ix`, `iy`, `gx`, `gy` have
+    ZERO uses in ported/ll_level.c (grep counts, both forms).
+    BLAST RADIUS over the 33 ZARIA.01 .MOV texts, counted state
+    by state: 17 object-side rows carry an F or I directive -
+    KAMIEN_KAMIEN1/2/3 [A_STOP] one each, POCISK_JAJO [A_RZUT]
+    and POCISK_KOKOS [A_RZUT] one each, SEP_SEP [A_DEAD] eight
+    plus [A_DOSTAL] one, SEP_SEP2, NOSOROG_NOS and PAJAK_PAJAKZ
+    [A_DOSTAL] one each - and 24 object states across 6 classes
+    (KAMIEN x3, LICHA_LICHA3, NOSOROG_NOS, PAJAK_PAJAKZ,
+    SEP_SEP, SEP_SEP2) carry a non-zero G header TOGETHER WITH
+    CHECK_LN: they are ground-bound, and this port keeps them
+    on the ground only by PR-78's placement settle. So the F/G
+    channel and a ground-support half for scene objects are ONE
+    port, not two, and doing the first alone drops every walker
+    in the level through the floor.
+    WHAT WOULD CLOSE THIS ROW, in order: (a) read the GRABG /
+    GRABOBJ family and the .grp members and place the two
+    fruit; (b) read AC_KILOF/AC_STONE's raiser with its parent
+    gate and raise it on contact; (c) build the object velocity
+    channel WITH the CHECK_LN support, then a leg that hangs,
+    collects and reaches A_KILOF, and a coconut that flies the
+    `F 1200,-300` + `G=0,80` arc and lands its ATC_ON window on
+    the lion. The window is authored (`A_DOSTAL(1)=AC_ENEMY_ATC`
+    at LEW.ZAR 857 and the [A_DOSTAL] block at 338: seq=hit,
+    sample=12, `1,200,I -320,-250`), but the damage is not: no
+    POCISK entry authors a `damage=` line (only the 8 ZWIERZ1
+    animals do - 20/20/15/15/10/10/10/10), and PR-139 settled
+    that an authored `damage=` is the only path to the lion, so
+    the arc lands and the hit does not. Counted, not assumed.

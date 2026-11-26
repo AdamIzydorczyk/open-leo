@@ -6401,6 +6401,34 @@ in that run (OI-125), a standing lion is not CARRIED by a seat
 (OI-128), and the PALMA spans are not yet reached from the east
 bank - the balloon and fruit legs of the goal wait on that chain.
 
+PR-537, PR-538 and PR-539 (same owner goal, 2026-11-26) moved
+that chain and say plainly where each clause stands:
+(1) JUMPING ON PALMS - measured, still unported. PR-537's
+ly_pal_walk/ly_pal_top show the seat is missed in x and by a
+height the authored jump cannot reach (no walk is ever grounded
+past x 406; the terrace jump peaks at one x, 1000, 53 px from
+the seat's own bracket 885..947), and PR-538 read the seat's own
+motion to be a net-zero +/-7 px BOB (0x1e5c0 shifts table and
+element by one row) plus a QUEUED action (0x52b10 appends to the
+chain at [base+0x10]) - so no authored seat motion lifts a rider
+to the 380 line. The pinnable half stays OI-128's carry:
+0x45250@0x4526e-0x45291 stores the table's own step in
+[obj+0xca]/[obj+0xce] and 0x4b430@0x4b479-0x4b48c adds it to the
+ground answer, which the port never does.
+(2) BALLOONS - the +32 path is shipped code and has never run
+(OI-133); the only two placements a lion's box can span are both
+east of the 408..624 chasm, and every route to them jumps, which
+pops all six.
+(3) FRUITS AND THROWING - the LION's half now runs (PR-539's
+ly_thr_spit/ly_thr_fruit: from the A_DRAP hang one ALT runs the
+whole A_RZUT throw and FIRE+F4 the A_KILOF_PR wind-up), and the
+three gaps that stop the fruit itself are named in OI-134: the
+GRABG group lines are never instantiated, the POCISK children are
+never instantiated, and no scene object applies a row F/I or a
+state-header G - 17 object-side F/I rows and 24 ground-bound
+object states with a G header in this one level, which is why
+that channel and a CHECK_LN ground support must be ONE port.
+
 **T6. Level flow.** `end_level` directive, `AC_LEAVE`, the vulture ride of
 ZARIA I, the map -> level -> map loop, TUNGA I <-> II exchange
 (`AC_XCHG_LEVEL`), lives/energy persistence, game over. STATUS.LEO progress is

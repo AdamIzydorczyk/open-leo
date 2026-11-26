@@ -70277,3 +70277,151 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   0x4b430 at 0x4b479-0x4b48c. The carry is the smaller, pinnable
   half and stays the next port; it does not by itself solve the
   380-line reach, and this record says so rather than hoping.
+
+## PR-539 - THE LION'S THROW RUNS END TO END FROM THE HANG, AND
+## THE FRUIT CHAIN'S THREE MISSING HALVES ARE NAMED ONE BY ONE
+KIND: gate
+SUBSYSTEM: ZARIA.01's authored throw states (A_RZUT, A_KILOF_PR)
+  reached from the A_DRAP hang the ly_climb leg builds; the fruit
+  chain's three gaps (the GRABG group lines, the POCISK children,
+  the object-side velocity channel). Two verify-play legs, no code
+  changed.
+ADDRESSES: 0x45770, 0x458e0, 0x45df0, 0x47cb0, 0x47d00, 0x51570,
+  0x51660, 0x516d7, 0x516e2, 0x51913, 0x51b78, 0x520c0, 0x5213d,
+  0x521f0, 0x52140, 0x52338, 0x5234a, 0x92178, 0xa1000, 0xa11c8,
+  0xa11e0, 0xa25d4, 0xa260c.
+NAMES: A_RZUT, A_KILOF, A_KILOF_PR, A_KAMIEN, A_KAMIEN_PR, A_DRAP,
+  AC_KILOF, AC_STONE, AC_BREAK_NEXT, K_ALT, K_F3, K_F4, GRABG,
+  kilof.grp, POCISK, jajo.mov, kokos.mov, obj_advance, brk_arm,
+  ly_thr_spit, ly_thr_fruit, OI-134.
+CODE: no: none. The legs read the shipped build; the record's
+  findings are the legs and the OI-134 row.
+HOOKS: none new. Both legs use the shipped LEO_PLAY_SCRIPT,
+  LEO_PLAY_ASK, LEO_PLAY_SEAT and LEO_PLAY_DANGER as ly_climb
+  does.
+OPENS: OI-134.
+CLOSES: none.
+CORRECTS: none.
+GATE: make 0 warnings; verify-all fixtures rc=0 86 (ok);
+GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named
+      (/tmp/opencode/pr539_build.log BUILD_EXIT=0 with zero
+      warnings, pr539_gateA.log and pr539_gateB.log both
+      GATEA_EXIT=0/GATEB_EXIT=0 at 86 (ok) each - 84 was PR-537's
+      count, these two legs are the difference - and
+      pr539_gatefreeA.log GATEFREEA_EXIT=0 at 16 (ok) plus 21
+      named verify-SKIPs. The legs' own logs are
+      /tmp/opencode/ly_thr_spit.log and ly_thr_fruit.log.)
+
+- WHY THESE LEGS, AND WHAT WAS NEVER SEEN. The owner's goal names
+  four clauses and only the fight had a leg. Nothing in this repo
+  had ever run a THROW line. The first question was therefore
+  where the authored game lets the lion throw at all, and the
+  answer is in this level's own text: awk over the whole
+  ZARIA.01_LEW.ZAR_LEW.MOV shows the six throw targets named as
+  transition targets in exactly ONE state block - [A_DRAP], the
+  hang, lines 462-466 - and nowhere else except the declared-state
+  list at 35-36. So in the shipped game a throw is a HANGING
+  action, and the route to it is the route ly_climb already walks:
+  walk, jump the first ledge, ask the DRABINKA at 213,507, climb,
+  and stand on the canopy terrace in A_DRAP at 204,489 (tick 263).
+  Both legs copy that script exactly and differ only after 263 -
+  262:NONE releases UP so A_LOOKUP's K_UP line cannot win.
+
+- ly_thr_spit: ONE ALT PRESS RUNS THE WHOLE A_RZUT STATE. The
+  authored line is [A_DRAP] line 466 `A_RZUT(1)=K_ALT`; the state
+  is control=BY_TIME|CHECK_ALL|FRAME_REV, G=0,130, sample=7,
+  seq=throw, and its row list is eight rows of 300. PR-109/PR-110
+  measured that threshold unit (1/100-iteration), PR-135 that one
+  admit is one row per iteration and the feed is the 100 of
+  0x4c8b7 - so 300 is three ticks a row and the frames must come
+  at 264,266,269,272,275,278,281,284. They do, exactly, at
+  204,491. At 287 the list wraps (frame 1 again) and at 288 the
+  authored `A_DRAP(1)=AC_BREAK_NEXT` line runs: AC_BREAK_NEXT is
+  the bit this port arms when a row list wraps (PR-162 F1b), so
+  the exit is not a fallback - it is the only exit that state has
+  apart from the hit and the fall. The seat moves with the art,
+  as PR-97's contact rule says: the hang sits at 489, the throw
+  art at 491 - two pixels apart because the two .SEQ contacts
+  differ - and the exit puts him back at 489. ALT is still held,
+  so the throw re-enters at 289: the leg pins 2 entries, 1
+  complete exit and 36 A_RZUT frame rows by tick 300, and those
+  counts are arithmetic on the authored rows, not a recording.
+
+- ly_thr_fruit: FIRE+F4 REACHES THE WIND-UP AND STOPS THERE. With
+  no AC_KILOF in the world, the only line of the five that can win
+  is `A_KILOF_PR(1)=K_FIRE,K_F4`, and that is what runs at 264:
+  seq=use at 204,484, then the pose cycle of its rows
+  1,2,3,4,3,2 - frame 4 at 272, back to frame 1 at 281 - held
+  there through tick 299 by the row `1,300,WAIT K_NEVER`, which
+  is PR-333's rule in the open (a WAIT clause that never matches
+  never consumes its threshold, so the row stays current). The
+  release at 300 runs the authored negative exit
+  `A_DRAP(1)=!K_FIRE` / `!K_F4` (PR-265: an =!X row is TRUE on a
+  clean step) and the leg pins the return to the hang at 204,489.
+  The negatives are the point: ZERO `state A_KILOF`, ZERO
+  `A_KAMIEN`, ZERO `AC_KILOF` in the whole run.
+
+- THE THREE GAPS, MEASURED, NOW A ROW (OI-134). (1) No fruit
+  object exists: ANI2.DES lines 21-22 are `GRABG,2113,350,
+  kilof.grp` and `GRABG,190,210,kij.grp`, PR-93's grammar leg
+  pins a GRABG line as a GROUP HEADER and not an entry, and no
+  .grp member is read at all. (2) The fruit that IS placed is
+  ordered to fly and never moves: ANI2.DES places 16 POCISK (15
+  kokos + 1 dummy) and ZWIERZ1.DES hangs a `POCISK,jajo.ani,
+  jajo.mov,0,0` CHILD under SEP2 and under SEP - the eggs those
+  two animals throw, joined by PR-93 but never instantiated - and
+  kokos.mov's ONLY transition anywhere, `A_RZUT(1)=K_GEN1`,
+  already fires for all 16 in PR-536's ly_bal_pop. That state is
+  `G=0,80` with row 1 `1,1,F 1200,-300` and ATC_ON; the jajo
+  twin is `G=0,90`. Nothing follows, because obj_advance applies
+  only a row's M pair (ported/ll_level.c 1720-1721). (3) The
+  object-side velocity channel does not exist: ix, iy, gx and gy
+  have zero uses in ported/ll_level.c. The blast radius was
+  counted over the 33 ZARIA.01 texts before writing that: 17
+  object-side rows carry an F or I directive, and 24 object states
+  across 6 classes (KAMIEN x3, LICHA, NOSOROG, PAJAK, SEP, SEP2)
+  carry a non-zero G header together with CHECK_LN - ground-bound
+  actors this port holds up only by PR-78's placement settle. The
+  F/G channel and a ground-support half are therefore ONE port;
+  doing the first alone drops every walker through the floor.
+  The hit at the end of the arc is authored too - LEW.ZAR 862
+  `A_DOSTAL(1)=AC_ENEMY_ATC` inside the [A_RZUT] block that
+  starts at 857, and the [A_DOSTAL] block itself at 338 (seq=hit,
+  sample=12, `1,200,I -320,-250`) - but no POCISK entry authors
+  a damage= line, and PR-139 settled that an authored damage= is
+  the only path to the lion, so the arc would land and the damage
+  would not. Counted in the row.
+
+- THE APPLY PATH, SEEN ON THE WAY (a lead, not a claim). Reaching
+  the F/I/G question needed the row-admit path, and it is now
+  located: the .MOV state grammar parses in 0x51913 (the BY_TIME
+  literal at 0x92178 is loaded at 0x51b78); a row line is built by
+  0x51570/0x51660, where 0x45770 allocates a node whose [node+4]
+  is a KIND DESCRIPTOR (0xa1000 for the row node) and 0x516d7
+  calls the directive parser 0x45df0 in a loop that prepends each
+  directive node (0x516e2-0x516e6: [node+0] = the old chain head).
+  The descriptors are 0x18 bytes of six verbs: the GEN clause's is
+  0xa11e0 and PR-217's Wait clause's is 0xa11c8, and their +0x14
+  verbs 0x47d00/0x47cb0 are CLONES (0x15-byte node, the 12-byte
+  TEventSet at +0x8 copied). At the admit the record calls
+  [record-class +0x18] at 0x52338 - 0x520c0 in both shipped record
+  classes 0xa25d4 and 0xa260c - and inside that, at 0x5213d, it
+  calls [row kind +0x10] with edx = 6 and branches on an answer of
+  6 at 0x52140, which is the GOTOREL cursor jump PR-322/PR-323
+  read; the generic +0x10 verb 0x458e0 is a chain walker (it
+  loads [eax+0] and calls each node's kind +0x10). WHAT IS NOT
+  SETTLED, and is the next read if the fruit arc is to be ported:
+  which mode argument applies a row's GEN/F/I/M directives, and
+  into WHICH object's set the GEN bit lands - PR-257's level-wide
+  bus is this port's model, and the only cross-object raise the
+  repo has read in the machine code is PR-241's, on the ASKED
+  object, gated by its own contact points (0x44ec0 -> 0x3f203).
+
+- NO CHANGE, AND WHY. No code changed: the throw legs measure
+  behaviour the shipped build already has, and the fruit gaps are
+  reads and ports that each need their own record. The gap order
+  for the owner's fruit clause is in OI-134: place the GRABG
+  family, read AC_KILOF/AC_STONE's raiser and its parent gate,
+  then build the object velocity channel together with the
+  CHECK_LN support. The balloon clause (OI-133) and the palm
+  clause (OI-125/OI-128) stay as PR-537 and PR-538 left them.
