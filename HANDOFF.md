@@ -3457,11 +3457,13 @@ record.
   accumulator running and NOTHING admitting is counted at OI-013).
   What T3 still holds: the OI-130 name-map audit, and a live window
   for OI-018 if one exists. What ZARIA.01 playability still names:
-  the water/pit at x~400 and the ladder-top route - OI-073 sharpened
-  the geometry (the ladder answers only while its 42x48 art box, top
-  y 558, is met, so the ground route is the authored A_FALL_DOWN/
-  A_DRAP/A_LOOKUP cycle, and reaching the climb is a ROUTE question,
-  OI-078's half).
+  the water/pit at x~400 and the climb route - PR-524 then MEASURED
+  that half and corrected it (NEXT_STEPS PR-524): a ground jump at
+  the ladder column NOW enters A_WSP (ladder state 2, set 0x1400),
+  and the rider cycles at the authored pair y 560 without ever
+  seating on the canopy terrace at y 518 - the gap is the
+  top-of-CLIMB seat, one law (OI-073/OI-078's named candidates),
+  not a route-finding problem.
 
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`

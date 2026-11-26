@@ -68170,3 +68170,126 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs
       inside the ZARIA.01 traverse leg, and that leg's own
       K_NEVER-park pin rode to --mov-selftest - coverage moved,
       nothing was dropped.)
+
+## PR-524 - ZARIA.01 ROUTE AUDIT UNDER THE NEW PHYSICS: THE LADDER
+## CLIMB ENTRY NOW WORKS FROM A GROUND JUMP (A_WSP ENTERS AT THE
+## COLUMN), WHAT STOPS THE TRAVERSAL IS THE TOP-OF-CLIMB SEAT AT THE
+## AUTHORED PAIR y 560, AND MY OWN OI-073 PARAGRAPH FROM PR-523 IS
+## CORRECTED BY THE RUN
+
+```
+KIND: read
+SUBSYSTEM: the ZARIA.01 traversal route - ground geometry, the
+    ladder-jump chain, and the pit/water loop - audited live on the
+    PR-523 default physics, plus the shipped route data read through
+    the PORT's own container reader (tools/re/llrs_tree.c +
+    llrs_cat1.c compiled from ported/llrs.c, records dumped to
+    /tmp/opencode/z01_*). No new engine address is read; this
+    measures what the already-ported laws do on the real level and
+    names the gaps precisely enough to pick the next work item.
+    (1) THE ROUTE, FROM THE DATA. ZARIA1.DES (LEVELDES POL slot):
+    pozycja=50,640, platformy=zaria_a.plt, lew_rect=0,0;1000,1000,
+    zwierzaki/ani_plat/animacje = none,zwierz2.des,zwierz1.des /
+    none,anipl2.des,none / ani3,ani2,ani1. ZARIA_A.PLT (ETAPY
+    ZARIA.01 slot, 45 lines): main ground line 1 `-50,680!408,684`
+    ENDS at x 408; line 2 `5 98,514;288,520;379,503;453,504;539,
+    536;589,566` the canopy terrace; line 3 `5 20,376;...;403,386`
+    the high hill; lines 6-13 mid-water stones x 624..1338; line
+    14 `2 1338,691!1801,683!2240,681` the second ground; line 45
+    the y=1500 catcher. The walkable route across the pit is
+    THROUGH THE TERRACE (terrace end 589,566 -> the 624 stone is
+    a 35 px hop; ground-to-624 is a 216 px gap, not jumpable). The
+    water is a box, not a surface: ANI2.DES `DRECT,988,645;1340,
+    750`, and the lion's [A_WPAD] rows are `A_WPAD(1)=AC_ONAIR,
+    AC_DRECT` - both required - so only falls INSIDE that box
+    reach the water state; [A_WYJSCIE] then `pos 1020,692` +
+    `wait AC_TIME` and hands back to A_DRAP (the pos directive is
+    PR-317's, modelled; the loop has never run in a leg because
+    nothing reaches x 988 falling). No shipped ZARIA text carries
+    end_level - the level's end is the engine's stage re-entry
+    (0x5d1f5, PR-199's counted owner), which §1 already lists as
+    missing. (2) THE LIVE PROBES. (a) long FWD hold
+    (/tmp/opencode/z_walk.log): walks at the settled 650 raw (6 px
+    a pass), steps off at x 408 tick 88, then the authored
+    descend cycle - A_WALK -> A_FALL_DOWN, the ladder's STATE-PAIR
+    AC_DRAB law raising during A_FALL_DOWN (NOT geometry: it fires
+    at x 410..430, 200 px right of the column), A_DRAP one row,
+    A_WALK one row - x +1 a tick, y down to the lew_rect death at
+    (430,~1010), respawn at 50,648. Same shape the traverse leg
+    pins. (b) JUMP AT THE COLUMN (/tmp/opencode/z_lj.log,
+    z_lj3.log): this is NEW at PR-523's scale - apex feet y 550
+    at tick 84, falling to feet 562 at x 218 tick 94, the ladder
+    answers AS STATE 2 (A_DOWN - PR-216's one answering index)
+    with set 0x1400, A_WSP ENTERS at tick 95. Holding UP the
+    rider then cycles A_WSP / A_PODCIAG / A_DRAP / A_TURN_BACK
+    between y 560 and 594 forever; 560 is exactly the authored
+    ladder pair `30,50` -> (210,560), and the terrace he must
+    stand on reads y 518 at that x - his feet hang 42 px under it
+    (box top 512 above it: the STRADDLE), and nothing seats him.
+    Walking past the column on the ground (feet 683) raises
+    nothing at all: no ask, no cycle. (3) THE GAP, NAMED. The
+    top-of-climb seat: candidates all already in the read
+    material - the shape-box contact/push-out 0x42a70/0x42de0 at
+    the terrace straddle (OI-073's header item), a consumer of the
+    ladder's pair/contact-point words (the [obj+0xa5] family,
+    PR-276 - the port counts such object polylines as "moving
+    ground" and acts on none; KATAPULT's seat (307,633)-(340,633)
+    and its trailing pair `-6300,-1350` are the same grammar and
+    the same gap), or A_PODCIAG's lift motion (PR-273 item (i),
+    still unnamed: in the probe it holds y with v 0,0 and moves
+    nobody). Also measured here: the jump apex is now ~100 px
+    against the video's 24-30 px band - the `I` pair's units are
+    the ESTIMATE row `jump impulse unit` still waiting on its
+    re-fit at the row-admit scale (PR-135's "vertical constants
+    not re-fitted" item), and it does NOT gate the route work:
+    the entry the new scale opens is the one the data requires.
+ADDRESSES: none new (0x42a70, 0x42de0, 0x45320, 0x45200, 0x45120,
+  0x1e512, 0x1e690, 0x1e970, 0x5d1f5 cited are prior records').
+NAMES: A_WALK, A_JUMP, A_WSP, A_WSP(3), A_PODCIAG, A_DRAP,
+  A_TURN_BACK, A_FALL_DOWN, A_WPAD, A_WYJSCIE, AC_DRAB, AC_DRECT,
+  AC_ONAIR, DRECT, DRABINKA, KATAPULT, LINA, ZARIA_A.PLT,
+  ZARIA1.DES, ANI2.DES, ANIPL2.DES, LL_PLAY_JUMP_DIV, ZARIA.01,
+  OI-073, OI-078.
+CODE: no: a data read (port-container dumps to /tmp/opencode) and
+  two live play probes; no port file is touched.
+HOOKS: none.
+OPENS: the top-of-climb seat law (the three candidates above,
+  named in OI-073/OI-078), the object seat-polyline "moving
+  ground" consumer (same grammar, KATAPULT case), the jump
+  impulse unit re-fit at the row-admit scale.
+CLOSES: none.
+CORRECTS: PR-523's OI-073 paragraph, shipped the same day: "the
+  ladder answers only while its 42x48 art box, top y 558, is met;
+  a lion on the ground only answers the A_FALL_DOWN/A_DRAP/
+  A_LOOKUP/A_WSP(3) cycle; reaching the climb is a route question
+  (feet above 558)". Measured: the ladder's ask side is the
+  authored rectangle (203,540)-(233,670) + contact point (213,507)
+  + pair (210,560), not the art extent; walking on the ground
+  raises NOTHING (the AC_DRAB raiser is the PR-304 state-pair
+  law, and it fired over the pit, not at the column); the climb
+  entry is NOT the route gap - a ground jump reaches it (apex
+  550, entry at feet 562 through A_DOWN's answer); the gap is the
+  seat at the top.
+MEASURED: (a) z_walk.log tick 88 off the cliff at x 408, the
+  5-tick descend cycle, death at (430,~1010) (the traverse leg's
+  own pin, tick 127, matches), respawn tick ~128; (b) z_lj.log
+  tick 84 apex 550, tick 94 ladder state 2 set 0x1400, tick 95
+  A_WSP at 218,562; z_lj3.log the 560..594 cycle, 120+ ticks,
+  A_PODCIAG holds v 0,0 and y; (c) the .des/.PLT lines quoted
+  above, dumped through llrs_tree/llrs_cat1 (rc=0 reads, sizes
+  1102/841/1294/214 bytes); (d) walk-through-column ticks 52-56,
+  x 201..225, no ladder log at all.
+```
+
+- WHY. ZARIA.01 "playable" is the session objective, and this is
+  the first honest map of what stands between the PR-523 physics
+  and a traversal: the pit crossing runs THROUGH the terrace, the
+  climb entry already works, and one law - the top-of-climb seat -
+  gates the whole route. The same reading merges three gaps that
+  were carried separately (OI-073's grounded-y remainder, OI-078's
+  climb chain, the ani_plat "moving ground" count) into one
+  mechanism question with named candidates, and corrects my own
+  wrong answer from the same day before it can mislead the next
+  pass.
+
+GATE: light: verify-index verify-docs rc=0 (ok);

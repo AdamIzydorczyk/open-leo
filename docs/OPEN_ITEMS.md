@@ -1463,23 +1463,47 @@ OI-073: the engine's grounded-y bookkeeping: the instruction that
     is PR-321's; bit2/3/6/7, `op`'s reader (0x23860's bit5
     law stands), and the grounded-y instruction stay open
     here.
-    PR-523 SHARPENS WHAT THE ZARIA.01 LADDER ACTUALLY IS, from the
-    real level under the row-admit physics. With the jump flow now
-    landing (the A_JUMP row-park fix), a lion that walks into the
-    ZARIA.01 ladder column answers a CYCLE, not a climb: the
-    authored A_FALL_DOWN / A_DRAP / A_LOOKUP / A_WSP(3) chain, over
-    and over, never reaching the top. The reason is geometric and
-    it is in the shipped data, not in a missing instruction: the
-    ladder object only answers AC_DRAB while its own 42x48 art box
-    is met, and that box tops out at y 558 (the .SEQ art extent of
-    the ZARIA ladder element from its .des placement) - a lion
-    standing on the main ground (feet 586) never meets it, so no
-    A_WSP is ever entered from the ground, only the fall/look
-    chain its near-miss signals select. Reaching the climb is a
-    ROUTE question (get the feet above 558 - a hop onto the
-    ladder-top route), which is OI-078's gameplay half, not a
-    grounded-y question; this row's remaining instruction items are
-    untouched by PR-523.
+    PR-524 PROBES THAT GEOMETRY LIVE, AND CORRECTS THE PARAGRAPH
+    ABOVE (mine, same day - the numbers below are the run, not a
+    guess). The ladder's ASK side is three authored boxes from
+    ANI2.DES, not the art extent: rectangle `23,30;53,160` ->
+    abs (203,540)-(233,670), contact point `1 33,-3` -> (213,507),
+    pair `30,50` -> (210,560) (PR-242/243/246/270, re-dumped
+    PR-524 via tools/re/llrs_cat1). Walking past the column ON
+    THE GROUND (feet 683-684 at that x) raises nothing at all in
+    the port - no A_* cycle, no AC_*: the AC_DRAB raiser is the
+    state-pair law (PR-304), not geometry, and it fired in the
+    probe only while the lion was IN A_FALL_DOWN/A_DRAP over the
+    pit. What DOES open the climb is the jump: at x 218, a jump
+    from the ground reaches apex feet y 550, the lion falls to
+    feet 562 with its box meeting the ladder column, the ladder
+    then answers AS STATE 2 - A_DOWN, the one answering index of
+    PR-216 - with set 0x1400, and A_WSP is entered on tick 95 of
+    /tmp/opencode/z_lj.log. The climb then
+    runs but never ENDS on the platform: the rider cycles
+    A_WSP/A_PODCIAG/A_DRAP/A_TURN_BACK between y 560 and 594
+    (/tmp/opencode/z_lj3.log), stopping exactly at the authored
+    pair y 560, while the terrace line he must stand on
+    (ZARIA_A.PLT line 2 `5 98,514;288,520;...`) reads y 518 at
+    that x - his feet 560 hang 42 px BELOW it, box top 512 above
+    it, straddling the line. The missing law is the TOP-OF-CLIMB
+    seat: the engine's shape-box contact/push-out (0x42a70/
+    0x42de0, OI's own header), or a reading of the pair/contact-
+    point words, must lift the rider from the pair onto the line.
+    So the climb ENTRY is no longer the route gap; the seat is.
+    The level's walkable geometry, from the same dump: main
+    ground line 1 ends at x 408; line 2 `5 98,514;288,520;379,
+    503;453,504;539,536;589,566` is the canopy terrace (x
+    98..589); line 3 `5 20,376;...;403,386` is the high hill;
+    lines
+    6-13 are the mid-water stones from x 624 to 1338; line 14
+    `2 1338,691!1801,683!2240,681` the second ground; line 45
+    `1 -100,1500!3000,1500` the catcher; death below lew_rect's
+    y edge (1000), which is what the plain FWD run hits at
+    (430,~986) before respawn (line: /tmp/opencode/z_walk.log).
+    Nothing in the shipped ZARIA texts ends the level (no
+    end_level row in lew_zar.mov - the engine's stage re-entry,
+    0x5d1f5, has no port counterpart; §1's level-flow gap).
 
 OI-074: elements with no margin lists (the 34 all-empty-margin
   ones): contact 0 or something else - "no evidence either way"
@@ -3551,6 +3575,32 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     The port's model of the query lives in
     ported/ll_play.c (ll_sufreg_parse, ll_ceiling_hit, ll_ceiling_walk),
     pinned in the same data-free leg.
+    PR-524 RE-MEASURES THIS ROW'S LIVE STATE AT PR-523'S PHYSICS
+    SCALE and narrows the climb gap to ONE law. From ZARIA's spawn
+    with the authored A_JUMP (`I 150,-1200` at s=20), the apex feet
+    reach y 550 at x 218, the falling box (feet 562) meets the
+    column, the ladder answers AS STATE 2 - A_DOWN, PR-216's one
+    answering index - with set 0x1400, and A_WSP is entered
+    (tick 95, /tmp/opencode/z_lj.log)
+    - at the old s=10/30px-apex scale this entry was out of reach
+    entirely, which is why this row's earlier probes could not get
+    past the jump. From there the rider cycles A_WSP / A_PODCIAG /
+    A_DRAP / A_TURN_BACK between y 560 and 594 and never seats
+    (/tmp/opencode/z_lj3.log): 560 is exactly the authored ladder
+    pair `30,50` -> (210,560), and the terrace to stand on is
+    ZARIA_A.PLT line 2 at y 518 - his feet hang 42 px under it.
+    What is missing is the TOP-OF-CLIMB seat: candidates in the
+    already-read material, in order of directness: the shape-box
+    contact/push-out 0x42a70/0x42de0 meeting the terrace line at
+    the straddle (box top 512 above 518, feet below - OI-073's
+    own header), a consumer of the ladder pair/contact-point words
+    ([obj+0xa5] family, PR-276), or A_PODCIAG's own lift motion
+    (PR-273 item (i), still unnamed - in the probe A_PODCIAG
+    holds y with v 0,0 and moves nobody). Named separately by the
+    same probe: the jump's apex (100 px) is now far above the
+    video's measured 24-30 px band - with the x law closed, the
+    `I` pair's units are the remaining vertical-constants item
+    PR-135 left open (the ESTIMATE row `jump impulse unit`).
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
