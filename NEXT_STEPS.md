@@ -69138,3 +69138,180 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
       hermetic halves plus the walk-LEFT leg's re-derivation,
       and the pool run losing its crossing; the final tree
       re-ran both halves clean.)
+
+## PR-530 - THE LIFE COUNTER AND THE FALL STATE: [obj+0x5c] IS THE SCRIPT'S
+## STATE INDEX, AND THE THIRD STATE IS THE FALL; THE CLASS VERB AT +0xd4 IS
+## THE ONE THAT SPENDS A LIFE, AND THE LEVEL LOOP EXITS CODE 2 AT ZERO
+
+```
+KIND: read
+SUBSYSTEM: the engine's life/energy chain and the death path: the lion
+  class verb at +0x90 (0x54450), the per-class death verb at +0xd4
+  (0x503d0 and its no-op siblings), the life counter global ds:0xa94f0
+  and its save/restore pair, the level loop's zero test and the stub
+  that consumes loop code 2; plus the port's measured stand-in for all
+  of it. No new port code: this is the read that PR-531 ports.
+ADDRESSES: 0x54450, 0x54467, 0x54474, 0x54478, 0x54482, 0x5448b,
+  0x5449c, 0x544a5, 0x544d0, 0x503d0, 0x503da, 0x503e4, 0x503f0,
+  0x503f4, 0x503fb, 0x503fc, 0x50406, 0x5040c, 0x50411, 0x50416,
+  0x5042b, 0x5042e, 0x50442, 0x5044f, 0x5044f-0x50455, 0x5045b,
+  0x50464, 0x50470, 0x50474, 0x50290, 0x5029b, 0x507b0, 0x507e0,
+  0x507fb, 0x50808, 0x50821, 0x5082c, 0x50845, 0x50854, 0x5086d,
+  0x5086d-0x50873, 0x3d940, 0x3d94d, 0x3d95e, 0x4ae82, 0x4ae87,
+  0x4ae8b, 0x5d3b0, 0x5d3b5, 0x5d3f0, 0x5d3f3, 0x5d3e3, 0x5d2f0,
+  0x5d2f9, 0x5e3f0, 0x5e3fb, 0x5eb09, 0x5dbe5, 0x5dc00, 0x5dddf,
+  0x5de0a, 0x2e100, 0x2e106, 0x36270, 0x3627a, 0x54f90, 0x4df10,
+  0x5daf1, 0x5dcd1, 0x5dceb, 0xa98a4, 0x926a3.
+NAMES: ds:0xa94f0, ds:0xcf464, ds:0xcef40, obj+0x5c, obj+0xad,
+  obj+0x60, obj+0x6d, obj+0xb5, obj+0xf2, obj+0x11a, obj+0x11e,
+  obj+0x28, class+0x90, class+0xd4, class+0xd8, A_DRAP, A_DEAD,
+  A_DOWN_PTAKI1, A_WPAD, AC_BREAK_NEXT, loop code 2, TLewZaria,
+  STATUS.LEO, OI-083, OI-066, OI-131.
+CODE: no: two comment corrections in ported/ll_level.c only - the
+  energy path's cite 0x50400 is replaced by the real instruction addresses
+  (0x503fb dec, 0x503fc energy 100, 0x50406 the store), and the
+  play_spawn note names the engine's own start value now that it is
+  read. No behaviour changes in this PR.
+HOOKS: none
+MEASURED: (a) THE GUARD, VERBATIM. 0x54450 is the lion family's +0x90
+  verb - 37 of the 189 class tables hold it at +0x90, and PR-530's
+  own slot query is what names that: it is the same slot PR-526 read
+  the ZARIA end-arm through. Its body: walk [[ds:0xcef40]+0x390] +
+  0x1c / +0x44 to the record the camera points at, take the WORD at
+  [rec+0x2] (0x54467 movsx), add 0x1f4 = 500, compare with the
+  object's y at [obj+0x4] (0x54474) and when the object is BELOW it
+  write [obj+0xad] = -1 (0x54478, the energy word). Then 0x54482
+  `cmp DWORD [obj+0x5c],2` - the CURRENT STATE INDEX, the field
+  PR-526 established by the 9/A_WPAD comparison - and on equality
+  test BYTE [[obj+0x60]+0],4 (0x5448b, the AC_BREAK_NEXT pulse
+  PR-527 arms at the row walk's forward top-end wrap) and call the
+  CLASS VERB [obj.vt+0xd4] (0x5449c), returning without touching the
+  energy test that follows for other kinds (0x544a5-0x544c2).
+  (b) THE INDEX IS THE FALL STATE IN EVERY SHIPPED LION SCRIPT. The
+  declared name lists put A_DEAD at index 1 and the falling state at
+  index 2 in all three that were compared: ZARIA.01 and TUNGA.11
+  LEW.MOV both read A_WALK, A_DEAD, A_DRAP; RAN.01 reads
+  A_FLY_PTAKI1, A_DEAD, A_DOWN_PTAKI1. So the guard is "the lion is
+  IN ITS FALL STATE at the moment its row list wraps" - not a kind
+  test, and PR-526's index-9 reading of the same field is what makes
+  that reading safe. (c) THE VERB THAT SPENDS A LIFE, FIELD BY
+  FIELD. The +0xd4 census over the class tables: 53 hold the plain
+  object death 0x544d0 (`[edx]=2, [ebx]=0, [obj+0x28]=1`), 10 hold
+  0x52c70 (`[obj+0x28] = [obj+0x2c] = 0` - no death at all), 9 hold
+  0x54e00 (0x52c70 then the child walk from [obj+0xd6]), and SEVEN
+  hold 0x503d0 - the lion arms 0x1ff15/0x20495 (TLewZaria's 0x96960,
+  PR-526's factory 0x1fef0), 0x1e0a6, 0x1ff49/0x22ee5,
+  0x269c2/0x26a75, 0x2703e/0x2743f, 0x3a455/0x3a5f5 and 0x3a489 /
+  0x9f540 and 0x9f668, the Tunga/Junction family of PR-526's
+  0x3a430. Two more hold WRAPPERS of the same verb: 0x2e100 at
+  +0xd4 of the class view 0x9c958 (`call 0x503d0`, then a state
+  request 0x52b10 with edx=0x19 and [ecx]=0x14), and 0x36270 at
+  0x9f244 - a site NOT inside the ctor table at 0x9f170, which ends
+  at 0x9f23a, i.e. the second-family descriptor block, named and not
+  resolved. 0x503d0 verbatim: [obj+0x11a] = 0 and [obj+0x11e] = 0
+  (0x503da/0x503e4), [obj+0xb5] = 0 (0x503f4), THEN `dec ds:0xa94f0`
+  (0x503fb read at 0x503ee, written at 0x50406) and
+  `[obj+0xad] = 0x64` (0x503fc) - energy back to 100 - then
+  `call 0x54f90` (0x5040c), [[ds:0xcef40]+0x3a8] = 0 (0x50416), the
+  class verb [obj.vt+0x4] with ebx=[obj+0x18] edx=[obj+0x14]
+  (0x5042b), [obj+0xc2] = [obj+0xc6] = 0, [obj+0x6d] = 1, the
+  caller's out words [esi]=1 [edi]=0, and FINALLY the zero test
+  again: `mov ebx,ds:0xa94f0` (0x5044f), test (0x5045b) - nonzero
+  clears [[ds:0xcef40]+0x3a0], ZERO calls 0x50290 with edx = 0,
+  which writes [obj+0xf2] = 0 (0x5029b). Then the 0xcf068 array is
+  cleared through 0x56380/0x56300/0x563a0 with 0xff (0x50479-0x50497)
+  and 0x4ab70 is called with the object's x/y. (d) THE LIFE
+  COUNTER'S WHOLE CENSUS. Every writer of ds:0xa94f0 in the image:
+  the dec at 0x50406 (the lion death); the class verb at +0xd8
+  (0x507e0, a 12-case switch through the table at 0x507b0) whose
+  case 0 INCs it and CAPS at 9 (0x50801-0x50811) and case 1 DEC's
+  it and FLOORS at 1 (0x50826-0x50835) - case 2 adds 50 to the
+  energy capped at 100 (0x5084b-0x50864) and case 3 subtracts 30
+  (0x5086d), the same -30 OI-131 saw inline in TLewZaria's +0x90 at
+  0x1e26d - and 20 code sites call [class+0xd8]; the run-start SET
+  TO 5 at 0x5d2f9 (in the routine 0x5d2f0, which the level stubs
+  also reach on loop code 2) and again at 0x5e3f0/0x5e3fb (which
+  sets ds:0xcf464 in the same breath); a SET TO 9 at 0x5eb09, in the
+  14th level entry PR-193 named - the one that takes its name from
+  its caller and discards the loop's result; and the SAVE pair -
+  restore at 0x5dbe5-0x5dc00 (read a dword, `xor 0x77072400`,
+  `and 0xff00`, `sar 8` = byte 1, store to ds:0xa94f0) with its
+  sibling ds:0xcf464 taken from the same obfuscation at 0x5dc0c-
+  0x5dc27, and store at 0x5dddf-0x5ddf6 (`mov edx,ds:0xa94f0`,
+  `shl edx,8`, `or eax,edx`, `xor 0x77072400`) with ds:0xcf464
+  packed the same way at 0x5de0a. THE TWO ENDS ARE NAMED BY THEIR
+  OWN STRINGS: the reader 0x5dae0 loads `status.leo` (`mov
+  eax,0xa98a4` at 0x5daf1) and the writer 0x5dcc0 opens the same
+  name (0x5dcd1) and prints `Cannot open status file!` (0x926a3 at
+  0x5dceb) - this is OI-066's record at both ends. The readers: the
+  HUD digit walk at
+  0x446b0-0x446f8 (the counter INDEXES an array: `mov eax,[eax +
+  lives*4]` at 0x446ec, then the element's +0x10 verb) and the loop
+  test below. (e) THE ZERO TEST AND ITS CONSUMER. 0x4ae82
+  `mov eax,ds:0xa94f0`, 0x4ae87 test, 0x4ae89 jne, 0x4ae8b
+  `mov ebx,2` - the level loop 0x4abd0 exits with CODE 2 when the
+  counter reaches zero, joining the four exits PR-190 counted at the
+  single epilogue 0x4ae53. The consumer is the plain level stub:
+  0x5d3b5 reads the code, 0x5d3b8/0x5d3f0 sort 0,1,2 from 3 and 4,
+  and code 2 goes 0x5d3f3 -> 0x5d3e3 -> `call 0x5d2f0` - the
+  routine that sets ds:0xa94f0 = 5, calls the save writer 0x5dcc0,
+  then branches on ds:0xcf464 (0x5d308: if it is zero, 0x5d38e). So
+  the shipped game's game-over is RESET THE RUN AND WRITE THE SAVE,
+  five lives again, and what it re-enters is the ds:0xcf464 half.
+  (f) THE PORT, MEASURED. ZARIA.01 with one key held for 1500 ticks
+  (/tmp/opencode/pr530_deathloop.log) falls into the 408..624 chasm
+  NINE times - 454,1010 / 455,1010 / 458,1011 / 456,1010 / 454,1010
+  / 454,1010 / 458,1011 / 457,1010 / 458,1011 - and prints ZERO
+  life lines: the port's fall-out path (ll_level.c 8203 `below
+  lew_rect ... -> respawn`) costs nothing, and the port's only
+  life-cost site is its energy test at 8190, which that log never
+  reaches. The port also starts at 6 lives (ll_level.c 13505, the
+  playthrough video's number) where the engine's own run start is
+  5 (0x5d2f9), and it has no code-2 path at all. The line itself is
+  the open half: the port kills at the authored lew_rect bottom
+  (1000 for ZARIA), the engine at [camera record +0x2] + 500 with
+  the energy word set to -1 - ZARIA_A.PLT's own line 45 at y 1500
+  is the authored catcher at exactly that distance below the
+  lew_rect bottom, counted here and not read.
+OPENS: OI-132 (the death LINE: what the camera record word at
+  [rec+0x2] is, and the port's lew_rect stand-in); OI-083 now
+  answered for the lives half; OI-066 gains a named field of
+  STATUS.LEO; OI-131's list of unported +0x90 arms gains the
+  [obj+0xf2] and [obj+0x6d] writes this record names.
+CLOSES: none as a row. The two claims the port carried as fact are
+  spent: that the death line is the authored lew_rect bottom (it is
+  a camera-row measure plus 500), and that the starting life count is
+  6 (the engine writes 5 at 0x5d2f9 and 0x5e3f0).
+CORRECTS: PR-68's code cite on the port's energy path, "0x50400:
+  lives--, energy 100": the decrement is 0x503fb/0x50406 and the
+  100 is 0x503fc, inside the class verb at +0xd4 (0x503d0), and the
+  0x50400 range is the tail of a DIFFERENT reset (the [obj+0x11a]
+  and [mgr+0x3a8] zeroes at 0x503da/0x50416). The claim itself -
+  that losing the last life resets the energy to 100 - stands, now
+  with its addresses.
+```
+
+- WHY. The objective since PR-524 has been "ZARIA.01 playable end
+  to end", and PR-529 delivered the traversal; what a PLAYER meets on
+  the way is the pit, and the port's answer to the pit was written in
+  PR-68 and never re-read. Measuring it first (nine falls, no life
+  spent, no end) showed the port has a death path with no death in
+  it. The read settles the parts that are settled from bytes - the
+  starting count, the counter's full census, the verb that spends a
+  life, the zero exit and its consumer - and separates them from the
+  part that is not: the camera-row death line, which needs the
+  camera's row arrays read before any of it can be ported honestly.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 76 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+      (both rc=0: /tmp/opencode/pr530_gate1.log and
+      pr530_gate2.log, the pair of the final tree with this
+      record's text in it; counts are grep -c '(ok)' and the named
+      `verify-*: SKIP` lines. The diff touches ported/ for comments
+      only, so the record carries the full pair rather than the
+      light line - the profile follows what the diff touches, not
+      the KIND. An earlier pair of the same tree was stopped by
+      hand when a further docs edit landed mid-run and is not
+      cited. After the last edit the selftest and the index both
+      re-run green: ./ll_level --play-selftest rc=0 and
+      `make verify-index` regenerates the index byte-identical.)

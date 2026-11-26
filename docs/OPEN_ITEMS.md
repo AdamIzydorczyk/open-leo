@@ -1219,6 +1219,20 @@ OI-066: the 84-byte STATUS.LEO record: field meaning AND the field
   status: OPEN
   origin: PR-193 item (3) / FINDING 4; HANDOFF 7 item 5; T-17
     territory; G-8's map half
+    PR-530 NAMES THE TWO ENDS AND ONE FIELD. The reader 0x5dae0
+    loads `status.leo` (`mov eax,0xa98a4` at 0x5daf1) and the writer
+    0x5dcc0 opens the same name (0x5dcd1) and prints `Cannot open
+    status file!` (0x926a3 at 0x5dceb). Within them: the life counter
+    is
+    written into the save stream at 0x5dddf-0x5ddf6: `mov edx,
+    ds:0xa94f0 ; xor ah,ah ; shl edx,8 ; or eax,edx ; xor
+    0x77072400 ; mov [ebp+0],eax` - byte 1 of a dword obfuscated by
+    that constant - and read back symmetrically at 0x5dbe5-0x5dc00
+    (`mov eax,[edi] ; xor 0x77072400 ; and 0xff00 ; sar 8 ; mov
+    ds:0xa94f0,eax`). The sibling global ds:0xcf464 is packed the
+    same way at 0x5dc0c-0x5dc27 / 0x5de0a, so the two counters share
+    one obfuscated dword; what ds:0xcf464 IS stays open (it is the
+    value the game-over routine branches on at 0x5d308).
 
 OI-067: the six stream classes' identity: what differs at
   +0x04..+0x18 and which file kind each carries; the +0x00 slot as
@@ -3878,11 +3892,27 @@ OI-082: the water surface as a floor (the lion walks WODA at pool
 
 OI-083: HUD display truth: both R3 clips start at 5 lives (the
   port prints a hard-coded 6) and the HUD energy at level start is
-  unknown - both are video-gated checks
-  status: OPEN
+  unknown
+  status: PARTIAL (the lives half is ANSWERED FROM THE IMAGE, no HUD
+    read needed - PR-530; the energy-at-level-start half stays
+    video-gated)
   origin: G-8; PR-186 item (10)
   notes: the lives half resolves through OI-066 (STATUS.LEO) rather
     than a HUD read.
+    PR-530 ANSWERS THE LIVES HALF WITHOUT THE CLIPS. The counter is
+    the global ds:0xa94f0 and its run-start write is `mov
+    DWORD ds:0xa94f0,0x5` at 0x5d2f9 - inside the routine the level
+    stubs also call on loop code 2, 0x5d3e3 - with the same 5 at
+    0x5e3f0/0x5e3fb; a fourth site sets 9 (0x5eb09, the 14th level
+    entry that discards the loop result). So 5 is the shipped start
+    value and the port's 6 is its own stand-in (ll_level.c 13505,
+    cited to the video). The counter verb at class slot +0xd8
+    (0x507e0) caps it at 9 (0x50811) and floors it at 1 (0x50835),
+    while the death verb's `dec` (0x503fb/0x50406) has no floor -
+    that is the path that reaches the loop's zero test at 0x4ae82.
+    What the HUD DRAW does with it is read enough to note: the digit
+    walk at 0x446b0-0x446f8 indexes an array BY the counter (`mov
+    eax,[eax+lives*4]` at 0x446ec).
 
 OI-084: is the rounded cave picture the WHOLE Mode X frame or a
   letterboxed copy? It decides what "the same picture" means for
@@ -9262,3 +9292,52 @@ OI-131: the object class's +0x90 verb is a STATE-REQUEST FILTER, and
     energy hit that rides a request to A_KILOF are all unmodelled,
     and the dive's real entry route is one of them (OI-053's
     message half).
+
+OI-132: the death LINE is a camera-row measure plus 500, not the
+  authored lew_rect bottom; the port's fall-out path is a stand-in
+  that spends no life and never ends the run
+  status: OPEN
+  origin: PR-530
+  notes: WHAT IS READ (PR-530, all bytes). The lion family's class
+    verb at +0x90 (0x54450, held at +0x90 by 37 of the 189 class
+    tables) runs every object step: it walks [[ds:0xcef40]+0x390] +
+    0x1c / +0x44 to the record the camera points at, takes the WORD
+    at [rec+0x2] (0x54467 movsx), adds 0x1f4 = 500 and compares it
+    with [obj+0x4] (0x54474); below that line it sets [obj+0xad] =
+    -1 (0x54478, the energy word). The life-losing half is separate:
+    `cmp DWORD [obj+0x5c],2` (0x54482 - the CURRENT STATE INDEX, the
+    field PR-526 pinned with the 9/A_WPAD test, and index 2 is the
+    falling state in every shipped lion script: ZARIA.01 and
+    TUNGA.11 both declare A_WALK, A_DEAD, A_DRAP, RAN.01 declares
+    A_FLY_PTAKI1, A_DEAD, A_DOWN_PTAKI1) and on equality with the
+    AC_BREAK_NEXT pulse in the live set (0x5448b, the mask-0x4 bit
+    PR-527 arms at the row walk's forward top-end wrap) it calls
+    [obj.vt+0xd4]. Seven class views hold the life-spending verb
+    0x503d0 (TLewZaria's 0x96960 and the Ena2/Tunga1-Junction arms
+    at 0x1e0a6, 0x1ff49/0x22ee5, 0x269c2/0x26a75, 0x2703e/0x2743f,
+    0x3a455/0x3a5f5, 0x3a489), 53 hold the plain object death
+    0x544d0, 10 the no-death 0x52c70 and 9 the child-taking 0x54e00.
+    WHAT IS NOT READ: what the word at [rec+0x2] is - the camera's
+    row arrays at [cam+0x44] (PR-189's "the [x+0x44] row arrays",
+    the 0x50 tile stride) have never been walked, so the engine's
+    death LINE is a formula without a number; whether the row-wrap
+    pulse in the fall state is what the shipped game actually rides -
+    the port's ZARIA.01 pit cycle passes THROUGH A_DRAP (index 2) 63
+    times in 1500 ticks and leaves it on `A_WALK(1)=K_FWD`, but
+    whether its row cursor wraps first is printed nowhere and was
+    NOT measured, and that pulse is the guard's second half; what
+    [[ds:0xcef40]+0x3a0] / [mgr+0x3a8] and [obj+0xf2] are (0x50290
+    writes [obj+0xf2] = 0 exactly when the counter hits zero); and
+    ds:0xcf464, the value the game-over routine 0x5d2f0 branches on
+    at 0x5d308 after setting five lives and calling the save writer.
+    WHY IT MATTERS: the port kills at the authored lew_rect bottom
+    (ZARIA y 1000) and costs nothing - /tmp/opencode/
+    pr530_deathloop.log holds one key held for 1500 ticks: nine
+    falls (454,1010 / 455,1010 / 458,1011 / 456,1010 / 454,1010 /
+    454,1010 / 458,1011 / 457,1010 / 458,1011) and zero life lines.
+    ZARIA_A.PLT's line 45 at y 1500 is 500 px below that bottom,
+    counted here and not read: either it is the authored catcher at
+    the engine's own line, or the camera-row formula lands somewhere
+    else. The level loop's zero exit (0x4ae82 -> code 2) and its
+    consumer (0x5d3f3 -> 0x5d3e3 -> 0x5d2f0) are read, and the port
+    has no code-2 path at all.

@@ -26,7 +26,7 @@ What exists and works (all verified by `make verify-all`, section 3):
 | title menu + chapter map | drawn from data (11 chapters, titles from `LEVELnn.SEQ`, arrow colours); progress/"start" variants not done |
 | level scene | 320x200 world view shown 2x; world size from `back_rect` or the reference layer; per-layer parallax (`speed=`, `main_back=`) for PCM layers, the PCX backdrop and every object; HUD from `BELKA*.DES` |
 | objects | 827+ placements, art by each state's `seq=`, `.MOV` state machines (loop until a transition fires; `GEN K_GENn`, `AC_BREAK_NEXT`); PR-93: the 3-comma static image lines (`<LEAF>,<name>.seq,x,y` -> that CD leaf's `.SEQ`, drawn at the authored x,y behind the actors) and the 0,0 entries = attached children (joined+counted, never instantiated at the world origin); PR-107: a `TARGET(N)=<cond>` line carries an authored START ROW and the target state is entered at that row (same rule for the lion and scene objects) |
-| lion (play mode) | walks on the level's own ground (`.PLT`) with his current ANIMATION's shape-box bottom as the contact line (PR-97: `ll_player.contact`, `ll_seq_shape_contact`, `mov_state_contact`), steps the engine's OWN velocity law at the engine's OWN cadence (PR-523, default): the row clock is fed every 50 ms iteration - the constant 100, or for a BY_X state the persisted whole-px step word - while the velocity registers, the position step at register//100, the ground queries and the bounds run only when the authored row step answers (a threshold crossed, or a `Wait` clause matched), plus exactly one seed pass at the rising edge of the intent word and at a zero FEED WORD (`[obj+0xca]`) met by a held intent (PR-522's cold start, re-keyed by PR-529), and the ordinary pass at a row whose clause refuses (a parked row parks the cursor, not the body); `v -= T*v/100` then `v += F*s/20` with the key intent `s` = ±20, the keyboard's word the live capture carries and the word of EVERY state, not a BY_X-only one (PR-529: pr516i's named A_JUMP window is byte-exact on both the pull and the release), the port's own `auto_walk` keeping the BY_X scope (PR-520/PR-523, replacing PR-135's fitted ±10; `LEO_PLAY_ROW_PHYSICS=0` restores the old per-iteration model for comparison only); jumps (ESTIMATED units), keys facing-relative (Model M, PR-85), camera follows (lead 100/220 - PR-136's absolute camera read CONFIRMS the right lead at 95-108; PR-137 APPLIED the grounded anchor at 128 + the world clamp (the 175..180 band was the clamp, not the anchor), pinned hermetically by `ll_level --follow-selftest`), HUD shows energy/lives |
+| lion (play mode) | walks on the level's own ground (`.PLT`) with his current ANIMATION's shape-box bottom as the contact line (PR-97: `ll_player.contact`, `ll_seq_shape_contact`, `mov_state_contact`), steps the engine's OWN velocity law at the engine's OWN cadence (PR-523, default): the row clock is fed every 50 ms iteration - the constant 100, or for a BY_X state the persisted whole-px step word - while the velocity registers, the position step at register//100, the ground queries and the bounds run only when the authored row step answers (a threshold crossed, or a `Wait` clause matched), plus exactly one seed pass at the rising edge of the intent word and at a zero FEED WORD (`[obj+0xca]`) met by a held intent (PR-522's cold start, re-keyed by PR-529), and the ordinary pass at a row whose clause refuses (a parked row parks the cursor, not the body); `v -= T*v/100` then `v += F*s/20` with the key intent `s` = ±20, the keyboard's word the live capture carries and the word of EVERY state, not a BY_X-only one (PR-529: pr516i's named A_JUMP window is byte-exact on both the pull and the release), the port's own `auto_walk` keeping the BY_X scope (PR-520/PR-523, replacing PR-135's fitted ±10; `LEO_PLAY_ROW_PHYSICS=0` restores the old per-iteration model for comparison only); jumps (ESTIMATED units), keys facing-relative (Model M, PR-85), camera follows (lead 100/220 - PR-136's absolute camera read CONFIRMS the right lead at 95-108; PR-137 APPLIED the grounded anchor at 128 + the world clamp (the 175..180 band was the clamp, not the anchor), pinned hermetically by `ll_level --follow-selftest`), HUD shows energy/lives (the port's 6 and its no-cost fall respawn are both its own stand-in: the engine's run start writes 5 lives at 0x5d2f9, the life is spent only through the class verb at +0xd4 (0x503d0), and the death line is a camera-row measure plus 500, not the lew_rect bottom - PR-530, OI-132) |
 | collision | push-out ported from the machine code (`FUN_00042de0/42cf0`), solid/semi-solid response, damage from an enemy ONLY through its own ATC window (the authored `atc_on` rows) and the 0x550c0 clash rule - a bare touch never hurts the lion (PR-139 deleted the port's unconditional contact damage); the enemy's own ATC-window attack when armed (PR-90, off unless `LEO_PLAY_DANGER=1`), balloon pickup; ON by default except RAN.01 |
 
 What does NOT exist yet (the real gap to "a playable game"): combat
@@ -47,7 +47,10 @@ PR-194/199, and since PR-526 the level's OWN lion class raising the
 loop's first guard, code 3, which is how ZARIA ends: the dive; what
 is missing is the engine's fresh-object stage re-entry 0x5d1f5 and
 the exchange between TUNGA I and II), RAN's balloon mode,
-sound effects, save/progress semantics.
+sound effects, save/progress semantics - the life counter and the
+game-over exit are now READ (PR-530: the counter global, the save
+field, loop code 2 and the reset-the-run consumer at 0x5d2f0) and
+unported, held at OI-132 until the camera-row death line is read.
 Section 8 lists them as tasks.
 
 ## 2. Ground rules (non-negotiable)
@@ -6346,6 +6349,36 @@ STATUS after PR-194: the CONTRACT half of T6 is now in port code, and
     or a level index, and who writes [level+0x4] - the easy shape was
     measured and ruled out (no ds:0xcef40 load pairs with a [reg+0x4]
     store nearby). PR-195 is that read.
+
+PR-530 READ THE LIFE CHAIN T6 ASKS FOR (NEXT_STEPS PR-530). The
+counter is the global ds:0xa94f0, not an object field, and its whole
+census fits one record: the run start writes 5 (0x5d2f9, and again
+0x5e3f0), one entry writes 9 (0x5eb09), the class verb at +0xd8
+(0x507e0) caps it at 9 and floors it at 1 while the death verb's
+`dec` (0x503fb/0x50406) has no floor, and the save codec packs it as
+byte 1 of a `xor 0x77072400` dword (store 0x5dddf-0x5ddf6, restore
+0x5dbe5-0x5dc00) next to ds:0xcf464 - one named field of OI-066's
+record. THE ZERO END IS READ: the level loop tests the counter at
+0x4ae82 and exits with code 2 (0x4ae8b), and the plain level stub
+sorts it at 0x5d3f0/0x5d3f3 into `call 0x5d2f0` - set five lives,
+call the save writer 0x5dcc0, branch on ds:0xcf464. So the shipped
+game-over is RESET THE RUN AND WRITE THE SAVE. THE LIFE-SPENDING PATH
+is the lion class verb at +0x90 (0x54450, at +0x90 in 37 of the 189
+class tables): `cmp DWORD [obj+0x5c],2` - the current STATE INDEX,
+and index 2 is the fall state in every shipped lion script (ZARIA.01
+and TUNGA.11 declare A_WALK, A_DEAD, A_DRAP; RAN.01 A_FLY_PTAKI1,
+A_DEAD, A_DOWN_PTAKI1) - and with the AC_BREAK_NEXT pulse live it
+calls [obj.vt+0xd4]; seven class views hold the life-spending verb
+0x503d0 (TLewZaria's 0x96960 among them), 53 hold the ordinary
+object death 0x544d0. WHAT STOPS T6 PORTING IT is the death LINE:
+0x54450's other half sets energy [obj+0xad] = -1 when the object is
+500 px below the WORD at [rec+0x2] of the record the camera points
+at, and the camera's row arrays ([cam+0x44], PR-189's note) have
+never been walked - OI-132. The port meanwhile kills at the authored
+lew_rect bottom and spends nothing: one key held for 1500 ticks in
+ZARIA.01 falls nine times and prints no life line
+(/tmp/opencode/pr530_deathloop.log), and it starts at 6 lives
+because PR-68 took the number from the video - the image says 5.
 
 **T7. RAN's balloon mode.** Episode 9 of the video shows it (you fly right,
 birds attack the canopy, vulture boss throws bombs). Lion states with scripted

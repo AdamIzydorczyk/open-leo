@@ -8187,7 +8187,18 @@ static void play_advance(play_ctx *pl, const ll_play_keys *keys,
         for (int k = 0; k < nobj; k++)
             obj_arm_atak((lvl_obj *)&objs[k], ax, ay, verbose, tick);
     }
-    if (pl->energy <= 0) {                  /* 0x50400: lives--, energy 100 */
+    if (pl->energy <= 0) {                  /* PR-530: the engine's
+                                             * life-spending verb is the
+                                             * class's +0xd4 (0x503d0):
+                                             * `dec ds:0xa94f0` at
+                                             * 0x503fb/0x50406 and
+                                             * `[obj+0xad] = 0x64` at
+                                             * 0x503fc, reached from the
+                                             * +0x90 verb's state-2 test
+                                             * at 0x54482-0x5449c. This
+                                             * energy test is the port's
+                                             * own trigger, not that
+                                             * chain. */
         pl->lives--;
         pl->energy = 100;
         pl->lock = 0;
@@ -8200,8 +8211,16 @@ static void play_advance(play_ctx *pl, const ll_play_keys *keys,
     if (ev & LL_PLAY_EV_STATE)
         printf("ll_level: play: %s -> %s\n", pl->mov->st[was].name,
                pl->mov->st[pl->p.sti].name);
-    if (pl->p.y > pl->ydead) {              /* fell out of the authored   */
-        printf("ll_level: play: below lew_rect at (%d,%d) -> respawn\n",   /* world */
+    if (pl->p.y > pl->ydead) {              /* STAND-IN, OI-132 (PR-530): */
+        printf("ll_level: play: below lew_rect at (%d,%d) -> respawn\n",   /* the  */
+                                             /* engine's line is the WORD */
+                                             /* at [rec+0x2] of the      */
+                                             /* camera's current record  */
+                                             /* +0x1f4 (0x54467-0x54478) */
+                                             /* and it sets energy -1;   */
+                                             /* the life is spent by the */
+                                             /* +0xd4 verb, which this   */
+                                             /* stand-in never calls.    */
                xi, yi);
         play_spawn(pl);
         xi = (int)pl->sx;
@@ -13502,7 +13521,11 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
      * its first call. LEO_LEVEL_CAMY still seeds the PREVIEW camera and
      * is overridden in play mode, where the game's own camera rule runs. */
     pl.energy = 100;                       /* 0x503ac: energy 100 at (re)start */
-    pl.lives = 6;                          /* the playthrough video's start    */
+    pl.lives = 6;                          /* the playthrough video's   */
+                                           /* number. PR-530 counts to   */
+                                           /* this: the engine writes 5  */
+                                           /* (0x5d2f9, again 0x5e3f0),  */
+                                           /* OI-083.                    */
     hud_t hud;
     memset(&hud, 0, sizeof hud);
     scene_owner scene;                     /* scripts + placements, owned;
