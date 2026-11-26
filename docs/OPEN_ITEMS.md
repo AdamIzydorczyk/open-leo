@@ -3749,6 +3749,17 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     raiser (the LINA class is unmodelled in the port). Then the
     shore to the pool DRECT, whose end-rule half PR-526 already
     measures.
+    PR-528 BINDS THE LINA HALF of the candidates: the rope's
+    factory arm 0x4e81d leaves the class view 0xa1dfc named
+    above, its +0x78 verb 0x3f390 is 0x3f1c0's grammar with a
+    CENTRAL-50% probe (0x3f448) and the AC_LINA/AC_LINA_CATCH
+    pair (0x3f4ac/0x3f4d4, 0x3f525 alone), and ly_rope runs
+    the authored chain end to end - bus unroll at 46, AC_EDGE
+    at the band at 374, the CATCH at 402, the hang at
+    (549,577), the UP lift back onto the canopy at (546,506).
+    THE ROPE IS THE CHASM'S SAFETY NET, NOT ITS CARRIER: the
+    hang sits 75 px west of the east lip, so the crossing
+    stays exactly the seat-chain route named at OI-124.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -6039,6 +6050,16 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     AC_DUP restarts stay authored fact; what they re-fire is a NEW
     pass entered through the self-transition, not a hold inside one
     flight.
+    PR-528 MEASURES OUT ONE CANDIDATE of this row: the LINA
+    rope at 525,525 is now bound (class view 0xa1dfc, verb
+    0x3f390) and ly_rope runs its whole authored chain - the
+    CATCH twins answer inside its 50% probe and the lion hangs
+    at (549,577), 75 px WEST of the east lip and 96 px above
+    the right bank's line, then UP lifts him back onto the
+    canopy. The rope is the chasm's RECOVERY device, not its
+    carrier. What carries the crossing is still this row's
+    named gap: the row-admit air-carry cadence above as a port
+    leg, and the KATAPULT/PALMA seat leg.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that

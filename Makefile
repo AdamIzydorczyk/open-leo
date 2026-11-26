@@ -2562,6 +2562,59 @@ ifeq ($(PX_DATA),1)
 	  || { echo "play ZARIA reverse-walk grep FAILED"; \
 	       grep -E 'play: A_|state A_(WALK|DRAP|LOOKUP|FALL_DOWN) ' \
 	         /tmp/opencode/ly_revwalk.log | tail -12; exit 1; }
+# PR-528, OI-122/OI-123: THE LINA ROPE IS BOUND - the second authored
+# candidate for the 408..624 chasm. The factory arm 0x4e81d names LINA,
+# allocates 0xd9 and leaves [obj+8] = 0xa1dfc, whose +0x78 verb is
+# 0x3f390 - 0x3f1c0's shape with three measured differences (50% probe
+# instead of 70%, the AC_LINA/AC_LINA_CATCH twins, and the same
+# AC_EDGE band first), and ZARIA.01 places the rope at 525,525 with
+# column 546..554 x 555..645, pair point 550,574 and band x 546..554
+# y 494..574. The leg walks the revwalk route, presses DOWN at 372
+# while A_WALK stands over the band, then holds UP at 410. The chain,
+# every tick its own arithmetic: the rope takes its own K_GEN1 wake at
+# 46 (the lion's A_DRAP idle rows GEN it - PR-257's bus) and settles
+# in A_DOWN, the answering state; at 374 the band answers AC_EDGE
+# ("set 100") and A_WALK's `A_SCIAG(1)=AC_EDGE,K_DOWN` row takes the
+# descent (546,506 -> 549,574); at 402 the CATCH twins answer inside
+# the 50% probe ("set 600000" = bits 21|22), the fall hands to the
+# hang at (549,577) over the pit, and UP at 410 walks `A_WSP_LIN(1)=
+# AC_EDGE,K_UP` into A_PODCIAG, whose lock/unlock rows (PR-525's
+# anchor walk) lift the lion back onto the canopy: 549,574 at 416,
+# 542,534 at 419, grounded at (546,506) at 440. THE ROPE IS THIS
+# CHASM'S SAFETY NET, NOT ITS BRIDGE: the hang sits 75 px west of the
+# east lip, and the crossing stays open on the air-carry law (OI-124,
+# PR-517's row-admit registers) and the landing continuity (OI-073),
+# not on the class binding - this leg proves the binding and the
+# chain, and names what it does not close.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=10 \
+	  LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE 295:FWD 372:FWD,DOWN 385:NONE 410:UP 445:NONE" \
+	  LEO_PLAY_ASK=1 \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_rope.ppm \
+	  LEO_LEVEL_PPM_TICK=445 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_rope.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play ZARIA rope FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_rope.log; exit 1; fi
+	@grep -q 'asked ladder LINA/lina.mov at state 1: its authored contact point 525,525 tested against the asker'"'"'s live box .* -> no (0x4b500 -> 0x3f390 -> 0x44ec0)' /tmp/opencode/ly_rope.log \
+	  && grep -q 'play tick 46: LINA/lina.mov takes its own K_GEN1 line: state A_DROP' /tmp/opencode/ly_rope.log \
+	  && grep -q 'play tick 374: ladder LINA/lina.mov state 2 ANSWERS the lion (non-solid): set 100' /tmp/opencode/ly_rope.log \
+	  && grep -q 'play: A_WALK -> A_SCIAG' /tmp/opencode/ly_rope.log \
+	  && grep -q 'play tick 402: ladder LINA/lina.mov state 2 ANSWERS the lion (non-solid): set 600000' /tmp/opencode/ly_rope.log \
+	  && grep -q 'play: A_FALL_DOWN -> A_WSP_LIN' /tmp/opencode/ly_rope.log \
+	  && grep -q 'play tick 407: state A_WSP_LIN seq climb_r frame 3 pos 549,577 grounded 0' /tmp/opencode/ly_rope.log \
+	  && grep -q 'play: A_WSP_LIN -> A_PODCIAG' /tmp/opencode/ly_rope.log \
+	  && grep -q 'play tick 440: state A_PODCIAG seq lift frame 9 pos 546,506 grounded 1' /tmp/opencode/ly_rope.log \
+	  && echo "play LINA rope (PR-528): the LINA class is bound and its" \
+	     "0x3f390 answer verb runs in play - asked, K_GEN1 unroll at" \
+	     "46, AC_EDGE at the band at 374, the descent, the 50%-probe" \
+	     "CATCH twins at 402, the hang at (549,577) over the pit," \
+	     "and the UP climb back onto the canopy at (546,506): the" \
+	     "chasm's safety net works; the crossing itself stays open" \
+	     "at OI-124/OI-073 (ok)" \
+	  || { echo "play ZARIA rope grep FAILED"; \
+	       grep -E 'play: A_|asked ladder LINA|ANSWERS|state A_(WSP_LIN|PODCIAG|SCIAG) ' \
+	         /tmp/opencode/ly_rope.log | tail -12; exit 1; }
 # PR-277, FOCUS 1 / OI-078: JUMPING OFF THE LADDER AND RE-CATCHING
 # IT - the authored mid-climb exit chain, end to end. A_WSP's own
 # row `A_PRE_JUMP(1)=K_JUMP` is key-only, so pressing JUMP at 200

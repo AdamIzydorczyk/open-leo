@@ -5896,13 +5896,32 @@ static int clash_suppressed(const play_ctx *pl, int lx, int ox)
  * legs L12) - and an object with NO authored pair keeps the
  * 1x1 default, also counted. P1's priority over the rung
  * answer is a separate leg.
- * CLASS SCOPE, COUNTED: only DRABINKA answers here. Its chain is
- * the one anchored end to end (PR-141: factory 0x1f8ac -> class
- * table 0x97cdc, +0x78 = 0x3f1c0). LINA's constructor chain is
- * proven (PR-149 F3) but LINA's class table and the bit pair its
- * +0x78 entry raises (the AC_LINA twins, 21/22) have never been
- * anchored, and the K-prefixed climbable variants (KLINA,
- * KDRABINA, PR-141) not at all - those stay unanswered, item 2.
+ * CLASS SCOPE (PR-528 EXTENDS IT): two chains are anchored end to
+ * end. DRABINKA's is PR-141's (factory 0x1f8ac -> class table
+ * 0x97cdc, +0x78 = 0x3f1c0). LINA's factory arm is 0x4e81d: the
+ * name test 0x76a69 against "LINA" at 0x92005 allocates 0xd9,
+ * calls ctor 0x531f0, and the pairs at 0x4e8c4/0x4e8d2 leave the
+ * object's [obj+8] view = 0xa1dfc, whose +0x78 IS 0x3f390 and
+ * whose +0x18 is the SAME record verb 0x3f0f0 - the rope reads
+ * its column and band with the same grammar (OI-117 cited the
+ * 0xa1dfc+0x78 row). The K-prefixed variants (KLINA, KDRABINA)
+ * stay unanchored and unanswered, item 2.
+ * 0x3f390 IS 0x3f1c0'S SHAPE, with three measured differences
+ * (PR-528, read from the bytes this pass): the state gate is the
+ * same (1 = the K_GEN1 flag raise at 0x3f3d3-0x3f3df, exactly
+ * 0x3f203's form; 2 = the AC packet; anything else the inert
+ * tail 0x3f534); P1 is the same edge band and answers the same
+ * AC_EDGE (`or BYTE PTR [ecx+1],1`, 0x3f41d); P2/P3 differ: the
+ * probe inset word is `mov edx,0x32` at 0x3f448 = 50, not 0x46 =
+ * 70 (0x3f278), so the rope keeps the CENTRAL 50% of its column,
+ * and the merged pair is `or dh,0x40` at 0x3f4ac (byte 6 bit 6 =
+ * bit 22 = AC_LINA_CATCH) merged with `or bh,0x20` at 0x3f4d4
+ * (byte 2 bit 5 = bit 21 = AC_LINA) through 0x49580/0x749a0,
+ * while P3-outside-the-probe answers AC_LINA ALONE (`or BYTE PTR
+ * [ecx+2],0x20`, 0x3f525). The bit pairs sit in different bytes
+ * because AC_LINA/AC_LINA_CATCH are indexes 21/22 in the name
+ * block at 0x91ad9/0x91ae1, where AC_DRAB/AC_DRAB_CATCH are
+ * 10/12 - the port's mask uses those indexes verbatim.
  * WHAT DOES NOT SHIP (counted, not hidden): the kind-4 contact
  * node and its +/-10 y-override (PR-147 - PR-149 F1 built the
  * node shape it needs, the natural next PR); object-asked answers
@@ -5913,8 +5932,13 @@ static int clash_suppressed(const play_ctx *pl, int lx, int ox)
  * test of the row-1 branch (the port models no child list - the
  * feature was never read - so the engine's row-1 answer here is
  * the inert exit and [obj+0x66] bit 6 is never set, counted).
- * AT ZARIA.01 THIS STILL CHANGES NOTHING OBSERVABLE, and the legs
- * say why instead of asserting it away: (i) the authored A_WALK token
+ * AT ZARIA.01 THIS CHANGED NOTHING OBSERVABLE UNTIL PR-528 BOUND
+ * LINA: the ly_rope leg below shows the bound rope asking with
+ * 0x3f390, taking its own K_GEN1 unroll, answering AC_EDGE at its
+ * band and the CATCH pair in its column, and running the lion's
+ * authored descent/hang/climb chain. The DRABINKA reading stayed
+ * as PR-149/PR-216 left it, and the legs say why instead of
+ * asserting it away: (i) the authored A_WALK token
  * carries no CHECK bit for the ladder's list (PR-131's gate, the
  * same gate the port's play_collide applies - zero answer
  * calls); (ii) even with the gate open the placed ladder answers
@@ -5935,7 +5959,13 @@ static int clash_suppressed(const play_ctx *pl, int lx, int ox)
  * asserted away. */
 static int ladder_class(const lvl_obj *o)
 {
-    return o->sc && ci_eq(o->sc->leaf, "DRABINKA");
+    if (!o->sc)
+        return 0;
+    if (ci_eq(o->sc->leaf, "DRABINKA"))
+        return 1;                      /* 0x97cdc +0x78 = 0x3f1c0  */
+    if (ci_eq(o->sc->leaf, "LINA"))
+        return 2;                      /* 0xa1dfc +0x78 = 0x3f390  */
+    return 0;
 }
 
 /* PR-257: the 0x3f1c0 branch gate for the AC answer packet. The verb
@@ -5960,39 +5990,51 @@ static int pt_in_blk(const ll_pt *p, const ll_blk *q)
            p->y >= q->y0 && p->y <= q->y1;
 }
 
-static void blk_probe70(ll_blk *b)
+static void blk_probe_pct(ll_blk *b, int n)
 {
-    /* 0x49fb0 with n = 0x46 (0x3f278), verbatim 0x49fb6..0x49fe4
-     * and CORRECTED against the PR-149 wording, see the model
+    /* 0x49fb0 with the caller's n (0x3f278 hands 0x46 = 70 for the
+     * ladder, 0x3f448 hands 0x32 = 50 for the rope, PR-528),
+     * verbatim 0x49fb6..0x49fe4 and CORRECTED against the PR-149
+     * wording, see the model
      * note: inset the x-words SYMMETRICALLY by half =
-     * trunc((w - trunc(w*70/100)) / 2) - keep the central 70%.
+     * trunc((w - trunc(w*n/100)) / 2) - keep the central n%.
      * Both C divisions truncate toward zero exactly where the
      * engine's idiv and the `sar 31 / sub / sar 1` idiom do, so
      * the plain code IS the byte law for both signs. The x-words
-     * only; y untouched. w*70 must not overflow: engine imul is
-     * 32-bit too, and level spans are far below 2^31/70. */
+     * only; y untouched. w*n must not overflow: engine imul is
+     * 32-bit too, and level spans are far below 2^31/n. */
     int w = b->x1 - b->x0;
-    int ins = w * 70 / 100;            /* C99 division truncates
-                                        * toward zero = idiv exactly */
+    int ins = w * n / 100;            /* C99 division truncates
+                                       * toward zero = idiv exactly */
     int t = w - ins;
-    int half = t / 2;                  /* = the sar idiom, both signs */
+    int half = t / 2;                 /* = the sar idiom, both signs */
 
     b->x0 += half;
     b->x1 -= half;
 }
 
-static unsigned long long ladder_answer_core(int state, const ll_blk *edge,
+static unsigned long long ladder_answer_core(int kind, int state,
+                                             const ll_blk *edge,
                                              const ll_blk *rung,
                                              const ll_pt *ask)
 {
     ll_blk probe;
+    int n = (kind == 2) ? 50 : 70;    /* 0x3f448 vs 0x3f278 */
+    unsigned long long m_one =
+        (kind == 2) ? (1ull << LL_SIG_AC_LINA)
+                    : (1ull << LL_SIG_AC_DRAB);
+    unsigned long long m_catch = m_one |
+        (1ull << ((kind == 2) ? LL_SIG_AC_LINA_CATCH
+                              : LL_SIG_AC_DRAB_CATCH));
 
     if (state != 2)
         return 0ull;                   /* the ONLY answering state is
                                         * the SECOND DECLARED one
                                         * (0x3f1dc reads [self+0x5c],
                                         * `cmp 2` at 0x3f214 -> the
-                                        * P1/P2/P3 path): 0x53440
+                                        * P1/P2/P3 path; the rope's
+                                        * verb is the same shape at
+                                        * 0x3f3ac/0x3f3e4): 0x53440
                                         * numbers states from the
                                         * declared list, 1-based, and
                                         * the ctor starts the object
@@ -6024,10 +6066,10 @@ static unsigned long long ladder_answer_core(int state, const ll_blk *edge,
     if (!pt_in_blk(ask, rung))        /* P2 FALSE: inert exit 0x3f364 */
         return 0ull;
     probe = *rung;
-    blk_probe70(&probe);
+    blk_probe_pct(&probe, n);
     if (pt_in_blk(ask, &probe))       /* P3 TRUE: merged, 0x3f2dc.. */
-        return (1ull << LL_SIG_AC_DRAB) | (1ull << LL_SIG_AC_DRAB_CATCH);
-    return 1ull << LL_SIG_AC_DRAB;    /* P3 FALSE: 0x3f355 alone */
+        return m_catch;               /* /0x3f493.. */
+    return m_one;                     /* P3 FALSE: 0x3f355 / 0x3f525 */
 }
 
 /* the object's current block, port-source version (see the model
@@ -6186,7 +6228,7 @@ static unsigned long long ladder_answer_for(const lvl_obj *o,
                                         * authors no pair line) */
         edge.y0 = edge.y1 = o->y;
     }
-    return ladder_answer_core(state, &edge, &rung, &p);
+    return ladder_answer_core(ladder_class(o), state, &edge, &rung, &p);
 }
 
 /* PR-241: the OTHER half of the same verb - a raise, not an answer.
@@ -6354,12 +6396,13 @@ static void ladder_ask_raise(lvl_obj *o, const int ab[4], int verbose,
     if (ask_probe())
         fprintf(stderr, "ll_level: play tick %d: asked ladder %s/%s at"
                 " state %d: %s %d,%d tested against the asker's live box"
-                " %d,%d..%d,%d -> %s (0x4b500 -> 0x3f1c0 -> 0x44ec0)\n",
+                " %d,%d..%d,%d -> %s (0x4b500 -> %s -> 0x44ec0)\n",
                 tick, o->sc->leaf, o->sc->movname,
                 o->sc->mov->st[o->sti].decl_idx,
                 o->npts ? "its authored contact point" : "NO authored point",
                 o->npts ? o->cpx[0] : 0, o->npts ? o->cpy[0] : 0,
-                ab[0], ab[1], ab[2], ab[3], hit ? "PASS" : "no");
+                ab[0], ab[1], ab[2], ab[3], hit ? "PASS" : "no",
+                ladder_class(o) == 2 ? "0x3f390" : "0x3f1c0");
     if (!hit)
         return;                       /* 0x3f1fb: je 0x3f364, the tail */
     /* PR-257: the 0x3f1c0 branch gate, read at last. The answer verb
@@ -6379,8 +6422,9 @@ static void ladder_ask_raise(lvl_obj *o, const int ab[4], int verbose,
         return;
     if (verbose)
         printf("ll_level: play tick %d: asked ladder %s/%s at state %d"
-               " raises K_GEN1 on itself (0x3f203)\n", tick, o->sc->leaf,
-               o->sc->movname, o->sc->mov->st[o->sti].decl_idx);
+               " raises K_GEN1 on itself (%s)\n", tick, o->sc->leaf,
+               o->sc->movname, o->sc->mov->st[o->sti].decl_idx,
+               ladder_class(o) == 2 ? "0x3f3d3-0x3f3dc" : "0x3f203");
     if (obj_transition(o, o->sc->mov, 0) && verbose)
         printf("ll_level: play tick %d: %s/%s takes its own K_GEN1"
                " line: state %s\n", tick, o->sc->leaf, o->sc->movname,
@@ -6957,49 +7001,81 @@ static void play_collide(play_ctx *pl, const lvl_obj *objs, int nobj,
 static int ladder_answer_selftest(void)
 {
     static const struct {
-        int x0, x1, wx0, wx1;
+        int n, x0, x1, wx0, wx1;
         const char *what;
     } probe_cases[] = {
-        { 0, 40, 6, 34, "w=40: ins 28, half 6 keeps the middle 70%" },
-        { 0, 41, 6, 35, "w=41: ins trunc(28.7)=28, half trunc(6.5)=6" },
-        { 0, 43, 6, 37, "w=43: ins trunc(30.1)=30" },
-        { 0, 10, 1, 9, "w=10: half trunc(1.5)=1, the odd px stays in" },
-        { 0, 3, 0, 3, "w=3: half 0, the probe IS the rung" },
-        { 0, 1, 0, 1, "w=1: unchanged" },
-        { 40, 0, 34, 6, "descending words mirror the law (34 above 6)" },
-        { -41, 0, -35, -6, "negative coordinates: the law on values" },
+        { 70, 0, 40, 6, 34, "w=40: ins 28, half 6 keeps the middle 70%" },
+        { 70, 0, 41, 6, 35, "w=41: ins trunc(28.7)=28, half trunc(6.5)=6" },
+        { 70, 0, 43, 6, 37, "w=43: ins trunc(30.1)=30" },
+        { 70, 0, 10, 1, 9, "w=10: half trunc(1.5)=1, the odd px stays in" },
+        { 70, 0, 3, 0, 3, "w=3: half 0, the probe IS the rung" },
+        { 70, 0, 1, 0, 1, "w=1: unchanged" },
+        { 70, 40, 0, 34, 6, "descending words mirror the law (34 above 6)" },
+        { 70, -41, 0, -35, -6, "negative coordinates: the law on values" },
+        { 50, 0, 8, 2, 6, "rope n=50 (0x3f448): w=8 ins 4 half 2" },
+        { 50, 546, 554, 548, 552, "ZARIA.01's rope column 546..554:"
+          " w=8 keeps the central 4 px" },
+        { 50, 0, 9, 2, 7, "rope w=9: ins 4, t 5, half trunc(2.5)=2" },
+        { 50, 0, 3, 1, 2, "rope w=3: ins 1, t 2, half 1 - the middle"
+          " 2 px (unlike n=70, whose half is 0 here)" },
     };
     static const unsigned long long m_drab = 1ull << LL_SIG_AC_DRAB;
     static const unsigned long long m_cat = m_drab |
                                             (1ull << LL_SIG_AC_DRAB_CATCH);
+    static const unsigned long long m_lina = 1ull << LL_SIG_AC_LINA;
+    static const unsigned long long m_lcat = m_lina |
+                                             (1ull << LL_SIG_AC_LINA_CATCH);
     static const struct {
-        int state; ll_pt ask; unsigned long long want;
+        int kind, state; ll_pt ask; unsigned long long want;
         const char *what;
     } core_cases[] = {
-        { 0, { 120, 124 }, 0ull, "state 0 (a block whose name is not"
+        { 1, 0, { 120, 124 }, 0ull, "state 0 (a block whose name is not"
           " declared, 0x53471): no branch, nothing even inside the probe" },
-        { 0, { 100, 100 }, 0ull, "state 0 even ON the edge pixel" },
-        { 1, { 120, 124 }, 0ull, "state 1 (ZARIA.01's A_UP, the first"
+        { 1, 0, { 100, 100 }, 0ull, "state 0 even ON the edge pixel" },
+        { 1, 1, { 120, 124 }, 0ull, "state 1 (ZARIA.01's A_UP, the first"
           " declared state) is the child-ANY branch (0x3f1e4/0x44ec0):"
           " no child list modelled, so nothing answers" },
-        { 3, { 120, 124 }, 0ull, "state 3 (A_DROP): inert 0x3f217->0x3f364" },
-        { 9, { 100, 100 }, 0ull, "state 9 even on the edge pixel" },
-        { 2, { 100, 100 }, 1ull << LL_SIG_AC_EDGE, "state 2 (A_DOWN, the"
+        { 1, 3, { 120, 124 }, 0ull, "state 3 (A_DROP): inert 0x3f217->0x3f364" },
+        { 1, 9, { 100, 100 }, 0ull, "state 9 even on the edge pixel" },
+        { 1, 2, { 100, 100 }, 1ull << LL_SIG_AC_EDGE, "state 2 (A_DOWN, the"
           " second declared state): P1 FIRST, on the stored edge block,"
           " AC_EDGE only" },
-        { 2, { 106, 100 }, m_cat, "probe near corner inclusive: CATCH+"
+        { 1, 2, { 106, 100 }, m_cat, "probe near corner inclusive: CATCH+"
           "DRAB merged" },
-        { 2, { 120, 124 }, m_cat, "probe band middle: merged" },
-        { 2, { 136, 148 }, m_cat, "probe far corner inclusive (136,148):"
+        { 1, 2, { 120, 124 }, m_cat, "probe band middle: merged" },
+        { 1, 2, { 136, 148 }, m_cat, "probe far corner inclusive (136,148):"
           " merged (no y inset)" },
-        { 2, { 101, 124 }, m_drab, "inside the rung, left of the band:"
+        { 1, 2, { 101, 124 }, m_drab, "inside the rung, left of the band:"
           " DRAB alone (0x3f355)" },
-        { 2, { 142, 148 }, m_drab, "rung far corner inclusive (142,148),"
+        { 1, 2, { 142, 148 }, m_drab, "rung far corner inclusive (142,148),"
           " outside the band: alone" },
-        { 2, { 99, 124 }, 0ull, "one px left of the rung: P2 FALSE ->"
+        { 1, 2, { 99, 124 }, 0ull, "one px left of the rung: P2 FALSE ->"
           " inert 0x3f364" },
-        { 2, { 100, 149 }, 0ull, "below the rung (y not inset): inert" },
-        { 2, { 143, 124 }, 0ull, "one px right of the rung: inert" },
+        { 1, 2, { 100, 149 }, 0ull, "below the rung (y not inset): inert" },
+        { 1, 2, { 143, 124 }, 0ull, "one px right of the rung: inert" },
+        /* PR-528, the ROPE verb 0x3f390 on the same edge/rung pair.
+         * The probe keeps the CENTRAL 50%: rung 100..142, w=42,
+         * ins 21, t 21, half 10 -> probe 110..132. x=104 is inside
+         * the rung but outside that probe: AC_LINA ALONE (0x3f525).
+         * AC_EDGE is the SAME bit as the ladder's (0x3f41d). */
+        { 2, 1, { 120, 124 }, 0ull, "rope state 1: the flag branch raises"
+          " K_GEN1 (0x3f3d9), answers nothing" },
+        { 2, 3, { 120, 124 }, 0ull, "rope state 3 (A_DROP): inert"
+          " 0x3f3e7 -> 0x3f534" },
+        { 2, 2, { 100, 100 }, 1ull << LL_SIG_AC_EDGE, "rope state 2:"
+          " P1 FIRST, AC_EDGE, the same bit as the ladder's" },
+        { 2, 2, { 110, 124 }, m_lcat, "rope probe near corner inclusive"
+          " (110 = 100+half 10): CATCH+LINA merged (0x3f4ac/0x3f4d4)" },
+        { 2, 2, { 120, 124 }, m_lcat, "rope probe middle: merged" },
+        { 2, 2, { 132, 148 }, m_lcat, "rope probe far corner inclusive"
+          " (132 = 142-10): merged" },
+        { 2, 2, { 104, 124 }, m_lina, "inside the column, left of the"
+          " 50% probe: AC_LINA ALONE (0x3f525)" },
+        { 2, 2, { 142, 148 }, m_lina, "column far corner inclusive, outside"
+          " the probe: LINA alone" },
+        { 2, 2, { 99, 124 }, 0ull, "one px left of the column: inert"
+          " 0x3f534" },
+        { 2, 2, { 143, 124 }, 0ull, "one px right of the column: inert" },
     };
     const ll_blk rung = { 100, 100, 142, 148 };
     const ll_blk edge = { 100, 100, 100, 100 };
@@ -7009,7 +7085,7 @@ static int ladder_answer_selftest(void)
          k++) {
         ll_blk b = { probe_cases[k].x0, 7, probe_cases[k].x1, 9 };
 
-        blk_probe70(&b);
+        blk_probe_pct(&b, probe_cases[k].n);
         if (b.x0 != probe_cases[k].wx0 || b.x1 != probe_cases[k].wx1 ||
             b.y0 != 7 || b.y1 != 9) {
             fprintf(stderr, "ladder answer selftest: FAILED probe law"
@@ -7021,7 +7097,8 @@ static int ladder_answer_selftest(void)
     for (k = 0; k < (int)(sizeof core_cases / sizeof core_cases[0]);
          k++) {
         unsigned long long got = ladder_answer_core(
-            core_cases[k].state, &edge, &rung, &core_cases[k].ask);
+            core_cases[k].kind, core_cases[k].state, &edge, &rung,
+            &core_cases[k].ask);
 
         if (got != core_cases[k].want) {
             fprintf(stderr, "ladder answer selftest: FAILED decision"
@@ -7039,10 +7116,20 @@ static int ladder_answer_selftest(void)
         static const ll_pt nask[] = { { 100, 120 }, { 102, 120 } };
 
         for (k = 0; k < 2; k++)
-            if (ladder_answer_core(2, &far_edge, &narrow, &nask[k]) !=
+            if (ladder_answer_core(1, 2, &far_edge, &narrow, &nask[k]) !=
                 m_cat) {
                 fprintf(stderr, "ladder answer selftest: FAILED narrow"
                                 " rung (probe == rung must merge)\n");
+                return 1;
+            }
+        /* PR-528: the same consequence for the rope's narrower
+         * probe: w = 2 (< 50%'s floor) is a CATCH too. */
+        for (k = 0; k < 2; k++)
+            if (ladder_answer_core(2, 2, &far_edge, &narrow, &nask[k]) !=
+                m_lcat) {
+                fprintf(stderr, "ladder answer selftest: FAILED narrow"
+                                " column (rope probe == column must"
+                                " merge)\n");
                 return 1;
             }
     }
@@ -7056,7 +7143,7 @@ static int ladder_answer_selftest(void)
                                       { 100, 148 } };
 
         for (k = 0; k < 3; k++)
-            if (ladder_answer_core(2, &off_edge, &down, &dask[k]) !=
+            if (ladder_answer_core(1, 2, &off_edge, &down, &dask[k]) !=
                 0ull) {
                 fprintf(stderr, "ladder answer selftest: FAILED"
                                 " descending block must answer inert"
@@ -7064,12 +7151,16 @@ static int ladder_answer_selftest(void)
                 return 1;
             }
     }
-    {   /* L3, class scope: the anchored chain is DRABINKA's (PR-141's
-         * factory 0x1f8ac -> table 0x97cdc -> +0x78 = 0x3f1c0); LINA
-         * and the K-prefixed variants stay unanswered (item 2). */
+    {   /* L3, class scope: two chains are anchored - DRABINKA's
+         * (PR-141's factory 0x1f8ac -> table 0x97cdc -> +0x78 =
+         * 0x3f1c0) and LINA's (PR-528's factory arm 0x4e81d, name
+         * test against 0x92005, view pair 0x4e8d2 -> 0xa1dfc ->
+         * +0x78 = 0x3f390). The K-prefixed variants stay
+         * unanswered (item 2). */
         static const struct { const char *leaf; int want; } scope[] = {
-            { "DRABINKA", 1 }, { "drabinka", 1 }, { "LINA", 0 },
-            { "KLINA", 0 }, { "KDRABINA", 0 }, { "BAL", 0 },
+            { "DRABINKA", 1 }, { "drabinka", 1 }, { "LINA", 2 },
+            { "lina", 2 }, { "KLINA", 0 }, { "KDRABINA", 0 },
+            { "BAL", 0 },
         };
 
         for (k = 0; k < (int)(sizeof scope / sizeof scope[0]); k++) {
@@ -7799,6 +7890,119 @@ static int ladder_answer_selftest(void)
                             pa[g].what, pa[g].ax, pa[g].ay, pa[g].a,
                             pa[g].b, pa[g].r[0], pa[g].r[1],
                             pa[g].r[2], pa[g].r[3], got6, pa[g].want);
+                    free(m2);
+                    return 1;
+                }
+                free(m2);
+            }
+        }
+        {   /* L15 (PR-528): ZARIA.01's AUTHORED ROPE through the
+             * same grammar. The .des text (ETAPY, read as bytes this
+             * pass) authors
+             *   LINA,lina.ani,lina.mov,525,525
+             *   1 0,0
+             *   21,30;29,120
+             *   25,49
+             * so the column is x 546..554, y 555..645 (the pit's
+             * mouth) and the edge band is x apx 550 +/- trunc(n/2),
+             * n = 9 -> 546..554 (the column's own 9 px), y
+             * 574-0x50..574 = 494..574 - the UPPER part of the
+             * rope, exactly where a lion walking the kind-5 canopy
+             * above it stands (his centre at x 550 is y ~543).
+             * The probe keeps
+             * the CENTRAL 50%: w = 8, ins 4, half 2 -> x 548..552.
+             * The answer pair is the AC_LINA twins (0x3f4ac/0x3f4d4
+             * merge CATCH|LINA, 0x3f525 answers LINA alone). */
+            static const char LINA_L15[] =
+                "A_UP\nA_DOWN\nA_DROP\n\n[A_UP]\ncontrol=BY_TIME\n"
+                "A_DROP(1)=K_GEN1\nseq=lin\n1,0,WAIT K_GEN1\n\n[A_DROP]\n"
+                "control=BY_TIME\nA_DOWN(1)=AC_BREAK_NEXT\nseq=lin\n"
+                "2,500\n3,400\n\n[A_DOWN]\ncontrol=BY_TIME\nseq=lin\n"
+                "10,0,WAIT K_NEVER\n";
+            static const struct { int r[4], a, b, ax, ay;
+                                 unsigned long long want;
+                                 const char *what; } ro[] = {
+                { { 546, 555, 554, 645 }, 25, 49, 550, 560,
+                  1ull << LL_SIG_AC_EDGE,
+                  "the band 494..574 first, P1: AC_EDGE, the same\n"
+                  "bit the ladder's band answers - this is what the\n"
+                  "canopy walk at x 550 sees, centre y ~543" },
+                { { 546, 555, 554, 645 }, 25, 49, 550, 609,
+                  (1ull << LL_SIG_AC_LINA) |
+                  (1ull << LL_SIG_AC_LINA_CATCH),
+                  "1 px below the band, inside the column AND its\n"
+                  "50% probe 548..552: the merged twins" },
+                { { 546, 555, 554, 645 }, 25, 49, 552, 645,
+                  (1ull << LL_SIG_AC_LINA) |
+                  (1ull << LL_SIG_AC_LINA_CATCH),
+                  "the probe's far corner at the rope's foot,\n"
+                  "exactly ON it: inclusive" },
+                { { 546, 555, 554, 645 }, 25, 49, 547, 620,
+                  1ull << LL_SIG_AC_LINA,
+                  "inside the column, left of the 50% probe:\n"
+                  "AC_LINA ALONE (0x3f525) - the narrow probe is\n"
+                  "the rope's one measured difference from a ladder" },
+                { { 546, 555, 554, 645 }, 25, 49, 545, 620, 0ull,
+                  "1 px left of the column: the inert exit 0x3f534" },
+                { { 546, 555, 554, 645 }, 25, 49, 525, 525, 0ull,
+                  "the object pixel itself: its x 525 is OUTSIDE\n"
+                  "the band 546..554 (the pair point 550,574 sits\n"
+                  "21 px east of the object and the band keeps the\n"
+                  "column's width), so not even the anchor answers" },
+                { { 546, 555, 554, 645 }, 25, 49, 555, 620, 0ull,
+                  "1 px right of the column: inert" },
+            };
+
+            for (unsigned g = 0; g < sizeof ro / sizeof ro[0]; g++) {
+                ll_mov_t *m2 = calloc(1, sizeof *m2);
+                obj_script sc2;
+                lvl_obj o7;
+                ll_player asker4;
+                unsigned long long got7;
+
+                if (!m2) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " out of memory (L15)\n");
+                    return 1;
+                }
+                ll_mov_parse(LINA_L15, m2);
+                memset(&sc2, 0, sizeof sc2);
+                strcpy(sc2.leaf, "LINA");
+                sc2.mov = m2;
+                memset(&o7, 0, sizeof o7);
+                o7.sc = &sc2;
+                o7.x = 525;
+                o7.y = 525;
+                o7.nrect = 1;
+                o7.npair = 1;
+                o7.arx0 = (short)ro[g].r[0];
+                o7.ary0 = (short)ro[g].r[1];
+                o7.arx1 = (short)ro[g].r[2];
+                o7.ary1 = (short)ro[g].r[3];
+                o7.apx = (short)(o7.x + ro[g].a);
+                o7.apy = (short)(o7.y + ro[g].b);
+                for (int q = 0; q < m2->nst; q++)
+                    if (m2->st[q].decl_idx == 2)
+                        o7.sti = q;
+                if (m2->st[o7.sti].decl_idx != 2) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " L15: the fixture has no state with"
+                                    " the engine's index 2\n");
+                    free(m2);
+                    return 1;
+                }
+                memset(&asker4, 0, sizeof asker4);
+                asker4.x = ro[g].ax;
+                asker4.y = ro[g].ay;
+                got7 = ladder_answer_for(&o7, &asker4);
+                if (got7 != ro[g].want) {
+                    fprintf(stderr, "ladder answer selftest: FAILED"
+                                    " L15 case %u (%s): ask %d,%d band a"
+                                    " %d b %d rect (%d,%d)-(%d,%d)"
+                                    " got %llx want %llx\n", g,
+                            ro[g].what, ro[g].ax, ro[g].ay, ro[g].a,
+                            ro[g].b, ro[g].r[0], ro[g].r[1],
+                            ro[g].r[2], ro[g].r[3], got7, ro[g].want);
                     free(m2);
                     return 1;
                 }

@@ -35,7 +35,10 @@ land through their own windows in PR-90 stage 1 - what is missing is
 the engine's per-class AI driver and the attack/charge motion), the signal bus's
 routing between objects and its engine-internal raisers (the bit table and
 named `GEN`/condition wiring landed in PR-88), pickups/inventory,
-ladders/vines, level flow (the end-of-level path is ported in two
+ladders/vines - both classes are bound now (the ladder chain since
+PR-150/241, the LINA rope since PR-528); what is missing is the
+chasm carry the rope does not close (OI-124), level flow (the
+end-of-level path is ported in two
 forms - the authored `end_level` row and its loop code 1 since
 PR-194/199, and since PR-526 the level's OWN lion class raising the
 loop's first guard, code 3, which is how ZARIA ends: the dive; what
@@ -3519,6 +3522,24 @@ record.
   SEQ_REV terms of
   the step's parity gate (getter 0x239f0, [obj+0x71]) stay at
   OI-113.
+  PR-528 SHIPPED THE LINA ROPE (NEXT_STEPS PR-528): the rope
+  class is BOUND. Its factory arm 0x4e81d leaves [obj+8] =
+  0xa1dfc, +0x78 IS 0x3f390 - 0x3f1c0's grammar with three
+  measured differences: the same state gate and K_GEN1 flag arm
+  (0x3f3d3-0x3f3dc), the same AC_EDGE band first (0x3f41d), a
+  CENTRAL-50% probe instead of 70% (`mov edx,0x32` 0x3f448),
+  and the AC_LINA/AC_LINA_CATCH twins as the answer pair
+  (0x3f4ac/0x3f4d4; 0x3f525 answers LINA alone outside the
+  probe). ly_rope runs the chain under keys: the K_GEN1 bus
+  unrolls the rope at 46, the band answers at 374 and takes
+  A_SCIAG down, the CATCH twins answer inside the 50% probe at
+  402, the lion hangs at (549,577) OVER the pit and UP walks
+  the lift rows back onto the canopy at (546,506). THE ROPE IS
+  THIS CHASM'S SAFETY NET, NOT ITS BRIDGE: the hang sits 75 px
+  west of the east lip, and the crossing itself stays open on
+  the row-admit air-carry law (OI-124) and landing continuity
+  (OI-073); the KATAPULT/PALMA seat chain remains the authored
+  carrier (OI-124).
 
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`

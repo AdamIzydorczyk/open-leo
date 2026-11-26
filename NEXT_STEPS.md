@@ -68798,3 +68798,173 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
       unchanged. gate1.log, made before the ly_climb re-pin,
       failed ONLY on the old "stays in A_LOOKUP" pin, and the
       mutant of MEASURED (f) was taken in between.)
+
+## PR-528 - THE LINA ROPE'S CLASS IS BOUND: 0x3f390 IS 0x3f1c0'S
+## GRAMMAR WITH A 50% PROBE AND THE AC_LINA TWINS, AND ly_rope
+## RUNS THE AUTHORED CHAIN - THE CHASM'S SAFETY NET, NOT ITS
+## BRIDGE
+
+```
+KIND: port
+SUBSYSTEM: the ladder-answer family of the level model. The class
+  scope note and ladder_class answer 1 (DRABINKA, 0x97cdc +0x78
+  = 0x3f1c0) and 2 (LINA, 0xa1dfc +0x78 = 0x3f390);
+  ladder_answer_core takes the kind and the probe PERCENTAGE -
+  blk_probe70 became blk_probe_pct(b,n), 70 for the ladder
+  (0x3f278) and 50 for the rope (0x3f448) - and the in-column
+  answer is the kind's own pair; the ask probe and the
+  flag-raise line print each class's own verb; the L1 probe
+  table gained n=50 rows, the decision table the rope rows and
+  a narrow-column case, L3 the rope scope line, the new L15
+  the whole authored ZARIA.01 rope through the grammar, and
+  verify-play a new leg ly_rope. PR-527 named the two authored
+  crossing candidates; this PR binds one of them and measures
+  what it does and does not carry.
+ADDRESSES: 0x4e81d (the factory arm naming LINA: the name test
+  0x76a69 against "LINA" at 0x92005, allocation 0xd9, ctor
+  0x531f0), the class-view stores 0x4e8c4 -> 0x97cdc (the
+  LADDER's table: OVERWRITTEN) and 0x4e8d2 -> 0xa1dfc =
+  [obj+8]; 0xa1dfc+0x78 = 0x3f390 and 0xa1dfc+0x18 = 0x3f0f0,
+  the same record verb the ladder reads its boxes with. Inside
+  0x3f390: the state gate and the flag arm 0x3f3d3/0x3f3d9/
+  0x3f3dc (`mov ah,[ecx+0x66] / add cx,0x64 / or ah,0x40 /
+  mov [ecx+2],ah` - [obj+0x66] |= 0x40, 0x3f203's form), the
+  inert tail 0x3f534, P1 AC_EDGE 0x3f41d, the probe word
+  `mov edx,0x32` at 0x3f448 where 0x3f278 hands 0x46 to the
+  same 0x49fb0, the merged pair 0x3f4ac `or dh,0x40` (bit 22)
+  with 0x3f4d4 `or bh,0x20` (bit 21), P3 AC_LINA ALONE 0x3f525,
+  and the name block 0x91ad9/0x91ae1 for the bit indexes; the
+  PR-268 census (the OI-078/OI-117 rows) already named
+  0xa1dfc+0x78 - this pass walks its factory arm from the
+  name and lands on the same view.
+NAMES: ladder_class, ladder_answer_core, ladder_answer_for,
+  blk_probe_pct, LL_SIG_AC_LINA, LL_SIG_AC_LINA_CATCH, ly_rope.
+CODE: yes: ladder_class returns 1/2 by leaf; the kind and the
+  probe percentage thread through ladder_answer_core and
+  ladder_answer_for; blk_probe_pct(b,n); the ask line prints
+  0x3f390 and the flag line 0x3f3d3-0x3f3dc for kind 2 and
+  keeps the ladder's strings for kind 1; L1 n=50 rows, the
+  rope decision rows, the LINA/KLINA scope line, L15, and the
+  ly_rope leg in the Makefile.
+HOOKS: none new.
+MEASURED: (a) THE CHAIN, END TO END AND CORRECTED AT THE
+  FIRST WRONG TURN: the factory arm 0x4e81d is the only arm
+  naming LINA, and its TWO view stores put 0x97cdc first and
+  0xa1dfc second - the second wins, so the object's +0x78 is
+  0x3f390, exactly the row the PR-268 census wrote. (An
+  earlier probe of this chain read the first store as the
+  answer; the pair of stores settles it.) (b) THE VERB'S LAW,
+  FROM BYTES: the same state gate (1 = the K_GEN1 flag raise,
+  2 = the AC packet, anything else the inert tail 0x3f534);
+  P1 tests the SAME edge band and answers the SAME AC_EDGE
+  bit (0x3f41d); P2 reads the same authored rectangle but
+  keeps the CENTRAL 50% - 0x3f448 hands 50 where 0x3f278
+  hands 70 - and inside that probe the pair ORs both twins
+  (0x3f4ac/0x3f4d4), while the column outside the probe
+  answers AC_LINA ALONE (0x3f525). The twins are name-block
+  indexes 21/22, so the pair lands in different bytes than
+  the ladder's 10/12 - the port's mask uses the indexes
+  verbatim. (c) THE AUTHORED ROPE: ANI2.DES places two, at
+  (125,292) `1 0,200 / 23,30;31,200 / 25,49` and at
+  (525,525) `1 0,0 / 21,30;29,120 / 25,49`; through the
+  PR-268/PR-270 grammar the second is the column
+  (546,555)-(554,645) - straight down into the pit's mouth -
+  pair point (550,574), band x 546..554 y 494..574, and
+  probe 548..552. The band's TOP half overlaps the kind-5
+  canopy walk above: standing at (546,506) the lion is
+  INSIDE the band, which is what makes this rope catch the
+  walk. (d) THE SELFTEST, RED FIRST: the L1 n=50 rows pin
+  the ZARIA column 546..554 -> 548..552 and its truncation
+  edges - one of them was written WRONG and went RED under
+  its own arithmetic (for w=3 n=50 ins=1, half=1, the probe
+  is the middle 2 px; "the probe IS the column" is the n=70
+  edge) - the rope decision rows pin P1 priority, the merged
+  twins inclusive at both probe corners, AC_LINA alone left
+  of the probe in a column wider than it, the inert exits
+  and the state gate; L3 maps LINA -> 2 and KLINA -> 0; and
+  L15 runs the authored (c) rope: the band first at its top
+  corner, the twins at the probe's inclusive far corner,
+  AC_LINA alone 1 px out of the probe, the inert 1 px out of
+  the column, and the object pixel itself answering NOTHING
+  (its x 525 is west of the band - the pair point sits 21 px
+  east of the object). (e) ly_rope (NEW; RED under the
+  kind-1 mutation): the bound rope is asked like the ladder
+  and its ask line prints 0x3f390; the K_GEN1 BUS - the
+  lion's own A_DRAP idle rows, PR-257 - wakes it at 46 into
+  the authored A_DROP unroll and it settles in the answering
+  state; at 374 the band answers ("set 100") and the lion's
+  `A_SCIAG(1)=AC_EDGE,K_DOWN` line descends 546,506 ->
+  549,574; at 402 the twins answer inside the 50% probe
+  ("set 600000"), the authored chain A_SCIAG -> A_WSP ->
+  A_FALL_DOWN hands to the HANG at (549,577) over the pit,
+  and there UP first runs the state's own F-pair y force
+  (PR-259: v -3000 at 413), the band answers AGAIN the
+  moment the body is back inside it (415, "set 100"), and
+  the authored `A_PODCIAG(1)=AC_EDGE,K_UP` line runs at 416:
+  the lock/unlock lift rows (PR-525) carry 549,574 ->
+  542,534 -> grounded (546,506) at 440 - back onto the
+  canopy. With kind forced to 1 the "set 600000",
+  A_FALL_DOWN -> A_WSP_LIN and A_WSP_LIN -> A_PODCIAG lines
+  all vanish while the AC_EDGE half answers identically -
+  the twins and their chain are what distinguish the kind.
+  (f) THE CHASM IS STILL NOT CROSSED, and the rope says why:
+  the hang sits at (549,577), 75 px WEST of the east lip
+  (624) and 96 px above the right bank's line (673); from
+  the hang a JUMP lands back ON the canopy (552,577 ->
+  585,531, measured), and the step-off still dies at
+  (618,1023) (PR-527). The rope is the chasm-side RECOVERY
+  device - the authored safety net - and the carrier of the
+  crossing stays the row-admit air-carry cadence of PR-517
+  (OI-124) and the seat-chain leg.
+OPENS: the row-admit air-carry cadence modelled as a port
+  leg (OI-124) and the landing continuity at the bank edge
+  (OI-073) - with them, the crossing of 408..624; the
+  KATAPULT/PALMA seat leg (that half of OI-124 and OI-078);
+  object-asked answers (the model note's item 3) - other
+  levels place LINAs too, and the port has no object-to-
+  object ask pass; KLINA/KDRABINA remain unanchored and
+  unanswered (item 2); the AC_LINA/AC_LINA_CATCH raisers
+  OUTSIDE 0x3f390 - a poster census for bits 21/22 is owed
+  the way PR-146 counted 12/22; and what raises K_GEN1 on
+  the FIRST rope (125,292) - the bus answer covers ZARIA's
+  case only while the lion idles.
+CLOSES: none as a row. The OI-078 clause "the LINA class is
+  unmodelled in the port" is spent, and OI-124 now carries
+  the rope measured OUT as a carrier.
+CORRECTS: PR-527's OPENS phrase "or the LINA rope at 525,525
+  and its AC_LINA_CATCH raiser" as a crossing candidate:
+  the rope, bound and measured, cannot carry the crossing -
+  its catch point is 75 px short of the far lip and a jump
+  from the hang lands back on the canopy. The chasm closes
+  at OI-124's law or the seat leg, not at a class binding.
+```
+
+- WHY. The session objective is "ZARIA.01 playable end to
+  end", and since PR-527 the level died at one known place:
+  the 408..624 chasm, with exactly two authored candidates
+  named and NEITHER bound. One of them - the rope the census
+  had already pointed at - was a bounded read: its factory
+  arm, its verb, and the placement grammar were all already
+  modelled for the ladder, and the two verbs turned out to
+  share the grammar line for line except at three places,
+  which are exactly the numbers a rope needs (a narrower
+  catch column, a catch signal instead of a rung signal).
+  Binding it also settles a question the level itself asked:
+  the band of the pit-side rope overlaps the canopy walk, so
+  the authored A_SCIAG descent, the hang, and the UP lift
+  are not dead text - they are the level's recovery device
+  for its own edge. And measuring the hang's position
+  against the east lip turns "maybe the rope is the bridge"
+  into a NUMBER: 75 px short. That is what makes the next
+  step the air-carry law instead of another class.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 74 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+      (both rc=0; counts are grep -c '(ok)' and the named
+      `verify-*: SKIP` lines of /tmp/opencode/pr528_gate1.log
+      and /tmp/opencode/pr528_gate2.log. One (ok) more than
+      PR-527's 73: the new ly_rope leg; the fixture-free
+      counts are PR-526/527's, coverage unchanged. The
+      kind-1 mutation of MEASURED (e) and the RED of the
+      L1 w=3 row were taken between those logs, and the
+      final tree re-ran both halves clean.)
