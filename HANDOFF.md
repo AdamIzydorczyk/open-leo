@@ -27,7 +27,7 @@ What exists and works (all verified by `make verify-all`, section 3):
 | level scene | 320x200 world view shown 2x; world size from `back_rect` or the reference layer; per-layer parallax (`speed=`, `main_back=`) for PCM layers, the PCX backdrop and every object; HUD from `BELKA*.DES` |
 | objects | 827+ placements, art by each state's `seq=`, `.MOV` state machines (loop until a transition fires; `GEN K_GENn`, `AC_BREAK_NEXT`); PR-93: the 3-comma static image lines (`<LEAF>,<name>.seq,x,y` -> that CD leaf's `.SEQ`, drawn at the authored x,y behind the actors) and the 0,0 entries = attached children (joined+counted, never instantiated at the world origin); PR-107: a `TARGET(N)=<cond>` line carries an authored START ROW and the target state is entered at that row (same rule for the lion and scene objects) |
 | lion (play mode) | walks on the level's own ground (`.PLT`) with his current ANIMATION's shape-box bottom as the contact line (PR-97: `ll_player.contact`, `ll_seq_shape_contact`, `mov_state_contact`), steps the engine's OWN velocity law at the engine's OWN cadence (PR-523, default): the row clock is fed every 50 ms iteration - the constant 100, or for a BY_X state the persisted whole-px step word - while the velocity registers, the position step at register//100, the ground queries and the bounds run only when the authored row step answers (a threshold crossed, or a `Wait` clause matched), plus exactly one seed pass at the rising edge of the intent word and at a zero FEED WORD (`[obj+0xca]`) met by a held intent (PR-522's cold start, re-keyed by PR-529), and the ordinary pass at a row whose clause refuses (a parked row parks the cursor, not the body); `v -= T*v/100` then `v += F*s/20` with the key intent `s` = ±20, the keyboard's word the live capture carries and the word of EVERY state, not a BY_X-only one (PR-529: pr516i's named A_JUMP window is byte-exact on both the pull and the release), the port's own `auto_walk` keeping the BY_X scope (PR-520/PR-523, replacing PR-135's fitted ±10; `LEO_PLAY_ROW_PHYSICS=0` restores the old per-iteration model for comparison only); jumps (ESTIMATED units), keys facing-relative (Model M, PR-85), camera follows (lead 100/220 - PR-136's absolute camera read CONFIRMS the right lead at 95-108; PR-137 APPLIED the grounded anchor at 128 + the world clamp (the 175..180 band was the clamp, not the anchor), pinned hermetically by `ll_level --follow-selftest`), HUD shows energy/lives (PR-531 SHIPS the chain: start 5 per 0x5d2f9, the line-crossing step writes ONLY energy -1 (0x54478) and the NEXT step spends a life with energy 100 and the respawn (the 0x503d0 stand-in), the fifth fall exits at loop code 2 (0x4ae82) and the code-2 consumer resets the lives to 5 before its empty-queue stop (0x5d2f9/0x5d38e); the death LINE ships too (PR-533: ydead = the main_back layer .PCM height + 0x1f4 read as sx16 per 0x54467, back_rect height + 0x1f4 on a NULL desc, lew_rect y1 only with neither - the PR-532 table per level, ZARIA = 1200). What stays a stand-in: the engine's own state-2+wrap trigger, OI-132 PARTIAL) |
-| collision | push-out ported from the machine code (`FUN_00042de0/42cf0`), solid/semi-solid response, damage from an enemy ONLY through its own ATC window (the authored `atc_on` rows) and the 0x550c0 clash rule - a bare touch never hurts the lion (PR-139 deleted the port's unconditional contact damage); the enemy's own ATC-window attack when armed (PR-90's stand-in - ON by default since PR-534's owner goal, `LEO_PLAY_DANGER=0` the named comparison switch), balloon pickup (the +32-with-cap path is SHIPPED but has never run in any leg: PR-536 measured that every ZARIA.01 balloon sits >= 114 px above any walkable line, so a perch - the palms or the climb terrace - is the precondition, OI-133; and one `K_GEN1` ends all six for good, their `A_DEAD(1)=K_GEN1` having no inverse); the `ani_plat=` seat tables (KAMIEN/KATAPULT/KILOF_PL/PALMA, PR-335's parse, PR-342's row-admit motion) ride the SAME ground law since PR-535 (`LEO_PLAY_SEAT=0` the named comparison switch) - the lion lands on and walks on the KATAPULT pad's own table; what is NOT modelled is being CARRIED by a moving seat (OI-128) and the engine's own seat ASK chain (OI-122/OI-123); ON by default except RAN.01 |
+| collision | push-out ported from the machine code (`FUN_00042de0/42cf0`), solid/semi-solid response, damage from an enemy ONLY through its own ATC window (the authored `atc_on` rows) and the 0x550c0 clash rule - a bare touch never hurts the lion (PR-139 deleted the port's unconditional contact damage); the enemy's own ATC-window attack when armed (PR-90's stand-in - ON by default since PR-534's owner goal, `LEO_PLAY_DANGER=0` the named comparison switch), balloon pickup (the +32-with-cap path is SHIPPED but has never run in any leg: PR-536/PR-537 measured that only two of the six ZARIA.01 balloon points are spanned by any authored line and both lie beyond the 408..624 chasm, so the PALMA seat line - or the climb terrace - is the precondition, OI-133; and one `K_GEN1` ends all six for good, their `A_DEAD(1)=K_GEN1` having no inverse); the `ani_plat=` seat tables (KAMIEN/KATAPULT/KILOF_PL/PALMA, PR-335's parse, PR-342's row-admit motion) ride the SAME ground law since PR-535 (`LEO_PLAY_SEAT=0` the named comparison switch) - the lion lands on and walks on the KATAPULT pad's own table; what is NOT modelled is being CARRIED by a moving seat (OI-128) and the engine's own seat ASK chain (OI-122/OI-123); ON by default except RAN.01 |
 
 What does NOT exist yet (the real gap to "a playable game"): combat
 motion beyond the hits (the lion's attack landed in PR-89 and enemies
@@ -1300,6 +1300,17 @@ MODEL CHOICE: the ani_plat= seat tables as ground (PR-535)
     this is the port's wiring, not a recovered chain:
     OI-122/OI-123 keep the ask. Pinned behaviour by ly_seat /
     ly_seat_off; `LEO_PLAY_SEAT=0` is the comparison switch.
+  measured limits (PR-537): on ZARIA.01 the model is never the
+    reason a seat is missed. ANIPL2 carries only two palm tables
+    (the 380 line at x 885..947 and the 280 line at x 930..992);
+    ly_pal_walk shows no walk ever past x 406 or above pos 648,
+    and ly_pal_top - with the seats live as ground - reaches the
+    authored 509 terrace by air, crosses the seat's height inside
+    its x-neighbourhood on the RISE (the catch needs the descent)
+    and peaks above the seat line at one x, 1000, 53 px outside
+    the table's own bracket. So the open work is the CARRY
+    (OI-128) and the seat's own element half (OI-125), not the
+    ground law.
 
 
 CORRECTION TO THE ROW-ABOVE CLAIM, added 2026-11-17 by PR-114 and
@@ -3726,16 +3737,39 @@ PR-536 measured the BAL half of this task on ZARIA.01 and opened
 OI-133: the pickup path (the point (x+10,y+10) inside the lion's
 current shape box, +32 clamped to 100, skipped at full energy,
 skipped for an object that left its start state or lives on another
-layer) is SHIPPED but runs nowhere, because every balloon the level
-authors sits >= 114 px above the highest walkable line - a perch
-(PR-535's seat lines, or the terrace T5's climb ends on) is the
-precondition, not a tuning problem. The pop was pinned as one-way
+layer) is SHIPPED but runs nowhere, because only TWO of the six
+balloon points are spanned by any line the level authors -
+(1270,460) from `1 993,506;1141,507` and (1880,310) from `1 1838,
+371;1925,347` - and both sit on the far side of the 408..624
+chasm, which nothing but a jump crosses (PR-537's corrected
+census; the earlier ">= 114 px above every line" was wrong). The
+pop was pinned as one-way
 (`A_DEAD(1)=K_GEN1`, no inverse): ly_bal_pop shows ONE jump's
 K_GEN1 taking all six balloons AND the 16 POCISK fruit into
 A_RZUT - so the fruit clause of the owner goal is the same bus,
 and any balloon leg must reach its perch without a jump (walking,
 climbing and falling raise nothing: ly_ballive/ly_lives show zero
 balloon lines over 150 and 1500 ticks).
+
+PR-537 measured the PALM half of this task and the answer is a
+WALL plus a WINDOW, not a height. ANIPL2.DES carries THREE seat
+tables, not four: KATAPULT 300,588 (pair -6300,-1350) and PALMA
+965,335 / 1010,275, i.e. the 380 line at x 885..947 and the 280
+line at x 930..992 - the 475 line cited in earlier notes does not
+exist. ly_pal_walk measures the wall: in 2600 ticks of walking the
+lion is never grounded past x 406 (the chasm's west lip) nor above
+pos 648. ly_pal_top measures the window: the air route DOES stand
+him on the authored terrace 922,509;968,508 (927,477 grounded 1),
+a jump from the terrace crosses the 475 height inside the seat's
+x-neighbourhood without a catch (a feet-on-line landing needs the
+descent, ll_play.c `p->vy >= 0 && ground_y >= hit.y - 1.0`), and
+the next jump peaks above the 380 seat line at exactly x 1000 -
+53 px outside the seat's own bracket. A JUMP pressed in A_DRAP is
+the smaller A_JUMP_S pull, so only a press out of A_WALK/A_RUN has
+the reach. What the palm clause now needs is a landing that
+carries (OI-128) or a seat the lion rides (OI-125's element half),
+and the same pair of facts is what keeps the balloon pickup and
+the fruit out of reach.
 
 **T5. Ladders, vines, climbing.** States `A_WSP`, `A_WSP_LIN`, `A_PODCIAG`,
 `A_SCIAG`, objects `DRABINKA`, `LINA`; conditions `AC_DRAB_CATCH`,

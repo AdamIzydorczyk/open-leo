@@ -70078,3 +70078,123 @@ GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named verify-SKIPs
   damage the fight PR-534 ships already on the way, the +32 and
   its cap become a pinnable number the moment such a leg exists:
   that is OI-133's closing condition, named there.
+
+## PR-537 - THE PALMS, MEASURED: ZARIA.01 BLOCKS THE SEAT WITH A
+WALL AND A WINDOW, NOT WITH A HEIGHT (owner goal 2026-11-26:
+"…jumping on palms…" - first evidence)
+KIND: gate
+SUBSYSTEM: the ANIPL2 `ani_plat=` seat tables as ground (PR-535)
+  reached through the port's own jump physics - the goal's palm
+  clause - and the walk boundary of ZARIA.01.
+ADDRESSES: none read. The feet-on-line landing is PR-272's sweep
+  (`p->vy >= 0 && ground_y >= hit.y - 1.0`, ll_play.c); the WALK
+  contact 32 is PR-97's; the 100 px apex is PR-253's; the seat
+  table parse and its x-bracket are PR-335/PR-338's (0x45200 /
+  0x45380). This record's facts are measured from the port and
+  from the level's own bytes.
+NAMES: ANIPL2.DES, PALMA, KATAPULT, ztabl, palm.mov, palml.mov,
+  ZARIA_A.PLT, A_JUMP, A_JUMP_S, A_DRAP, DRABINKA, LINA, BAL,
+  ly_pal_walk, ly_pal_top, ZARIA.01.
+CODE: no: Makefile only - two verify-play legs, ly_pal_walk and
+  ly_pal_top. ly_pal_walk is scoped LEO_PLAY_SEAT=0 (it measures
+  the level's own walkable ground); ly_pal_top runs with the
+  default LEO_PLAY_SEAT=1 so the seat lines ARE ground in it,
+  which is what makes its negative a real one.
+HOOKS: none new.
+OPENS: none new; the missing step is named inside OI-128/OI-124
+  (a landing that carries, and a crossing that raises no K_GEN1).
+CLOSES: none.
+CORRECTS: PR-536 - its re-derived span census is wrong in three
+  places. The box window the port tests is `by0 <= p.y <= by0+h`
+  and with the lion on line L that window is L-32 .. L, so a
+  balloon point (x+10,y+10) is spanned exactly when some line has
+  y in (balloon_y, balloon_y+42]. On that test EXACTLY TWO of the
+  six are spanned by anything the level authors - (1270,460) by
+  `1 993,506;1141,507` and (1880,310) by `1 1838,371;1925,347` -
+  and (990,608) is NOT (the east-bank line there runs 633..654,
+  outside 608..650), (1542,272) is NOT (`1 1577,456;1599,456` is
+  456, not in 272..314), and (78,460)/(1600,113) are not. It
+  also corrects the seat census this repo has carried since
+  PR-535's probes: ANIPL2.DES has THREE entries, not four -
+  KATAPULT 300,588 (pair -6300,-1350), PALMA 965,335 with table
+  `1 -80,45;-18,45` (the 380 line at x 885..947) and PALMA
+  1010,275 with the same table (the 280 line at x 930..992).
+  There is no 820,435 placement and therefore no 475 seat line.
+GATE: make 0 warnings; verify-all fixtures rc=0 84 (ok);
+GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named verify-SKIPs
+      (/tmp/opencode/pr537_build3.log, pr537_gateG.log and
+      pr537_gatefreeG.log, the final tree. Earlier passes of
+      the same suite on the pre-docs tree are pr537_gateA/E;
+      the two new legs' own logs are the re-generated
+      ly_pal_walk.log and ly_pal_top.log.)
+
+- THE WALL, measured. ly_pal_walk (`1:FWD 2000:LEFT`, 2600 ticks,
+  LEO_PLAY_SEAT=0): the furthest x at which the lion is EVER
+  grounded is 406 - the west lip of the 408..624 chasm - and the
+  highest pos_y he ever reaches is 648, i.e. the 680 main ground.
+  Zero `state A_JUMP`, zero BAL lines, zero pickups. So no walk
+  in this level reaches any seat line, and the walk route of
+  OI-133 is not "hard", it does not exist: the chasm is a wall
+  for anything that never leaves the ground.
+
+- THE WINDOW, measured. ly_pal_top (`1:FWD 478:FWD,JUMP
+  529:FWD 533:JUMP 600:FWD 630:FWD,JUMP`, seats ON): the second
+  jump crosses the 475 height INSIDE the 380-seat's x-neighbourhood
+  - 855,470 at 615 and 879,472 at 618 - and is not caught, because
+  the landing test requires the descent; the very next line reads
+  `927,477 grounded 1`, the authored static terrace `1 922,
+  509;968,508`. That terrace is therefore reachable and pinned:
+  the port can stand the lion at 477 on the east half of the
+  level, which no leg had done from the air before. From there the
+  630 jump peaks above the 380 seat line at exactly ONE x, 1000
+  (44 rows, all at 1000), and the seat's own bracket is 885..947:
+  zero rows at pos 348 (380-32) or 443. The seat is missed by 53
+  px of x, not by any amount of height. A JUMP pressed while in
+  A_DRAP is not that jump either: the port answers A_JUMP_S, a
+  smaller pull (the same x 1000, peak pos 375), so only a press
+  out of A_WALK/A_RUN has the reach - the port's own A_JUMP law,
+  re-confirmed here in the vertical direction.
+
+- WHY THIS IS THE BLOCKER FOR THREE GOAL CLAUSES. The corrected
+  census says two balloons are reachable from authored ground:
+  (1270,460)'s point (1280,470) from the 506-507 line at x
+  1050..1080, and (1880,310)'s from the 347 terrace. Neither is
+  walkable into: the 506 line is on the far side of the wall
+  above, and the only route to it is this leg's jump chain, which
+  pops all six balloons on its first press. The one x-window where
+  a balloon point AND a perch meet (1050..1080 at the 380 seat
+  line) is on the PALMA table itself - so the palm seat is not an
+  alternative to the balloon clause, it IS its perch, and the
+  missing step is a landing that carries the lion onto the seat
+  line at the seat's own x (OI-128), or a seat whose table the
+  lion is standing on while it moves (OI-125's element half).
+
+- THE CARRY, NAMED (not ported here). OI-128's unread carrier is
+  now a machine fact. The seat-table reader 0x45250 writes the
+  step the table took during the query: 0x4526e-0x45291 copies
+  the found record pair into the query's own slot [q+0x89]/
+  [q+0x8d] and stores (record.x - old q.x) into [obj+0xca] and
+  (record.y - old q.y) into [obj+0xce]. The collector 0x4b430 -
+  called only from the ground-contact verb 0x54560 at 0x546f0
+  and 0x54732 - builds its answer from provider 0x534e0 (class
+  verb +0x68, four words at [esp]) and ADDS [obj+0xca] to words
+  0 and 2 and [obj+0xce] to words 1 and 3 (0x4b479-0x4b48c)
+  before testing the second registry [ebp+0x70]/count [ebp+0x7c]
+  through 0x45620. So the engine's ground answer is already
+  shifted by the seat's own motion: that is the carry, and the
+  port has the table shift (obj_seat_shift, PR-342) but never
+  stores the two deltas and never adds them to an answer. The
+  full write/read census of the pair, and which other arms
+  (0x45584, 0x45690, 0x27bb8, 0x54365) belong to this family,
+  is recorded in OI-128 - and the port is PR-538's subject: a
+  RED-first leg that lands the lion at pos 348 INSIDE the seat's
+  bracket 885..947 from the terrace this leg pins, with
+  LEO_PLAY_SEAT=0 as the control.
+
+- NO CHANGE, AND WHY. No code changed: both legs measure what is
+  there. What they change is the QUESTION. The palm clause is not
+  a reach problem (the height is available from the terrace by a
+  wide margin) and not a seat-ground problem (PR-535's ground is
+  in that run); it is the 53 px of x between the port's jump
+  trajectory and the seat's bracket, and the same wall/window pair
+  is what keeps the balloon pickup and the fruit unreachable.

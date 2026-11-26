@@ -8694,6 +8694,42 @@ OI-128: what landing and leaving a surface does - the class verbs
     carrier. Left open: 0x4b600's mode byte 0-vs-2, who
     fills the 0x78/0x84 registry (0x4db50 is the prime
     suspect, PR-509 named that family), its entry class.
+    PR-537 MEASURED WHY THIS ROW IS NOW THE GOAL BLOCKER: on
+    ZARIA.01 the palm seats are unreachable in x, not in height -
+    ly_pal_top stands the lion on the authored 509 terrace and
+    puts the next jump's peak above the 380 seat line at exactly
+    x 1000, 53 px outside that table's own bracket 885..947, with
+    the terrace-height crossing itself uncaught because it
+    happens on the RISE (the port's landing test needs the
+    descent). The only mechanism that can put the lion on a seat
+    line at the seat's own x is the carry this row owns - the
+    [obj+0xca]/[+0xce] delta collector and the registry behind
+    it - or OI-125's element half. THE CARRY, NAMED (2026-11-26, a
+    lead read off the machine code, to be ported as its own PR):
+    the seat-table reader 0x45250 at 0x4526e-0x45291 copies the
+    found record pair into the query's own slot [q+0x89]/[q+0x8d]
+    and stores (record.x - old q.x) into [obj+0xca] and
+    (record.y - old q.y) into [obj+0xce] - the step that table
+    took during THIS query. The complete access census of that
+    pair: writers 0x27bb8/0x27bac, 0x45280/0x452b3/0x452c4,
+    0x45584, 0x45690, 0x54365/0x54372, zeroed at 0x54e56/
+    0x54e60; readers 0x27bc4/0x27bcc, 0x45349/0x4534f, 0x4553c/
+    0x45542/0x4557c, 0x45688, 0x4b46d/0x4b473 and 0x4b638/
+    0x4b63e. The last two are inside the collector 0x4b430,
+    which builds the answer from provider 0x534e0 (class verb
+    +0x68, four words at [esp]) and adds [obj+0xca] to words 0
+    and 2 and [obj+0xce] to words 1 and 3 (0x4b479-0x4b48c)
+    BEFORE the 0x45620 test over the second registry [ebp+0x70]/
+    count [ebp+0x7c]; 0x4b430 is called only from the
+    ground-contact verb 0x54560 at 0x546f0 and 0x54732. So the
+    ground answer the engine hands back is already shifted by the
+    seat table's own motion - that IS the carry. The port has
+    the table shift (ll_level.c obj_seat_shift, PR-342) but
+    never stores those two deltas and never adds them to an
+    answer: the missing half, and a small one. Which of the
+    other writers/arms belong to the SAME family (0x45584 and
+    0x45690 are the .BLK/.SUF record readers, 0x27bb8 and
+    0x54365 are unread) is NOT settled here.
 
 OI-129: the shipped landing step is ~31 px for the lion's standing
   states, the port does not model it, and its fixture legs are green -
@@ -9442,9 +9478,9 @@ OI-132: the death LINE is the main_back LAYER'S OWN HEIGHT WORD
     instead, and the agreement with the engine (one fall, one life)
     is measured on the pit, not assumed.
 
-OI-133: a ZARIA.01 balloon pickup needs a crossing WITHOUT a
-  jump - the code path is shipped, no run reaches it, and the pop
-  that ends a balloon is one-way
+OI-133: a ZARIA.01 balloon pickup needs the PALMA seat line -
+  the code path is shipped, no run reaches it, and the pop that
+  ends a balloon is one-way
   status: OPEN
   origin: PR-536 (the goal clause "collecting baloons to restore
     health")
@@ -9457,27 +9493,32 @@ OI-133: a ZARIA.01 balloon pickup needs a crossing WITHOUT a
     100 and raises K_GEN1 on the picked object. ly_ballive and
     ly_bal_pop pin the ABSENCE of that line in both a walk-only
     and a jumping run, so the +32 branch is counted, not proven.
-    WHY NO ROUTE REACHES IT (measured from the level's own
-    bytes, and after correcting this row's first arithmetic): the
-    box test is `by0 <= p.y < by0 + h` with by0 = pos_y + the
-    element's f2 margin, and for the walk art the box BOTTOM is
-    the contact line (PR-97), so a lion standing on line L spans
-    y = L-32 .. L. ANI2.DES places BAL six times - (1542,272)
-    (1270,460) (1880,310) (78,460) (990,608) (1600,113) - tested
-    at (x+10,y+10). THREE of the six ARE spanned by ground the
-    level authors: (990,608) by the east-bank line `3 953,654;
-    994,644;1007,646;1051,633`, (1880,310) by the terrace
-    `1 1838,371;1925,347`, (1542,272) by `1 1577,456;1599,456`.
-    THREE are spanned by nothing - (1270,460), (78,460),
-    (1600,113) - and the only things high enough are the climb
-    terrace (ly_climb seats the lion at 483 grounded) and
-    ANIPL2's seat lines (PR-335, PR-535). So the blocker is the
-    ROUTE, not the height: the one ground-reachable balloon is
-    (990,608), and the way to it crosses the chasm at 408..624,
-    which in this port is an A_JUMP - and A_JUMP pops all six. A
-    balloon leg is impossible until a crossing exists that raises
-    no K_GEN1: OI-124's carrier, and the seat chain's wake and
-    ride halves OI-125/OI-128. THE POP IS TERMINAL:
+    WHY NO ROUTE REACHES IT (PR-537's corrected census; the
+    measurements are PR-536's ly_ballive/ly_bal_pop and PR-537's
+    ly_pal_walk/ly_pal_top): the box window is `by0 <= p.y <=
+    by0+h` and with the lion on line L that window is L-32 .. L
+    (PR-97's WALK contact), so a point (x+10,y+10) is spanned
+    exactly when some line has y in (balloon_y, balloon_y+42]. On
+    that test EXACTLY TWO of the six ANI2 placements are spanned
+    by anything the level authors: (1270,460) by `1 993,506;
+    1141,507` (x-window 1050..1080) and (1880,310) by `1 1838,
+    371;1925,347`. (990,608), (1542,272), (78,460) and (1600,113)
+    are spanned by NOTHING - PR-536's two arithmetic attempts both
+    put some of those in error, and PR-537's CORRECTS settles it.
+    The reachable one sits behind a WALL: ly_pal_walk walks 2600
+    ticks and is never grounded past x 406, the west lip of the
+    408..624 chasm, nor above pos 648 - no walk reaches it, and
+    the only route to it is a jump, which pops all six. The one
+    place where a balloon point AND a perch DO meet is on the
+    PALMA seat table itself: ly_pal_top stands the lion on the
+    authored terrace 922,509;968,508 (927,477 grounded 1) and
+    shows the next jump peaking above the 380 seat line at
+    exactly x 1000, 53 px east of that seat's own bracket
+    885..947 - missed in x, not in height. WHAT WOULD CLOSE THIS
+    ROW: a landing that carries (OI-128) or a seat the lion rides
+    (OI-125's element half) putting him on the 380 line at x
+    1050..1080 with energy < 100 - that lands the +32 and its
+    cap. THE POP IS TERMINAL:
     balonik.mov `A_DEAD(1)=K_GEN1` with an A_DEAD block `seq=dym`
     `sample=14` ending `6,100,GEN K_GEN2` and NO way back; ly_bal_
     pop pins ONE jump's K_GEN1 (A_JUMP row 4: press 42, bus at 48)

@@ -3971,6 +3971,20 @@ ifeq ($(PX_DATA),1)
 # two legs pin the absence, so the claim is counted, not hidden. The
 # climb/palm legs that would exercise it are the next steps; the
 # geometry above is why they must be climb/palm legs.
+# (4) CORRECTED BY PR-537, and the block above is left as written
+# so the record stays readable: the box window the port tests is
+# `by0 <= p.y <= by0+h`, so a point (x+10,y+10) is spanned exactly
+# when some line has y in (balloon_y, balloon_y+42]. On that test
+# EXACTLY TWO of the six are spanned by authored ground -
+# (1270,460) by `1 993,506;1141,507` and (1880,310) by `1 1838,
+# 371;1925,347` - and (990,608), (1542,272), (78,460), (1600,113)
+# by nothing. ANIPL2.DES is a THREE-entry table (KATAPULT 300,588,
+# PALMA 965,335 -> 380 line at 885..947, PALMA 1010,275 -> 280
+# line at 930..992): there is no 820,435 placement and no 475 seat
+# line. And the wall is measured, not assumed: ly_pal_walk is never
+# grounded past x 406 (the chasm's west lip) nor above pos 648,
+# while ly_pal_top reaches the 509 terrace by air and misses the
+# 380 seat by 53 px of x. See the PR-537 record.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 LEO_PLAY_DANGER=0 \
 	  LEO_PLAY_SEAT=0 LEO_PLAY_SCRIPT="1:FWD" \
@@ -4000,6 +4014,83 @@ ifeq ($(PX_DATA),1)
 	  && ! grep -q 'balloon at .* picked' /tmp/opencode/ly_balpop.log \
 	  && echo "play balloon pop (PR-536): ONE jump's K_GEN1 (A_JUMP row 4, press 42 + 6 = 48) takes ALL SIX balloons' A_DEAD line on the same tick and nothing after - the second jump at 90 raises the bus again and no BAL line follows (A_DEAD(1)=K_GEN1 has no inverse); the same bus is the level's one wake for everything else that moves at a jump - 16 POCISK/kokos.mov A_RZUT (the fruit THROWS itself), both LINA and DRABINKA A_DROP, KORONA A_TWIST, WODA A_RUN_AF - and no balloon is picked in this run (the +32 branch needs energy < 100 AND a shape-box meet with a point >= 114 px above any walkable line)" \
 	  || { echo "play balloon pop grep FAILED"; cat /tmp/opencode/ly_balpop.log; exit 1; }
+# PR-537 (the goal's "jumping on palms" clause): what ZARIA.01 actually
+# puts between the lion and a palm seat, measured as a WALL and a
+# WINDOW. (1) THE WALL - no walk crosses the level. ANIPL2.DES is a
+# THREE-entry table, not four: KATAPULT 300,588 with the pair
+# -6300,-1350, PALMA 965,335 with `1 -80,45;-18,45` (the 380 line at
+# x 885..947) and PALMA 1010,275 with the same table (the 280 line at
+# x 930..992) - the 475 line once cited is a mis-adding of the
+# 820,435 placement, which ANIPL2 does not contain. ly_pal_walk walks
+# 2600 ticks, FWD then LEFT, and measures the boundary: the furthest
+# x he is EVER grounded at is 406, the west lip of the 408..624
+# chasm; the highest pos_y he ever reaches is 648, i.e. the main
+# ground at 680; ZERO A_JUMP and ZERO BAL lines. So no walk reaches
+# any seat line, and no walk is even above the ground. (2) THE WINDOW
+# - the air route reaches the terrace but not the seat. ly_pal_top
+# (`1:FWD 478:FWD,JUMP 529:FWD 533:JUMP 600:FWD 630:FWD,JUMP`) is
+# the air route the port CAN drive: the 533 jump crosses the 475
+# height at 855,470 / 879,472 - INSIDE the x-bracket of the 380 seat
+# - and is not caught, because a feet-on-line catch needs the descent
+# (ll_play.c: the landing test is p->vy >= 0 together with
+# ground_y >= (double)hit.y - 1.0): the
+# next tick's line reads pos 927,477 grounded 1, the authored terrace
+# `1 922,509;968,508`. The 630 jump then peaks ABOVE the 380 seat
+# line at exactly one x - 1000 - and the seat's own x-bracket is
+# 885..947, so no line meets him there: zero rows at pos 348 (= 380
+# - the WALK contact) or 443. The seat is reachable in height and
+# missed in x, and the missed width is 53 px. A JUMP pressed in
+# A_DRAP is not that jump at all: the port gives A_JUMP_S, a smaller
+# pull (ly_pal10's later presses peak at pos 375 at x 1000), and
+# A_JUMP comes only out of A_WALK/A_RUN. (3) THE CENSUS, re-derived
+# with the box window the port actually tests (`by0 <= p.y <= by0+h`
+# with the WALK box spanning line-32 .. line, PR-97): a balloon point
+# (x+10,y+10) needs a line with y in (balloon_y, balloon_y+42]. Of
+# the six ANI2 placements exactly TWO have such a line - (1270,460)
+# from `1 993,506;1141,507` and (1880,310) from `1 1838,371;1925,
+# 347` - and (1542,272), (78,460), (990,608), (1600,113) are spanned
+# by NOTHING in the level. The one that matters sits at x 1050..1080,
+# i.e. 100 px EAST along the 380 seat line from where the terrace
+# jump stops: the PALMA seat IS the perch, and the missing step is
+# the landing on it.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=130 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_SEAT=0 LEO_PLAY_SCRIPT="1:FWD 2000:LEFT" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_pal_walk.ppm LEO_LEVEL_PPM_TICK=2600 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_pal_walk.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play palms wall FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_pal_walk.log; exit 1; fi
+	@test "$$(grep -c 'state A_JUMP' /tmp/opencode/ly_pal_walk.log)" -eq 0 \
+	  && test "$$(grep -c 'BAL/balonik' /tmp/opencode/ly_pal_walk.log)" -eq 0 \
+	  && test "$$(grep -c 'balloon at .* picked' /tmp/opencode/ly_pal_walk.log)" -eq 0 \
+	  && test "$$(grep -E 'grounded 1' /tmp/opencode/ly_pal_walk.log \
+	       | awk -F'pos ' '{split($$2,a,","); print a[1]}' \
+	       | sort -n | tail -1)" -eq 406 \
+	  && test "$$(grep -E 'grounded 1' /tmp/opencode/ly_pal_walk.log \
+	       | awk -F'pos ' '{split($$2,a,","); split(a[2],b," "); print b[1]}' \
+	       | sort -n | head -1)" -eq 648 \
+	  && echo "play palms wall (PR-537): 2600 ticks of walking (FWD, then LEFT) never cross ZARIA.01 - the furthest x the lion is EVER grounded at is 406, the west lip of the 408..624 chasm, and the highest he ever stands is pos 648 on the main ground; ZERO A_JUMP, ZERO balloon lines. No walk reaches a palm seat: ANIPL2's two tables (PALMA 965,335 -> the 380 line at 885..947, PALMA 1010,275 -> the 280 line at 930..992) are on the far side" \
+	  && echo " (ok)" \
+	  || { echo "play palms wall grep FAILED"; cat /tmp/opencode/ly_pal_walk.log; exit 1; }
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=30 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD 533:JUMP 600:FWD 630:FWD,JUMP" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_pal_top.ppm LEO_LEVEL_PPM_TICK=700 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_pal_top.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play palms window FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_pal_top.log; exit 1; fi
+	@grep -q 'play tick 615: state A_JUMP seq jump frame 8 pos 855,470' /tmp/opencode/ly_pal_top.log \
+	  && grep -q 'play tick 624: state A_JUMP seq jump frame 8 pos 927,477 grounded 1' /tmp/opencode/ly_pal_top.log \
+	  && test "$$(grep -cE 'pos [0-9]+,443 grounded 1' /tmp/opencode/ly_pal_top.log)" -eq 0 \
+	  && test "$$(grep -cE 'pos [0-9]+,348 grounded 1' /tmp/opencode/ly_pal_top.log)" -eq 0 \
+	  && test "$$(grep -E 'pos [0-9]+,[0-9]+ grounded' /tmp/opencode/ly_pal_top.log \
+	       | awk -F'pos ' '{split($$2,a,","); split(a[2],b," "); if (b[1]+0 < 380) print a[1]}' \
+	       | sort -n | uniq | tr '\n' ' ')" = '1000 ' \
+	  && echo "play palms window (PR-537): the air route reaches the authored terrace 922,509;968,508 at 927,477 grounded 1, and the SAME jump crosses the 475-height inside the seat's x-bracket (855,470 / 879,472) WITHOUT a catch - the landing test needs the descent (ll_play.c: p->vy >= 0 together with ground_y >= hit.y - 1.0) - while the next jump peaks above the 380 seat line at exactly one x, 1000, six ticks wide and 53 px outside the seat's own bracket 885..947: zero rows at pos 348 or 443. The PALMA seat is unreachable in x, not in height, and only A_JUMP (from A_WALK/A_RUN) has the reach - a JUMP pressed in A_DRAP gives the smaller A_JUMP_S pull" \
+	  && echo " (ok)" \
+	  || { echo "play palms window grep FAILED"; cat /tmp/opencode/ly_pal_top.log; exit 1; }
 else
 	@echo "verify-play: SKIP data legs (needs $(DATA) + LEO_HD_DIR fixtures; see NEXT_STEPS.md)"
 endif
