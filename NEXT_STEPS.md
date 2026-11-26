@@ -68199,7 +68199,15 @@ SUBSYSTEM: the ZARIA.01 traversal route - ground geometry, the
     the y=1500 catcher. The walkable route across the pit is
     THROUGH THE TERRACE (terrace end 589,566 -> the 624 stone is
     a 35 px hop; ground-to-624 is a 216 px gap, not jumpable). The
-    water is a box, not a surface: ANI2.DES `DRECT,988,645;1340,
+    archive's own FOCUS-1 fact sheet (PR-131-era, D2/G-9) reached
+    the same candidate from the video side: the 216-unit chasm's
+    "crossing mechanism is STILL NOT OBSERVED in any sampled
+    window - A t=13-28 (ladder up, canopy route east, down the
+    big tree at t=25-28) is the candidate explanation: the player
+    bypassed the gap above the water, not over it"; and its
+    t=13.3-15.7 window reads the DRABINKA@180 column in use. The
+    probes below show the route's ENTRY half now runs in the port.
+    The water is a box, not a surface: ANI2.DES `DRECT,988,645;1340,
     750`, and the lion's [A_WPAD] rows are `A_WPAD(1)=AC_ONAIR,
     AC_DRECT` - both required - so only falls INSIDE that box
     reach the water state; [A_WYJSCIE] then `pos 1020,692` +
@@ -68283,8 +68291,11 @@ MEASURED: (a) z_walk.log tick 88 off the cliff at x 408, the
 
 - WHY. ZARIA.01 "playable" is the session objective, and this is
   the first honest map of what stands between the PR-523 physics
-  and a traversal: the pit crossing runs THROUGH the terrace, the
-  climb entry already works, and one law - the top-of-climb seat -
+  and a traversal: the pit crossing runs THROUGH the terrace - the
+  same candidate the fact sheet's D2 named from the video side,
+  and its G-9 ("verify the ZARIA.01 ladder ride at 180 end to
+  end") is exactly the chain measured here - the climb entry
+  already works, and one law - the top-of-climb seat -
   gates the whole route. The same reading merges three gaps that
   were carried separately (OI-073's grounded-y remainder, OI-078's
   climb chain, the ani_plat "moving ground" count) into one
