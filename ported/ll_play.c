@@ -1875,6 +1875,27 @@ static int cond_true(const ll_player *p, const ll_play_keys *k,
  * bracket every place that arithmetic runs. A velocity this port holds
  * is always that integer divided by LL_PLAY_RAW_VDIV, so the round trip
  * is exact. */
+/* PR-518: THE ROW ADMIT IS THE PHYSICS STEP. Read live (pr516i,
+ * named windows, PR-517) the engine's physics pass runs once per row
+ * ADMIT, not once per iteration: between admits the position and BOTH
+ * velocity registers sit EXACTLY still while the row accumulator keeps
+ * running at the 20 Hz iteration rate; at an admit the registers step
+ * (force + drag + G), the body moves register//100, and the ground
+ * queries run. A_DRAP admits ~21/s (indistinguishable from per-
+ * iteration), a named A_JUMP ~5/s, an authored one-row `0,100` list
+ * exactly 10/s. The law is implemented here but stays behind an env
+ * gate until the selftest legs that carry per-iteration pins are
+ * re-derived on the live numbers - the same order the clock changes of
+ * PR-109/110 took. LEO_PLAY_ROW_PHYSICS=1 turns it on; the default is
+ * the old per-iteration pass, and the difference is named at OI-015. */
+static int ll_play_row_physics(void)
+{
+    static int cached = -1;
+    if (cached < 0)
+        cached = getenv("LEO_PLAY_ROW_PHYSICS") ? 1 : 0;
+    return cached;
+}
+
 static long long ll_play_v_raw(double v)
 {
     double a = v * (double)LL_PLAY_RAW_VDIV;
@@ -2147,6 +2168,43 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
     p->broke = 0;
     p->ac_time = 0;
 
+    /* PR-518: THE PHYSICS PASS RUNS AT ROW ADMITS. The live trace
+     * (pr516i, NAMED windows, PR-517) is unambiguous: between row
+     * admits the position and BOTH velocity registers sit EXACTLY
+     * still while the row accumulator keeps running at the 20 Hz
+     * iteration rate; at an admit the registers step (drag + force +
+     * G), the body moves register//100, and the ground queries run -
+     * A_DRAP admits ~21/s (physics indistinguishable from per-
+     * iteration), a named A_JUMP ~5/s (its authored row list), an
+     * authored one-row `0,100` list exactly 10/s. So sections 2-6
+     * below are gated on this iteration's admit, and the row clock
+     * runs FIRST: its time-mode feed and the BY_X feed from the
+     * PERSISTED step word [obj+0xca] (row_dx) belong to the
+     * iteration loop, exactly the 0x543a0 dispatcher's shape - feed
+     * every iteration, admit test every iteration, physics only when
+     * the admit answers. The y-intent word is stored here too (the
+     * engine writes [obj+0xbe] every frame loop, 0x549f0, and the
+     * BY_TY feed gate reads it), and a state with NO row list keeps
+     * physics per iteration: with no rows there is no admit, a
+     * literal reading would freeze the body, and that degenerate
+     * case is the nfr==0 item already open at OI-015. */
+    p->vert_intent = keys->k_up ? -LL_PLAY_INTENT_FULL
+                                : (keys->k_down ? LL_PLAY_INTENT_FULL : 0);
+    int row_admit = 0;
+    if (ll_play_row_physics() && st->nfr > 0) {
+        int walk = (st->ctrl & LL_CTRL_BY_X) && st->fx != 0;
+        int by_ty = (st->ctrl & LL_CTRL_BY_TY) && !p->vert_intent;
+        if (walk)
+            p->facc += p->row_dx < 0 ? -(double)p->row_dx
+                                     : (double)p->row_dx;
+        else if (!by_ty)
+            p->row_t += 100;           /* one iteration = exactly one
+                                        * feed of the engine's constant
+                                        * (0x4c8b7), PR-110 */
+        row_admit = ll_mov_row_admit(&st->fr[p->fi], row_live, walk,
+                                     &p->row_t, &p->facc);
+    }
+
     /* HISTORICAL RECORD OF THE FITTED MODEL (the model in force from
      * PR-79 until PR-135; the code that implements the engine's own law
      * is the block below, marked "2) horizontal physics: the ENGINE
@@ -2278,6 +2336,9 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * matching key is held; auto_walk states (K_GENn cutscene
      * walkers: GO_TO_BALON_*, EXIT, CHANGE_LEVEL) walk with s at
      * full intent and no key. */
+    if (ll_play_row_physics() && !(row_admit || st->nfr == 0))
+        goto physics_skipped;   /* PR-518, the helper above  */
+
     int key_walk = p->walkdir > 0 ? keys->k_fwd : keys->k_bkwd;
     int s = ((st->ctrl & LL_CTRL_BY_X) && (key_walk || p->auto_walk))
                 ? (p->walkdir < 0 ? -LL_PLAY_INTENT_FULL
@@ -2323,8 +2384,6 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * [ebx+0x4] is the authored F pair's SECOND number: the x side of
      * the same body multiplies [ebx+0x0] by the horizontal intent and
      * is the law PR-132 shipped as idiv(F*s,20). */
-    p->vert_intent = keys->k_up ? -LL_PLAY_INTENT_FULL
-                                : (keys->k_down ? LL_PLAY_INTENT_FULL : 0);
 
     /* 3) vertical: the y side of the same pass, PR-253/PR-256. The T_y
      * drag is computed from the OLD register, the authored G= word is
@@ -2480,8 +2539,12 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * section 7's gate picks by mode, as obj_advance's does. The feed
      * is the velocity's own distance, before the bounds clamp in (6) -
      * [obj+0xca] is the velocity register, not the post-clip position. */
-    if ((st->ctrl & LL_CTRL_BY_X) && st->fx != 0)
-        p->facc += dxv < 0 ? -dxv : dxv;
+    p->row_dx = (long long)dxv;       /* PR-518: [obj+0xca] persists;
+                                     * the mode-0 feed at the iteration
+                                     * top adds THIS word every frame,
+                                     * admits or not. */
+    if ((st->ctrl & LL_CTRL_BY_X) && st->fx != 0 && !ll_play_row_physics())
+        p->facc += dxv < 0 ? -dxv : dxv;   /* the OLD in-pass feed */
 
     /* 5) ground logic (.plt lines, the shape bottom on top).
      * PR-97: the tested point is `y + p->contact` - the contact line the
@@ -2692,29 +2755,31 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * at the list WRAP - was wrong for the player: the real scripts
      * name their own source.) */
     if (st->nfr > 0) {
-        int walk = (st->ctrl & LL_CTRL_BY_X) && st->fx != 0;
-        int by_ty = (st->ctrl & LL_CTRL_BY_TY) && !p->vert_intent;
-        /* PR-148, the mode-4 feed guard, byte-exact at 0x5441b: the
-         * dispatcher's BY_TY branch adds nothing while [obj+0xbe] is
-         * zero, and the row compare runs on regardless - a BY_TY row
-         * CLOSES ONLY ON ITERATIONS WHERE THE VERTICAL INTENT IS
-         * HELD, and the accumulator carries the partial feed across
-         * the gap exactly like the engine's [obj+0xa1]. The guard is
-         * on the feed, not the admit. Not copied: the same branch's
-         * cousin at 0x543f2 guards BY_TIME (mode 2) on the X-intent
-         * word - PR-102 recorded mode 2 as unguarded, the model has
-         * run that way through every video-verified leg since, and
-         * PR-147's own reading of that guard's data source (word0 =
-         * the arrows) makes it a behavioural regression study, not a
-         * copy. Counted as open item 2 in the PR-148 record. */
-        if (!walk && !by_ty)
-            p->row_t += 100;          /* one iteration = exactly one
-                                       * feed of the engine's constant
-                                       * (0x4c8b7): no millisecond
-                                       * arithmetic is left here, the
-                                       * clock is ll_player_step */
-        if (ll_mov_row_admit(&st->fr[p->fi], row_live, walk,
-                             &p->row_t, &p->facc)) {
+        if (!ll_play_row_physics()) {
+            /* the OLD path, unchanged: feed and admit test inside the
+             * pass after the physics, exactly as PR-110/PR-148 wrote
+             * them; the row clock stays where they left it. */
+            int walk = (st->ctrl & LL_CTRL_BY_X) && st->fx != 0;
+            int by_ty = (st->ctrl & LL_CTRL_BY_TY) && !p->vert_intent;
+            /* PR-148, the mode-4 feed guard, byte-exact at 0x5441b: the
+             * dispatcher's BY_TY branch adds nothing while [obj+0xbe] is
+             * zero, and the row compare runs on regardless - a BY_TY row
+             * CLOSES ONLY ON ITERATIONS WHERE THE VERTICAL INTENT IS
+             * HELD, and the accumulator carries the partial feed across
+             * the gap exactly like the engine's [obj+0xa1]. The guard is
+             * on the feed, not the admit. Not copied: the same branch's
+             * cousin at 0x543f2 guards BY_TIME (mode 2) on the X-intent
+             * word - PR-102 recorded mode 2 as unguarded, the model has
+             * run that way through every video-verified leg since, and
+             * PR-147's own reading of that guard's data source (word0 =
+             * the arrows) makes it a behavioural regression study, not a
+             * copy. Counted as open item 2 in the PR-148 record. */
+            if (!walk && !by_ty)
+                p->row_t += 100;      /* the engine's constant feed */
+            row_admit = ll_mov_row_admit(&st->fr[p->fi], row_live,
+                                         walk, &p->row_t, &p->facc);
+        }
+        if (row_admit) {              /* the row cursor and the chain */
             /* AT MOST ONE ROW PER ITERATION (PR-100's reading of the
              * state record's step at 0x521f0: compare, subtract the
              * authored threshold, hand the remainder over, and the step
@@ -2892,6 +2957,16 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
         p->sig |= 1ull << LL_SIG_AC_ONAIR;
     else if (!was_att)
         p->sig |= 1ull << LL_SIG_AC_DUP;
+physics_skipped:
+    /* PR-518: this is where an iteration that did NOT admit an empty-
+     * handed row resumes: the state's transitions, signals and row
+     * clock still ran (they are per frame), the physics pass did not.
+     * The surface-link raises above are the tail of the engine's
+     * physics step (0x54760-0x54803 runs right after the ground
+     * queries), so they are inside the gate - a non-admitting frame
+     * re-posts what the last physics step's ground query found, which
+     * is the same signal, and AC_ONAIR after a ledge is delayed by at
+     * most one state row. */
     return ev;
 }
 

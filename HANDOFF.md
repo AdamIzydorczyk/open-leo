@@ -3312,6 +3312,24 @@ record.
   the per-state feed gate).
 
 
+  PR-518 STATUS (the corrected law is IN the port, behind a gate).
+  ported/ll_play.c's body now runs the row clock FIRST - the 100 a
+  iteration time feed, the BY_TY feed guard, and for a walking state
+  the mode-0 feed of the persisted step word row_dx, the [obj+0xca]
+  the last physics pass left - and the admit answer then gates the
+  two registers, the position step at register//100, the ground
+  queries, the bounds and PR-331's surface-link tail: the order
+  0x543a0 / 0x521f0 / 0x54760 actually have. LEO_PLAY_ROW_PHYSICS=1
+  turns it on. The default is still the old per-iteration pass and
+  --play-selftest is rc=0 with 0 FAILED, exactly where PR-517 left
+  it, because the flip's cost is now counted instead of guessed:
+  gate on, 90 checks red in 12 legs (grouped in the record); plus 69
+  more if
+  LL_PLAY_INTENT_FULL moves to the keyboard's 20 (OI-011's answer is
+  recorded in the header, the constant is NOT moved). T3 is PR-519:
+  re-derive those legs on the live A_JUMP/A_WALK numbers, then flip
+  the constant and the default in one step.
+
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`
 (conditions `K_FIRE`+`K_F1`/`K_F2`, `K_ALT`); enemy `.MOV` death states;

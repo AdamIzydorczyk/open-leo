@@ -67541,3 +67541,114 @@ MEASURED: (a) run h's state/record hex dump (the layout, in OI-130);
 
 GATE: make 0 warnings; verify-all fixtures rc=0 73 (ok);
 GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+
+## PR-518 - THE ROW-ADMIT PHYSICS LAW IS NOW IN THE PORT, BEHIND A GATE:
+## THE ROW CLOCK RUNS FIRST, THE FEED FOR A WALKING STATE COMES FROM THE
+## PERSISTED STEP WORD [obj+0xca], AND SECTIONS 2-6 (REGISTERS, POSITION,
+## GROUND, BOUNDS) RUN ONLY ON THE ADMIT ANSWER
+
+```
+KIND: port
+SUBSYSTEM: ported/ll_play.c's iteration body and ported/ll_play.h. The
+  law PR-517 measured named (row admit = the physics step) is
+  implemented, and kept behind an env gate because the selftest's
+  per-iteration pins are not re-derived yet. (1) THE SHAPE, AS THE
+  DISPATCHER HAS IT (0x543a0 feeds, 0x521f0 answers, the physics tail
+  0x54760-0x54803 follows the ground queries): the body now runs the
+  row clock FIRST - the time-mode feed of exactly 100 per iteration
+  (0x4c8b7), the BY_TY feed guard (0x5441b), and for a walking state
+  the mode-0 feed of the PERSISTED word `row_dx` = the engine's
+  [obj+0xca], the whole-px step the last physics pass produced - then
+  the admit test, then, only when it answers, sections 2-6: the force
+  and drag and G on the two registers, the position step at
+  register//100, the .blk/.suf/ground queries, the lew_rect bounds -
+  then section 7's row cursor and chain, and the surface-link raises
+  of PR-331, which are that same physics-step tail. A state with NO
+  row list keeps physics per iteration: with no rows there is no
+  admit, and that degenerate case is the nfr==0 item already open at
+  OI-015. (2) THE GATE. LEO_PLAY_ROW_PHYSICS=1 turns the law on;
+  the default stays the old per-iteration pass, and the old pass is
+  kept byte-where-it-was (feed and admit test after the physics, as
+  PR-110/PR-148 wrote them) so nothing about today's behaviour
+  changes until the pins move. New ll_player field row_dx. (3) THE
+  COST OF THE FLIP, MEASURED, NOT GUESSED: --play-selftest with the
+  gate off is rc=0 with 0 FAILED checks (the port is where PR-517
+  left it); with the gate ON it is 90 FAILED checks in 12 legs,
+  grouped by leg into PR-519's worklist (/tmp/opencode/pr519_worklist
+  .md): the PR-135 gait leg 41, the PR-83 pit-and-shelf shapes 10,
+  the PR-259 BY_TY climb 10, the PR-82 walk distances 6, the
+  PR-253/PR-256 pull legs 6, the PR-86 entry rows 5, the PR-114
+  frozen-velocity state 5, the PR-91 hit reaction 4, PR-285's freeze
+  idiom 2, PR-85's turn 1. Each must be re-derived from the authored
+  F/T/G and its row thresholds, and cross-checked on pr516i where a
+  live counterpart exists (the A_JUMP register sequence and the
+  +66..82 px carry are the strongest pins), not scaled. (4) OI-011, DECIDED AND
+  NOT YET APPLIED. The header now records the answer: the port's full
+  one-axis intent is the KEYBOARD's word, 20 (PR-515/516 read ±20 in
+  the playable lion's [obj+0xba], and its register settles at the
+  s=20 equilibrium - exactly 500 at the authored A_WALK pair), not
+  the contact path's 10. With the corrected cadence that reads as:
+  register 500, feed v//100 = 5 a frame against the authored walk-row
+  threshold 6, so 16.7 admits a second x 5 px = 83 px/s - inside
+  PR-134's [38,76] band and the same shape as the live A_WALK
+  windows (feed 5/frame, admits ~14/s, 50-64 px/s); at s=10 the same
+  machine gives 250, feed 2, ~16 px/s, matching nothing. The constant
+  itself stays 10 in this PR: flipping it alone turns 69 of the same
+  legs' checks red, and PR-519 does the flip and the re-pins TOGETHER
+  on the live numbers - a half-flipped port would be worse than the
+  honest red here.
+ADDRESSES: the law being implemented - 0x543a0 (the dispatcher's
+    per-mode row feed), 0x521f0 (the row compare and subtract),
+    0x4c8b7 (the 100 a iteration feed), 0x5441b (the BY_TY feed
+    guard), 0x54760-0x54803 (the ground queries and the surface-link
+    tail this gate now covers), 0xca (the stored step word,
+    [obj+0xca], the source of the mode-0 feed), 0xba and 0xbe (the
+    intent words whose scale paragraph 4 decides).
+NAMES: ll_play_row_physics (new), LEO_PLAY_ROW_PHYSICS (new env
+    gate), ll_player.row_dx (new field), ll_mov_row_admit,
+    ll_player_step, player_iterate, LL_PLAY_INTENT_FULL (read, NOT
+    moved), OI-011, OI-015, OI-012.
+CODE: yes: ported/ll_play.c - the iteration body re-ordered (row
+    clock first, sections 2-6 and the PR-331 tail gated on the admit
+    answer, the old path kept where it was when the gate is off),
+    ll_player_start's zeroed row_dx as the [obj+0xca] counterpart;
+    ported/ll_play.h - the row_dx field and the intent-scale
+    paragraph that records OI-011's answer without moving the
+    constant.
+HOOKS: LEO_PLAY_ROW_PHYSICS (new env gate, same pattern as
+  LEO_PLAY_ASK/LEO_PLAY_SOLID); ll_player.row_dx.
+OPENS: OI-015 (the flip: 90 checks to re-derive on the live cadence,
+  then make the law the default; and the per-state feed gate inside
+  it), OI-011 (the decision is recorded, the constant is not moved),
+  OI-012 (the .MOV nfr==0 states, unchanged)
+CLOSES: none - the law is implemented and measured, but gated;
+  the flip and its re-pinned legs are PR-519
+CORRECTS: PR-517's record said PR-518 would "change the port's
+  physics leg"; it is larger than that sentence assumed - the row
+  clock's ORDER moves with it, and the mode-0 feed has to read a
+  stored word, which is why the change is gated rather than landed.
+MEASURED: (a) --play-selftest gate off: rc=0, 0 FAILED
+  (/tmp/opencode/pr518_st_off.txt); (b) gate on: 90 FAILED checks in
+  12 legs, grouped above (/tmp/opencode/pr518_st_on.txt); (c) gate off +
+  LL_PLAY_INTENT_FULL 20: 69 FAILED checks (the gait, walk-distance
+  and BY_TY legs carry s=10 numbers); (d) the A_WALK arithmetic of
+  paragraph 4, from the authored F=100,T=20 pair and threshold 6;
+  (e) a GATE FLAKE, named so PR-519 does not chase it: under a
+  parallel -j build the verify-golden demo is cut by its own 120 s
+  timeout and reports 26 vs 30 pose hashes; the same leg on a quiet
+  machine is 30 hashes match manifest. Same family as the verify-sel
+  rc=124 flakes PR-517 hit.
+```
+
+- WHY. PR-517 refuted the model at its root, so the port should carry
+  the real law rather than another fitted constant. Implementing it
+  honestly moved more than the physics block: the row clock's order
+  and the mode-0 feed's source are part of the same law, and that is
+  why it lands behind a gate with its cost measured - the 90 and 69
+  red-check counts are PR-519's worklist, counted now instead of
+  discovered later.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 73 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 22 named verify-SKIPs - the 21 in
+  PR-517's line under-counted by one, that run's log lists 22 SKIP
+  target names too

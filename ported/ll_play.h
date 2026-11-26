@@ -1037,34 +1037,45 @@ typedef struct { int k_fwd, k_bkwd, k_up, k_down, k_jump,
  *                                      engine's units, which at the
  *                                      50 ms iteration is F*s/100 in
  *                                      units/s)
- *   steady v = F*s/T units/s           (PR-134's table closes on real
- *                                      video: the ZARIA worm
- *                                      100*10/40 = 25 u/s against a
- *                                      measured bound of 30.3, and the
- *                                      real LEW.MOV ground run
- *                                      400*10/90 = 44.4 u/s inside the
- *                                      measured [38,76])
- * s is the engine's intent register ([obj+0xba], read live as 10 by
- * PR-99, and PR-132 closed "10 IS full one-axis intent"). PR-147's
- * byte-level census NARROWS that: 10 is the CONTACT-path constant (a
- * kind-1/4 contact node writes +/-10 toward the partner, 0x54a57/
- * 0x54b16), while the keyboard path writes +/-20 (reader 0x582f0) -
- * both into the same words, the contact chain overriding after the
- * input store. PR-515/516 CLOSED the player half of that census:
- * the playable lion's word IS the keyboard's raw +/-20 (never +/-10,
- * no normalizer), and its own register pair [obj+0xc2] ramps by
- * exactly idiv(F*s,20) and settles at the s=20 equilibrium - 500 at
- * the authored A_WALK pair, 622-646 in another state - while its
- * POSITION still measures 27-59 px/s per window, the band PR-134's
- * video and this port's s=10 both sit in. So the scale is settled
- * for the WORD and not for the TRAVEL: the live walk's rate is
- * bounded by its row-admit cadence (9.4-11.4 steps/s of
- * register//100 px), which this port's one-step-per-iteration model
- * does not reproduce at any s. The constant therefore STAYS 10 -
- * changing it alone would double the port's travel without matching
- * either side's measured rate - and the two halves are counted at
- * OI-011 (the scale) and OI-015 (the cadence), not smoothed over;
- * partial intents remain an open item, not modeled. */
+ *   steady v = F*s/T units/s was PR-134's PER-ITERATION reading.
+ *                                      PR-518 REPLACES the cadence
+ *                                      half of it: the live trace
+ *                                      (PR-517, named states) shows
+ *                                      the physics pass runs only at
+ *                                      ROW ADMITS, so px/s is
+ *                                      (register//100) x admit rate -
+ *                                      PR-134's video bands still
+ *                                      close, now on the live
+ *                                      cadence (see LL_PLAY_INTENT_
+ *                                      FULL for the s decision that
+ *                                      goes with it)
+ * s is the engine's intent register ([obj+0xba]/[obj+0xbe]). The
+ * scale question (PR-147's 10-vs-20 census, OI-011) is CLOSED by
+ * PR-515/516/517 reading the playable lion itself: the keyboard path
+ * writes the RAW +/-20 (0x582f0; live [obj+0xba] = 20 under a held
+ * arrow, and the register settles at the s=20 equilibrium - EXACTLY
+ * 500 at the authored A_WALK pair F=100,T=20, 622-646 in another
+ * state). The 10 of 0x54a57/0x54b16 is the CONTACT-node path writing
+ * the same word toward a partner - a path this port does not model,
+ * so no port consumer needs it. The video band [38,76] px/s then
+ * picks the s that FITS the corrected cadence: at s=20 the register
+ * reaches the authored equilibrium 500, the walking state's row feed
+ * is v//100 = 5 per frame against its authored threshold 6, which
+ * admits 16.7 times a second and moves the body 5 px each time -
+ * 83 px/s, inside the band and the same shape the live A_WALK
+ * windows measured (feed 5/frame, admits ~14/s, 50-64 px/s); at s=10
+ * the register reaches 250, the feed runs 2 a frame and the same
+ * arithmetic gives ~16 px/s, matching nothing. So the constant is the keyboard's word, 20 - the decision
+ * OI-011 asked for, made on three independent measurements (live
+ * word, live register equilibrium, live px/s) with the video band as
+ * the bound. OI-011's decision is therefore recorded as 20, but the
+ * constant is NOT flipped by this PR: with the corrected cadence
+ * already in the tree, 20 turns 69 of the --play-selftest checks red
+ * (the gait, walk-distance and BY_TY legs carry s=10 numbers), and
+ * those pins must be re-derived on the live trace's numbers, not
+ * scaled. The flip plus its re-pinned legs is PR-519. PR-99's 10 and
+ * PR-134's fitted band stay cited where they were measured; partial
+ * intents remain an open item, not modeled. */
 #define LL_PLAY_DRAG_DEN 100
 #define LL_PLAY_INTENT_FULL 10
 /* PR-135: one unit of the engine's velocity register. That register is
@@ -1167,7 +1178,19 @@ typedef struct {
                                  * list of 6-unit rows (RAN's and
                                  * ZARIA's real walk lists) would cycle
                                  * inside one iteration. Same law, same
-                                 * field name as lvl_obj.facc. */
+                                 * field name as lvl_obj.facc. PR-518:
+                                 * for a BY_X state this feed is added EVERY
+                                 * iteration from the PERSISTED step word
+                                 * row_dx below - the engine's mode-0 arm
+                                 * adds [obj+0xca], a stored word, while
+                                 * physics runs only at admits, so between
+                                 * admits the accumulator still walks
+                                 * toward the threshold. */
+    long long row_dx;           /* PR-518: [obj+0xca], the whole-px step
+                                 * the last physics pass produced. The
+                                 * mode-0 row feed reads this word; it
+                                 * survives between admits because the
+                                 * object's words do. */
     int grounded;
     int walkdir;                /* -1/1, set by K_BKWD/K_FWD transitions
                                  * (the real CH_DIR flag's effect)        */

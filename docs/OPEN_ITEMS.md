@@ -175,6 +175,17 @@ OI-011: shipped discrepancy: the port drives the player walk to
     admit. Neither number is settled here and the port's constant
     stays 10 until they are.
 
+    PR-518 RECORDS THE ANSWER: 20, the keyboard's word. The live
+    [obj+0xba] is ±20 (PR-515/516), the lion's own register settles
+    at the s=20 equilibrium (exactly 500 at the authored A_WALK
+    F=100,T=20 pair), and only s=20 lands inside PR-134's [38,76]
+    px/s band once the cadence is corrected (register 500, feed 5 a
+    frame against the authored threshold 6, 16.7 admits/s, 83 px/s -
+    the live A_WALK windows are the same shape at 50-64); s=10 gives
+    ~16 px/s, matching nothing. The constant in ll_play.h is still
+    10 in this PR: moving it alone turns 69 selftest checks red, and
+    it goes in WITH PR-519's re-pinned legs, not ahead of them.
+
 OI-012: does the PLAYER object go through the 0x54250 step at all?
   PR-135 applies the law to both actors as the model; the three
   call sites do not check class
@@ -349,6 +360,24 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     rate - neither the port's one-step-per-LL_ITER_MS model nor any
     single rate. Still open inside it: why the +100 feed itself runs
     at 7-9/s in DOSTAL/JUMP/TO_BOR windows and 21/s in DRAP.
+
+    PR-518 PUTS THE LAW IN THE CODE, BEHIND A GATE. The body now
+    runs the row clock FIRST (the 100-per-iteration time feed, the
+    BY_TY feed guard, and for a walking state the mode-0 feed of the
+    PERSISTED step word row_dx = [obj+0xca]) and the admit answer
+    gates the two registers, the position step at register//100, the
+    ground queries, the bounds and PR-331's surface-link tail - the
+    order 0x543a0/0x521f0/0x54760 have. LEO_PLAY_ROW_PHYSICS=1
+    turns it on; the default stays the per-iteration pass, so no
+    pin moves today. The cost of flipping it, MEASURED: selftest
+    gate off rc=0 / 0 FAILED; gate on 90 FAILED checks across ~13
+    legs (the mode-0 distance-feed leg, the gait legs, the pit and
+    edge-fall legs, the jump arcs, the BY_TY climb, the blockade and
+    .suf legs). Those re-derived numbers are PR-519's worklist and
+    come from the live trace, not from scaling the old ones. The
+    nfr==0 exception (a state with no row list keeps per-iteration
+    physics, since with no rows nothing would ever admit) stays open
+    here too.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
