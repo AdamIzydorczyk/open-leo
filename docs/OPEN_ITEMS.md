@@ -658,6 +658,30 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     window that was read. What stays open here is the semantics,
     not the raisers: the gate's second condition is
     `[asker+0xc6] > 0`, and what that word is is OI-119.
+    PR-526 CHECKS THE PLACEMENT HALF OF THAT ANSWER, AND THE ANSWER IS
+    YES - with the search done in the right file. The placement lists
+    are NOT in the CD containers (a case-insensitive byte search of
+    iso_stage/LEO/LEVELDES - 431,636,667 bytes - and
+    iso_stage/LEO/ETAPY - 20,100,773 - finds `drect` ZERO times,
+    while the same search finds 67 `lew=` records: those containers
+    hold the .DES records, which only NAME the member files). They
+    are in the HD block the port reads, hd_files/ETAPY (252,414
+    bytes). Counting the box-placement lines there (`^<TOKEN>,<x>,
+    <y>;<x>,<y>$` in file order): DRECT exactly 1, DRECT2 8, RECT 4,
+    BICZRECT 1 - and that one DRECT is ZARIA.01's pool,
+    `DRECT,988,645;1340,750`, authored right between its two LINA
+    placements (125,292 and 525,525) and its RECT/KILOF_PL boxes. So
+    the `A_WPAD(1)=AC_ONAIR,AC_DRECT` entry lines (LEW.MOV lines 53/
+    78/105/131/219) DO have shipped data behind them - one instance,
+    in the level this row is about - and the port already asks it:
+    rect_class_answer raises LL_SIG_AC_DRECT for a player inside that
+    authored box with p->vy > 0 (the OI-119 gate, modelled as the
+    fall), and a LEO_PLAY_ASK log prints the ask on every tick with
+    the lion at 51,648 far outside it. What stays open is therefore
+    not the raiser but the REACH: the box sits at x 988..1340, the
+    far east end of ZARIA.01's authored rectangle
+    (`lew_rect=0,0;1000,1000`), so the dive needs the traverse-east
+    run first - that is OI-078, not this row.
     PR-319 CLOSES THE OTHER HALF OF THE GATE. The asker's +0x68
     verb, which the rectangle test reads, is the POINT PROVIDER:
     for the LION's classes it is 0x23900 - `add eax,0xd6; ret` -
@@ -1054,7 +1078,19 @@ OI-053: the stage RE-ENTER path: the engine's caller loops with a
   NEW level object (0x5d1f5 allocates, 0x5d233 runs the ctor that
   zeroes the exit slot); the port has no re-entry and ends the
   level run at the guard
-  status: OPEN
+  status: PARTIAL (PR-526 SHIPS A REAL PRODUCER AND RUNS THE RESET
+    LEG: the level lion's end-request flag is the port's copy of
+    [[mgr+0x394]+0x116], the loop's FIRST guard now tests it in the
+    engine's own order, and verify-play's ly_dive leg drives a full
+    dive -> code 3 -> reset-to-authored -> re-run on ZARIA.01. Still
+    open: the fresh-object re-entry 0x5d1f5/0x5d233 (the port re-uses
+    its own context; PR-199's named ESTIMATE for the 0x5da60/0x5d050
+    pair is unchanged), and the MESSAGE QUEUE that would arm
+    [obj+0x12a] - ZARIA's own +0x10 verb 0x1e130 at 0x1e146 arms it
+    on message type 0xc, and the next state-request pass then forces
+    the request word to index 9 = A_WPAD (0x1e288) while 0x1e27f
+    skips the end check once. That is the engine's own way of putting
+    the lion into the water, and nothing in the port posts messages.)
   origin: PR-199 OPENS
 
 OI-054: a SCENE OBJECT's row admit cannot reach the exit-word slot
@@ -3666,6 +3702,28 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     so no live-engine y-step sample exists for the shift yet; the
     law stands on the machine-code read and the authored data,
     and a capture attempt stays open.
+    PR-526 ADDS THE END OF THE LEVEL to what ZARIA.01 can do: the
+    level's own lion class (named by its .DES `lew=TLewZaria`) ends
+    the stage when the dive state A_WPAD's row list wraps, and the
+    port now reads the same name, carries the same flag
+    ([obj+0x116]) and honours the same guard ORDER (that flag is
+    tested at the top of the loop BEFORE the end_level slot). The
+    ly_dive leg runs the whole chain on ZARIA.01's own data: dive,
+    ten T=200 rows, wrap at 24, the class arm raising the flag while
+    the authored A_WYJSCIE transition still runs at 25, loop code 3
+    at 26, and the stage re-entering at the authored spawn. ZARIA
+    has no `end_level` row and needs none. What that does NOT give
+    this row: the lion cannot REACH the water under keys yet. The
+    data for that gate does exist - ZARIA.01 authors the ONE DRECT
+    in the shipped placement text (`DRECT,988,645;1340,750`, counted
+    at OI-018) and the port's rect_class_answer already raises
+    AC_DRECT for a falling player inside it - but that box is at
+    x 988..1340, the far east end of the level, past what the
+    shipped legs walk to; and the engine's other dive route, the
+    class's message-armed one-shot, needs a message queue the port
+    has not got (OI-053). ly_dive enters the dive through the
+    LEO_PLAY_STATE test hook for exactly that reason, so the
+    level-end half is measured and the reach-the-water half is not.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -
   model it? what ends a JUMP early (does the original cancel
   recovery on the next input?)
@@ -9049,3 +9107,38 @@ OI-130: the live state array is NOT in .MOV declaration order, and
   survive the fit (A_JUMP's I pair and thresholds; A_TO_BOR's F=0,0
   against 189 s with no movement and no intent) stay; the rest need
   the same audit.
+
+OI-131: the object class's +0x90 verb is a STATE-REQUEST FILTER, and
+  only its end-of-stage arm is ported
+  status: OPEN
+  origin: PR-526 OPENS
+  notes: WHAT IS READ. The object step 0x536f0 builds a state-request
+    PAIR on its own frame - 0x5372f passes ebx = &stack[0x24] to
+    [class+0x54] (0x55070 in all three lion classes), 0x53736 passes
+    edx = &stack[0x20] with the object to 0x53520, and 0x53741-0x5374b
+    hand the SAME pair to the applier 0x535a0. Inside 0x53520 the
+    transition walker 0x52000 runs first (0x5356b), then
+    `call *[class+0x90]` (0x5357d) gets that pair - so the verb sees
+    the request WORD before it is applied. TLewZaria's arm 0x1e250
+    compares it with state INDICES: 4 (A_JUMP_S: when
+    [obj+0x10e]*[obj+0x6d] > 0 it calls 0x53670), 0xa (A_KILOF:
+    `subl $0x1e,[obj+0xad]` - energy -30 - unless the CURRENT state
+    is already 10, 0x1e26d), and at 0x1e2dc it OVERWRITES the request
+    with the current state (a cancel) for A_JUMP_DOWN/A_KAMIEN when
+    the level words ds:0xcef64/ds:0xcef68 say so; with the one-shot
+    [obj+0x12a] armed it writes `movl $9,(%edx)` instead (0x1e288) -
+    a forced A_WPAD entry - and 0x1e27f skips the end check that
+    once. TLewZariaB's 0x1e350 has the same shape with the A_WPAD
+    cancel and no end arm. WHAT IS NOT: what [obj+0x10e] and
+    [obj+0x6d] are, who sets ds:0xcef64/ds:0xcef68, what 0x53670
+    does, and the +0x90 arms of the classes 0x4dde0 can otherwise
+    install (0x25510 TLewEna, 0x269a0 TLewEna2, 0x29b00 TLewKadmar1,
+    0x2bfa0 TLewKadmar2, 0x2f0f0 TLewSades, 0x33500 TLewRan, 0x35200
+    TLewKara, 0x3a430 TLewTunga1/TLewJunction, 0x3b150 TLewTunga2,
+    0x38a30 TLewLona - names read from their own compare strings).
+    WHY IT MATTERS: the port has NO request word at all - its state
+    changes come from the matched transition alone - so a CANCELLED
+    request, a FORCED index (the engine's own A_WPAD entry) and the
+    energy hit that rides a request to A_KILOF are all unmodelled,
+    and the dive's real entry route is one of them (OI-053's
+    message half).

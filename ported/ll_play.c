@@ -2093,6 +2093,19 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * one call of this body is one iteration, which is what the caller's
      * accumulator guarantees. */
 
+    /* PR-526: the class +0x90 verb, called on EVERY transition pass
+     * before anything matches (0x5357d runs after the match walk at
+     * 0x5356b and before the state-change applier, so [obj+0x5c] is
+     * still the RUNNING state when the level's end-of-stage rule
+     * looks at it - the ZARIA arm 0x1e250 tests that index and the
+     * live set's AC_BREAK_NEXT bit, and 0x535a0 changes the state
+     * only afterwards). The hook answers 1 to raise end_req, the
+     * port's [obj+0x116]: the play loop's first guard (the
+     * 0x4ac3b-0x4ac50 leg) then takes the loop's code 3. Nothing
+     * here is ZARIA-specific on purpose: only the driver knows which
+     * lion class its level's `lew=` named. */
+    if (p->end_rule && p->end_rule(p->end_rule_ctx, p))
+        p->end_req = 1;
     /* 1) transitions, in the order the real .MOV lists them (first match
      * wins; K_FWD/K_BKWD carry the facing change the CH_DIR flag names) */
     for (int t = 0; t < st->ntr; t++) {
@@ -3215,6 +3228,18 @@ static int st_anchor_shift(void *ctx, const ll_player *p, int land,
     else
         *dx = land ? (int)dxf[r.idx] : -(int)dxf[r.idx];
     return 1;
+}
+
+/* PR-526, leg EN-S hook: the TLewZaria arm (0x1e250) in miniature -
+ * the running state is the one named A_WPAD and the list-wrap bit is
+ * live in this pass. (The engine compares the numeric 9; 9 is that
+ * state's position in ZARIA's own declared table, so the name is the
+ * honest form of the same fact, and this leg's fixture puts A_WPAD
+ * first so the numeric and the named forms agree.) */
+static int st_end_rule(void *ctx, const ll_player *p)
+{
+    (void)ctx;
+    return p->broke && !strcmp(p->mov->st[p->sti].name, "A_WPAD");
 }
 
 int ll_play_selftest(void)
@@ -6653,6 +6678,68 @@ long long pv = 100, pd = 0;          /* A_PULL's own arithmetic,
         CHECK(mx[0] == 307 && mx[2] == 307);
         CHECK(mx[3] == 303 && mx[5] == 303);
         free(ls);
+    }
+
+    /* PR-526, leg EN-S: THE LEVEL'S LION CLASS ENDS THE STAGE. The
+     * engine reads the flag it is about to act on at the top of the
+     * NEXT level-loop iteration (0x4ac3b-0x4ac50 -> code 3), and it
+     * raises that flag from the transition pass: 0x53520 matches the
+     * transition list against its copy of the iteration's EventSet
+     * (0x5356b), then calls [class+0x90] (0x5357d) - BEFORE the
+     * applier 0x535a0 writes the new state into [obj+0x5c] (the
+     * write is at 0x535ed). ZARIA's arm 0x1e250 sets [obj+0x116]=1
+     * exactly when [obj+0x5c] is 9 - A_WPAD, the tenth name in
+     * ZARIA's own declared table - and bit 2 of [obj+0x60], the
+     * AC_BREAK_NEXT the row walk armed at 0x521c1 in THIS iteration,
+     * is live. The transition the same wrap arms (`A_WYJSCIE(1)=
+     * AC_BREAK_NEXT`) is NOT suppressed: the engine runs it and the
+     * loop still ends.
+     * DERIVED on PR-110's 100-a-iteration clock, the port's one-beat
+     * convention included (transition pass reads what the row pass
+     * armed the iteration before - PR-333): the fixture's two
+     * T=100 rows close at the ends of iterations 0 and 1, the list
+     * WRAPS at the end of iteration 1 (fi + 1 >= nfr arms p->broke),
+     * and on iteration 2 the transition pass sees sti still A_WPAD
+     * with the bit armed: end_req must be 1 from iteration 2 and
+     * nowhere before, and the authored transition to A_DRAP still
+     * runs at iteration 2 (sti == 1) - the flag changes no state,
+     * no position, no signal. With the hook call commented out
+     * exactly the one er[2] check fails and nothing else moves
+     * (RED first). */
+    {
+        static const char ENSF[] =
+            "A_WPAD\nA_DRAP\n\n"
+            "[A_WPAD]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\n"
+            "A_DRAP(1)=AC_BREAK_NEXT\n1,100\n2,100\n"
+            "[A_DRAP]\ncontrol=BY_TIME\nF=0,0\nT=0,0\nG=0,0\n1,100\n";
+        ll_mov_t *es = calloc(1, sizeof *es);
+        ll_player ep;
+        ll_play_keys ek = { 0 };
+        int er[3], es_sti[3];
+        CHECK(es);
+        CHECK(ll_mov_parse(ENSF, es) == 2);
+        CHECK(es->nst == 2 && !strcmp(es->st[0].name, "A_WPAD") &&
+              es->start_st == 0);              /* the declared first name,
+                                               * exactly how ZARIA's own
+                                               * table puts A_WPAD at
+                                               * index 9 and the engine
+                                               * compares 9 */
+        ll_player_start(&ep, es, 300, 100, 0);
+        ep.end_rule = st_end_rule;
+        ep.end_rule_ctx = NULL;
+        for (int t = 0; t < 3; t++) {
+            ll_player_step(&ep, NULL, &ek, 0, 2000, LL_ITER_MS);
+            er[t] = ep.end_req;
+            es_sti[t] = ep.sti;
+        }
+        CHECK(er[0] == 0 && er[1] == 0);      /* nothing armed at the */
+                                              /* passes of iters 0, 1  */
+        CHECK(er[2] == 1);                    /* the wrap iteration's  */
+                                              /* transition pass raises */
+        CHECK(es_sti[0] == 0 && es_sti[1] == 0); /* the dive state runs */
+        CHECK(es_sti[2] == 1);                /* and the authored      */
+                                              /* transition still runs */
+        free(es);
     }
 
     /* PR-323: the answer-6 protocol of PR-322 - `goto N` /

@@ -1249,6 +1249,46 @@ typedef struct ll_player {           /* tagged for the anchor_shift hook */
     int (*anchor_shift)(void *ctx, const struct ll_player *p, int land,
                         int *dx, int *dy);
     void *anchor_ctx;
+    /* PR-526: the level's OWN lion class carries its end-of-stage rule.
+     * The level .DES names it (`lew=TLewZaria,...` in ZARIA1.DES) and
+     * the level-session open 0x4dde0 (the ctor-alloc method; its
+     * factory call sites run 0x4de24-0x4dece) tries that name down an
+     * ordered factory chain - 0x1fef0 'TLewZaria'/'TLewZariaB' (alloc
+     * 0x12e, ctor 0x1e0a0, class 0x96960 stored at [obj+0x8]), 0x25510
+     * 'TLewEna', 0x269a0 'TLewEna2', 0x29b00 'TLewKadmar1', 0x2bfa0
+     * 'TLewKadmar2', 0x2f0f0 'TLewSades', 0x33500 'TLewRan', 0x35200
+     * 'TLewKara', 0x3a430 'TLewTunga1'/'TLewJunction', 0x3b150
+     * 'TLewTunga2', 0x38a30 'TLewLona' (the name strings are at
+     * 0x9078b/0x90795, 0x908b3, 0x908f6, 0x90aae, 0x90b36, 0x90d01,
+     * 0x90fe6, 0x9112a, 0x9132c/0x91337, 0x91391, 0x912cf) - and
+     * stores the winner at [session+0x394]. THE LEVEL LOOP TESTS THAT
+     * OBJECT FIRST: 0x4ac3b `mov 0x394(%ecx),%eax`, 0x4ac41
+     * `mov 0x116(%eax),%eax`, 0x4ac47 test, 0x4ac49 je - and only on
+     * zero does it reach 0x4ac55's end_level slot `cmpl $0,0x4(%ecx)`;
+     * a nonzero +0x116 takes ebx=3 and jumps to the loop's exit tail.
+     * Every object class carries one verb on the transition path:
+     * 0x53520 copies the iteration's EventSet [obj+0x60] (0x53536-
+     * 0x53557), matches the state's transition list against that copy
+     * (0x5356b), then calls [class+0x90] (0x53574 loads the class,
+     * 0x5357d the call) - and only then zeroes [obj+0x60] through
+     * 0x749a0(eax=[obj+0x60], ebx=0xc, edx=0) at 0x5358e, while the
+     * state change 0x535a0 (called next by the object step 0x536f0 at
+     * 0x5374b) has not run yet. For ZARIA that slot is 0x1e250 (the
+     * dword at 0x969f0 = class 0x96960 +0x90): unless the one-shot
+     * [obj+0x12a] is armed (0x1e27f), it compares [obj+0x5c] with 9 -
+     * A_WPAD, the 10th name in ZARIA's OWN declared state table -
+     * (0x1e2a0), tests bit 2 of [obj+0x60] (0x1e2a6 `testb $4`, the
+     * AC_BREAK_NEXT the row walk itself arms at 0x521c1
+     * `orb [ebp],4`), and writes `movl $1,0x116(%ecx)` (0x1e2b6). The
+     * base lion's arm (0x96874+0x90 = 0x3d940) raises nothing and
+     * TLewZariaB's (0x97a98+0x90 = 0x1e350) has no such arm, so the
+     * rule is per-class data: the driver supplies it exactly like
+     * anchor_shift, and end_req is this port's copy of [obj+0x116] -
+     * raised once, cleared only by the next spawn's ctor (the base
+     * lion's 0x500b0 zeroes it at 0x5014c), never mid-run. */
+    int (*end_rule)(void *ctx, const struct ll_player *p);
+    void *end_rule_ctx;
+    int end_req;                    /* [obj+0x116] in this model      */
     signed char face;           /* PR-82: instance facing, -1/1, like
                                  * lvl_obj.face (PR-81). Updated from walkdir
                                  * only while the state carries CH_DIR;

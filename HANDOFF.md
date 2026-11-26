@@ -35,8 +35,13 @@ land through their own windows in PR-90 stage 1 - what is missing is
 the engine's per-class AI driver and the attack/charge motion), the signal bus's
 routing between objects and its engine-internal raisers (the bit table and
 named `GEN`/condition wiring landed in PR-88), pickups/inventory,
-ladders/vines, level flow (end of level, exchange between
-TUNGA I and II), RAN's balloon mode, sound effects, save/progress semantics.
+ladders/vines, level flow (the end-of-level path is ported in two
+forms - the authored `end_level` row and its loop code 1 since
+PR-194/199, and since PR-526 the level's OWN lion class raising the
+loop's first guard, code 3, which is how ZARIA ends: the dive; what
+is missing is the engine's fresh-object stage re-entry 0x5d1f5 and
+the exchange between TUNGA I and II), RAN's balloon mode,
+sound effects, save/progress semantics.
 Section 8 lists them as tasks.
 
 ## 2. Ground rules (non-negotiable)
@@ -3468,11 +3473,24 @@ record.
   [obj+0x0]/[obj+0x4] behind the bit guards, LIFT.SEQ's +40/-22
   anchors - and both climb legs now run the whole authored route:
   ladder, climb, lift, terrace seat, and ly_chang's JUMP pressing a
-  first real A_JUMP_S launch onto the big-tree canopy. What ZARIA.01
-  still lacks to be "playable" is the level END (no end_level text;
-  the engine's stage re-entry 0x5d1f5 is unported) and the I-row
-  impulse unit re-fit (OI-015, now load-bearing for the canopy hop's
-  apex).
+  first real A_JUMP_S launch onto the big-tree canopy. PR-526 SHIPPED
+  the level END (NEXT_STEPS PR-526): a ZARIA stage ends by its OWN
+  lion class - the .DES `lew=TLewZaria` name selects the class whose
+  +0x90 verb 0x1e250 raises the end-request word [obj+0x116] when the
+  dive state A_WPAD's wet row list wraps, and the level loop tests
+  that word BEFORE the end_level slot (0x4ac3b before 0x4ac55) and
+  takes code 3, the stage reset. The port reads the same name through
+  the same hook shape as the anchor shift and re-enters its own stage;
+  ly_dive pins dive -> wrap -> code 3 -> the lion back at the authored
+  spawn. What ZARIA.01 still lacks to be "playable" is now the
+  MIDDLE of the map: reaching the water under keys (the level authors
+  the entry gate's data - the ONE DRECT box in the shipped placement
+  text, 988,645;1340,750, and rect_class_answer already answers it for
+  a falling player - but nothing walks to x 988 yet, OI-078), the
+  engine's own forced dive entry (the class's message-armed one-shot,
+  OI-053/OI-131), the fresh-object stage re-entry 0x5d1f5/0x5d233,
+  and the I-row impulse unit re-fit (OI-015, now load-bearing for the
+  canopy hop's apex).
 
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`

@@ -2950,7 +2950,7 @@ ifeq ($(PX_DATA),1)
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA hang-and-hop FAILED (rc=$$rc)"; \
 	    cat /tmp/opencode/ly_chang.log; exit 1; fi
 	@grep -q 'play tick 237: state A_PODCIAG seq lift frame 1 pos 207,559 grounded 0' \
-	         /tmp/opencode/ly_chang.log \
+	  /tmp/opencode/ly_chang.log \
 	  && grep -q 'play tick 239: state A_PODCIAG seq lift frame 2 pos 200,519 grounded 0' \
 	         /tmp/opencode/ly_chang.log \
 	  && grep -q 'play tick 259: state A_PODCIAG seq lift frame 9 pos 204,497 grounded 0' \
@@ -2994,6 +2994,127 @@ ifeq ($(PX_DATA),1)
 	  || { echo "play ZARIA hang-and-hop grep FAILED"; \
 	       grep -E 'play: A_|state A_(PODCIAG|DRAP|JUMP_S|SCIAG|TURN_BACK|WSP) ' \
 	         /tmp/opencode/ly_chang.log | tail -12; exit 1; }
+# PR-526: THE LEVEL ENDS BY ITS OWN LION CLASS'S RULE - the dive.
+# ZARIA1.DES names the lion class in its OWN text (`lew=TLewZaria,`),
+# and the level-session open 0x4dde0 tries that name against a factory
+# chain - 0x1fef0 answers 'TLewZaria' (alloc 0x12e, class
+# 0x96960 installed at [obj+0x8]) - and stores the winner at
+# [session+0x394]. The level loop's FIRST top-of-iteration guard reads
+# [[ecx+0x394]+0x116] (0x4ac3b-0x4ac50): nonzero is loop code 3, and
+# the caller's 0x5d3c6-0x5d3d7 leg runs the reset pair 0x5da60/0x5d050
+# and CONTINUES (eax=1 at 0x5d3dc) - the stage re-enters. Who raises
+# [obj+0x116]? Every transition pass calls the object class's +0x90
+# verb: 0x53520 copies the iteration's EventSet [obj+0x60]
+# (0x53536-0x53557), matches the state's transition list against that
+# copy (0x5356b, 0x52000), then calls [class+0x90] (0x5357d) BEFORE
+# the applier 0x535a0 writes the next state into [obj+0x5c] (the
+# write is 0x535ed) - and only then zeroes [obj+0x60] through
+# 0x749a0(eax=[obj+0x60], ebx=0xc, edx=0) at 0x5358e. ZARIA's slot
+# (dword 0x1e250 at 0x969f0 = class+0x90) sets [obj+0x116]=1 exactly
+# when [obj+0x5c] == 9 - A_WPAD, the tenth name in ZARIA's OWN
+# declared state table - and bit 2 of [obj+0x60], the AC_BREAK_NEXT
+# the row walk itself armed at 0x521c1 (`orb BYTE [ebp],4` on the
+# last-row step), is live. So in ZARIA there is NO end_level row and
+# no A_EXIT: the level ends when the lion's wet animation list WRAPS -
+# the dive into the water IS the level end, and the loop restarts the
+# stage. (The base lion's +0x90 arm 0x3d940 raises nothing, and
+# TLewZariaB's 0x1e350 has no such arm - it CANCELS a request for state
+# index 9 unless the level word ds:0xcef64 is set, and never writes
+# +0x116: the rule belongs to the named class, nothing else. That same
+# verb is also the level's state-request FILTER, counted here and not
+# ported: the word it tests is the request pair 0x536f0 builds at
+# 0x53736 and 0x535a0 applies, so `cmpl $4` is a request for index 4 =
+# A_JUMP_S and `cmpl $0xa` one for A_KILOF (energy [obj+0xad] -30),
+# and 0x1e2dc cancels an A_JUMP_DOWN/A_KAMIEN request when the level
+# words ds:0xcef64/ds:0xcef68 say so. The message side, also counted:
+# ZARIA's own +0x10 verb 0x1e130 does NOT delegate to the base handler
+# for type 0xc - at 0x1e146 it arms the one-shot [obj+0x12a]=1, and on
+# the next state-request pass 0x1e288 rewrites that request to index 9
+# = A_WPAD while 0x1e27f skips this end check once. So ZARIA has its
+# own way of putting the lion into the water, and the port has no
+# message queue that could run it: OI-053. The base lion's own +0x10
+# handler 0x50d60 does have a raiser of its own - the 0x50d9c arm
+# `movl $1,[obj+0x116]` reached through its table at 0x50d20
+# (PR-483's kind-0xc/pause word) - and ZARIA's class replaces it.)
+# THE LEG (test hook LEO_PLAY_STATE, named in README): no key, then
+# A_WPAD is entered at tick 5 - its authored entries (LEW.MOV lines
+# 53/78/105/131/219) all ask AC_ONAIR,AC_DRECT. That gate DOES have
+# shipped data - ZARIA.01 authors the one DRECT box in the placement
+# text, `DRECT,988,645;1340,750`, and the port's own
+# rect_class_answer raises AC_DRECT for a falling player inside it
+# (counted at OI-018) - but that box is at x 988..1340, the far east
+# end of the level, and no shipped leg walks that far, so the state
+# cannot be entered from the keys in a leg yet; the hook mirrors a
+# matched transition's applier exactly (row 1 current, both feeds
+# zeroed). DERIVED on the authored A_WPAD
+# rows - TEN of them, `1,200,lock`, `2,200,smpauto`, `3,200`, `4,200`,
+# `6,200` ... `11,200,unlock`, each carrying its own threshold 200 -
+# on PR-110's clock (100 a row-unit, so one row per two ticks): the
+# entry tick's row pass feeds 100 and no row closes, row 1 closes at
+# tick 6, and one row per two ticks after, so the tenth row
+# (`11,200,unlock`, the frame the log shows as 11 - the frame field is
+# the AUTHORED frame number, and this list has no frame 5) is current
+# at tick 22. The next close, at tick 24, is the LIST WRAP (fi + 1 >=
+# nfr at the PR-323 step: fi := 0, the wrap bit armed), which is why
+# the log shows frame 1 again at 24. Tick 25 is where both halves of
+# the engine's sequence live on one pass: the class's 0x1e250 arm
+# raises the flag at 0x5357d, and the authored
+# `A_WYJSCIE(1)=AC_BREAK_NEXT` transition still matches and is still
+# applied (0x535a0 - the end request does NOT suppress the state
+# change). At tick 26's TOP the loop's first guard sees the flag and
+# takes code 3, and the port's stage_apply re-enters: no play line
+# runs at 26 (the guard `continue`s, exactly as the engine's caller
+# re-enters before the next iteration), and play_spawn has put the
+# lion back at the authored pozycja - x 50, ZARIA_A.PLT line 1
+# `1 -50,680!408,684` at x 50 gives 680, minus the WALK art's
+# documented 32 px (PR-97) = 50,648 grounded, A_WALK from its
+# declared first name at its authored row 1 = frame 10, held there
+# with no key (the BY_X law PR-83 pins). The dry state's single tick
+# is pinned to NOT continue: the reset takes the stage first.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 \
+	  LEO_PLAY_SCRIPT="1:NONE" LEO_PLAY_STATE="5:A_WPAD" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_dive.ppm LEO_LEVEL_PPM_TICK=40 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_dive.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play ZARIA dive-end FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_dive.log; exit 1; fi
+	@grep -q 'play state injection: tick 5: A_WPAD' /tmp/opencode/ly_dive.log \
+	  && grep -q 'play tick 6: state A_WPAD seq wet frame 2' \
+	         /tmp/opencode/ly_dive.log \
+	  && grep -q 'play tick 8: state A_WPAD seq wet frame 3' \
+	         /tmp/opencode/ly_dive.log \
+	  && grep -q 'play tick 22: state A_WPAD seq wet frame 11' \
+	         /tmp/opencode/ly_dive.log \
+	  && grep -q 'play tick 24: state A_WPAD seq wet frame 1' \
+	         /tmp/opencode/ly_dive.log \
+	  && grep -q 'play: A_WPAD -> A_WYJSCIE' /tmp/opencode/ly_dive.log \
+	  && grep -q 'play tick 25: state A_WYJSCIE seq dry' \
+	         /tmp/opencode/ly_dive.log \
+	  && grep -q 'stage driver: exit 3 at tick 25: RESET to the authored' \
+	         /tmp/opencode/ly_dive.log \
+	  && grep -q 'end-request flag (0x1e250 -> \[obj+0x116\]=1) was read' \
+	         /tmp/opencode/ly_dive.log \
+	  && ! grep -q 'play tick 26: state' /tmp/opencode/ly_dive.log \
+	  && grep -q 'play tick 27: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
+	         /tmp/opencode/ly_dive.log \
+	  && grep -q 'play tick 40: state A_WALK seq walk frame 10 pos 50,648 grounded 1' \
+	         /tmp/opencode/ly_dive.log \
+	  && ! grep -q 'play: A_WYJSCIE -> A_DRAP' /tmp/opencode/ly_dive.log \
+	  && [ "$$(grep -c 'exit 3 at tick' /tmp/opencode/ly_dive.log)" = 1 ] \
+	  && echo "play dive-end (PR-526): the level's own lion class ends" \
+	     "the stage - LEO_PLAY_STATE enters the authored A_WPAD, its" \
+	     "ten T=200 rows admit one per two ticks (row 11 current at" \
+	     "22), the list wraps at 24 arming the bit, and at 25 the" \
+	     "transition pass runs the authored A_WYJSCIE row AND the" \
+	     "class's 0x1e250 arm raises [obj+0x116]; at 26 the loop's" \
+	     "FIRST guard (0x4ac3b, before the end_level slot) takes code" \
+	     "3 and the stage re-enters at the authored spawn 50,648 -" \
+	     "ZARIA has no end_level row and needs none: the dive IS the" \
+	     "level end (ok)" \
+	  || { echo "play ZARIA dive-end grep FAILED"; \
+	       grep -E 'play: A_|state A_(WPAD|WYJSCIE|WALK) |stage driver' \
+	         /tmp/opencode/ly_dive.log | tail -16; exit 1; }
 # PR-83: the KEYUP half of the input contract. No backend ever translated
 # SDL_KEYUP, so through the REAL backend every key stuck down forever: the
 # reported "controls press themselves in a loop". The live loop (NO

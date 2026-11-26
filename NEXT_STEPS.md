@@ -68446,3 +68446,163 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
       `verify-*: SKIP` lines of /tmp/opencode/pr525_gate1.log and
       /tmp/opencode/pr525_gate2.log - same counts as PR-523's,
       coverage unchanged.)
+
+## PR-526 - THE LEVEL ENDS BY ITS OWN LION CLASS: `lew=` SELECTS THE
+## CLASS, ITS +0x90 VERB RAISES THE END-REQUEST THE LOOP TESTS BEFORE
+## THE `end_level` SLOT, AND ZARIA.01'S DIVE ENDS AND RE-ENTERS
+
+```
+KIND: port
+SUBSYSTEM: the level loop's top-of-iteration guard and the level's own
+  lion class (the `lew=` first field): ll_player's new end_rule hook and
+  its end_req word (ported/ll_play.h, called at the top of the
+  transition pass in ll_player_step), the driver's class rule keyed to
+  the .DES name and its wiring through play_spawn, the LEO_PLAY_STATE
+  test injection (ported/ll_level.c), the new --play-selftest leg
+  EN-S, and the new verify-play leg ly_dive. PR-198/PR-199 left the
+  loop's code-3 producer unnamed and PR-524/PR-525 named the level end
+  as the last thing ZARIA.01 lacked; ZARIA has no `end_level` row and
+  PR-526 finds it needs none.
+ADDRESSES: 0x4ac3b, 0x4ac41, 0x4ac47, 0x4ac49, 0x4ac4b, 0x4ac50,
+  0x4ac55, 0x4ae53 (the loop's guard order), 0x4dde0 and its factory
+  call sites 0x4de24, 0x4de35, 0x4de46, 0x4de57, 0x4de68, 0x4de79,
+  0x4de8a, 0x4de9b, 0x4deac, 0x4debd, 0x4dece; the eleven factory
+  arms 0x1fef0, 0x25510, 0x269a0, 0x29b00, 0x2bfa0, 0x2f0f0, 0x33500,
+  0x35200, 0x3a430, 0x3b150, 0x38a30 and their compare strings
+  0x9078b, 0x90795, 0x908b3, 0x908f6, 0x90aae, 0x90b36, 0x90d01,
+  0x90fe6, 0x9112a, 0x9132c, 0x91337, 0x91391, 0x912cf; the class
+  tables 0x96960 (+0x90 dword 0x969f0 = 0x1e250), 0x97a98 (0x1e350),
+  0x96874 (0x3d940), 0x1e0a0 (TLewZaria ctor), 0x1e130 with its
+  0x1e146 arm; the verb's own arms 0x1e253, 0x1e26d, 0x1e27f,
+  0x1e288, 0x1e29e, 0x1e2a0, 0x1e2a6, 0x1e2b6, 0x1e2c0, 0x1e2dc,
+  0x1e2e7, 0x1e350; the object step and transition pass 0x536f0,
+  0x536f8, 0x5370c, 0x53733, 0x53736, 0x53741-0x5374b, 0x53520,
+  0x53536-0x53557, 0x5356b, 0x53574, 0x5357d, 0x53583-0x5358e,
+  0x535a0; 0x500b0 with its 0x5014c zero of [obj+0x116]; 0x50d60,
+  0x50d20, 0x50d9c (the base handler's own raiser, PR-483); and the
+  cited 0x52000, 0x521c1, 0x749a0, 0x5d1f5, 0x5d233, 0x5da60, 0x5d050.
+NAMES: lew=, TLewZaria, TLewZariaB, TLewEna, TLewEna2, TLewKadmar1,
+  TLewKadmar2, TLewSades, TLewRan, TLewKara, TLewTunga1,
+  TLewJunction, TLewTunga2, TLewLona, A_WPAD, A_WYJSCIE, A_KILOF,
+  A_JUMP_S, A_JUMP_DOWN, A_KAMIEN, AC_BREAK_NEXT, AC_DRECT, DRECT,
+  end_rule, end_rule_ctx, end_req, lion_class, play_end_rule,
+  st_end_rule, play_force_state, LEO_PLAY_STATE, EN-S, ly_dive,
+  [obj+0x116], [obj+0x12a], [obj+0x5c], [obj+0x60], [session+0x394],
+  [class+0x90], [class+0x54], ds:0xcef64, ds:0xcef68, ZARIA1.DES,
+  LEW.MOV, OI-018, OI-053, OI-078, OI-131.
+CODE: yes: ll_player.end_rule/end_rule_ctx called at the very top of
+  the transition pass (before any match, so [obj+0x5c] is still the
+  RUNNING state - the engine's 0x5357d-before-0x535a0 order) and
+  ll_player.end_req as this model's [obj+0x116]; ll_level.c captures
+  the `lew=` first field into play_ctx.lion_class, answers the rule
+  through play_end_rule (class name + the state named A_WPAD + the
+  wrap bit), re-arms it in play_spawn like the PR-525 anchor hook,
+  clears end_req in stage_reset_to_authored with the ctor argument for
+  it, tests it at the top of the play loop BEFORE the end_level slot
+  and routes it through the existing stage_apply(3); and
+  play_force_state, the LEO_PLAY_STATE injection.
+HOOKS: LEO_PLAY_STATE (new; README-documented TEST injection, not an
+  engine law).
+MEASURED: (a) THE GUARD, byte-exact: 0x4ac3b `mov 0x394(%ecx),%eax`,
+  0x4ac41 `mov 0x116(%eax),%eax`, 0x4ac47 test, 0x4ac49 je - and the
+  end_level slot is tested ONLY on zero, 0x4ac55 `cmpl $0,0x4(%ecx)`;
+  a set +0x116 takes `mov $3,%ebx` (0x4ac4b) and jumps to the loop's
+  exit tail 0x4ae53, where PR-198/199 read the caller's reset pair
+  0x5da60/0x5d050 and the continue at 0x5d3dc. (b) WHOSE OBJECT IT
+  IS: the .DES `lew=` FIRST field is the lion CLASS name and 0x4dde0
+  tries it down eleven arms - 0x1fef0 answers 'TLewZaria'/'TLewZariaB'
+  (alloc 0x12e, ctor 0x1e0a0, class 0x96960 stored at [obj+0x8]),
+  then 0x25510 'TLewEna', 0x269a0 'TLewEna2', 0x29b00 'TLewKadmar1',
+  0x2bfa0 'TLewKadmar2', 0x2f0f0 'TLewSades', 0x33500 'TLewRan',
+  0x35200 'TLewKara', 0x3a430 'TLewTunga1'/'TLewJunction', 0x3b150
+  'TLewTunga2', 0x38a30 'TLewLona'; ZARIA1.DES says
+  `lew=TLewZaria,Lew.zar,lew.mov,lew.des`. (c) THE VERB: 0x536f0
+  builds a state-REQUEST pair on its frame ([class+0x54] writes the
+  second word at 0x53733, 0x53736 hands the pair plus the object to
+  0x53520, 0x53741-0x5374b hand the SAME pair to the applier
+  0x535a0); inside 0x53520 the transition walker 0x52000 runs FIRST
+  (0x5356b), then `call *[class+0x90]` at 0x5357d, then
+  0x749a0([obj+0x60],0xc,0) zeroes the live set (0x5358e, PR-262).
+  TLewZaria's +0x90 = 0x1e250: unless the one-shot [obj+0x12a] is
+  armed (0x1e27f) it compares [obj+0x5c] with 9 - A_WPAD, the tenth
+  name of ZARIA's OWN declared table (LEW.MOV lines 1-37) - at
+  0x1e2a0, tests bit 2 of [obj+0x60] at 0x1e2a6 (`testb $4`, the
+  AC_BREAK_NEXT the row walk arms at 0x521c1), and writes
+  `movl $1,0x116(%ecx)` at 0x1e2b6. Its remaining arms are a
+  state-request FILTER, counted at OI-131 (request index 4 with
+  [obj+0x10e]*[obj+0x6d] > 0 -> 0x53670; index 0xa -> energy
+  [obj+0xad] -30; 0x1e2dc cancels A_JUMP_DOWN/A_KAMIEN under
+  ds:0xcef64/ds:0xcef68; 0x1e288 forces index 9 when 0x1e146 armed
+  the one-shot). The base lion's 0x3d940 raises nothing and
+  TLewZariaB's 0x1e350 has no end arm at all - it CANCELS an A_WPAD
+  request unless ds:0xcef64 - so the rule is the named class's, and
+  the flag is cleared nowhere but the base ctor's 0x5014c. (d) EN-S
+  (--play-selftest, RED first: with the hook call disabled exactly the
+  one er[2] pin failed and nothing else moved): a fixture declaring
+  `A_WPAD,A_DRAP` with two T=100 rows and `A_DRAP(1)=AC_BREAK_NEXT`;
+  rows close at the ends of iterations 0 and 1, the LIST WRAP arms
+  the bit at the end of 1, and iteration 2's transition pass raises
+  end_req while the authored transition still runs (sti 0,0,1) - the
+  flag suppresses nothing. (e) ly_dive on ZARIA.01's own data:
+  injected at 5, A_WPAD seats at 50,650 - the ground line 680 minus
+  30, the wet animation's own shape-box contact under PR-97's rule,
+  no new constant - its ten T=200 rows admit one per two ticks
+  (frame 2 at 6, frame 11 at 22; the frame field is the AUTHORED
+  number and the list has no frame 5), the list wraps at 24 (frame 1
+  again, the bit armed), 25's transition pass runs the authored
+  `A_WYJSCIE(1)=AC_BREAK_NEXT` AND the class arm, and 26's TOP guard
+  takes code 3: the reset line, NO play line at 26 (the guard
+  continues, as the engine re-enters before the next iteration), and
+  from 27 the lion at the authored spawn - A_WALK row 1 (frame 10)
+  at 50,648 grounded, held to the sampled 40 - with exactly ONE
+  code-3 line in 40 ticks. (f) THE ENTRY DATA EXISTS after all:
+  ZARIA.01 authors the ONE DRECT in the shipped placement text
+  (`DRECT,988,645;1340,750`; counting the box lines of
+  hd_files/ETAPY, 252,414 bytes: DRECT 1, DRECT2 8, RECT 4, BICZRECT
+  1) and rect_class_answer already raises AC_DRECT for a falling
+  player inside it, so `A_WPAD(1)=AC_ONAIR,AC_DRECT` has data behind
+  it. The earlier "no placement names a DRECT" reading was a search
+  of the WRONG files: the CD containers carry no placement text at all
+  (0 hits for `drect` in iso_stage/LEO/LEVELDES 431,636,667 B and
+  iso_stage/LEO/ETAPY 20,100,773 B, while 67 `lew=` records are
+  there) - the placement lists are HD-side.
+OPENS: the wet/dry anchor shifts are OBSERVED but unpinned - the
+  `lock` word moves the dive 50,650 -> 50,680 at 6 and the `unlock`
+  at the wrap gives 677, A_WYJSCIE's own `lock` 673 - because the
+  wet/dry .SEQ element fields were never read, so those numbers are
+  counted, not modelled; the fresh-object stage re-entry
+  0x5d1f5/0x5d233 and what 0x5da60/0x5d050 really reset (OI-053 -
+  the port's code-3 reset is still PR-199's named ESTIMATE); the
+  message queue that would arm [obj+0x12a], i.e. the engine's own
+  forced A_WPAD entry (OI-053); the state-request filter as a whole
+  (OI-131); the +0x90 end rules of the other ten lion classes;
+  walking the 938 px east to the pool under keys (OI-078); and no
+  live-engine capture of a dive or a stage reset.
+CLOSES: none as a row; the named sub-questions - OI-053's "nothing
+  in the port reaches loop code 3" and OI-018's "which shipped data
+  could raise AC_DRECT" - are answered in those rows' PR-526 notes.
+CORRECTS: none.
+```
+
+- WHY. The session objective is "ZARIA.01 playable", and PR-525 had
+  left exactly one subsystem named: the end. ZARIA has no
+  `end_level` row, so every earlier attempt to reach an exit looked
+  for a row that does not exist. The engine does not need one: a
+  level's end is a property of the class ITS OWN .DES names, and the
+  word the loop reads FIRST is that object's. That turns "make the
+  level endable" into "honour the name the data already carries" - and
+  it explains the authored wet animation: the dive is not an
+  animation with an exit clause, it is the level's end, which is why
+  its block ends in `unlock` and its transition leads to a state the
+  player never sees again. It also moves the remaining gap into one
+  honest shape: the entry data (one DRECT pool box) and the exit rule
+  are both now measured, and what is missing between them is the
+  938 px of ground in between.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 72 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+      (both rc=0; counts are grep -o '(ok)' and the named
+      `verify-*: SKIP` lines of /tmp/opencode/pr526_gate1.log and
+      /tmp/opencode/pr526_gate2.log - one (ok) more than PR-525's
+      71: the new ly_dive leg. The fixture-free counts are the same
+      as PR-525's, coverage unchanged.)

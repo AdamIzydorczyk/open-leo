@@ -5304,6 +5304,17 @@ typedef struct {
     } art[32];
     int nart;
     char leaf[24];                          /* art leaf being claimed     */
+    char lion_class[24];                    /* PR-526: the `lew=` first   *
+                                             * field - the level's own    *
+                                             * lion CLASS name, exactly   *
+                                             * what the level-session     *
+                                             * open 0x4dde0 compares in   *
+                                             * its factory arms (0x1fef0  *
+                                             * answers 'TLewZaria'/       *
+                                             * 'TLewZariaB'), and the    *
+                                             * class carries the         *
+                                             * end-of-stage rule read at *
+                                             * 0x1e250                    */
     double xmin, xmax, ydead;               /* lew_rect bounds            */
     double sx, sy;                          /* pozycja spawn              */
     ll_play_keys keys;                      /* held arrows (live path)    */
@@ -5315,6 +5326,67 @@ typedef struct {
                                              * (off by default)            */
     int cam_ox, camy_v, camy_set;           /* PR-72: camera follow state      */
 } play_ctx;
+
+/* PR-526: LEO_PLAY_STATE="<tick>:<STATE>[,...]" - a TEST INJECTION, not
+ * an engine law: it puts the lion into a named state of its own script at
+ * that tick, exactly as a matched transition's applier does (the port's
+ * state-change block: authored start row through ll_mov_row_start, both
+ * feeds zeroed, the PR-321 word and the attack window cleared). It exists
+ * because some authored states have no entry a leg can drive from the
+ * keys yet: A_WPAD's five entry lines (ZAR LEW.MOV lines 53/78/105/
+ * 131/219) all ask AC_ONAIR,AC_DRECT. The port DOES raise AC_DRECT -
+ * ZARIA.01 authors the one DRECT box in the shipped placement text,
+ * 988,645;1340,750, and rect_class_answer answers it for a falling
+ * player inside it (OI-018) - but that is the far east end of the
+ * level and no leg walks there yet, while the state's END, the
+ * stage-complete leg of PR-526, is what the level is measured on.
+ * Nothing is printed and no byte changes unless the variable names a
+ * state. */
+static void play_force_state(play_ctx *pl, const char *spec, int tk)
+{
+    if (!spec)
+        return;
+    const char *p = spec;
+    while (*p) {
+        char *end = NULL;
+        long t = strtol(p, &end, 10);
+        if (end == p || *end != ':') {
+            p++;
+            continue;
+        }
+        const char *v = end + 1;
+        char tok[24];
+        size_t n = 0;
+        while (v[n] && v[n] != ',' && n + 1 < sizeof tok) {
+            tok[n] = v[n];
+            n++;
+        }
+        tok[n] = '\0';
+        if (t == tk && pl->have && pl->mov) {
+            for (int i = 0; i < pl->mov->nst; i++) {
+                if (!strcmp(pl->mov->st[i].name, tok)) {
+                    ll_player *q = &pl->p;
+                    q->sti = i;
+                    q->fi = ll_mov_row_start(&pl->mov->st[i], 1);
+                    q->row_t = 0;
+                    q->facc = 0.0;
+                    q->atc = 0;
+                    q->atc_hit = 0;
+                    q->lock = 0;
+                    q->dirword = 0;
+                    printf("ll_level: play state injection: tick %d: %s "
+                           "(test hook; its authored entries ask AC_ONAIR,"
+                           "AC_DRECT and the leg cannot reach the pool "
+                           "box at 988,645;1340,750 yet)\n", tk, tok);
+                    break;
+                }
+            }
+        }
+        p = v + n;
+        while (*p == ',')
+            p++;
+    }
+}
 
 static ll_play_keys script_keys(const char *s, int tick)
 {
@@ -5464,6 +5536,30 @@ static int play_anchor_shift(void *ctx, const ll_player *p, int land,
     return 1;
 }
 
+/* PR-526: the +0x90 arm of the lion class THIS level's own .DES names.
+ * ZARIA1.DES: `lew=TLewZaria,Lew.zar,lew.mov,lew.des` - the engine's
+ * level-session open 0x4dde0 compares that first field at its 0x1fef0
+ * arm and installs the matching lion; its class 0x96960 carries
+ * the end-of-stage verb at +0x90 = 0x1e250 (dword at 0x969f0), which
+ * raises [obj+0x116] when the running state is index 9 = A_WPAD (the
+ * tenth name of ZARIA's own declared table) and this pass's live set
+ * carries AC_BREAK_NEXT - the list wrap of A_WPAD's `1,200 ...
+ * 11,200,unlock` wet rows. TLewZariaB (class 0x97a98, +0x90 =
+ * 0x1e350, ZARIA2.DES) has NO such arm, and neither does the base
+ * lion (0x96874+0x90 = 0x3d940), so the rule is keyed to the authored
+ * class name and nothing else. The engine's comparison is the numeric
+ * 9; 9 is A_WPAD's position in ZARIA's authored table, so the name is
+ * the same fact, honestly spelled. */
+static int play_end_rule(void *ctx, const ll_player *p)
+{
+    const play_ctx *pl = ctx;
+    if (strncmp(pl->lion_class, "TLewZaria", 9) != 0)
+        return 0;
+    return p->broke &&
+           p->sti < p->mov->nst &&
+           !strcmp(p->mov->st[p->sti].name, "A_WPAD");
+}
+
 /* the surface under the spawn point is the CONTACT line: the position point
  * is placed contact px above it (PR-97; play_contact needs the state the
  * player starts in, which ll_player_start picks, so this runs after it) */
@@ -5476,6 +5572,8 @@ static void play_spawn(play_ctx *pl)
                                               * memsets the player, so the
                                               * hook rides on every spawn */
     pl->p.anchor_ctx = pl;
+    pl->p.end_rule = play_end_rule;           /* PR-526: the class arm,  */
+    pl->p.end_rule_ctx = pl;                  /* same one-per-spawn rule */
     ll_player_set_contact(&pl->p, play_contact(pl));
     if (g && pl->p.grounded)
         pl->p.y = (double)hit.y - (double)pl->p.contact;
@@ -8273,6 +8371,10 @@ static void stage_reset_to_authored(lvl_obj *objs, int nobj, play_ctx *pl)
          * ctor's zero is applied at the same point in the sequence - and
          * nowhere else: the loop never clears the slot (PR-198). */
         pl->p.exit_word = 0;
+        pl->p.end_req = 0;   /* PR-526: same argument for [obj+0x116] -
+                              * the base lion's ctor 0x500b0 zeroes it at
+                              * 0x5014c on the fresh object, and nothing
+                              * else in the loop body ever writes it. */
         play_spawn(pl);
     }
 }
@@ -13279,6 +13381,16 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
         char leafname[24] = "", movstem[16] = "";
         const char *lew = des_get(kvs, nk, "lew");
         if (lew[0]) {
+            /* PR-526: the FIRST field is the lion class name the engine
+             * matches in its factory chain; keep it verbatim so the play
+             * path can honour the class's own rules (the end-of-stage
+             * arm at 0x1e250 is ZARIA-TLewZaria-only). */
+            const char *c0 = strchr(lew, ',');
+            size_t n = c0 ? (size_t)(c0 - lew) : strlen(lew);
+            if (n >= sizeof pl.lion_class)
+                n = sizeof pl.lion_class - 1;
+            memcpy(pl.lion_class, lew, n);
+            pl.lion_class[n] = '\0';
             /* lew=<class>,<art leaf>,<mov>,<player des> (RAN.01:
              * "TLewRan,Lew.ran,lew.mov,lewran.des") */
             char tw[32] = "";
@@ -13765,6 +13877,31 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
             stage_inj inj[STAGE_MAX_INJ];
             int ninj = stage_inj_parse(getenv("LEO_LEVEL_EXIT"), inj);
             for (int tk = 1; tk <= ticks; tk++) {
+                /* PR-526: THE FIRST GUARD, in the engine's own order:
+                 * 0x4ac3b-0x4ac50 tests [[ecx+0x394]+0x116] - the
+                 * LEVEL LION's end-request flag, raised on the
+                 * transition pass by the class's own verb (ZARIA's is
+                 * 0x1e250: the dive state A_WPAD's row list wrapped) -
+                 * BEFORE the end_level slot, and takes ebx=3: the
+                 * caller's 0x5d3c6-0x5d3d7 leg runs the reset pair
+                 * 0x5da60/0x5d050 and the outer loop CONTINUES with
+                 * eax=1 (0x5d3dc). This port's copy of that leg is
+                 * stage_apply(3) - the same named-ESTIMATE reset PR-199
+                 * documented for the injected codes, now reached by a
+                 * real, authored producer. No shipped leg before this
+                 * one can reach it: A_WPAD has no raiser in the port
+                 * (AC_DRECT, OI-018), so every existing pin is
+                 * byte-identical until LEO_PLAY_STATE injects the dive. */
+                if (pl.p.end_req) {
+                    if (!stage_apply(3, tk - 1, objs, nobj, &pl))
+                        break;
+                    printf("ll_level: stage driver: the level lion's own\n"
+                           "ll_level: stage driver: end-request flag "
+                           "(0x1e250 -> [obj+0x116]=1) was read at the "
+                           "top of the\nll_level: stage driver: "
+                           "iteration: loop code 3, the stage re-enters\n");
+                    continue;
+                }
                 /* PR-199: THE REAL PRODUCER, tested where the engine
                  * tests it - at the TOP of the iteration, before any of
                  * its work (0x4ac55, after the 0x4ac3b loop head). A row
@@ -13796,6 +13933,7 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
                     break;
                 }
                 ll_play_keys keys = script_keys(scr, tk);
+                play_force_state(&pl, getenv("LEO_PLAY_STATE"), tk);
                 play_advance(&pl, &keys, LL_ITER_MS, 1, tk, objs, nobj);
                 for (int k = 0; k < nobj; k++)
                     obj_advance(&objs[k], LL_ITER_MS);

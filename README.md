@@ -239,6 +239,26 @@ prints nothing and changes no byte, which is why every existing play pin
 is untouched.
 `./stage_selftest` (built by `make stage_selftest`) pins the table itself
 with no data at all.
+Level-lion end rule (PR-526): a level ends by its OWN lion class, not only
+by an `end_level` row. The `.DES` `lew=` first field names that class, the
+engine's level-session open (0x4dde0-0x4ded7) matches it in a factory chain
+and stores the lion at `[session+0x394]`; the level loop's FIRST
+top-of-iteration guard (0x4ac3b-0x4ac50) reads `[lion+0x116]` and takes
+loop code 3 (reset pair 0x5da60/0x5d050, re-entry). ZARIA's class raises
+that flag from the transition pass (class+0x90 = 0x1e250: the running
+state is `A_WPAD` and this pass carries the list-wrap bit `AC_BREAK_NEXT`)
+- so there, the dive into the water IS the level end. The port reads the
+same bytes through the same `lew=` name and honours the rule through the
+same hook shape as the anchor shift (PR-525). Walking into that state is a
+different matter: its authored entry lines ask `AC_ONAIR,AC_DRECT`, and
+while the port does answer the level's one authored pool box
+(`DRECT,988,645;1340,750` in ZARIA.01's placement text, raised for a
+falling player inside it), that box is at the far east end of the level,
+past what the shipped legs reach. So verify-play drives the dive through a
+TEST hook: `LEO_PLAY_STATE="<tick>:<STATE>[,...]"` puts the lion in a
+named state of its own script at that tick, exactly as a matched
+transition's applier does. It is an injection, not an engine law; the log
+prints one line per injection, and nothing changes without it.
 Scene hooks (M4-C, PR-45, used by verify-level): the level preview now
 runs the level's OWN authored scene - the .MOV scripts of the objects
 its .des placement files (zwierzaki=/animacje=/ani_plat=) name, drawn
