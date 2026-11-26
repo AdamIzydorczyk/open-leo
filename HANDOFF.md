@@ -3367,6 +3367,29 @@ record.
   this arithmetic, move LL_PLAY_INTENT_FULL to 20 and the gate
   default with it, and audit the name map.
 
+  PR-521 STATUS (the x law's missing term is in, gated, and shown
+  separable from the flip). The port did not compute G_x at all: the
+  x force at 0x542ab-0x542fa was only idiv(F*s,20). A new
+  ll_play_x_force now adds the authored G_x word scaled by the
+  direction word (0x542c1, the header's `G=*facing`), but only when
+  the row-admit path runs (with_gx = ll_play_row_physics()), so the
+  default per-iteration model is byte-for-byte unchanged. Its pin is
+  PR-520's own ramp, hand-derived and data-free: a fixture authored
+  F=100,0 / T=20,5 / G=30,350 run through the production helper and
+  ll_play_v_step reproduces the held-value sequence 131,235,...,638
+  and the key-release step 541 (with G_x) against 511 (without), the
+  pair that proves G_x is not key-gated. The measurement that matters
+  for T3: adding G_x does NOT change the flip's cost. Gate off stays
+  rc=0 / 0 FAILED; gate on stays 90 FAILED, byte-identical to
+  PR-518's set, because every existing fixture leg authors G=0,0. So
+  the 90 re-derivations are the row-admit ORDER's, not this term's,
+  and the two open halves of T3 (re-derive the legs + flip, and move
+  LL_PLAY_INTENT_FULL to 20) are now cleanly separate from the fact
+  that the row-admit path carries the full measured x law. T3 stays
+  PR-519/PR-522's work: re-derive the red legs on this arithmetic,
+  answer the cold-start feed, audit the name map, then flip the
+  constant and the default together.
+
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`
 (conditions `K_FIRE`+`K_F1`/`K_F2`, `K_ALT`); enemy `.MOV` death states;

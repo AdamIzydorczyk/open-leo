@@ -67854,3 +67854,83 @@ MEASURED: the four intent_x=+20 windows and the full ramp above;
   is now the standard. PR-521 can implement the x law as written.
 
 GATE: light: verify-index verify-docs rc=0 (ok);
+
+## PR-521 - THE CLOSED-FORM x LAW IS IN THE PORT: THE AUTHORED G_x WORD
+## RIDES EVERY ROW ADMIT ON THE x REGISTER (0x542c1), PINNED BY PR-520'S
+## 18/18 RAMP AND ITS KEY-RELEASE STEP; DEFAULT BEHAVIOUR UNCHANGED
+
+```
+KIND: port
+SUBSYSTEM: ported/ll_play.c's x-side velocity step (ll_play_x_force)
+  and its selftest. PR-520 closed the x law exactly; PR-521 puts the
+  term it was missing - the authored G= word's first number, G_x - into
+  the row-admit physics path, on the same env gate (LEO_PLAY_ROW_
+  PHYSICS) that already holds that ordering. (1) THE TERM. The x force
+  at 0x542ab-0x542fa is idiv(F*s,20) PLUS G_x, and 0x542c1 scales G_x
+  by the direction word - the header's engine note has long written the
+  increment as `F_eff*s/20 + G=*facing`; only the live confirmation of
+  its VALUE and role (ZARIA.01's A_WALK `G=30,350` -> G_x = 30, present
+  at every admit) was missing, so it sat unadded at OI-015. A new
+  ll_play_x_force(p, st, s, with_gx) builds the add; ll_player_step
+  calls it with with_gx = ll_play_row_physics(), so the per-iteration
+  default path still gets exactly idiv(F*s,20), byte for byte. (2) THE
+  TEST IS PR-520'S OWN RAMP. Hand-derived, no game data: a fixture
+  state authored F=100,0 / T=20,5 / G=30,350 (the ZARIA A_WALK words),
+  then ll_play_x_force + ll_play_v_step run on the raw register from
+  v=1 and reproduce PR-520's held-value ramp 131,235,...,638 exactly,
+  17/17, and the key-release step from 638 gives 541 with the word and
+  511 without it - the value pair that PROVES G_x is not key-gated.
+  The arithmetic runs through the production helper and primitive, so
+  the new line is what is under test. MUTATION: drop the G_x line and
+  exactly 4 checks in this leg go red; the default-path legs stay green.
+  (3) THE FLIP COST IS UNCHANGED, AND THAT IS THE FINDING. The gate is
+  off the port is rc=0 with 0 FAILED - identical to PR-518's baseline,
+  the default untouched. Gate on it is STILL 90 FAILED, the failing set
+  byte-identical to PR-518's (the same 40-check gait cluster and the
+  same legs, only line numbers shifted by the insert). So G_x is a
+  NO-OP on every existing fixture leg: they all author G=0,0 (the gait
+  fixture's `G=0,0` is that largest cluster), so the 90 red checks
+  PR-519 must re-derive come from the row-admit ORDER, not from this
+  force term. G_x is orthogonal to that work and lands without adding
+  to it. (4) NOT MOVED: LL_PLAY_INTENT_FULL stays 10. PR-520 passed
+  s=20 in its arithmetic because that is the live [obj+0xba], but the
+  constant is OI-011's and moves only with the legs re-derived on the
+  full law - the s=10 -> 20 move and the flip stay PR-519's work.
+ADDRESSES: 0x542ab-0x542fa (the x force add), 0x542c1 (G_x times
+  [obj+0x6d]), 0xba (intent_x), 0xc2 (the x register).
+NAMES: A_WALK, A_WALKX, ll_play_x_force, LEW.MOV, ZARIA.01,
+  LEO_PLAY_ROW_PHYSICS, OI-011, OI-015.
+CODE: yes: ll_play_x_force adds the authored G_x word, scaled by the
+  direction word, to the x register's force add, on the row-admit path
+  only; a new data-free selftest leg pins PR-520's 18/18 register ramp
+  and its 541-vs-511 key-release step.
+HOOKS: none (reuses LEO_PLAY_ROW_PHYSICS, PR-518).
+OPENS: OI-015 (the row-admit flip's 90 checks, unchanged by this
+  term), OI-011 (the s constant, not moved)
+CLOSES: none - the closed-form x law now carries its G_x term; the
+  default flip and the s constant are still PR-519.
+CORRECTS: none. The ll_play_v_step note "The G_x term itself is still
+  not added here" is brought in line with the now-implemented term; no
+  prior claim is retracted.
+MEASURED: (a) gate off --play-selftest: rc=0, 0 FAILED
+  (/tmp/opencode/pr521_off.log); (b) gate on: 90 FAILED, the same set
+  as PR-518 modulo the insert offset (/tmp/opencode/pr521_on.log);
+  (c) the leg's 17/17 register values and the 541/511 pair, run
+  through ll_play_x_force + ll_play_v_step; (d) mutation: removing the
+  G_x line turns exactly 4 leg checks red and leaves the default green.
+```
+
+- WHY. PR-520 handed off the x law as a thing that could now be
+  implemented; the G_x term is the only part of that law the port did
+  not yet compute. Adding it behind the existing gate, with PR-520's own
+  live ramp as the data-free pin, means the row-admit path now carries
+  the whole measured x law - and the measurement shows the flip cost
+  (PR-519's 90 re-derivations) is untouched by it, so the two open
+  threads stay separable. The default build is byte-identical until the
+  row-admit path is made the default.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 72 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 23 named verify-SKIPs (both rc=0;
+  the play-selftest leg is 0 FAILED gate-off and 90 gate-on; the (ok)
+  and SKIP counts are `grep -c '(ok)'` / `grep -c SKIP` of the two
+  run logs)

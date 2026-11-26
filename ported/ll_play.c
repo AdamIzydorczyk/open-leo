@@ -1923,8 +1923,11 @@ static double ll_play_v_px(long long r)
  * (0x50442) and written -1/+1 by the `ldir`/`rdir` nodes
  * (0x459f0/0x45a10) and by command opcode 6 (PR-319). PR-321 models
  * the authored writes and scales the row-pull/FC x sides with them
- * (ll_play_dir_word). The G_x term itself is still not added here -
- * counted at OI-015, not guessed. */
+ * (ll_play_dir_word). PR-520 measured the G_x term's role live - the
+ * authored A_WALK `G=30,350` of ZARIA.01 supplies G_x = 30 and it rides
+ * EVERY register step, including the one where the key is let go - so
+ * ll_play_x_force below adds it, on the row-admit path only. The old
+ * per-iteration model's pins predate the term and stay as they were. */
 static long long ll_play_v_step(long long v, int t_pct, long long add)
 {
     long long drag = (v * (long long)t_pct) / 100LL;
@@ -1972,6 +1975,30 @@ static long long ll_play_dir_word(const ll_player *p)
     if (p->dirword)
         return p->dirword;
     return p->walkdir ? (long long)p->walkdir : 1;
+}
+
+/* PR-521: the x-side force the row-admit physics adds at 0x542ab-0x542fa.
+ * PR-520 closed this law exactly over a live walk from a standstill:
+ *   v += idiv(F*s, 20) + G_x - idiv(v*T_x, 100)
+ * The first term is the intent force PR-135 shipped. The second, G_x, is
+ * the authored `G=` word's FIRST number scaled by the direction word - the
+ * engine's 0x542c1 multiplies [obj+0x6d] by it, and the header's engine
+ * note already writes the increment as `F_eff*s/20 + G=*facing`. ZARIA.01's
+ * authored A_WALK `G=30,350` supplies G_x = 30, and PR-520 showed it rides
+ * EVERY register step: the key-release step of that window is 541 with the
+ * word and 511 without it, so G_x is NOT key-gated. `with_gx` is the row-
+ * admit gate (ll_play_row_physics): the default per-iteration model and its
+ * pins predate this term, so a leg that runs with the gate unset keeps the
+ * force PR-135 shipped, byte for byte. The value of s is the caller's - it
+ * is the keyboard's word, NOT the register unit (OI-011 keeps that constant
+ * at LL_PLAY_INTENT_FULL until the legs are re-derived). */
+static long long ll_play_x_force(const ll_player *p, const ll_mov_st *st,
+                                 int s, int with_gx)
+{
+    long long addx = ((long long)st->fx * (long long)s) / 20LL;
+    if (with_gx)
+        addx += (long long)st->gx * ll_play_dir_word(p);
+    return addx;
 }
 
 static void apply_row_pull(ll_player *p, const ll_mov_st *st, int fi)
@@ -2361,8 +2388,11 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
          * PR-256: the raise at 0x54266-0x54275 tests [ebx+0x8] only, so
          * it is an X-side rule; the y drag keeps its authored percent. */
         vx100 = ll_play_v_step(vx100, td,       /* idiv(F*s, 20) is the */
-                               ((long long)st->fx * (long long)s) / 20LL);
-    }                                       /* add 0x542ab-0x542c7 makes */
+                               ll_play_x_force(p, st, s,
+                                              ll_play_row_physics()));
+    }   /* PR-521: on the row-admit path the add also carries the authored
+         * G_x word (0x542c1, the closed x law of PR-520); with the gate
+         * off it is still exactly idiv(F*s,20) as 0x542ab-0x542c7 makes. */
     if (vx100 > 100000)                    /* the engine's own guard has */
         vx100 = 100000;                    /* no cap in this chain; this */
     else if (vx100 < -100000)              /* one only bounds runaway    */
@@ -5545,6 +5575,71 @@ int ll_play_selftest(void)
         }
         CHECK(!bad);
         free(bxm);
+    }
+    {   /* PR-521: the x-side law in closed form, as PR-520 measured it live.
+         * The register update at each row admit is
+         *   v += idiv(F*s, 20) + G_x - idiv(v*T_x, 100)
+         * with the authored ZARIA.01 A_WALK supplying F=100, T_x=20 and the
+         * `G=30,350` word's first number G_x=30 - read exactly as PR-517 read
+         * its second number as the flight's +55 y force. The x force is NOT
+         * key-gated: G_x rides every admit, key down or not. HAND-DERIVED,
+         * no game data: the 17 target values ARE the held-value ramp PR-520
+         * records from a standstill (18 register states 1,131,...,638, each
+         * held one admit), and the final key-release step is the value that
+         * window names (541 with the authored G_x word, 511 if it is dropped).
+         * This runs the arithmetic on the raw integer register through the
+         * port's own ll_play_v_step and ll_play_x_force, so it pins BOTH the
+         * new term and the primitive. MUTATION: with_gx=0 (the G_x line in
+         * ll_play_x_force deleted) gives 511 at the last step and diverges
+         * from the ramp earlier; the leg fails. This is why the x law is now
+         * in the port (on the row-admit path only); OI-011's constant s is
+         * deliberately NOT tested here - PR-520 passed s=20 in this arithmetic
+         * because that is the live [obj+0xba] word, but the port's
+         * LL_PLAY_INTENT_FULL stays 10 until the legs are re-derived. */
+        static const char WX[] =
+            "A_WALKX\n\n[A_WALKX]\ncontrol=BY_X\nF=100,0\nT=20,5\n"
+            "G=30,350\nseq=a\n1,6\n";
+        ll_mov_t wx;
+        CHECK(ll_mov_parse(WX, &wx) == 1);
+        const ll_mov_st *ws = &wx.st[0];
+        CHECK(ws->fx == 100 && ws->tx == 20 && ws->gx == 30); /* the authored
+                                                                 A_WALK words:
+                                                                 F=100,0;
+                                                                 T=20,5 ->
+                                                                 T_x = 20;
+                                                                 G=30,350 ->
+                                                                 G_x = 30 */
+        ll_player pw = { 0 };
+        pw.dirword = 1;             /* the default direction word (0x50442);
+                                     * PR-520's window faced right, so G_x is
+                                     * the +30 force it measures */
+        static const long long ramp[] = {
+            131, 235, 318, 385, 438, 481, 515, 542, 564, 582, 596, 607, 616,
+            623, 629, 634, 638 };  /* held value by held value, 18/18 */
+        long long v = 1;            /* the capture starts at 1, not 0 */
+        int bad = 0;
+        for (size_t k = 0; k < sizeof ramp / sizeof ramp[0]; k++) {
+            long long add = ll_play_x_force(&pw, ws, 20, 1); /* the held key:
+                                                              * s = 20 is the
+                                                              * live [obj+0xba] */
+            if (add != 130)                                   /* idiv(100*20,20)
+                                                               * = 100, + 30 */
+                bad = 1;
+            v = ll_play_v_step(v, ws->tx, add);
+            if (v != ramp[k])
+                bad = 1;
+        }
+        CHECK(!bad);
+        CHECK(v == 638);            /* the top of the ramp, not an overshoot */
+        /* The key-release step is the proof G_x is not key-gated: with the
+         * key let go (s = 0) the register still gains the authored G_x. */
+        long long rel_gx = ll_play_v_step(638, ws->tx,
+                                          ll_play_x_force(&pw, ws, 0, 1));
+        long long rel_no = ll_play_v_step(638, ws->tx,
+                                          ll_play_x_force(&pw, ws, 0, 0));
+        CHECK(rel_gx == 541);       /* the value that window shows */
+        CHECK(rel_no == 511);       /* what dropping G_x predicts - wrong */
+        CHECK(rel_gx != rel_no);
     }
     {   /* PR-115: PR-110 open items 1 and 8 - how many ROWS ONE STEP may
          * close. The engine admits exactly one. 0x52320-0x5232b, the

@@ -203,6 +203,16 @@ OI-011: shipped discrepancy: the port drives the player walk to
   LL_PLAY_INTENT_FULL is still 10; PR-521 moves it with the legs
   re-derived on this arithmetic.
 
+  PR-521 PUTS THE G_x TERM IN THE PORT (row-admit path only). The x
+  force at 0x542ab-0x542fa is idiv(F*s,20) PLUS G_x scaled by the
+  direction word (0x542c1, the header's `G=*facing`); a new
+  ll_play_x_force builds it with with_gx = ll_play_row_physics(), so
+  the default per-iteration path is byte-unchanged. Pinned data-free
+  through the production helper: the ZARIA A_WALK words F=100/T=20/
+  G_x=30 reproduce PR-520's 131,235,...,638 ramp and the 541-vs-511
+  key-release pair. OI-011's constant is NOT touched: the s=20 in that
+  arithmetic is the live word, the port's stays 10 until the legs move.
+
 OI-012: does the PLAYER object go through the 0x54250 step at all?
   PR-135 applies the law to both actors as the model; the three
   call sites do not check class
@@ -435,6 +445,17 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     sampler resolves 17 step samples with at least four of them
     carrying two admits, and 78 px of travel at the mean v//100 of
     4.32 is 18 admits - closed within the sampling resolution.
+    PR-521 LANDS THE x LAW'S G_x TERM, GATED, AND SHOWS IT IS
+    ORTHOGONAL TO THE FLIP. ll_play_x_force adds the authored G_x
+    word (times the direction word, 0x542c1) to the x register's
+    force add, on the row-admit path only (with_gx = row_physics),
+    so the default per-iteration model and its pins are untouched:
+    gate off --play-selftest is still rc=0 / 0 FAILED. Gate on it is
+    still 90 FAILED - the SAME set as PR-518, byte for byte. That is
+    the point: every existing fixture leg authors G=0,0, so G_x is a
+    no-op there and the 90 red checks are the row-admit ORDER's cost,
+    not this term's. The nfr==0 degenerate case and the s-constant
+    move (OI-011) stay the open halves of the flip.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
