@@ -68752,6 +68752,8 @@ MEASURED: (a) THE STEP, byte-exact, in the one row-advance method
   525,525; neither class is bound in the port (OI-122/OI-123).
 OPENS: the chasm half of OI-078, now sharply named: cross 408..624
   through the KATAPULT/PALMA seat class or the LINA raiser; the
+  seat clearance law itself is fully read (PR-336..351) and the
+  missing half is the port leg named at OI-124; the
   SEQ_REV_X/SEQ_REV_Y terms of the step gate - the [class+0x70]
   getter 0x239f0 and [obj+0x71] - are still unmodelled (OI-113),
   and with them the A_TURN/A_TURN_BACK/A_WSP rows that spell those

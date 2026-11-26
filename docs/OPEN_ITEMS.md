@@ -3740,11 +3740,13 @@ OI-078: the in-game ZARIA.01 climb, now MOVING to the top at
     10400 -> 80), and the live-capture A_JUMP carried 82 px
     (pr516i - where the real player never crossed either, max x
     486, dying in the pit at 464); neither crosses 216 px. What
-    remains for this row is exactly one named gap: cross the chasm
-    through the authored crossing - the KATAPULT seat pad
-    307,633;340,633 with its three PALMA launchers (class
-    unread, OI-122) or the LINA rope at 525,525 and its
-    AC_LINA_CATCH raiser (class unread, OI-123) - then walk the
+    remains for this row is exactly one named gap: crossing the
+    chasm on the authored seat chain - the KATAPULT pad
+    307,633;340,633 with its three PALMA spans up to the exit
+    column at x 1020 - whose whole clearance law PR-336..351
+    already read and whose only missing half is the port leg at
+    OI-124; or the LINA rope at 525,525 and its AC_LINA_CATCH
+    raiser (the LINA class is unmodelled in the port). Then the
     shore to the pool DRECT, whose end-rule half PR-526 already
     measures.
 OI-079: AC_DUP: the engine's attach machine is named (PR-179) -

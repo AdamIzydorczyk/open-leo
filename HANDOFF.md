@@ -3511,9 +3511,12 @@ record.
   and the captured player never crossed it either (max x 486).
   The remaining named middle of the map is now exactly ONE
   crossing: the KATAPULT seat pad 307,633;340,633 with its three
-  PALMA launchers (class unread, OI-122) or the LINA rope at
-  525,525 and its AC_LINA_CATCH raiser (OI-123); the shore to
-  the pool and the dive are measured halves. The SEQ_REV terms of
+  PALMA spans to the exit column at x 1020 - the seat clearance
+  law is fully read (PR-336..351) and what is missing is the
+  port leg named at OI-124 - or the LINA rope at 525,525 and its
+  AC_LINA_CATCH raiser (the class is unmodelled in the port);
+  the shore to the pool and the dive are measured halves. The
+  SEQ_REV terms of
   the step's parity gate (getter 0x239f0, [obj+0x71]) stay at
   OI-113.
 
