@@ -3899,6 +3899,11 @@ OI-083: HUD display truth: both R3 clips start at 5 lives (the
   origin: G-8; PR-186 item (10)
   notes: the lives half resolves through OI-066 (STATUS.LEO) rather
     than a HUD read.
+    PR-531 SHIPS IT: the port now starts at 5 (LL_LIVES_START =
+    0x5d2f9), every pit fall costs a life (ly_lives: 4,3,2,1,0), the
+    zero ends the run through loop code 2, and the code-2 consumer
+    resets the counter to 5 before stopping - all pinned. What stays
+    video-gated is ONLY the HUD energy reading.
     PR-530 ANSWERS THE LIVES HALF WITHOUT THE CLIPS. The counter is
     the global ds:0xa94f0 and its run-start write is `mov
     DWORD ds:0xa94f0,0x5` at 0x5d2f9 - inside the routine the level
@@ -9294,9 +9299,12 @@ OI-131: the object class's +0x90 verb is a STATE-REQUEST FILTER, and
     message half).
 
 OI-132: the death LINE is a camera-row measure plus 500, not the
-  authored lew_rect bottom; the port's fall-out path is a stand-in
-  that spends no life and never ends the run
-  status: OPEN
+  authored lew_rect bottom; the port's stand-in NOW spends a life and
+  ends the run (PR-531) - the LINE and the engine's exact trigger are
+  what stays open
+  status: PARTIAL (PR-531 SHIPPED the cost, the zero exit at loop
+    code 2 and the 0x5d2f0 reset-and-stop consumer; the LINE itself
+    and the engine's own state-2 + wrap trigger stay open)
   origin: PR-530
   notes: WHAT IS READ (PR-530, all bytes). The lion family's class
     verb at +0x90 (0x54450, held at +0x90 by 37 of the 189 class
@@ -9341,3 +9349,30 @@ OI-132: the death LINE is a camera-row measure plus 500, not the
     else. The level loop's zero exit (0x4ae82 -> code 2) and its
     consumer (0x5d3f3 -> 0x5d3e3 -> 0x5d2f0) are read, and the port
     has no code-2 path at all.
+    PR-531 PORTED THE HALVES THAT NEED NO NUMBER and flipped this
+    row. SHIPPED: below the line the step writes ONLY energy -1
+    (0x54478); the consumer spends one life with energy 100 and the
+    respawn on the NEXT step (the 0x503d0 stand-in, the engine's own
+    two-stage split); the counter starts at 5 (0x5d2f9,
+    LL_LIVES_START); zero arms exit code 2 (0x4ae82-0x4ae8b) routed
+    through the existing stage driver, whose code-2 branch FIRST
+    resets the lives to 5 (0x5d2f9) and then stops through the
+    engine's own empty-queue answer (0x5d38e). Pinned hermetically
+    (--lives-selftest) and on ZARIA.01 (ly_lives: five falls, 4,3,
+    2,1,0, the end at 782). CORRECTED here too: 0x54476 `jge
+    0x54482` skips ONLY the energy write and lands ON the state
+    test - the state-2 test and the life verb are NOT line-gated,
+    only the energy write is; the energy-negative arm with state !=
+    2 writes [edx]=2,[ebx]=0 (0x544b4/0x544ba), the exact 0x544d0
+    death request, and index 2 IS the fall/death state in all 15
+    shipped lion scripts (A_DRAP x6, A_DOWN, A_BORRING, A_TUNGA1,
+    A_OBROT, A_IDLE, A_RZUT_S, A_DOWN_PTAKI1, A_GO); 0x53410 is
+    the request-word plumbing (an empty request gets the current
+    index, [ebx] = -1 is resolved from the state array [obj+0x50]).
+    WHY THE TRIGGER IS NOT PORTED: the port has no request word, and
+    its fall states leave index 2 at the next row admit by their own
+    authored lines (`A_WALK(1)=K_FWD`, `A_FALL_DOWN(1)=AC_ONAIR`) -
+    pr530_deathloop.log passes A_DRAP 63 times in 1500 ticks, never
+    on a list wrap - so the port's cost rides the line-crossing
+    instead, and the agreement with the engine (one fall, one life)
+    is measured on the pit, not assumed.

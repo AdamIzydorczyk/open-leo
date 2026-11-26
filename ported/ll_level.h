@@ -42,6 +42,11 @@ int ll_mov_selftest(void);
  * leads, and the 0..world-view clamps. 0 = ok, 1 = FAILED (on stderr). */
 int ll_follow_selftest(void);
 
+/* PR-531: hermetic life-chain selftest: the below-line energy write,
+ * the life-spending consumer, the zero -> loop-code-2 arm and the
+ * code-2 reset (0x54478, 0x503fb-0x5042b, 0x4ae82, 0x5d2f9). */
+int ll_lives_selftest(void);
+
 /* Standalone music (singleton), used by the MAPKA level-select screen:
  * the engine plays "mapka.mod" from the SOUND container on entering the
  * map (FUN_0005dec0) and stops it on every exit (FUN_0005df20).

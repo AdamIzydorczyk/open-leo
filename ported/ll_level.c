@@ -5292,6 +5292,13 @@ static const llrs_slot *rec_find(const llrs_slot *recs, unsigned n,
  * last entry at or before the current tick is held until the next one),
  * on the fixed grid of the LEO_LEVEL_PPM leg - one engine iteration per
  * tick, LL_ITER_MS (PR-135) - deterministic. */
+/* PR-531: the shipped start value of the life counter is 5, NOT the
+ * video's 6: `mov DWORD ds:0xa94f0,0x5` at 0x5d2f9 (inside the queue
+ * runner 0x5d2f0, which the level stubs also reach on loop code 2) and
+ * again at 0x5e3f0/0x5e3fb (PR-530, OI-083). One named constant so the
+ * run start and the code-2 reset cannot drift apart. */
+#define LL_LIVES_START 5
+
 typedef struct {
     int have;                               /* fully wired = play mode on */
     ll_plt plt;
@@ -5319,7 +5326,16 @@ typedef struct {
     double sx, sy;                          /* pozycja spawn              */
     ll_play_keys keys;                      /* held arrows (live path)    */
     int layer;                              /* the lion's layer = main_back */
-    int energy, lives, lock;                /* PR-68: 100 / 6 / hurt-lock ticks */
+    int energy, lives, lock;                /* PR-68: the counter pair;    *
+                                             * PR-531: the engine's run     *
+                                             * start is 5 (0x5d2f9), the   *
+                                             * life is spent by the verb   *
+                                             * below and a zero reaches    *
+                                             * loop code 2 (loop_exit)     */
+    int loop_exit;                          /* PR-531: pending level-loop   *
+                                             * exit CODE 2 - 0x4ae82 tests  *
+                                             * the counter every iteration  *
+                                             * and 0x4ae8b writes ebx=2     */
     int solid;                              /* PR-71: contact pass on/off      */
     int danger;                             /* PR-90: the DANGER + class   *
                                              * MAIN box arming stand-in    *
@@ -8200,6 +8216,16 @@ static void play_advance(play_ctx *pl, const ll_play_keys *keys,
                                              * own trigger, not that
                                              * chain. */
         pl->lives--;
+        if (pl->lives <= 0)       /* PR-531: the engine's `dec` at
+                                   * 0x503fb/0x50406 has NO floor, and
+                                   * the level loop tests the counter at
+                                   * 0x4ae82, writing exit CODE 2 at
+                                   * zero (0x4ae8b). The verb still
+                                   * completes (energy, the [obj.vt+0x4]
+                                   * respawn) and the loop exits on its
+                                   * own test - so the port flags, then
+                                   * respawns, then the leg routes it. */
+            pl->loop_exit = 2;
         pl->energy = 100;
         pl->lock = 0;
         printf("ll_level: play: energy gone -> respawn, %d live(s) left\n",
@@ -8211,20 +8237,29 @@ static void play_advance(play_ctx *pl, const ll_play_keys *keys,
     if (ev & LL_PLAY_EV_STATE)
         printf("ll_level: play: %s -> %s\n", pl->mov->st[was].name,
                pl->mov->st[pl->p.sti].name);
-    if (pl->p.y > pl->ydead) {              /* STAND-IN, OI-132 (PR-530): */
-        printf("ll_level: play: below lew_rect at (%d,%d) -> respawn\n",   /* the  */
-                                             /* engine's line is the WORD */
-                                             /* at [rec+0x2] of the      */
-                                             /* camera's current record  */
-                                             /* +0x1f4 (0x54467-0x54478) */
-                                             /* and it sets energy -1;   */
-                                             /* the life is spent by the */
-                                             /* +0xd4 verb, which this   */
-                                             /* stand-in never calls.    */
+    if (pl->p.y > pl->ydead) {              /* PR-531: the BELOW-LINE leg */
+        printf("ll_level: play: below lew_rect at (%d,%d) -> energy -1\n",
                xi, yi);
-        play_spawn(pl);
-        xi = (int)pl->sx;
-        yi = (int)pl->p.y;
+        pl->energy = -1;                    /* 0x54478 writes ONLY the   */
+                                           /* energy word; the life is   */
+                                           /* spent by the consumer      */
+                                           /* above, on a LATER step -   */
+                                           /* exactly like the +0x90     */
+                                           /* verb being called again.   */
+                                           /* The LINE is still the      */
+                                           /* lew_rect bottom standing   */
+                                           /* in for the camera record's */
+                                           /* word + 0x1f4 (0x54467-     */
+                                           /* 0x54474) - OI-132 - and so */
+                                           /* is the trigger: the verb's */
+                                           /* real gate (state index 2   */
+                                           /* + the row-wrap pulse,      */
+                                           /* 0x54482-0x5449c) cannot    */
+                                           /* fire in this port yet:     */
+                                           /* ZARIA's A_DRAP leaves on   */
+                                           /* K_FWD at the next admit    */
+                                           /* and while airborne on      */
+                                           /* AC_ONAIR to A_FALL_DOWN.   */
     }
     if (verbose)
         printf("ll_level: play tick %d: state %s seq %s frame %d pos %d,%d"
@@ -8624,9 +8659,19 @@ static int stage_apply(int code, int tick, lvl_obj *objs, int nobj,
                " ONE item and the engine returns 2 - not reachable in the"
                " port, ll_stage_queue_len() is 0\n", code, tick);
     } else if (out == LL_STAGE_STOP && code == 2) {
+        /* PR-531: the consumer IS the queue runner 0x5d2f0, and its
+         * first act is the counter reset - `mov DWORD ds:0xa94f0,0x5`
+         * at 0x5d2f9 - then the save write (0x5dcc0, called at
+         * 0x5d303), and only then the branch on the queue count
+         * (0x5d308) whose empty leg 0x5d38e answers stop. The port
+         * reproduces the counter reset; it does not write a save. */
+        pl->lives = LL_LIVES_START;
         printf("ll_level: stage driver: exit %d at tick %d: queue leg with"
                " an EMPTY queue (the port has no producer) - the engine's"
-               " own empty-queue leg 0x5d38e answers stop\n", code, tick);
+               " own empty-queue leg 0x5d38e answers stop; the queue"
+               " runner FIRST set the lives back to %d (0x5d2f9; its"
+               " save write 0x5dcc0 the port does not do)\n",
+               code, tick, LL_LIVES_START);
     } else if (out == LL_STAGE_STOP) {
         printf("ll_level: stage driver: exit %d at tick %d: STOP (the"
                " engine's 0x5d3ec)\n", code, tick);
@@ -8635,6 +8680,119 @@ static int stage_apply(int code, int tick, lvl_obj *objs, int nobj,
                " reset (the engine's 0x5d3dc)\n", code, tick);
     }
     return out != LL_STAGE_STOP;
+}
+
+/* PR-531: THE LIFE-CHAIN SELFTEST, HERMETIC. Pins the two-stage shape
+ * of the engine's fall chain on a synthetic script with NO transitions:
+ * (1) the below-line leg of the +0x90 verb ONLY writes the energy word
+ * (0x54478 `mov DWORD [obj+0xad],-1`) - it does not respawn and spends
+ * nothing; (2) the life is spent by the CONSUMER (the +0xd4 verb
+ * 0x503d0: `dec ds:0xa94f0` 0x503fb/0x50406, energy back to 100
+ * 0x503fc, the respawn through its [obj.vt+0x4] call at 0x5042b) on a
+ * LATER step - the port's energy test stands in for that verb and its
+ * exact gate (state index 2 + the list-wrap pulse) is NOT reachable
+ * here yet (OI-132); (3) when the counter reaches zero the level loop
+ * exits with CODE 2 (0x4ae82-0x4ae8b) and the code-2 consumer 0x5d2f0
+ * sets the counter to 5 FIRST (0x5d2f9) and then stops through the
+ * empty-queue leg (0x5d38e). No game data, no keys. */
+int ll_lives_selftest(void)
+{
+    static const char cmv[] =
+        "A_STAND\nA_HOLD\nA_FALL\n\n"
+        "[A_STAND]\ncontrol=BY_TIME\n1,100\n\n"
+        "[A_HOLD]\ncontrol=BY_TIME\n1,100\n\n"
+        "[A_FALL]\ncontrol=BY_TIME\n1,100\n";
+    play_ctx pl;
+    ll_play_keys nokeys = { 0 };
+    ll_mov_t *mm = calloc(1, sizeof *mm);
+    int bad = 0, falls = 0;
+
+    if (!mm)
+        return 1;
+    ll_mov_parse(cmv, mm);
+    memset(&pl, 0, sizeof pl);
+    pl.have = 1;
+    pl.mov = mm;
+    pl.xmin = -5000;
+    pl.xmax = 5000;
+    pl.ydead = 100.0;
+    pl.sx = 0;
+    pl.sy = 0;
+    pl.energy = 100;
+    pl.lives = LL_LIVES_START;
+    ll_player_start(&pl.p, mm, 0, 0, 0);
+    if (mm->nst != 3 || pl.p.sti != 0) {
+        fprintf(stderr, "lives selftest: FAILED the synthetic script did"
+                        " not parse three states (nst %d sti %d)\n",
+                mm->nst, pl.p.sti);
+        free(mm);
+        return 1;
+    }
+
+    /* (1) below the line: energy -1 ONLY (0x54478). No respawn, no
+     * life, no exit code. */
+    pl.p.y = 200.0;
+    play_advance(&pl, &nokeys, LL_ITER_MS, 0, 1, NULL, 0);
+    if (pl.energy != -1 || pl.lives != LL_LIVES_START || pl.loop_exit) {
+        fprintf(stderr, "lives selftest: FAILED the below-line leg did"
+                        " not write ONLY energy -1 (energy %d lives %d"
+                        " loop_exit %d, want -1/%d/0 per 0x54478)\n",
+                pl.energy, pl.lives, pl.loop_exit, LL_LIVES_START);
+        bad = 1;
+    }
+    /* (2) the NEXT step is spent by the consumer: one life, energy
+     * 100, back at the spawn (the port's stand-in for 0x503d0). */
+    play_advance(&pl, &nokeys, LL_ITER_MS, 0, 2, NULL, 0);
+    if (pl.lives != LL_LIVES_START - 1 || pl.energy != 100 ||
+        pl.p.y >= pl.ydead || pl.loop_exit) {
+        fprintf(stderr, "lives selftest: FAILED the consumer leg (lives"
+                        " %d energy %d y %.0f loop_exit %d, want"
+                        " %d/100/above the line/0 per 0x503fb-0x5042b)\n",
+                pl.lives, pl.energy, pl.p.y, pl.loop_exit,
+                LL_LIVES_START - 1);
+        bad = 1;
+    }
+    /* (3) spend the rest: the zero is reached, flagged as loop code 2,
+     * and NOT before (0x4ae82 tests after every spend). */
+    for (falls = 1; falls < LL_LIVES_START && !bad; falls++) {
+        pl.p.y = 200.0;
+        play_advance(&pl, &nokeys, LL_ITER_MS, 0, 3 + 2 * falls, NULL, 0);
+        if (pl.loop_exit) {
+            fprintf(stderr, "lives selftest: FAILED a zero exit armed"
+                            " before the counter ran out (fall %d lives"
+                            " %d)\n", falls, pl.lives);
+            bad = 1;
+            break;
+        }
+        play_advance(&pl, &nokeys, LL_ITER_MS, 0, 4 + 2 * falls, NULL, 0);
+    }
+    if (!bad && (pl.lives != 0 || pl.loop_exit != 2)) {
+        fprintf(stderr, "lives selftest: FAILED the zero run (lives %d"
+                        " loop_exit %d, want 0/2 per 0x4ae82-0x4ae8b)\n",
+                pl.lives, pl.loop_exit);
+        bad = 1;
+    }
+    /* (4) the code-2 consumer FIRST resets the counter to 5 (0x5d2f9)
+     * and then stops through its own empty-queue leg (0x5d38e). */
+    if (!bad) {
+        int cont = stage_apply(2, 100, NULL, 0, &pl);   /* 0 = STOP */
+        if (cont != 0 || pl.lives != 5) {
+            fprintf(stderr, "lives selftest: FAILED the code-2 consumer"
+                            " (continue %d lives %d, want stop and 5 per"
+                            " 0x5d2f9/0x5d38e)\n", cont, pl.lives);
+            bad = 1;
+        }
+    }
+    free(mm);
+    if (bad)
+        return 1;
+    printf("lives selftest: below the line writes ONLY energy -1"
+           " (0x54478) + the next step spends exactly one life, energy"
+           " 100 and the spawn (0x503fb-0x5042b stand-in) + the zero"
+           " arms loop code 2 and not before (0x4ae82) + code 2 resets"
+           " the counter to %d (0x5d2f9) and stops (0x5d38e) (ok)\n",
+           LL_LIVES_START);
+    return 0;
 }
 
 /* PR-199: DRIVING THE REAL end_level ROW PATH ON A REAL LEVEL.
@@ -13521,11 +13679,10 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
      * its first call. LEO_LEVEL_CAMY still seeds the PREVIEW camera and
      * is overridden in play mode, where the game's own camera rule runs. */
     pl.energy = 100;                       /* 0x503ac: energy 100 at (re)start */
-    pl.lives = 6;                          /* the playthrough video's   */
-                                           /* number. PR-530 counts to   */
-                                           /* this: the engine writes 5  */
-                                           /* (0x5d2f9, again 0x5e3f0),  */
-                                           /* OI-083.                    */
+    pl.lives = LL_LIVES_START;             /* 0x5d2f9, PR-530/OI-083:   */
+                                           /* the shipped run start is 5; */
+                                           /* PR-68's 6 came from the     */
+                                           /* video and is now spent.     */
     hud_t hud;
     memset(&hud, 0, sizeof hud);
     scene_owner scene;                     /* scripts + placements, owned;
@@ -14171,6 +14328,8 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
                 for (int k = 0; k < ninj; k++)
                     if (inj[k].tick == tk)
                         code = inj[k].code;
+                if (pl.loop_exit)           /* PR-531: the zero counter's */
+                    code = 2;               /* own exit, 0x4ae82-0x4ae8b  */
                 if (code && !stage_apply(code, tk, objs, nobj, &pl)) {
                     printf("ll_level: stage driver: the play leg ended at"
                            " tick %d of %d\n", tk, ticks);

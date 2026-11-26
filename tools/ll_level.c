@@ -30,6 +30,9 @@ int main(int argc, char **argv)
     /* PR-137: viewer camera-law selftest, hermetic */
     if (argc == 2 && strcmp(argv[1], "--follow-selftest") == 0)
         return ll_follow_selftest() ? 1 : 0;
+    /* PR-531: life-chain selftest, hermetic */
+    if (argc == 2 && strcmp(argv[1], "--lives-selftest") == 0)
+        return ll_lives_selftest() ? 1 : 0;
     if (argc < 3) {
         fprintf(stderr,
                 "usage: %s DATA_DIR LEVEL [-t SECONDS] [--no-audio] "

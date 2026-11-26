@@ -24,8 +24,10 @@
  *      wrapper 2 passes edx=1 at 0x5d436/0x5d446 - what that flag picks
  *      is not read), and the wrapper THEN returns 1 = run the same stage
  *      again.
- *   2  the queue runner 0x5d2f0 runs and ITS value is returned: it opens
- *      status.leo (0x5dcc0 at 0x5d303), reads the queue count at
+ *   2  the queue runner 0x5d2f0 runs and ITS value is returned: it
+ *      FIRST resets the life counter ds:0xa94f0 to 5 (0x5d2f9, read by
+ *      PR-530), then opens status.leo (the save writer 0x5dcc0 called
+ *      at 0x5d303), reads the queue count at
  *      ds:0xcf464 (0x5d308); with the count 0 it returns 0 (`xor
  *      ebx,ebx` at 0x5d38e), with a non-empty queue it processes EXACTLY
  *      ONE entry (0x5e180/0x5df50 build the strings, 0x60a30 constructs,

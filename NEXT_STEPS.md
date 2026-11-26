@@ -69315,3 +69315,155 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
       cited. After the last edit the selftest and the index both
       re-run green: ./ll_level --play-selftest rc=0 and
       `make verify-index` regenerates the index byte-identical.)
+
+
+## PR-531 - THE LIFE CHAIN SHIPPED: THE LINE-CROSSING STEP WRITES ONLY
+## ENERGY -1 (0x54478), ONE STEP LATER A CONSUMER SPENDS THE LIFE, THE
+## FIFTH FALL EXITS THE RUN WITH CODE 2, AND THAT CONSUMER FIRST RESETS
+## THE LIVES TO 5 (0x5d2f9)
+
+```
+KIND: port
+SUBSYSTEM: the life/energy chain of the play layer in ll_level.c: the
+  below-line leg of play_advance (the line test and the energy write
+  of the engine's class verb at +0x90, 0x54474-0x54478), the
+  life-spending consumer (the port's standing stand-in for the class
+  verb at +0xd4, 0x503d0), the zero counter's loop exit
+  (0x4ae82-0x4ae8b) routed through the EXISTING stage driver, whose
+  code-2 branch now plays the queue runner 0x5d2f0's own part
+  (counter reset 0x5d2f9, then the empty-queue answer 0x5d38e), and
+  the run-start counter itself (LL_LIVES_START, 5 per 0x5d2f9). It
+  also corrects PR-530's control-flow reading of 0x54450.
+ADDRESSES: 0x54450, 0x54467, 0x5446e, 0x54474, 0x54476, 0x54478,
+  0x54482, 0x5448b, 0x5449c, 0x544a2, 0x544a5, 0x544ae, 0x544b4,
+  0x544ba, 0x544c3, 0x53410, 0x53416, 0x5341f, 0x53427, 0x544d0,
+  0x503fb, 0x503fc, 0x50406, 0x5042b, 0x4ae82, 0x4ae87, 0x4ae8b,
+  0x5d2f0, 0x5d2f9, 0x5d303, 0x5d38e, 0x5dcc0.
+NAMES: LL_LIVES_START, play_ctx.loop_exit, energy word, loop code 2,
+  A_DRAP, A_FALL_DOWN, A_WALK, K_FWD, AC_ONAIR, AC_BREAK_NEXT,
+  LL_SIG_AC_BREAK_NEXT, ds:0xa94f0, ds:0xcf464, OI-132, OI-083,
+  OI-066, PR-68, PR-530.
+CODE: yes: ported/ll_level.c has one named constant LL_LIVES_START
+  = 5 (0x5d2f9) replacing the video's 6 at the run start, and it is
+  the value
+  the code-2 arm restores; a play_ctx.loop_exit field; the y > ydead
+  branch writes ONLY the energy word and prints '-> energy -1' (it
+  no longer respawns); the energy consumer arms loop_exit = 2 when
+  the decrement reaches zero and then completes with the same energy
+  100 + respawn (the engine's verb runs through, the loop exits on
+  its OWN next test); the play route feeds loop_exit to the existing
+  stage_apply as exit code 2; the code-2 branch resets the counter
+  FIRST and prints the whole named contract. ported/ll_stage.h: the
+  queue-runner item gains PR-530's counter-reset read (0x5d2f9). New
+  hermetic selftest ll_lives_selftest on a synthetic three-state
+  script (--lives-selftest, verify-play's always-run section).
+HOOKS: none new; LEO_LEVEL_EXIT stays the test injector for codes.
+MEASURED: (a) THE CONTROL FLOW, VERBATIM - PR-530'S READING
+  CORRECTED. 0x54474 `cmp ecx,esi` with ecx = [rec+0x2] + 0x1f4 and
+  esi = [obj+0x4], then 0x54476 `jge 0x54482`: NOT below the line
+  jumps OVER the energy write and LANDS ON the state test. So 0x54482
+  `cmp DWORD [obj+0x5c],2` runs at EVERY call of the verb, and the
+  life verb [obj.vt+0xd4] at 0x5449c is NOT line-gated - only
+  0x54478's energy write is. PR-530's fall-through wording and this
+  pass's first re-reading ("both gated") are both wrong; "returns
+  without touching the energy test" is true only of the state-2 +
+  wrap leg, which returns at 0x544a2. The rest of the verb, now end
+  to end: state != 2 OR no pulse falls through to 0x544a5 `cmp
+  [obj+0xad],0`; energy < 0 AND state != 2 writes the OUT WORDS
+  [edx] = 2, [ebx] = 0 (0x544b4/0x544ba) - byte for byte the
+  signature of 0x544d0, the plain object death PR-530 counted in 53
+  class tables - so the arm is a REQUEST of the script's index-2
+  state, and index 2 IS the fall/death animation across the shipped
+  lion scripts (the .MOV declaration census, 15 members: A_DOWN,
+  A_BORRING, A_TUNGA1, A_OBROT, A_IDLE, A_RZUT_S, A_DOWN_PTAKI1,
+  A_GO, A_DRAP x6); otherwise 0x544c3 calls 0x53410, which (a) with
+  an EMPTY request word writes the CURRENT index into it (0x53416-
+  0x5341b), (b) with [ebx] = -1 fills it from the state array
+  [obj+0x50] + edx*4 + 4 (0x53427-0x53430) - the per-step request
+  plumbing this verb keeps warm. (b) WHAT THE PORT SHIPS AND PINS.
+  ll_lives_selftest, no data: below the line once writes energy -1
+  ONLY (energy == -1, lives untouched, no respawn, no exit flag);
+  the NEXT step spends exactly one life, sets energy 100, and puts
+  the lion back above the line at the spawn; five falls run the
+  counts 4,3,2,1,0 and arm loop_exit == 2 EXACTLY when the counter
+  hits zero; stage_apply(2) then returns STOP and leaves lives == 5
+  (0x5d2f9 before 0x5d38e). (c) THE ENGINE'S OWN GATE, NOT PORTED,
+  AND WHY. The life verb needs state index 2 + the AC_BREAK_NEXT
+  pulse (0x54482-0x5449c); the port's fall states cannot hold a row
+  list to its end while falling: ZARIA.01's [A_DRAP] authors
+  `A_WALK(1)=K_FWD` and `A_FALL_DOWN(1)=AC_ONAIR` among its first
+  exit lines, and a falling lion always carries AC_ONAIR, so the pit
+  cycle leaves index 2 at the next admit - pr530_deathloop.log
+  counts 63 A_DRAP passes through index 2 in 1500 ticks, none on a
+  list wrap. Forcing index 2 is the request-2 arm, and the port has
+  NO request word at all (PR-530's own words, OI-131). The port's
+  trigger therefore stays the line-crossing feeding the PR-68
+  consumer - a named stand-in whose ONE agreement with the engine is
+  measured, not assumed: in the ZARIA pit every line-crossing IS a
+  fall, so one fall costs one life on both sides of that agreement.
+  (d) THE RUN, MEASURED END TO END. ly_lives: the traverse script
+  with one key held, 1500 ticks: falls at (454,1010)/(454,1010)/
+  (456,1010)/(457,1010)/(454,1010), five 'energy gone -> respawn,
+  N live(s) left' lines 4,3,2,1,0 and NO '5 live(s) left' line (the
+  start is 5), then 'stage driver: exit 2 at tick 782' and 'the play
+  leg ended at tick 782 of 1500' - against PR-530's nine falls, zero
+  lines and no end. (e) THE RIPPLE, EVERY NUMBER RE-DERIVED. The
+  one-step lag shifts every position after a death: ly_trv's second
+  pass now walks off at the SAME column as the first (404 grounded
+  237, 410 grounded 0 238 - PR-529's 405/411 was a PHASE of the old
+  same-step respawn, not a second law), its deaths at ~157 and 309
+  both read (454,1010); ly_pool's whole second pass moves +2 ticks -
+  takeoff 371,651 at 377, apex y 551 at 408 (still exactly 100 px
+  over the 651 line), grounded 691,617 at 426, pier step-off
+  986,655 at 505, the DRECT answer (991,655)/0x80000 at 508,
+  A_WYJSCIE and exit 3 at 529; ly_revwalk's fall at (647,1023)
+  costs 4 live(s) and the snap moves 472 to 473. The x's the engine
+  owns are unchanged.
+OPENS: OI-132 flipped to PARTIAL - the cost, the zero exit and its
+  consumer are shipped; the LINE (the camera record's word at
+  [rec+0x2], the [cam+0x44] row arrays never walked) and the
+  engine's exact trigger (state-2 + pulse, the request-2 arm, the
+  0x53410 plumbing) stay open; OI-083 stays PARTIAL (the
+  energy-at-level-start half is video-gated; the lives half is now
+  SHIPPED, not just read).
+CLOSES: none as a row. The port's two PR-68 guesses are spent: the
+  free fall respawn, and the start-at-6.
+CORRECTS: PR-530 MEASURED (a)'s fall-through wording, as spelled out
+  at (a) above - the state test is unconditional, the LINE gates
+  only the energy write, and the energy-negative arm REQUESTS the
+  index-2 state with 0x544d0's own out-word signature. The claim
+  PR-530 shipped (the +0xd4 verb spends the life and restores
+  energy 100) stands untouched.
+```
+
+- WHY. T6's "lives/energy persistence, game over" has waited on this
+  since PR-68 wrote a death path with no death in it. PR-530 read
+  the chain; PR-531 ships the halves the bytes settle - the start
+  count, the two-stage split, the zero exit, the reset-and-stop -
+  behind two hermetic assertions and a fifth-fall level leg, and
+  re-pins every level leg the one-step lag moves. The half it does
+  NOT ship is the half that has no number yet: the camera-row death
+  line and the engine's own pulse trigger, both held at OI-132.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 78 (ok);
+GATE-FIXTURE-FREE: rc=0 15 (ok) + 21 named verify-SKIPs
+      (both halves rc=0 on the final tree with every field filled:
+      /tmp/opencode/pr531_gate1.log and pr531_gate2.log, the cited
+      pair. An earlier pair of the same code+docs ran while the
+      record still carried a GATE placeholder - its only two
+      failures were verify-index and verify-docs; the cited pair's
+      counts add exactly those two legs plus a journal-db rebuild
+      line on each half. One -j32 pair in between died
+      inside verify-cmake's mingw cross-build - the process was
+      SIGKILLed ('Killed') right after that submake's
+      jobserver-reset warning, the wall-clock sensitivity OI-126
+      names; verify-cmake passed in the earlier pair and in both
+      cited halves. verify-play alone: 29 (ok) including
+      --lives-selftest and ly_lives. MUTATION CHECKS:
+      LL_LIVES_START 5->6 breaks ly_lives exactly at the pinned
+      ABSENT '5 live(s) left' negative; dropping the zero-arm
+      (loop_exit) from the consumer breaks --lives-selftest at
+      'the zero run (lives 0 loop_exit 0, want 0/2)'; reverting
+      the consumer's energy-100 write breaks it at the consumer
+      leg. All three restored, rebuilt, and the hermetic legs
+      re-green before the cited pair.)
