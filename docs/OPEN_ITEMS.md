@@ -6251,11 +6251,28 @@ OI-125: the element half of the object class +0xa4 verb - the five
     two states and none ships; and the reads below.
     WHAT WOULD CLOSE IT: the callers of 0x20964/0x22dfa/
     0x22e18 and what 0x52c70 does; whether [obj+0xbd]/[obj+0xc1] are
-    the rectangle words of PR-246 - the cursor-7 arm 0x1e93e-0x1e944
-    hands [obj+0xb5] and [obj+0xb1] to 0x52b10, and PR-246 stores the
-    authored rectangle x0,y0,x1,y1 at [obj+0xb1..0xbd] - or the ids of
-    PR-340's counter block; what 0x52b10 does with that pair; the
-    element blocks each of the five arms passes; which cursor value
+    the rectangle words of PR-246 - PARTIALLY ANSWERED (2026-11-26,
+    PR-538's reading list, machine code only, no claim beyond it):
+    0x52b10 is an APPEND, not an applier - it walks the chain at
+    [base+0x10] to its end (0x52b13-0x52b20), allocates a 16-byte
+    node (0x52b22-0x52b2c) and writes node+0 = 0, node+4 = EDX,
+    node+8 = EBX, node+12 = ECX (0x52b30-0x52b3c). So the cursor-7
+    arm 0x1e934-0x1e957 pushes (edx, ebx, ecx) = (2, [obj+0xb5],
+    [obj+0xb1]) as a QUEUED ACTION and stores the returned handle
+    into [obj+0xc1] - it does not move anything by itself, and the
+    -6300,-1350 pair is not read as a pair there at all. The
+    dereferences of [obj+0xb1] are 0x1e5fd (inside the CLOCK arm
+    0x1e5c0: after 0x45200 shifts the table by y = +/-1 from the
+    cursor, [obj+0xb1] is tested, and non-null means a method
+    [handle+0x8] is called with the three words (0,1,0) at
+    0x1e60c-0x1e624 - the element half of the SAME one-row step)
+    and 0x1e651 (lea, the table-header read 0x1e630 itself); the
+    writes of [obj+0xb5] are 0x54012/0x54155, which are BYTE
+    fields of another class - the dword pair read at 0x1e944 is
+    NOT a rectangle in that arm. Still open: who walks the queue
+    [base+0x10] (66 call sites of the append helper, none in the
+    0x52-0x55 object-runner range read [reg+0x10] as a link), and
+    the element blocks each of the five arms passes; which cursor value
     pairs with the admitted row, since the cursor step of 0x520c0 runs
     before the step of 0x521f0 - PR-342 keys the move to the admitted
     row and says so; and what [obj+0xc2] bit 7 and

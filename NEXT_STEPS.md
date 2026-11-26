@@ -70198,3 +70198,82 @@ GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named verify-SKIPs
   in that run); it is the 53 px of x between the port's jump
   trajectory and the seat's bracket, and the same wall/window pair
   is what keeps the balloon pickup and the fruit unreachable.
+
+## PR-538 - THE SEAT'S OWN STEP, AND WHAT IT DOES AND DOES NOT DO:
+0x52b10 IS AN APPEND, AND THE CLOCK ARM SHIFTS THE TABLE AND THE
+ELEMENT TOGETHER
+KIND: read
+SUBSYSTEM: the ani_plat= seat runner pair - the +0xa4 (clock) and
+  +0xac (jump) class verbs of KATAPULT/PALMA - read to settle what
+  the authored seat motion does, after PR-537 showed the palm seat
+  is missed in x and not in height.
+ADDRESSES: 0x1e5c0, 0x1e5dd, 0x1e5f8, 0x1e5fd, 0x1e603, 0x1e60c,
+  0x1e624, 0x1e630, 0x1e651, 0x1e690, 0x1e886, 0x1e934, 0x1e93e,
+  0x1e944, 0x1e952, 0x1e957, 0x45200, 0x45250, 0x4526e, 0x45280,
+  0x45286, 0x45291, 0x452c4, 0x52b10, 0x52b13, 0x52b22, 0x52b30,
+  0x535db, 0x54012, 0x54155.
+NAMES: obj_seat_shift, seat_x, seat_y, ani_plat, ANIPL2.DES,
+  KATAPULT, PALMA, A_RUN, K_GEN1, BY_TIME, AC_*, LEO_PLAY_SEAT.
+CODE: no: none. The record's finding lives in the OI-125 row,
+  which this read edits.
+HOOKS: none.
+OPENS: none.
+CLOSES: none.
+CORRECTS: PR-336, PR-342 - the reading recorded there that the
+  KATAPULT trailing pair is a LAUNCH applied through 0x52b10. In
+  the
+  cursor-7 arm 0x1e934-0x1e957, [obj+0xb1] and [obj+0xb5] are
+  pushed as a QUEUED ACTION (0x52b10 appends a 16-byte node to
+  the chain at [base+0x10]: node+0=0, node+4=EDX, node+8=EBX,
+  node+12=ECX) and the returned handle is stored at [obj+0xc1];
+  nothing is moved there. The real seat step is the clock arm
+  0x1e5c0: 0x1e5f8 shifts the [obj+0xa5] table by y = +1/-1 from
+  the row cursor (0x1e5dd), and 0x1e5fd-0x1e624 - the "element
+  half" PR-341 counted open - dereferences [obj+0xb1] and calls
+  its method at +0x8 with the words (0,1,0): the table and its
+  element take the SAME one-row step.
+GATE: light: verify-index verify-docs rc=0 (ok);
+
+- WHAT THE CLOCK ARM IS. 0x535db calls the +0xa4 class verb from
+  the state applier; for KATAPULT/PALMA that is 0x1e5c0, which
+  reads the state record's row cursor ([obj+0x5c] through the
+  state array [obj+0x50], PR-341's read) and hands 0x45200
+  x = 0, y = +1 while the cursor is below 7 and -1 from 7 on
+  (0x1e5dd-0x1e5f8). So a palm table climbs for the first half of
+  its own row cycle and descends for the second: a BOB of
+  +/-7 px, net zero, exactly what the port's obj_seat_shift
+  already implements. The element half then does the same step to
+  the .SEQ element behind [obj+0xb1] (0x1e603 tests it, 0x1e60c
+  loads it, 0x1e61c-0x1e624 build the (0,1,0) argument block and
+  the call is `call DWORD PTR [handle+0x8]`).
+
+- WHAT THE JUMP ARM'S SEVENTH ROW DOES - AND DOES NOT DO. The
+  +0xac verb 0x1e690 is a jump table over cursor-3 = 0..4; rows
+  0..3 shift the table by the pairs PR-342 lists, and row 4
+  (cursor 7) shifts it by (-42,-31), then - only if the handle
+  [obj+0xc1] is non-null - calls three global methods and at
+  0x1e934-0x1e952 appends (edx=2, ebx=[obj+0xb5], ecx=[obj+0xb1])
+  through 0x52b10, storing the returned node at [obj+0xc1]. The
+  five arms sum to (0,0) (PR-342), and the append is a QUEUED
+  ACTION, not a movement: the walk at 0x52b13-0x52b20 finds the
+  end of the chain at [base+0x10] and 0x52b30-0x52b3c writes
+  node+0=0 / node+4=EDX / node+8=EBX / node+12=ECX. Whoever walks
+  that chain is NOT in the object-runner range (0x52000-0x55000
+  reads no [reg+0x10] as a link), and 66 call sites use the same
+  helper: the queue's consumer stays open, and it is the next read
+  if the catapult's launch is to be ported.
+
+- WHY THIS MATTERS FOR THE GOAL. PR-537 proved the palm seat is
+  missed by 53 px of x, not by height, and that the port can
+  stand the lion on the terrace below it. This read says the
+  authored seat motion is a bob, not a lift: neither the clock
+  arm nor the jump arm can carry a lion 129 px up to the 380
+  line, and the only unaccounted authored effect is the queued
+  action of the cursor-7 arm. So the palm clause needs either
+  that consumer (the launch) or the CARRY of OI-128 - whose two
+  delta fields [obj+0xca]/[obj+0xce] ARE written by the seat
+  table reader 0x45250 (0x4526e-0x45291: (record.x - old q.x),
+  (record.y - old q.y)) and ARE added to the ground answer by
+  0x4b430 at 0x4b479-0x4b48c. The carry is the smaller, pinnable
+  half and stays the next port; it does not by itself solve the
+  380-line reach, and this record says so rather than hoping.
