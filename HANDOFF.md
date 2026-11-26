@@ -3257,6 +3257,38 @@ fixtures for the jump range are UNCONDITIONALLY the zax37 jumps
 measure, byte citations and the instrument bands: the PR-205
 record.
 
+  PR-516 STATUS (the live physics channels, register by register).
+  Two rows of the register closed: the player DOES go through
+  0x54250 (OI-012) - its own [obj+0xc2]/[obj+0xc6] pair ramps in
+  steps of exactly idiv(F*s,20) and the position step is that
+  register //100 - and the walking state's accumulator IS
+  [obj+0xa1], fed with abs([obj+0xca]) by the class +0xa0 slot
+  0x543a0's mode-0 arm, live against the authored row threshold 6
+  with the strict-past gate (OI-008). Three stays open and each
+  now has numbers on it: (a) the intent scale - the live word is
+  +20 and the register settles at the s=20 equilibrium 500 (in one
+  state family above it, 622-646), while the port seeds s=10 and
+  holds 250, and the live POSITION bands (27-59 px/s per window)
+  match the video band, not the equilibrium: LL_PLAY_INTENT_FULL
+  is NOT changed, the tension is OI-011; (b) the clock - the same
+  run feeds that same accumulator at 5.5/s, 10/s and 20.5/s in
+  different windows, so no px/s claim built on a fixed iteration
+  rate is safe, and the walk's travel is bounded by its step
+  cadence (9.4-11.4 steps/s of +5/+6 px), not by F/T alone
+  (OI-015); (c) the state name - the runtime array is not the
+  .MOV declaration order and the engine names states through a
+  separate table, so no measured window is yet attributed to a
+  named state (OI-130; the trace tool now carries a three-route
+  resolver that records which route hit). For the chasm question
+  the row law matters more than the velocity: the pull's re-fire
+  IS the row list's re-admission - A_JUMP and A_JUMP_S keep their
+  I pair inside a list that restarts itself, and A_PRE_JUMP
+  entering `A_JUMP(4)` one row past A_JUMP's only I row proves an
+  entered-past row never fires - so the flight carry is a held
+  target, not an impulse, which is exactly the port's one-shot
+  gap (OI-124).
+
+
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`
 (conditions `K_FIRE`+`K_F1`/`K_F2`, `K_ALT`); enemy `.MOV` death states;

@@ -108,6 +108,20 @@ FIELDS = [                # name -> offset in the object, per the ledger
     # [obj+0xa1] the row accumulator whose threshold-gate PR-100 read.
     ('st_array', 0x50), ('st_index', 0x5c),
     ('gate_95', 0x95), ('accum_a1', 0xa1),
+    # PR-516: the integrator's own registers. 0x54250 keeps velocity as
+    # 100x fixed point at [obj+0xc2]/[obj+0xc6] and writes the integer
+    # px/tick pair at [obj+0xca]/[obj+0xce] (PR-98 F-steps 2-6, already
+    # sampled above as clamp_dx/clamp_dy). Sampling the raw registers next
+    # to the intent word settles where the raw +20 halves: if v sits at
+    # the s=10 steady state (F/(2T)) while [obj+0xba] reads +20, the
+    # halving is INSIDE 0x54250; if v oscillates between the s=10 and
+    # s=20 steady states, the key word only lands every other iteration.
+    ('v_raw_x', 0xc2), ('v_raw_y', 0xc6),
+    # [obj+0x6d] is the x-side direction multiplier of 0x54340 (PR-320:
+    # written 1 at every state start 0x50442, +-1 by ldir/rdir nodes).
+    # [obj+0xd2] is the contact record whose absence takes the player's
+    # 0x54a10 `je` and skips the +/-10 intent rewrite (PR-515).
+    ('dir_6d', 0x6d), ('contact_d2', 0xd2),
 ]
 WIN = 0x140               # sampled window: covers every FIELDS offset
 MENU_AT = (640, 400)      # the chapter map menu's CRTC geometry (PLAN S6)
@@ -436,6 +450,136 @@ def class_census(blob, base, tables, scan_from=0):
         if v - base in tables:
             hits.append((i - CLASS_OFF, v - base))
     return hits
+
+
+NAME_TOKEN = re.compile(rb'[A-Za-z_][A-Za-z0-9_]{2,}')
+
+
+def name_token(blob, at=0):
+    """An inline state name: NUL-terminated text starting AT `at`. A
+    pointer's own bytes must never pass as a name (the first resolver
+    did exactly that, reading `all bytes printable`), so this matches a
+    token only at the start of the buffer."""
+    m = NAME_TOKEN.match(bytes(blob or b''), at)
+    return m.group(0).decode('ascii') if m else ''
+
+
+def last_name_before(blob, end, window=0x10):
+    """The last name token in a buffer that ENDS at or before `end` with
+    only NUL padding in between - the shape of a name stored inline in
+    front of a pointer field in the same record. `window` bounds how far
+    the token may sit from `end`: a name that belongs to a field 0x28
+    bytes away is not this field's name (that is the mutation this
+    guard exists for)."""
+    blob = bytes(blob or b'')
+    best = ''
+    for m in NAME_TOKEN.finditer(blob, 0, end):
+        if end - window <= m.end() <= end and not any(blob[m.end():end]):
+            best = m.group(0).decode('ascii')
+    return best
+
+
+class StateNames:
+    """PR-516: name the live state an object runs.
+
+    `[obj+0x50] + [obj+0x5c]*4` is the current state's ARRAY ENTRY (the
+    dispatcher 0x4ffb0 reads `[eax+0x50]` indexed by `[eax+0x5c]*4`;
+    0x534c0 allocs and 0x51770 fills the entry with a 0x48-byte object
+    whose +0 is NOT a name: 0x51793 `mov [eax-0x1a],edx` stores the
+    record the object was built from, and 0x517c2 puts a vptr at +0x44).
+    The engine itself resolves state NAMES by a different table - 0x53440
+    walks a vector `[edi]=data, [edi+8]=count` with entry i at
+    `[data+i*8]` and 0x76a69 case-folds a strcmp against text inline at
+    entry+0 - and that vector is not reachable from the object. So the
+    name is found by three routes, and the run records WHICH one hit:
+      a. the record pointer at state+0x0, when that record opens on an
+         inline name (PR-418/436: parsed record names are inline at +0);
+      b. the name vector, found from the object: one heap scan for a
+         dword equal to the state-object pointer, with the name inline
+         beside it or pointed to just before it;
+      c. neither: one hex dump of the state object and of its +0 record,
+         so the layout becomes measured instead of assumed.
+    Memoised by (array, index); `state_ptr` and `state_how` say what was
+    read, so a name claim in a record is always traceable to an address."""
+
+    HEAP_LO, HEAP_HI = 0xc0000, 0x600000     # where the game allocates
+
+    def __init__(self, h, base, note, scanfile):
+        self.h, self.base, self.note = h, base, note
+        self.scanfile = scanfile
+        self.cache, self.heap = {}, None
+
+    def _read(self, addr, n):
+        blob = _xp(self.h, addr, n)
+        return bytes(blob) if blob else b''
+
+    def _heap(self):
+        """One non-pausing read of the allocation range, reused for every
+        state key (the same range and rule as census_live)."""
+        if self.heap is None:
+            lo = self.base + self.HEAP_LO
+            self.heap = (lo, ram_window(self.h, lo, self.HEAP_HI - self.HEAP_LO,
+                                        self.scanfile) or b'')
+        return self.heap
+
+    def _dword(self, addr):
+        raw = self._read(addr, 4)
+        return struct.unpack('<I', raw)[0] if len(raw) == 4 else 0
+
+    def _via_vector(self, ptr):
+        lo, blob = self._heap()
+        want = struct.pack('<I', ptr)
+        for i in range(0, len(blob) - 4, 4):
+            j = blob.find(want, i)
+            if j < 0:
+                break
+            i = j
+            a = lo + j                       # [a] == the state object
+            before = self._read(a - 0x28, 0x28)
+            n = last_name_before(before, 0x28)
+            if n:
+                return n, a, 'name-inline-before-state-pointer'
+            q = (struct.unpack_from('<I', before, 0x24)[0]
+                 if len(before) == 0x28 else 0)
+            if q:
+                n = name_token(self._read(q, 0x20))
+                if n:
+                    return n, a, 'name-pointer-before-state-pointer'
+        return '', 0, ''
+
+    def resolve(self, array, idx):
+        key = (array & 0xFFFFFFFF, idx)
+        if key in self.cache:
+            return self.cache[key]
+        a = key[0] + idx * 4
+        ptr = self._dword(a)
+        name, how, aux = '', 'no-state-object', 0
+        if ptr:
+            rec = self._dword(ptr)
+            name = name_token(self._read(rec, 0x20))
+            if name:
+                how, aux = 'state-record-name', rec
+            else:
+                name, aux, how = self._via_vector(ptr)
+                if not name:
+                    how = 'unresolved'
+                    self.note('state object layout (name unresolved)',
+                              array=hex(key[0]), index=idx, entry=hex(a),
+                              state=hex(ptr),
+                              state_hex=self._read(ptr, 0x48).hex(),
+                              record=hex(rec),
+                              record_hex=self._read(rec, 0x40).hex())
+        self.cache[key] = (name, ptr, how, aux)
+        return self.cache[key]
+
+    def apply(self, got):
+        for w in got.values():
+            idx, array = w.get('st_index'), w.get('st_array')
+            if idx is None or array is None or not 0 <= idx < 256:
+                continue
+            name, ptr, how, aux = self.resolve(array, idx)
+            w['state_name'], w['state_ptr'] = name, ptr
+            w['state_how'], w['state_src'] = how, aux
 
 
 def load_names(path):
@@ -942,6 +1086,7 @@ def main():
         deadline = time.time() + (a.max_seconds if a.show else a.trace_seconds)
         di, dt_next = 0, 0.0
         prev = None
+        st_names = StateNames(h, base, note, RAMWIN + '.states')
         frame_next = tick_next = 0.0
         tick = None
         while time.time() < deadline:
@@ -970,6 +1115,7 @@ def main():
                 tick = read_tick(h)
                 tick_next = t + 1.0
             got = batch_reads(h, objs, RAMWIN)
+            st_names.apply(got)
             for o, w in got.items():
                 rec = {'t': round(t, 2), 'tick': tick, 'obj': hex(o), **w}
                 trace.write(json.dumps(rec) + '\n')

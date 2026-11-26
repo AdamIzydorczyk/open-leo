@@ -1050,13 +1050,21 @@ typedef struct { int k_fwd, k_bkwd, k_up, k_down, k_jump,
  * kind-1/4 contact node writes +/-10 toward the partner, 0x54a57/
  * 0x54b16), while the keyboard path writes +/-20 (reader 0x582f0) -
  * both into the same words, the contact chain overriding after the
- * input store. Which scale the x force's unread multiplier consumes
- * is not settled by either; the video-validated steady state keeps
- * 10, so the port uses 10 for a held direction key, an auto_walk
- * state, and PR-148's vertical intent alike. That shared scale is
- * counted as an open item (it would decide the y-force path too),
- * not smoothed over; partial intents remain an open item, not
- * modeled. */
+ * input store. PR-515/516 CLOSED the player half of that census:
+ * the playable lion's word IS the keyboard's raw +/-20 (never +/-10,
+ * no normalizer), and its own register pair [obj+0xc2] ramps by
+ * exactly idiv(F*s,20) and settles at the s=20 equilibrium - 500 at
+ * the authored A_WALK pair, 622-646 in another state - while its
+ * POSITION still measures 27-59 px/s per window, the band PR-134's
+ * video and this port's s=10 both sit in. So the scale is settled
+ * for the WORD and not for the TRAVEL: the live walk's rate is
+ * bounded by its row-admit cadence (9.4-11.4 steps/s of
+ * register//100 px), which this port's one-step-per-iteration model
+ * does not reproduce at any s. The constant therefore STAYS 10 -
+ * changing it alone would double the port's travel without matching
+ * either side's measured rate - and the two halves are counted at
+ * OI-011 (the scale) and OI-015 (the cadence), not smoothed over;
+ * partial intents remain an open item, not modeled. */
 #define LL_PLAY_DRAG_DEN 100
 #define LL_PLAY_INTENT_FULL 10
 /* PR-135: one unit of the engine's velocity register. That register is

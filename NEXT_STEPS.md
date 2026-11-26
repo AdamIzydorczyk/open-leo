@@ -67258,3 +67258,174 @@ MEASURED: (a) intent censuses pr515c/pr515e (1522+1299
 
 GATE: make 0 warnings; verify-all fixtures rc=0 65 (ok);
 GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+
+## PR-516 - THE LIVE PLAYER STEPS ITS OWN INTEGRATOR: THE RAW +20
+## RAMPS IN STEPS OF EXACTLY idiv(F*s,20) AND SETTLES AT THE s=20
+## EQUILIBRIUM 500 (IN ONE STATE FAMILY ABOVE IT); THE POSITION STEP
+## IS THE REGISTER //100; A WALK FEEDS ITS OWN ROW CLOCK WITH ITS
+## STEP AGAINST THE AUTHORED THRESHOLD 6; AND ONE FEED CENSUS IS NOT
+## A CLOCK - THE SAME RUN ADMITS AT 5.5, 10 AND 20.5 A SECOND
+
+```
+KIND: read
+SUBSYSTEM: the player's velocity registers and a walking state's
+  row feed - the two questions OI-012 and OI-008 asked, now
+  measured live - plus the row law that gates the jump pull and
+  the state-identity gap those numbers now depend on. (1) THE
+  PLAYER STEPS 0x54250 ITSELF. The trace now samples the
+  integrator's own 100x fixed-point pair [obj+0xc2]/[obj+0xc6]
+  (PR-98's registers, never sampled before): with the keyboard's
+  +20 held the x register grows in single steps of ~+100 =
+  idiv(F*s,20) at F=100, s=20 (the add 0x5434f makes), and it
+  SETTLES - in one state family at exactly the s=20 equilibrium
+  of the authored A_WALK pair, (F*s/20)*(100/T) = 500 (pr516c2,
+  st_index 5: window medians 398-400, max EXACTLY 500), in
+  another ABOVE it at 622-646 (st_index 1). No halving exists on
+  the player's path, and the frame-reconstructed step is
+  `dpos == v_raw // 100` (pr516b: 283 matches / 118 not;
+  pr516c2: 79 / 13 at |v_raw| >= 100). (2) THE WALK FEEDS ITS
+  OWN ROW CLOCK WITH ITS OWN STEP. The feed is the class +0xa0
+  slot 0x543a0: `[state+0x12] & 7`, `cmp eax,4; ja 0x5443f`,
+  through the table at 0x54380 = 0x543c6 (abs([obj+0xca]) ->
+  [obj+0xa1]), 0x543dc (the [obj+0xce] twin), 0x543fb (+100,
+  no intent test: plain BY_TIME), 0x543f2 (+100 behind
+  `cmp [obj+0xba],0`), 0x5441b (+100 behind `cmp [obj+0xbe],0`)
+  - control words 5..7 leave the accumulator alone. LIVE, the
+  sampled word runs 0,2,6,5,4,3,2 while x steps +5/+6 px: feed =
+  the integer step, threshold 6 = the authored walk-row number,
+  strict-past, remainder carried (2+4=6 does NOT fire, 6+5=11
+  fires and leaves 5) - PR-100's arithmetic and PR-116's gate,
+  live on the player. (3) A FEED CENSUS IS NOT A CLOCK. In ONE
+  run that same accumulator is fed at 20.5/s (one 7.2 s BY_TIME
+  window, 134 EXACT +100 feeds) and at 5.5-10.3/s in every other
+  BY_TIME window of the same object (a 32.3 s window at 8.6/s, a
+  246 s one at 7.4/s, the st_index 4 windows at 5.5-6.2/s),
+  while the walk's POSITION moves at 9.4-11.4 steps/s of +5/+6
+  px = 27-59 px/s per window. This record's own first pass
+  claimed the rig runs at native 20/s from the 7.2 s window;
+  that is REFUTED as a general statement - the rate is
+  per-window, and only the per-event numbers hold: px per step =
+  register //100. (4) BOTH SIDES ON REGISTER SCALE. Port
+  (pr516_port.log, ZARIA.01, the --play leg): the walk register
+  holds EXACTLY 250 (the s=10 equilibrium), position +2 px per
+  tick = 40 px/s, and A_JUMP applies the authored I (-24000
+  printed at the first airborne tick) then decays EXACTLY
+  x0.8/it - +7 px of flight carry. Live: 500-646 raw carried
+  into the same jump, and the flight pull HELD (PR-515). (5)
+  THE ROW LIST, NOT THE IMPULSE, GATES THE PULL. The authored
+  ZARIA.01 lion script (/tmp/opencode/mov/
+  ZARIA.01_LEW.ZAR_LEW.MOV, extracted this PR through the port's
+  own LLRS reader) puts the I pair inside a list that restarts
+  itself: [A_JUMP] control=BY_TIME F=180,0 T=20,1 G=0,55 rows
+  1,75,F 0,350 | 2,75,F 0,350,smpauto | 2,75,I 150,-1200 | ...
+  with `A_JUMP(11)=AC_DUP`; [A_JUMP_S] rows 1,225,F 0,350,
+  smpauto | 2,100 | 2,150,I 120,-1200 | 3,300,FC 80,0 | ... |
+  7,0,WAIT AC_DUP | 8,100,F 0,100 with `A_JUMP_S(9)=AC_DUP`.
+  THE PROOF THE ADMISSION IS THE GATE: [A_PRE_JUMP] exits
+  `A_JUMP(4)=AC_BREAK_NEXT`, one row PAST A_JUMP's only I row,
+  and authors its own I 250,-1100 once. (6) THE STATE NAME, AND
+  WHY THESE WINDOWS HAVE NONE. `[obj+0x50]+[obj+0x5c]*4` is the
+  entry (0x4ffb0); 0x534c0 allocs it (`mov eax,0x48; call
+  0x5c320`, the allocator behind 0x7521f, the failure string
+  0x924f4); 0x51770/0x51eb0 fill it - the record pointer at +0
+  (0x51793 `mov [eax-0x1a],edx`, 0x51ed8 `mov [ebx],edx`), row
+  counters at +8/+a/+c, a vector at +0x2e, a vptr 0xa260c at
+  +0x44 (0x517c2) - and no name. The engine names states
+  through a SEPARATE table (0x53440 over a `[edi]=data,
+  [edi+8]=count` vector, entry i at `[data+i*8]`, text inline at
+  entry+0, 0x76a69 a case-folding strcmp). PR-515's st_index
+  map was .MOV declaration order and does NOT match behaviour:
+  the sustained +20 ground windows run st_index 1 (BY_X feed,
+  the equilibrium register, y never leaves the floor) while
+  declaration order says A_JUMP_S.
+ADDRESSES: 0x543a0, 0x54380, 0x543c6, 0x543dc, 0x543fb, 0x543f2,
+  0x5441b, 0x5434f, 0x5c320, 0x7521f, 0x924f4, 0x534c0, 0x51770,
+  0x51eb0, 0x51793, 0x517c2, 0xa260c, 0x4ffb0, 0x53440, 0x76a69
+NAMES: control=BY_X, control=BY_TIME, A_WALK, A_JUMP, A_JUMP_S,
+  A_PRE_JUMP, I, FC, AC_DUP, AC_BREAK_NEXT, AC_ONAIR, [obj+0xa1],
+  [obj+0xc2], [obj+0xc6], [obj+0xca], [obj+0x50], [obj+0x5c],
+  [state+0x12], LEW.ZAR/LEW.MOV, state_name, state_how
+CODE: yes: tools/golden_level_trace.py - FIELDS gains v_raw_x/
+  v_raw_y ([obj+0xc2]/[obj+0xc6]), dir_6d, contact_d2; a
+  three-route state-name resolver appends state_name/state_ptr/
+  state_how/state_src to every sampled record and, when no route
+  hits, logs ONE hex dump of the state object and of its +0
+  record, so the layout becomes evidence. ported/ll_play.h -
+  the LL_PLAY_INTENT_FULL note only: the word half of the
+  census is closed, the travel half is now a cadence question,
+  the constant stays 10 with both halves cited. No physics, no
+  leg, no pin moves.
+HOOKS: none - every new field is appended after the fields the
+  play legs grep; the jsonl keys of existing fields are unchanged.
+OPENS: OI-011 (the port's LL_PLAY_INTENT_FULL: both sides are
+    now on register scale, the live word is 20 and the port's is
+    10, and the video band and the live register do not agree -
+    no change made here), OI-015 (one accumulator, three feed
+    rates in one run: the clock question, now measured instead of
+    assumed), OI-124 (the pull's re-fire is the row list's
+    re-admission, with the authored proof), OI-130 (the live
+    state name: the object keeps a record pointer, the engine
+    names states elsewhere)
+CLOSES: OI-008 (the walking state's accumulator IS [obj+0xa1],
+    fed with abs([obj+0xca]) - the mode-0 arm read instruction
+    by instruction and live-confirmed with the authored threshold
+    6), OI-012 (the player DOES go through 0x54250: its own
+    register pair ramps and the position step is that register
+    truncated)
+CORRECTS: PR-515 (3g) "the [obj+0x5c] map is confirmed -
+    walk=4 A_WALK, idle=18 A_DRAP": the runtime array is not the
+    .MOV declaration order (the sustained +20 ground windows run
+    st_index 1, which declaration order calls A_JUMP_S). PR-515
+    (2) "sustained right at the raw +20 gives 50-64 px/s ...
+    the halving between the word and the force is a MEASURED,
+    NAMED gap": there is no halving - the register reaches the
+    s=20 equilibrium and passes it, and the 50-64 band is the
+    duty-cycle average of QMP holds clamped to 1500 ms.
+MEASURED: (a) register censuses through /tmp/opencode/
+    pr516_claims.py over pr516b/c2.jsonl (19,474 / 25,244 lion
+    samples of 0x524400 at 50 Hz): intent +20 in 1,750 / 583
+    samples, v_raw_x at +20 held - p50 218/388, p99 638/629, max
+    646/634; the +deltas between samples cluster at +100..+111.
+    The step census in (1) is the same script's last section: a
+    frame boundary is any change of [obj+0xa1] between two
+    consecutive 50 Hz samples, and the test is dpos against
+    v_raw//100 (toward zero).
+    (b) the window census through pr516_walkrate.py: sustained
+    +20 windows move +57..+99 px in 1.7 s at window medians
+    438-607 raw. (c) the feed-rate census through
+    pr516_clock.py: the numbers in (3) above, per CONTIGUOUS
+    window, not averaged over a run. (d) the walk's accumulator
+    trace at 406.91-407.59 s, sample by sample, in OI-008. (e)
+    the authored row blocks, verbatim, from
+    /tmp/opencode/mov/ZARIA.01_LEW.ZAR_LEW.MOV (777 .MOV members
+    extracted from the HD ANIMACJE through tools/re/
+    llrs_extract_mov.c). (f) the port's own registers from
+    pr516_port.log (walk 5000 printed const = raw 250, +2 px/
+    tick; A_JUMP -24000 then x0.8/it). (g) the state-object
+    layout bytes: the 0x48-byte object, its vptr 0xa260c and its
+    +0 record pointer, from the ctor pair 0x51770/0x51eb0. (h)
+    run f (the resolver's first run) never entered a level -
+    Down alone at the chapter map does not start it; run g
+    repeats the plan with the Enter that run e used.
+```
+
+- WHY. Two open items asked whether the port's physics model is
+  the engine's. For the integrator the answer is now yes, with
+  the live word: the player's own registers ramp by the authored
+  add and settle at the authored equilibrium, and the position is
+  that register truncated. That kills the "where does +20 halve"
+  question and opens the real one, which is the CADENCE: the same
+  run admits the same accumulator at 5.5, 10 and 20.5 a second,
+  so no px/s claim built on a fixed 20 Hz is safe, and the walk's
+  travel is bounded by its step cadence, not by F/T. And the row
+  list, not the impulse, is what holds a flight - the authored
+  data says so twice (a self-restarting list, and a state that
+  enters one row past the I row and never fires it), which is
+  exactly the port's one-shot gap. What the crossing arithmetic
+  of OI-124 now needs is one named state measured end to end, and
+  that is OI-130: the object keeps a record pointer while the
+  engine names states through another table, so the resolver had
+  to be built before the claim could be made.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 73 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs

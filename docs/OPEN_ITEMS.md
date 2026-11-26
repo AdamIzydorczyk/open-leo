@@ -105,8 +105,31 @@ OI-007: the port's double accumulator drifts off its own exact-
   notes: no selftest in either family reaches that case.
 
 OI-008: which accumulator the engine keeps for a WALKING state
-  status: OPEN
-  origin: PR-119 (HANDOFF 13.82)
+  status: CLOSED BY PR-516
+  notes: THE SAME ONE, and the walk feeds it with its own travelled
+    step. The feed is the class +0xa0 slot 0x543a0: it reads the
+    current state's control word `[state+0x12] & 7`, bounds it to 4
+    (`cmp eax,4; ja 0x5443f`) and jumps through the table at 0x54380,
+    whose five dwords read 0x543c6, 0x543dc, 0x543fb, 0x543f2,
+    0x5441b. Mode 0 (0x543c6) is `mov eax,[ebx+0xca]; cdq;
+    xor eax,edx; sub eax,edx; add [ebx+0xa1],eax` - the accumulator
+    is [obj+0xa1], the same word every other mode feeds, and the
+    amount is abs([obj+0xca]), the integrator's own integer px-per-
+    iteration step (0x54358-0x54372). Mode 1 (0x543dc) is the same
+    for [obj+0xce]; mode 2 (0x543fb) adds ds:0xcef40+0x388 (=100)
+    with NO intent test - that is the plain BY_TIME arm; mode 3
+    (0x543f2) adds it behind `cmp [obj+0xba],0`; mode 4 (0x5441b)
+    behind `cmp [obj+0xbe],0` (PR-147/148's BY_TY). Control words
+    5..7 leave the accumulator untouched. LIVE, in a sustained walk
+    (pr516b.jsonl, lion 0x524400, 406.9-408.5 s, 50 Hz): the word
+    moves exactly with the walk's own step. x steps +5/+6 px and
+    the sampled word runs 0,2,6,5,4,3,2 - `feed = |the step|`
+    against the authored walk-row threshold 6, the strict-past gate
+    and the remainder carried (2+4=6 does NOT fire, 6+5=11 fires
+    and leaves 5): PR-100's row arithmetic and PR-116's
+    strict-past rule, live-confirmed on the player. What the
+    accumulator is FOR in a walk - what its thresholds do to the
+    gait - is the cadence question OI-015's last note states.
 
 OI-009: engine fidelity asks, measured and awaiting an owner call:
   reproduce the truncated move-by-dx step (sub-pixel dropped at the
@@ -130,11 +153,50 @@ OI-011: shipped discrepancy: the port drives the player walk to
   origin: PR-79/99/131/135 (HANDOFF 13.88); G-1 referee windows
     (PR-131/134: LEWPL has no A_RUN state - the A_WALK->A_RUN entry
     is an .MOV row question, answer it from data not video)
+  notes: PR-516 PUTS BOTH SIDES ON REGISTER SCALE. Port
+    (/tmp/opencode/pr516_port.log, ZARIA.01, LEO_PLAY_SCRIPT): the
+    walk register holds EXACTLY 250 (the s=10 equilibrium
+    F*s/T at F=100,T=20), the position steps EXACTLY +2 px per
+    iteration = 40 px/s of travel at the 50 ms clock. Live
+    (pr516b/c2.jsonl, lion 0x524400, 50 Hz): the word is +20
+    (1750/583 samples), and the player's own [obj+0xc2] register
+    ramps and settles - in one state family at EXACTLY 500, the
+    s=20 equilibrium of that same authored pair (c2, st_index 5
+    windows: median 398-400, max 500), in another at 622-646, ABOVE
+    it (b/c2 st_index 1: window medians 438-607, max 646). So the
+    player steps the 0x54250 law with the KEYBOARD's word (OI-012)
+    and the port's s=10 is not what the live game feeds it. The
+    measured POSITION rate is still 27-59 px/s in those same
+    windows, because x moves +5/+6 px per step event at ~11/s,
+    not per iteration at 20/s (OI-008, OI-015). What the row now
+    waits for is not "where does 20 halve" (it does not) but which
+    state's F/T pair is in force - the live state array is not in
+    .MOV declaration order, OI-130 - and at what cadence its rows
+    admit. Neither number is settled here and the port's constant
+    stays 10 until they are.
 
 OI-012: does the PLAYER object go through the 0x54250 step at all?
   PR-135 applies the law to both actors as the model; the three
   call sites do not check class
-  status: PARTIAL
+  status: CLOSED BY PR-516
+  notes: YES, and it is the whole of the player's position. The
+    50 Hz live trace samples the player's own integrator registers
+    ([obj+0xc2]/[obj+0xc6], the 100x fixed-point pair): under a
+    held right arrow the x register RAMPS (the +deltas between
+    samples cluster at +100..+111, exactly `idiv(F*s,20)` at
+    F=100,s=20 - the add 0x5434f makes) and settles: in one
+    state family at EXACTLY the s=20 equilibrium of the authored
+    A_WALK pair, (F*s/20)*(100/T) = 500 (pr516c2 st_index 5
+    windows: window medians 398-400, max EXACTLY 500), in another
+    ABOVE it, 622-646 (pr516b/c2 st_index 1 windows) - a register
+    the authored A_WALK pair does not explain, named not fitted.
+    Frame-reconstructed on the engine's own feed boundaries, the
+    position step is `dpos == v_raw // 100` (pr516b: 283 matches
+    against 118 non-matches at |v_raw| >= 100; pr516c2: 79
+    against 13), and the sampled walk shows the register at
+    565-607 with x stepping +5/+6 px. The player DOES step
+    0x54250's law with the KEYBOARD's word. See OI-011 for what
+    that does to the port's constant and OI-008 for the row half.
 
 OI-013: the [obj+0x95] flag that turns `I`/`IC` rows on; the
   [vt+0xbc] test and byte +0xb6 bit 2 behind the drag floor 20;
@@ -239,6 +301,28 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     until that is read the port's walkdir multiply stays the
     stand-in when no authored word is in force - and the G_x
     term 0x542c1, still not added to `add`.
+    PR-516 MEASURES THE CLOCK ITEM AND IT DOES NOT CLOSE CLEAN.
+    One 50 Hz run (pr516b/c2.jsonl, lion 0x524400) feeds the SAME
+    accumulator at different rates per window: one 7.2 s BY_TIME
+    window (st_index 2) at 20.5/s (134 EXACT +100 feeds over
+    7.2 s), while other BY_TIME windows of the same object feed
+    at 5.5-10.3/s (a 32.3 s window at 8.6/s, a 246 s one at
+    7.4/s, the st_index 4 windows at 5.5-6.2/s). The walking
+    state moves its POSITION at 9.4-11.4 steps/s of +5/+6 px =
+    [obj+0xc2]//100 each, i.e. 50-60 px/s - the band PR-515
+    measured - while its row accumulator admits on (nearly) every
+    step (OI-008). So: the row-feed census is NOT a clock
+    referee, PR-516's first reading that "the rig does not
+    distort the loop" is REFUTED as a general statement (it holds
+    for that one 7.2 s window), and the port's model - one
+    iteration per LL_ITER_MS, one position step per iteration -
+    matches neither the walk's ~10/s nor any single rate in the
+    trace. The numbers that DO hold across all of it are the
+    per-event ones: px per position step = the register //100,
+    and the walk's real travel is bounded by the step cadence,
+    not by F/T alone. What decides it: a 50 Hz window of one
+    NAMED state (OI-130) with the [obj+0x95] gate, the row
+    cursor and the guest's timer read together.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
@@ -5344,6 +5428,42 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     both point at the unmodelled SEQ-step words [obj+0xe2/
     e6/ea]); gate_95/accum_a1 live, matching PR-100's
     threshold arithmetic.
+    PR-516 READS THE ROW LAW THAT DECIDES THE CARRY, AND IT
+    IS THE PULL'S RE-FIRE, NOT A PIN. (a) The row feed is
+    the class +0xa0 slot 0x543a0, whose control-word switch
+    (table at 0x54380) feeds [obj+0xa1] with abs([obj+0xca])
+    for BY_X, abs([obj+0xce]) for its y twin, and +100 for
+    the three time arms - a BY_X walk literally feeds its own
+    row clock with its own integer step (OI-008), live
+    confirmed. (b) The authored ZARIA.01 lion script
+    (/tmp/opencode/mov/ZARIA.01_LEW.ZAR_LEW.MOV) puts the I
+    pair INSIDE the row list: [A_JUMP] control=BY_TIME
+    F=180,0 T=20,1 rows 1,75,F 0,350 | 2,75,F 0,350,smpauto
+    | 2,75,I 150,-1200 | ... | `A_JUMP(11)=AC_DUP`;
+    [A_JUMP_S] rows 1,225,F 0,350,smpauto | 2,100 |
+    2,150,I 120,-1200 | 3,300,FC 80,0 | ... | 7,0,WAIT
+    AC_DUP | 8,100,F 0,100 with `A_JUMP_S(9)=AC_DUP` - a
+    list that restarts itself, so its I row is admitted
+    again every pass. (c) THE PROOF THE ADMISSION IS THE
+    GATE: [A_PRE_JUMP] exits `A_JUMP(4)=AC_BREAK_NEXT` - it
+    enters A_JUMP one row PAST that state's only I row, and
+    it authors its own I 250,-1100 once. A state entered
+    past the I row never fires it. (d) So the flight carry
+    this row asked about (+86..100 px over 3.5-3.7 s, live,
+    PR-515) is the I target RE-ADMITTED, not a one-shot
+    impulse: at the authored I x 120-150 the pull holds
+    1.2-1.5 px an iteration, and a run that enters the jump
+    carrying the walk's own register (live 500-646 raw,
+    5-6 px an iteration, OI-011) holds more. The port's
+    one-shot apply plus an x0.8/it decay (+7 px of flight)
+    cannot reach 216 and never could; a leg that models the
+    ramp and the per-admit re-pull can, and the ORIGINAL's
+    own death at the west lip (PR-515) is then what such a
+    leg SHOULD reproduce at that input, not what the level
+    forbids. What still keeps the crossing unproven is the
+    cadence question OI-015 now carries and the state
+    identity OI-130: no measured window in any run is yet
+    named by the game.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that
@@ -8377,3 +8497,44 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
     why the directive exists at all (low), and the 56-file
     lock/lock2 port legs - the real standing-transition
     work now.
+
+OI-130: the live state array is NOT in .MOV declaration order, and
+  the table the engine uses to name states is not reachable from the
+  state object - so no measured window in any 50 Hz run is yet named
+  status: OPEN
+  origin: PR-516 (the run-12/13 state windows; PR-515's st_index map
+    was declaration order and is corrected in that record)
+  notes: WHAT THE OBJECT KEEPS, READ. `[obj+0x50] + [obj+0x5c]*4`
+    is the current state's ENTRY (the dispatcher 0x4ffb0 indexes
+    exactly that); 0x534c0 allocates the entry's object - `mov
+    eax,0x48; call 0x5c320` (the allocator: size in eax, 0x7521f
+    behind it, the failure string at 0x924f4) - and 0x51770/0x51eb0
+    fill it: `[state+0x0] = the record it was built from` (0x51793
+    `mov [eax-0x1a],edx`, 0x51ed8 `mov [ebx],edx`), row counters
+    zeroed at +0x8/+0xa/+0xc, a vector based at +0x2e, and a vptr
+    0xa260c at +0x44 (0x517c2). No name anywhere in the object.
+    WHAT THE ENGINE USES INSTEAD, READ: 0x53440 resolves a state
+    NAME against a vector of the `[edi]=data, [edi+8]=count` shape
+    with entry i at `[data+i*8]`, and 0x76a69 is a case-folding
+    strcmp against text INLINE at entry+0. That vector belongs to the
+    owner record, not to the state object: the two tables are
+    parallel and separate, and nothing in the 0x48-byte object points
+    back to its entry. WHY IT MATTERS: every physics claim of
+    OI-011/OI-012/OI-015 is about a window whose state is unnamed -
+    the same st_index behaves as a walk in one run and the authored
+    declaration order says A_JUMP_S - and the crossing arithmetic of
+    OI-124 needs ONE named state measured end to end. WHAT THE TOOL
+    NOW DOES: tools/golden_level_trace.py resolves the entry through
+    three routes and writes which one hit (`state_name`,
+    `state_ptr`, `state_how`, `state_src`) - (a) the record pointer
+    at state+0x0 when that record opens on an inline name, (b) one
+    heap scan for a dword equal to the state-object pointer, with the
+    name inline before it or pointed to from just before it (the
+    0x53440 shape), (c) failing both, one hex dump of the state
+    object and of its +0 record, so the layout is evidence and not
+    assumption. WHAT CLOSES IT: any one of those routes returning a
+    name on a live level - route (a) is the cheap one and depends on
+    whether the parsed record keeps its name inline at +0 after the
+    .MOV parse (PR-418/436 read that layout in a different parser
+    path); if it does not, the owner record's [rec+0x3c] vector must
+    be reached through the object's class/owner chain and sampled.
