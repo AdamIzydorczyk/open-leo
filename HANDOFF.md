@@ -27,7 +27,7 @@ What exists and works (all verified by `make verify-all`, section 3):
 | level scene | 320x200 world view shown 2x; world size from `back_rect` or the reference layer; per-layer parallax (`speed=`, `main_back=`) for PCM layers, the PCX backdrop and every object; HUD from `BELKA*.DES` |
 | objects | 827+ placements, art by each state's `seq=`, `.MOV` state machines (loop until a transition fires; `GEN K_GENn`, `AC_BREAK_NEXT`); PR-93: the 3-comma static image lines (`<LEAF>,<name>.seq,x,y` -> that CD leaf's `.SEQ`, drawn at the authored x,y behind the actors) and the 0,0 entries = attached children (joined+counted, never instantiated at the world origin); PR-107: a `TARGET(N)=<cond>` line carries an authored START ROW and the target state is entered at that row (same rule for the lion and scene objects) |
 | lion (play mode) | walks on the level's own ground (`.PLT`) with his current ANIMATION's shape-box bottom as the contact line (PR-97: `ll_player.contact`, `ll_seq_shape_contact`, `mov_state_contact`), steps the engine's OWN velocity law at the engine's OWN cadence (PR-523, default): the row clock is fed every 50 ms iteration - the constant 100, or for a BY_X state the persisted whole-px step word - while the velocity registers, the position step at register//100, the ground queries and the bounds run only when the authored row step answers (a threshold crossed, or a `Wait` clause matched), plus exactly one seed pass at the rising edge of the intent word and at a zero FEED WORD (`[obj+0xca]`) met by a held intent (PR-522's cold start, re-keyed by PR-529), and the ordinary pass at a row whose clause refuses (a parked row parks the cursor, not the body); `v -= T*v/100` then `v += F*s/20` with the key intent `s` = ±20, the keyboard's word the live capture carries and the word of EVERY state, not a BY_X-only one (PR-529: pr516i's named A_JUMP window is byte-exact on both the pull and the release), the port's own `auto_walk` keeping the BY_X scope (PR-520/PR-523, replacing PR-135's fitted ±10; `LEO_PLAY_ROW_PHYSICS=0` restores the old per-iteration model for comparison only); jumps (ESTIMATED units), keys facing-relative (Model M, PR-85), camera follows (lead 100/220 - PR-136's absolute camera read CONFIRMS the right lead at 95-108; PR-137 APPLIED the grounded anchor at 128 + the world clamp (the 175..180 band was the clamp, not the anchor), pinned hermetically by `ll_level --follow-selftest`), HUD shows energy/lives (PR-531 SHIPS the chain: start 5 per 0x5d2f9, the line-crossing step writes ONLY energy -1 (0x54478) and the NEXT step spends a life with energy 100 and the respawn (the 0x503d0 stand-in), the fifth fall exits at loop code 2 (0x4ae82) and the code-2 consumer resets the lives to 5 before its empty-queue stop (0x5d2f9/0x5d38e); the death LINE ships too (PR-533: ydead = the main_back layer .PCM height + 0x1f4 read as sx16 per 0x54467, back_rect height + 0x1f4 on a NULL desc, lew_rect y1 only with neither - the PR-532 table per level, ZARIA = 1200). What stays a stand-in: the engine's own state-2+wrap trigger, OI-132 PARTIAL) |
-| collision | push-out ported from the machine code (`FUN_00042de0/42cf0`), solid/semi-solid response, damage from an enemy ONLY through its own ATC window (the authored `atc_on` rows) and the 0x550c0 clash rule - a bare touch never hurts the lion (PR-139 deleted the port's unconditional contact damage); the enemy's own ATC-window attack when armed (PR-90's stand-in - ON by default since PR-534's owner goal, `LEO_PLAY_DANGER=0` the named comparison switch), balloon pickup; ON by default except RAN.01 |
+| collision | push-out ported from the machine code (`FUN_00042de0/42cf0`), solid/semi-solid response, damage from an enemy ONLY through its own ATC window (the authored `atc_on` rows) and the 0x550c0 clash rule - a bare touch never hurts the lion (PR-139 deleted the port's unconditional contact damage); the enemy's own ATC-window attack when armed (PR-90's stand-in - ON by default since PR-534's owner goal, `LEO_PLAY_DANGER=0` the named comparison switch), balloon pickup; the `ani_plat=` seat tables (KAMIEN/KATAPULT/KILOF_PL/PALMA, PR-335's parse, PR-342's row-admit motion) ride the SAME ground law since PR-535 (`LEO_PLAY_SEAT=0` the named comparison switch) - the lion lands on and walks on the KATAPULT pad's own table; what is NOT modelled is being CARRIED by a moving seat (OI-128) and the engine's own seat ASK chain (OI-122/OI-123); ON by default except RAN.01 |
 
 What does NOT exist yet (the real gap to "a playable game"): combat
 motion beyond the hits (the lion's attack landed in PR-89 and enemies
@@ -40,7 +40,8 @@ PR-150/241, the LINA rope since PR-528), and since PR-529
 ZARIA.01 runs end to end under the keys - spawn, the leap over
 408..624, the pool dive and the level's own exit; what stays open
 is whether the ORIGINAL crosses that gap by jump or by the seat
-chain (OI-124), level flow (the
+chain (OI-124 - the seat is stood on since PR-535, not yet ridden
+across), level flow (the
 end-of-level path is ported in two
 forms - the authored `end_level` row and its loop code 1 since
 PR-194/199, and since PR-526 the level's OWN lion class raising the
@@ -1281,6 +1282,24 @@ ESTIMATE: shape payloads for lion-vs-object tests
   evidence: model choice: how the original resolved two elements into its
     single-payload routine is unpinned; same-payload pairings stay byte-
     identical (selftest-pinned, PR-89)
+
+MODEL CHOICE: the ani_plat= seat tables as ground (PR-535)
+  where: ll_level.c `play_ground`, play_ctx.gline/gplt, `.seat`
+  value: a seat table of the four classes that install the
+    [obj+0xa5] table verbs (KAMIEN/KATAPULT/KILOF_PL/PALMA, the
+    PR-338 census) joins the player's ground as one synthetic
+    polyline, re-read every iteration, under the SAME one-way
+    feet-on-line law as a .plt line; the x limit is the sweep
+    over the table's own records, not 0x45380's pair test; no
+    carry of a moving seat (OI-128)
+  evidence: PR-335 (the table), PR-342 (its motion), PR-348/349
+    (the seat sampler = the same clearance over a level pair) and
+    PR-360 (the aim block's fill is the SEQ land anchor = the
+    art's contact offset) point at one law, but no engine call
+    path is read that hands a seat to the PLAYER's query, so
+    this is the port's wiring, not a recovered chain:
+    OI-122/OI-123 keep the ask. Pinned behaviour by ly_seat /
+    ly_seat_off; `LEO_PLAY_SEAT=0` is the comparison switch.
 
 
 CORRECTION TO THE ROW-ABOVE CLAIM, added 2026-11-17 by PR-114 and
@@ -6319,6 +6338,19 @@ SHIPPED - DOCS ONLY, NO T5 BEHAVIOUR CHANGED:
         A_WPAD's fall into the locked pool.
     F7. [gate] the standing end pass only (OI-096): the Windows
         legs once, at the end, never per PR.
+
+PR-535 (owner goal 2026-11-26, "jumping on palms"): the seat
+tables ANIPL2.DES authors are GROUND now. The four classes whose
+view installs the [obj+0xa5] table verbs (KAMIEN/KATAPULT/
+KILOF_PL/PALMA) contribute their own table, re-read every
+iteration so PR-342's row-admit shift is where the lion is asked,
+into the same one-way feet-on-line ground the .plt lines use;
+ly_seat / ly_seat_off pin the KATAPULT pad catch and the drop at
+the last record's x. T5's seat half is OPEN further down this
+list: the KATAPULT's own `1,0,WAIT K_GEN1` row admitted nothing
+in that run (OI-125), a standing lion is not CARRIED by a seat
+(OI-128), and the PALMA spans are not yet reached from the east
+bank - the balloon and fruit legs of the goal wait on that chain.
 
 **T6. Level flow.** `end_level` directive, `AC_LEAVE`, the vulture ride of
 ZARIA I, the map -> level -> map loop, TUNGA I <-> II exchange

@@ -286,6 +286,16 @@ box (`|dx| < 40 && |dy| < 50`, 0x61b6e), and the enemy then lands its
 authored `damage=` through its own `ATC_ON` window. This is the port's
 named stand-in for the engine's per-class attack AI (which stays open);
 `=0` restores the pre-534 off mode for comparison.
+`LEO_PLAY_SEAT=0|1` (play mode; PR-535, the same owner ruling - the goal
+asks for JUMPING ON PALMS): a placement whose class installs the animated
+platform's surface-table verbs (KAMIEN / KATAPULT / KILOF_PL / PALMA, the
+PR-338 census of the `[obj+0xa5]` family) contributes its OWN seat table -
+the `ani_plat=` line PR-335 parses, moved at the row admit by the class's
+`+0xa4` verb PR-342 ports - as ground for the lion's terrain queries, with
+the same one-way, feet-on-line law as the `platformy=` `.PLT` polylines.
+The default is ON; `=0` restores the seat-free ground every earlier leg
+derived against. Being CARRIED by a moving seat is not modelled yet
+(OI-128).
 `LEO_PLAY_ROW_PHYSICS=0` (play mode; the hook is PR-518's, its default
 is PR-523's) is the physics-cadence switch. Default — unset, or any value
 without a leading `0` — is the engine's own cadence, measured off the live

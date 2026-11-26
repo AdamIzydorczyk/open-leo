@@ -806,7 +806,13 @@ verify-play: ll_level
 # tick. The default-mode counterpart of any such walk is visible in the
 # probes kept for the record: with the hook unset the same legs print the
 # DANGER arm at the class-box tick and an ATTACKS window hit (see the
-# PR-534 record for /tmp/opencode/pr534_trv_default.log).
+# PR-534 record for /tmp/opencode/pr534_trv_default.log - those probes
+# are named there). The SAME rule now applies to the SECOND default this
+# repo ships: LEO_PLAY_SEAT (PR-535, the ani_plat= seat tables riding
+# the player's ground) defaults ON, the two legs named "seat ground"/
+# "seat off-switch" are its proof and control, and every other ZARIA.01
+# leg sets LEO_PLAY_SEAT=0 so its pins stay the seat-free derivation its
+# comment derives.
 
 # PR-97 RE-PIN NOTE (applies to every y in this target): the player's x,y
 # is the POSITION POINT; what stands on the .plt line is the animation's
@@ -1100,6 +1106,7 @@ ifeq ($(PX_DATA),1)
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 LEO_PLAY_SOLID=1 \
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD" LEO_LEVEL_PPM=/tmp/opencode/ly_hit.ppm \
+	  LEO_PLAY_SEAT=0 \
 	  LEO_LEVEL_PPM_TICK=80 ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_hit.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play hit FAILED (rc=$$rc)"; exit 1; fi
@@ -1178,6 +1185,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=4 LEO_PLAY_SOLID=1 \
 	  LEO_PLAY_SCRIPT="1:FWD 26:FIRE,F1 27:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_atk.ppm LEO_LEVEL_PPM_TICK=128 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_atk.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play attack FAILED (rc=$$rc)"; exit 1; fi
@@ -1304,6 +1312,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 LEO_PLAY_SOLID=1 \
 	  LEO_PLAY_SCRIPT="1:FWD 30:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_dgr.ppm LEO_LEVEL_PPM_TICK=152 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_dgr.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play enemy attack FAILED (rc=$$rc)"; \
@@ -1396,6 +1405,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=12 LEO_PLAY_SOLID=1 \
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_trv.ppm LEO_LEVEL_PPM_TICK=380 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_trv.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play traverse probe FAILED (rc=$$rc)"; \
@@ -1786,6 +1796,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 \
 	  LEO_PLAY_SCRIPT="1:NONE" LEO_LEVEL_PPM=/tmp/opencode/ly_zidle.ppm \
 	  LEO_LEVEL_PPM_TICK=40 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zidle.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA start/idle FAILED (rc=$$rc)"; \
@@ -1858,6 +1869,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:NONE 52:BKWD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zkeys.ppm \
 	  LEO_LEVEL_PPM_TICK=55 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zkeys.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA press/release FAILED (rc=$$rc)"; \
@@ -1930,6 +1942,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 \
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zcam.ppm LEO_LEVEL_PPM_TICK=54 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zcam.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA cam-y leg FAILED (rc=$$rc)"; \
@@ -1990,6 +2003,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 \
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:NONE 52:BKWD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zwalk.ppm LEO_LEVEL_PPM_TICK=82 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zwalk.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA left-walk FAILED (rc=$$rc)"; \
@@ -2127,6 +2141,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=4 \
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 52:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zjump.ppm LEO_LEVEL_PPM_TICK=96 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zjump.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA jump FAILED (rc=$$rc)"; \
@@ -2140,6 +2155,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=4 \
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 52:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zland.ppm LEO_LEVEL_PPM_TICK=100 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zland.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA jump land-run FAILED (rc=$$rc)"; \
@@ -2280,6 +2296,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_ASK=1 LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 \
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 51:JUMP 70:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zask.ppm LEO_LEVEL_PPM_TICK=96 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zask.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA ladder ask FAILED (rc=$$rc)"; \
@@ -2331,6 +2348,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_ASK=1 LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 \
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 45:BKWD 50:JUMP 62:NONE" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zask2.ppm LEO_LEVEL_PPM_TICK=64 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zask2.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA ladder ask-mirror FAILED"; \
@@ -2405,6 +2423,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=3 \
 	  LEO_PLAY_SCRIPT="20:FIRE,F1" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_zfight.ppm LEO_LEVEL_PPM_TICK=55 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zfight.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA fight FAILED (rc=$$rc)"; \
@@ -2423,6 +2442,7 @@ ifeq ($(PX_DATA),1)
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=1 \
 	  LEO_PLAY_SCRIPT="20:FIRE 24:NONE" \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_zfire.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA fire-alone FAILED (rc=$$rc)"; \
@@ -2607,6 +2627,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 290:NONE" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_climb.ppm \
 	  LEO_LEVEL_PPM_TICK=340 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_climb.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA climb chain FAILED (rc=$$rc)"; \
@@ -2727,6 +2748,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_ASK=1 \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_revwalk.ppm \
 	  LEO_LEVEL_PPM_TICK=510 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_revwalk.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA reverse-walk FAILED (rc=$$rc)"; \
@@ -2791,6 +2813,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_ASK=1 \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_rope.ppm \
 	  LEO_LEVEL_PPM_TICK=445 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_rope.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA rope FAILED (rc=$$rc)"; \
@@ -2939,6 +2962,7 @@ ifeq ($(PX_DATA),1)
 180:UP,JUMP 181:UP" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_cjump.ppm \
 	  LEO_LEVEL_PPM_TICK=318 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_cjump.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA ladder-jump FAILED (rc=$$rc)"; \
@@ -3023,6 +3047,7 @@ ifeq ($(PX_DATA),1)
 180:FWD,UP,JUMP 181:FWD,UP" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_cjump_fwd.ppm \
 	  LEO_LEVEL_PPM_TICK=318 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_cjump_fwd.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA ladder-leap-forward FAILED (rc=$$rc)"; \
@@ -3113,6 +3138,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_pool.ppm \
 	  LEO_LEVEL_PPM_TICK=700 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_pool.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA pool crossing FAILED (rc=$$rc)"; \
@@ -3176,6 +3202,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_lives.ppm \
 	  LEO_LEVEL_PPM_TICK=1500 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_lives.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA life chain FAILED (rc=$$rc)"; \
@@ -3332,6 +3359,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_PLAY_DANGER=0 LEO_PLAY_SCRIPT="1:FWD 40:JUMP 42:NONE 100:FWD,UP 200:FWD,DOWN" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_cdown.ppm \
 	  LEO_LEVEL_PPM_TICK=318 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_cdown.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA ladder-descend FAILED (rc=$$rc)"; \
@@ -3491,6 +3519,7 @@ ifeq ($(PX_DATA),1)
 263:NONE 264:JUMP 266:NONE" \
 	  LEO_PLAY_ASK=1 LEO_LEVEL_PPM=/tmp/opencode/ly_chang.ppm \
 	  LEO_LEVEL_PPM_TICK=400 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_chang.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA hang-and-hop FAILED (rc=$$rc)"; \
@@ -3621,6 +3650,7 @@ ifeq ($(PX_DATA),1)
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=2 \
 	  LEO_PLAY_SCRIPT="1:NONE" LEO_PLAY_STATE="5:A_WPAD" \
 	  LEO_LEVEL_PPM=/tmp/opencode/ly_dive.ppm LEO_LEVEL_PPM_TICK=40 \
+	  LEO_PLAY_SEAT=0 \
 	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
 	  > /tmp/opencode/ly_dive.log 2>&1; rc=$$?; \
 	  if [ $$rc -ne 0 ]; then echo "play ZARIA dive-end FAILED (rc=$$rc)"; \
@@ -3836,6 +3866,73 @@ ifeq ($(PX_DATA),1)
 	      /tmp/opencode/ly_tun.log \
 	  && echo "play per-level: TUNGA.11 LEW.TUN set spawns in its declared A_WALK and walks its own .plt/bounds on FWD - the intent-edge pass, then one pass per 6 px of its own row feed (130, 234, 318, 385 raw), so the frame rate and the walk rate are one quantity (no level special-casing in code)" \
 	  || { echo "play TUNGA.11 grep FAILED"; cat /tmp/opencode/ly_tun.log; exit 1; }
+# PR-535 (OI-072, the ground-SOURCE remainder): the ani_plat= seat
+# tables ride the ground the lion's terrain query is asked with. ZARIA.01
+# ships four of them in ANIPL2.DES (the `ani_plat=none,anipl2.des,none`
+# line PR-302 anchored); PR-335 ports their parse and PR-342 the class
+# +0xa4 verb that walks them, and until now NOTHING READ the table - the
+# port acted on `platformy=` only. The first seat is the KATAPULT pad:
+# placement 300,588, table line `1 7,45;40,45 -6300,-1350` = TWO records
+# stored ABSOLUTE (0x45200 at 0x1e52a) at 307,633 and 340,633, i.e. 16 px
+# above the walk line (ZARIA_A.PLT line 1 runs -50,680!408,684, so at
+# x=330 the grass is at 683). MODEL CHOICE, counted with OI-072/OI-124:
+# the seat rides the SAME ground law as a .plt line (the one-way,
+# feet-on-line sweep of PR-272), because PR-348..351/392/393 measured the
+# seat sampler as the same clearance over a level pair and PR-360 measured
+# the aim block's fill - the SEQ element's land anchor - as the art's
+# contact offset, the very feet point the .plt law uses. What the seat
+# does NOT get here: the x-bracket's own record-pair search (the ground
+# query samples segments over the polyline, so the table answers only
+# across its OWN records' x-range - which is the same boundary the
+# seat_ask_core bracket of 0x45380 draws, just sampled by the ground
+# sweep instead of by the pair test) and any land-ATTACH (OI-128: the
+# lion standing on a seat is not yet carried by the holder's [obj+0xca]).
+# Both are named in the leg text. LEO_PLAY_SEAT=0 is the named
+# comparison switch (the PR-523/PR-534 pattern); every other ZARIA.01 leg
+# now sets it, so its clean-law derivation stays exactly what it derived.
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_SCRIPT="1:FWD 70:NONE 72:JUMP 74:FWD 80:NONE 125:FWD" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_seat.ppm LEO_LEVEL_PPM_TICK=170 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_seat.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play seat ground FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_seat.log; exit 1; fi
+	@grep -q 'play tick 115: state A_JUMP seq jump frame 8 pos 324,580 grounded 0' \
+	      /tmp/opencode/ly_seat.log \
+	  && grep -q 'play tick 119: state A_JUMP seq jump frame 8 pos 324,601 grounded 1' \
+	      /tmp/opencode/ly_seat.log \
+	  && ! grep -q 'play tick 124: state A_JUMP seq jump frame 8 pos 324,651 grounded 1' \
+	      /tmp/opencode/ly_seat.log \
+	  && grep -q 'play tick 121: state A_WALK seq walk frame 4 pos 325,601 grounded 1' \
+	      /tmp/opencode/ly_seat.log \
+	  && grep -q 'play tick 134: state A_WALK seq walk frame 8 pos 337,601 grounded 1' \
+	      /tmp/opencode/ly_seat.log \
+	  && grep -q 'play tick 136: state A_WALK seq walk frame 9 pos 341,601 grounded 0' \
+	      /tmp/opencode/ly_seat.log \
+	  && grep -q 'play: A_WALK -> A_FALL_DOWN' /tmp/opencode/ly_seat.log \
+	  && grep -q 'play tick 161: state A_WALK seq walk frame 10 pos 357,651 grounded 1' \
+	      /tmp/opencode/ly_seat.log \
+	  && echo "play seat ground (PR-535, OI-072): the jump at 72 crosses the pad's x-bracket (307..340) in the air and the SAME flight that the off-switch control lands at 651 on the grass is caught 50 px higher - 324,601 grounded at 119, the position point 32 px (the landing state's own contact, PR-97) under the seat line 633 the .des stores absolute; walking east keeps him on the table (325,601 at 121, 337,601 at 134) until the x leaves the table's LAST record at 341, where the ground query has nothing above the grass left and the authored step-down chain runs (A_WALK -> A_FALL_DOWN at 137, 341/345/351/356, back on the grass at 357,651 at 161). The KATAPULT's own A_RUN never admitted a row in this run - its row 1 is \`1,0,WAIT K_GEN1\` and the lion's K_GEN1 (tick 78) woke the KORONA/BAL/LINA rows but no KAT line - so this measures the table AS AUTHORED, unmoved: the seat's own wake + the launch pair -6300,-1350 stay OI-125, and being CARRIED by a moving seat (the holder's [obj+0xca]) stays OI-128 (ok)" \
+	  || { echo "play seat ground grep FAILED"; cat /tmp/opencode/ly_seat.log; exit 1; }
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_SEAT=0 \
+	  LEO_PLAY_SCRIPT="1:FWD 70:NONE 72:JUMP 74:FWD 80:NONE 125:FWD" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_seat_off.ppm LEO_LEVEL_PPM_TICK=170 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_seat_off.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play seat off-switch FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_seat_off.log; exit 1; fi
+	@grep -q 'play tick 115: state A_JUMP seq jump frame 8 pos 324,580 grounded 0' \
+	      /tmp/opencode/ly_seat_off.log \
+	  && grep -q 'play tick 119: state A_JUMP seq jump frame 8 pos 324,606 grounded 0' \
+	      /tmp/opencode/ly_seat_off.log \
+	  && grep -q 'play tick 124: state A_JUMP seq jump frame 8 pos 324,651 grounded 1' \
+	      /tmp/opencode/ly_seat_off.log \
+	  && ! grep -q 'pos 324,601 grounded 1' /tmp/opencode/ly_seat_off.log \
+	  && echo "play seat off-switch (PR-535 control): the SAME script with LEO_PLAY_SEAT=0 flies the identical line (324,580 at 115) and passes straight THROUGH the seat line - 324,606 grounded 0 at 119 - landing on the grass at 324,651 at 124. Nothing but the seat ground differs between the two legs (ok)" \
+	  || { echo "play seat off-switch grep FAILED"; cat /tmp/opencode/ly_seat_off.log; exit 1; }
 else
 	@echo "verify-play: SKIP data legs (needs $(DATA) + LEO_HD_DIR fixtures; see NEXT_STEPS.md)"
 endif

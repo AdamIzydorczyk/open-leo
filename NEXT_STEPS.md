@@ -69808,3 +69808,133 @@ GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named verify-SKIPs
   are NOT re-timed by this PR: that route question is the same
   one OI-078/OI-124 already carry, with the fight now part of
   the route.
+
+## PR-535 - THE SEAT TABLE IS GROUND: THE LION LANDS ON THE
+KATAPULT PAD (owner goal 2026-11-26: "continue work on zaria 1 to
+add fight mehanics, collecting fruits and throwing, collecting
+baloons to restore health and jumping on palms" - the palms half,
+first step)
+KIND: port
+SUBSYSTEM: the play-mode ground source (the ani_plat= seat
+  tables) - OI-072's USE half.
+ADDRESSES: none NEW is read. The load-time absolute storage
+  0x45200 at 0x1e52a and the table reader 0x45120 are PR-335's;
+  the class +0xa4 row-admit move 0x1e5c0/0x1e690 is PR-341/342's;
+  the pair bracket 0x45380 and the seat ask chain are
+  PR-336/348/349's; the feet-on-line ground law and its contact
+  offsets are PR-97/272/360's. This record wires those
+  ALREADY-READ tables into the ground the player step is asked
+  with, and measures the result on the level.
+NAMES: LEO_PLAY_SEAT, ANIPL2.DES, ani_plat=, KATAPULT, PALMA,
+  KAMIEN, KILOF_PL, A_RUN, WAIT K_GEN1, A_JUMP, A_WALK,
+  A_FALL_DOWN, ly_seat, ly_seat_off, ZARIA_A.PLT, ZARIA.01.
+CODE: yes: play_ctx gains .seat (default 1); the per-iteration
+  play_ground() in ll_level.c rebuilds a ground ll_plt of the
+  level's .plt polylines plus one SYNTHETIC polyline per seat
+  table of those four classes, re-read at call time so PR-342's
+  moved table stands where it moved to; the array is sized at
+  play setup and freed at the end; play_advance asks the player
+  step against it. A seat needs TWO records (0x45388 tests the
+  record count, 0x45380 brackets a PAIR).
+HOOKS: LEO_PLAY_SEAT (new; ON by default, =0 the named
+  comparison switch; README documents it).
+OPENS: none new. OI-072 keeps its grammar halves but its
+  "nothing READS the moved table" line is closed; OI-124 gets a
+  STANDS-ON note (the pad catch, and what the row still lacks:
+  the ride across 408..624); OI-125 gets its UNEXERCISED half
+  (no KAT row admitted in the pinned run) and OI-128 the
+  rider/attach this wiring does NOT do.
+CLOSES: OI-072's USE half as named in that row (the row stays
+  OPEN for its grammar questions).
+CORRECTS: none - the seat law itself stays unread here; this
+  wiring is the port's MODEL CHOICE, named in the code and in
+  this record, not a recovered engine call path.
+GATE: make 0 warnings; verify-all fixtures rc=0 81 (ok);
+GATE-FIXTURE-FREE: rc=0 16 (ok) + 21 named verify-SKIPs
+      (/tmp/opencode/pr535_gate4.log, pr535_gatefree2.log and
+      pr535_gate5.log, the final tree; the two seat legs' own
+      logs are the re-generated ly_seat.log / ly_seat_off.log.)
+
+- WHY. The goal names JUMPING ON PALMS. ZARIA.01 authors its
+  stand-up surfaces in ANIPL2.DES - the `ani_plat=none,anipl2.
+  des,none` line PR-302 anchored, four entries: the KATAPULT pad
+  and three PALMA spans. PR-335 parses their tables and PR-342
+  ports the class verb that walks them, but the port acted on
+  `platformy=` only, so nothing the lion could stand on was ever
+  built from them (OI-072's named remainder). This PR is that
+  USE half: the tables become ground, exactly as authored, and
+  the leg measures what the level then does.
+
+- RED-FIRST. The legs were written against the UNWIRED binary
+  first: with no seat ground the proof leg goes red on its own
+  pin - no `pos 324,601 grounded 1` anywhere (/tmp/opencode/
+  pr535_red.log, the pre-change run) - while the control's
+  numbers (606 through, grass at 651 at 124) are what the
+  seat-free binary already printed. The reverse mutation is
+  pinned in the suite: the proof leg run with `LEO_PLAY_SEAT=0`
+  fails its grep (that IS the control leg), and the control leg
+  without the switch fails its own `606 grounded 0` pin.
+
+- THE GEOMETRY, hand-derived. ANIPL2.DES line 2 is
+  `KATAPULT,kat.ani,kat.mov,300,588` then `1 7,45;40,45
+  -6300,-1350`: count 1, so TWO records, stored ABSOLUTE at
+  307,633 and 340,633 (0x45200 at 0x1e52a, PR-335). ZARIA_A.
+  PLT line 1 runs `-50,680!408,684`, so the grass at x=330 is
+  683: the pad's top stands 16 px above the walk line. The
+  catch's position point is 601 = 633 - 32, and 32 is that art's
+  WALK contact from the PR-97 re-pin note (the same 32 that puts
+  walking pos at 651 on the grass line 683): the CONTACT LINE is
+  what stands on the seat, exactly as on a .plt line - that is
+  the model choice, stated here and in the code.
+
+- THE MEASURED CATCH. `1:FWD 70:NONE 72:JUMP 74:FWD 80:NONE
+  125:FWD`: the walk stops at x 290, the JUMP press at 72
+  launches, the resumed FWD drifts the flight east across the
+  pad, and BOTH legs fly the identical line up to the seat -
+  324,580 at 115 in each. Then they part: with the seat the
+  flight is CAUGHT at 324,601 grounded 1 at 119; with
+  `LEO_PLAY_SEAT=0` it passes straight through that line (324,
+  606 grounded 0 at 119) and lands on the grass at 324,651 at
+  124. Walking east then rides the table - 325,601 at 121, 330,
+  601 at 130, 337,601 at 134 - until x passes the table's LAST
+  record: 341,601 grounded 0 at 136, `A_WALK -> A_FALL_DOWN` at
+  137, and the authored step-down chain (341/345/351/356, the
+  same 6-tick phase PR-533 named in ly_trv) returns him to the
+  grass at 357,655 at 160, walking at 357,651 at 161. That
+  boundary is where the ground sweep stops covering the poly-
+  line's own records - the same x 340 where 0x45380's seat
+  bracket closes. The agreement of BOUNDARY is recorded; an
+  agreement of LAW is not claimed.
+
+- UNMOVED, AND NAMED. The KATAPULT's own `[A_RUN]` admitted no
+  row in this run: its row 1 is `1,0,WAIT K_GEN1`, the lion's
+  jump raised K_GEN1 at 78 and the log shows the KORONA, all six
+  BAL and both LINA rows taking THEIR K_GEN1 line while no KAT
+  line appears - and the catch position is byte-stable from 119
+  to 136, so this measures the table AS AUTHORED, at its load
+  position. The seat's own wake and its trailing launch pair
+  `-6300,-1350` (the [obj+0xb1]/[obj+0xb5] slot PR-336 reads
+  and nothing applies) stay OI-125's; being CARRIED by a seat
+  that does move (the holder's [obj+0xca]) stays OI-128's; the
+  engine's own ask chain (0x45320/0x45400, the 0x45471 held-
+  surface waiver) stays OI-122/OI-123's.
+
+- SCOPE RULE. 24 ZARIA.01 play legs now carry
+  `LEO_PLAY_SEAT=0` explicitly (the PR-534 convention restated
+  at the top of the target), so no gait/pit/climb/rope/pool/
+  death-line derivation moved under this wiring: verify-play and
+  then verify-all ran green with the scoping lines in place, and
+  the only legs printing seat-line positions are ly_seat /
+  ly_seat_off. The pad sits INSIDE ly_trv's walk and that leg's
+  numbers are unchanged with and without the seat, because the
+  ground query is one-way - a surface 16 px ABOVE the feet does
+  not step the lion UP onto it. The seat needs a JUMP, which is
+  what the goal's word "jumping" describes.
+
+- WHAT THIS OPENS FOR THE GOAL. Balloons and fruit both need a
+  route to the canopy and the east bank that does not raise a
+  K_GEN1 pop, and the seat chain is the authored route (OI-124).
+  The next step this suggests is the PALMA chain from the east
+  bank - ZARIA_A.PLT already carries the climb (the 649,623 /
+  623,587 / 555 lines) and the first PALMA table top is 475 -
+  and the seat's own motion, the missing half OI-125 names.

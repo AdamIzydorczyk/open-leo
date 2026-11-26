@@ -5353,6 +5353,27 @@ typedef struct {
     int danger;                             /* PR-90: the DANGER + class   *
                                              * MAIN box arming stand-in    *
                                              * (off by default)            */
+    int seat;                               /* PR-535: the ani_plat= seat  *
+                                             * tables ride the ground      *
+                                             * (ON by default); 0 is the   *
+                                             * named comparison switch     */
+    /* PR-535 (OI-072/OI-124): the ground the player step is asked with.
+     * gline[0 .. plt.n) mirrors the level's .plt polylines and the slots
+     * after it carry one SYNTHETIC polyline per seat object - the object's
+     * OWN surface table (the [obj+0xa5] family PR-338 censused: only the
+     * KAMIEN / KATAPULT / KILOF_PL / PALMA class views install that
+     * table's reader and ask verbs), as it currently stands AFTER the
+     * PR-342 row-admit shift. play_ground rebuilds this every iteration,
+     * so the terrain the lion is asked against contains the moved seat
+     * table at the position it reached. gline is sized at play setup;
+     * NULL - no LEO_PLAY_SEAT, or an allocation failure - keeps the
+     * old, seat-free ground. */
+#define SEAT_GND_MAX 16                     /* ZARIA.01 ships 4; the cap  *
+                                             * only bounds the seat slots */
+    ll_poly *gline;                         /* malloc'd at play setup:    *
+                                             * plt.n + SEAT_GND_MAX slots */
+    ll_xy gpt[SEAT_GND_MAX][OBJ_MAXSEAT];
+    ll_plt gplt;
     int cam_ox, camy_v, camy_set;           /* PR-72: camera follow state      */
 } play_ctx;
 
@@ -8174,6 +8195,53 @@ static int contact_model_selftest(void)
     return bad;
 }
 
+/* PR-535: build the ground for one player iteration: the level's .plt
+ * polylines first, then one synthetic polyline per seat table currently
+ * carried by a placement of the four classes that install the [obj+0xa5]
+ * table family (PR-338's census: the table reader 0x1e630/0x1e510 at
+ * +0x18 and the ask 0x1e970/0x1e570 at +0x78 resolve ONLY for KAMIEN,
+ * KATAPULT, KILOF_PL and PALMA - the other .des tables, LINA's and
+ * GRABG's among them, sit behind the OTHER family's ask chain, which is
+ * OI-123/OI-128's open half and must NOT become ground here). The
+ * coordinates are read AT CALL TIME, so the table stands where the
+ * PR-342 row-admit shift has walked it. A table needs two records to
+ * answer at all - 0x45388 tests the record count and 0x45380 brackets a
+ * PAIR. MODEL CHOICE, counted with OI-072/OI-124: the seat line rides
+ * the SAME ground law as a .plt line (feet-on-line, one-way, the
+ * sweep of PR-272), because PR-348..351/392/393 measured the seat
+ * sampler to be the same clearance over a level pair and PR-360
+ * measured the aim block's fill - the SEQ element's land anchor - to be
+ * the art's contact offset, the same feet point the .plt law already
+ * uses; the engine's separate idiv truncation window changes nothing
+ * when every sampled record pair is level, which all four shipped ZARIA
+ * tables are (PR-352's census). */
+static void play_ground(play_ctx *pl, const lvl_obj *objs, int nobj)
+{
+    int n = pl->plt.n, k = 0;
+
+    for (int i = 0; i < n; i++)
+        pl->gline[i] = pl->plt.line[i];
+    for (int j = 0; j < nobj && k < SEAT_GND_MAX; j++) {
+        const lvl_obj *o = &objs[j];
+        if (o->dead || o->nseat < 2 || !o->sc)
+            continue;
+        if (!ci_eq(o->sc->leaf, "PALMA") &&
+            !ci_eq(o->sc->leaf, "KATAPULT") &&
+            !ci_eq(o->sc->leaf, "KAMIEN") &&
+            !ci_eq(o->sc->leaf, "KILOF_PL"))
+            continue;
+        for (unsigned i = 0; i < o->nseat; i++) {
+            pl->gpt[k][i].x = o->seat_x[i];
+            pl->gpt[k][i].y = o->seat_y[i];
+        }
+        pl->gline[n + k].p = pl->gpt[k];
+        pl->gline[n + k].n = (int)o->nseat;
+        k++;
+    }
+    pl->gplt.line = pl->gline;
+    pl->gplt.n = n + k;
+}
+
 /* one fixed step + the shared logging (transition lines always; per-tick
  * lines only on the headless CI grid where they are grep-pinned) */
 static void play_advance(play_ctx *pl, const ll_play_keys *keys,
@@ -8184,8 +8252,10 @@ static void play_advance(play_ctx *pl, const ll_play_keys *keys,
     /* The terrain tests of THIS step use the contact of the state the player
      * was in when it started (that is the animation being shown at this
      * instant). */
-    int ev = ll_player_step(&pl->p, &pl->plt, keys, pl->xmin, pl->xmax,
-                            dt_ms);
+    if (pl->gline)
+        play_ground(pl, objs, nobj);        /* PR-535: seats ride along */
+    int ev = ll_player_step(&pl->p, pl->gline ? &pl->gplt : &pl->plt,
+                            keys, pl->xmin, pl->xmax, dt_ms);
     /* PR-97: re-read the contact AFTER the step, because ll_player_step is
      * where the state transitions happen, and keep the actor's contact LINE
      * invariant across a state change: a grounded actor stands on the same
@@ -13849,6 +13919,15 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
          * pre-534 off mode as the named comparison switch. */
         pl.danger = getenv("LEO_PLAY_DANGER")
                         ? atoi(getenv("LEO_PLAY_DANGER")) != 0 : 1;
+        /* PR-535 (OI-072): the ani_plat= seat tables ride the player's
+         * ground by default now - the owner goal 2026-11-26 asks for
+         * JUMPING ON PALMS, and the seat tables are what the game puts
+         * under the lion there. LEO_PLAY_SEAT=0 is kept as the named
+         * comparison switch (the PR-523/PR-534 pattern): it restores the
+         * seat-free, platformy=-only ground every earlier leg derived
+         * against. */
+        pl.seat = getenv("LEO_PLAY_SEAT")
+                      ? atoi(getenv("LEO_PLAY_SEAT")) != 0 : 1;
     }
     pl.cam_ox = CAM_LEAD_R;
     /* PR-84: the follow-cam-y state (play_ctx camy_v/camy_set) starts
@@ -14200,6 +14279,13 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
                     }
                     free(ptxt);
                 }
+                /* PR-535: size the seat-riding ground array for THIS
+                 * level's polyline count. NULL on allocation failure or
+                 * with LEO_PLAY_SEAT=0: play_advance then keeps the old
+                 * seat-free ground. */
+                if (pl.seat && pl.plt.n >= 0)
+                    pl.gline = calloc((size_t)pl.plt.n + SEAT_GND_MAX,
+                                      sizeof *pl.gline);
             }
             llrs_block_free(erecs);
         }
@@ -14775,6 +14861,11 @@ done:                                 /* single cleanup path (E-05): every
         free(pl.art[k].blob);
     }
     hud_free(&hud);
+    free(pl.gline);                       /* PR-535: the seat-riding      *
+                                         * ground array (the synthetic    *
+                                         * points live in pl.gpt, not in  *
+                                         * gline, so this frees no        *
+                                         * polyline storage of its own)   */
     ll_plt_free(&pl.plt);
     free(pl.mov);
     ll_pcx_free(&img);

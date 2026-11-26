@@ -1356,6 +1356,20 @@ OI-072: the ground SOURCE remainder (G-13): the port loads ground
   holds; and whether a moving platform re-translates its table
   horizontally (0x45200 is called with the placement only at
   load, the runtime calls pass (0, ±1)).
+  PR-535 ACTS ON THE TABLE (partial, the USE half): the seat
+  tables of the four classes that install the [obj+0xa5] verbs
+  are now part of the ground the lion's terrain step is asked
+  with, re-read every iteration so the table stands where
+  PR-342's row-admit shift has walked it; ly_seat / ly_seat_off
+  pin the KATAPULT pad catch (324,601 grounded at 119 vs the
+  same flight passing through at 324,606 grounded 0 with
+  LEO_PLAY_SEAT=0) and the drop at the last record's x. NOT
+  closed here: the engine's own ASK chain (0x45320/0x45400,
+  OI-122/OI-123), the rider/attach law (0x54250/0x54827,
+  OI-128 - a standing lion is NOT carried by the seat's own
+  [obj+0xca]), the layer gate for ani_plat placements, and the
+  KATAPULT's own wake (its `1,0,WAIT K_GEN1` row admitted no
+  row in the pinned run, OI-125's unexercised half).
   PR-336 NARROWS THIS ROW TO TWO NAMED GAPS - now OI-122 and
   OI-123 - and both are needed before any of the above can be
   ported. (1) THE CLASS
@@ -6153,6 +6167,22 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     the lion would land in the pit. The seat chain stays the
     authored mechanism the shipped game places at that gap, and
     this row stays open on the cadence and on the seat leg.
+
+    PR-535 STANDS ON THE SEAT. The seat tables of the four
+    classes that install the [obj+0xa5] verbs now ride the
+    ground the player step queries, and ly_seat/ly_seat_off pin
+    the KATAPULT pad from the level's west side: the same jump
+    flight the off-switch control carries through 324,606
+    ungrounded is caught at 324,601 grounded at tick 119 - the
+    position point 32 px under the authored seat top 633 - then
+    walking on the table (325,601, 337,601) until x passes the
+    LAST record at 341, where the step-down chain returns him
+    to the grass. This row stays open: the pad is only 16 px
+    above the walk line and the chasm gap at 408..624 is still
+    not crossed FROM A SEAT (no attach: OI-128's [obj+0xca]
+    rider law, and the KATAPULT's own `1,0,WAIT K_GEN1` row
+    admitted nothing in the pinned run, OI-125's half), and the
+    PALMA spans are not yet reached from the east bank.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that
