@@ -323,6 +323,32 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     not by F/T alone. What decides it: a 50 Hz window of one
     NAMED state (OI-130) with the [obj+0x95] gate, the row
     cursor and the guest's timer read together.
+    PR-517 MEASURED THE LAW, NAMED. One 50 Hz run
+    (pr516i.jsonl, every lion sample named by OI-130's route) shows
+    the row ACCUMULATOR fed EXACTLY +100 at 20.99/s in an A_DRAP
+    window (212 feeds / 10.1 s) - the guest loop runs native 20/s,
+    so the 5-9/s figures of the PR-516 census are NOT clock
+    distortion; they are per-state FEED rates (A_DOSTAL 8.3-8.9/s,
+    A_JUMP 3.9-5.2/s, A_TO_BOR 7.2/s, A_JUMP_S 5.4-6.0/s; the feed
+    gate that produces those rates is not modelled). What those feeds
+    gate is the POSITION and VELOCITY step itself: in a named A_JUMP
+    window (380.31-384.5 s) y moves only when the accumulator wraps
+    and [obj+0x95] flips (681->636->626->616->607... at ~5 admits/s),
+    and BOTH registers decay only at those admits (v_raw_x
+    120,96,77,62,50,40,32,26 = the T=20 idiv drag - the FIRST T
+    field of the authored `T=20,1`; v_raw_y -1145,-1079,-1014,
+    -949,-885,-822 = idiv(|v|*T2,100) toward zero with the SECOND
+    T field (1) PLUS the authored `G=0,55` constant +55: the
+    predicted steps +66,+65,+65,+64,+63,... match the observed
+    sequence 10/10); between admits the registers
+    sit EXACTLY still while the accumulator runs. An A_DEAD-labelled
+    one-row window moves at 10.0-11.2 steps/s = a 20 Hz feed against
+    threshold 100 with strict-past carry, matching that authored
+    single row `0,100`. So: the loop is 20 Hz, the ROW ADMIT is the
+    physics step, and a state's px/s is (register//100) x its admit
+    rate - neither the port's one-step-per-LL_ITER_MS model nor any
+    single rate. Still open inside it: why the +100 feed itself runs
+    at 7-9/s in DOSTAL/JUMP/TO_BOR windows and 21/s in DRAP.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
@@ -5464,6 +5490,26 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     cadence question OI-015 now carries and the state
     identity OI-130: no measured window in any run is yet
     named by the game.
+    PR-517 NAMES THE FLIGHT AND CORRECTS (d). In a named A_JUMP
+    window (pr516i, 380.3-384.5 s and three more) the flight is:
+    one I-row SET to the authored I pair (x 150, y -1200), and the
+    same physics step already drags x by the T1=20 idiv law to 120
+    and raises y to -1145 = +G_y 55 + T2=1 drag; then BOTH registers
+    decay per ROW ADMIT by those same two laws
+    (~5/s), the position stepping only at admits - +66..82 px carried
+    per window; the x register decays from its SET value toward 0
+    (window ranges reach 500 raw because the held +20 re-feeds it -
+    at 381.50-381.59 mid-flight intent +20 visibly lifts it
+    201->341). No I re-fire is seen INSIDE a window: each of the
+    four windows has exactly ONE SET, and the carry is the decaying
+    register truncated at
+    each admit - OI-015's law. So the port's one-shot apply is
+    right about the impulse and wrong about the CADENCE (it decays
+    the register per 50 ms iteration and integrates x always; the
+    engine decays and integrates ONLY at admits). The lists'
+    AC_DUP restarts stay authored fact; what they re-fire is a NEW
+    pass entered through the self-transition, not a hold inside one
+    flight.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that
@@ -8501,7 +8547,7 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
 OI-130: the live state array is NOT in .MOV declaration order, and
   the table the engine uses to name states is not reachable from the
   state object - so no measured window in any 50 Hz run is yet named
-  status: OPEN
+  status: CLOSED BY PR-517
   origin: PR-516 (the run-12/13 state windows; PR-515's st_index map
     was declaration order and is corrected in that record)
   notes: WHAT THE OBJECT KEEPS, READ. `[obj+0x50] + [obj+0x5c]*4`
@@ -8538,3 +8584,27 @@ OI-130: the live state array is NOT in .MOV declaration order, and
     .MOV parse (PR-418/436 read that layout in a different parser
     path); if it does not, the owner record's [rec+0x3c] vector must
     be reached through the object's class/owner chain and sampled.
+    CLOSED BY PR-517, THE ROUTE THAT HIT. The run-h layout dump said
+    the record at state+0 ENDS in two heap pointers, [rec+0x38] and
+    [rec+0x3c] (0x46c2bc, 0x464804 in that run; state object
+    0x464820 = that second pointer +0x1c). A probe of those pointers
+    as the 0x53440 vector (entry i at [data+i*8], name text inline at
+    entry+0) HIT: route `owner-record-vector-at-rec+0x3c` resolved
+    EVERY lion sample of the next run (pr516i.jsonl, 14,571 samples,
+    zero misses) and named eight live states - all eight are real
+    LEW.MOV blocks of this level (A_DEAD, A_DRAP, A_DOSTAL, A_JUMP,
+    A_JUMP_S, A_WSP, A_TO_BOR, A_BOR_END). The runtime index map:
+    1=A_DEAD, 2=A_DRAP, 3=A_DOSTAL, 4=A_JUMP_S, 5=A_JUMP, 14=A_WSP,
+    18=A_TO_BOR, 19=A_BOR_END - NOT declaration order (declaration 1
+    is A_JUMP_S), and behavior agrees with the names: the measured
+    A_JUMP window ends by entering st 2 = A_DRAP, exactly the authored
+    `A_DRAP(1)=AC_BREAK_NEXT` exit of the jump family, and the
+    gameplay-idle windows run st 18 = A_TO_BOR, whose authored seq is
+    idle. One named anomaly, named not hidden: st 1 = A_DEAD runs as
+    a MOVING +20-intent window in every run, which its authored block
+    (F=0,0, one row) does not describe - but A_DEAD lives in the
+    engine's undefined-cursor region (its exits carry row 33 and the
+    literal `(x)` on a one-row list, PR-323's "the engine NEVER
+    clamps the written cursor"), so the name at that index may sit
+    beside a misaligned entry. The physics claims of OI-011/OI-015
+    are now quoted against these names with that caveat.

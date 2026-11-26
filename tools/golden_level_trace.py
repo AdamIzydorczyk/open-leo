@@ -491,14 +491,22 @@ class StateNames:
     walks a vector `[edi]=data, [edi+8]=count` with entry i at
     `[data+i*8]` and 0x76a69 case-folds a strcmp against text inline at
     entry+0 - and that vector is not reachable from the object. So the
-    name is found by three routes, and the run records WHICH one hit:
+name is found by four routes, and the run records WHICH one hit:
       a. the record pointer at state+0x0, when that record opens on an
          inline name (PR-418/436: parsed record names are inline at +0);
-      b. the name vector, found from the object: one heap scan for a
-         dword equal to the state-object pointer, with the name inline
-         beside it or pointed to just before it;
-      c. neither: one hex dump of the state object and of its +0 record,
-         so the layout becomes measured instead of assumed.
+      b. the owner record's own tail pointers: the run-h layout dump shows
+         the record at state+0 ENDS in two heap pointers ([rec+0x38],
+         [rec+0x3c]) - probe those as the 0x53440 name vector (data at
+         [struct], count at [struct+8], entry i at [data+i*8], name text
+         inline at entry+0);
+      c. one CAPPED heap scan for a dword equal to the state-object
+         pointer, with the name inline beside it or pointed to from just
+         before it (context read from the cached blob, not per-match QMP:
+         the run-h lesson is that uncapped per-match reads over the whole
+         heap cost a whole trace);
+      d. none of them: ONE hex dump per run of the state object and of
+         its +0 record, so the layout becomes measured instead of
+         assumed.
     Memoised by (array, index); `state_ptr` and `state_how` say what was
     read, so a name claim in a record is always traceable to an address."""
 
@@ -507,7 +515,7 @@ class StateNames:
     def __init__(self, h, base, note, scanfile):
         self.h, self.base, self.note = h, base, note
         self.scanfile = scanfile
-        self.cache, self.heap = {}, None
+        self.cache, self.heap, self.dumped = {}, None, False
 
     def _read(self, addr, n):
         blob = _xp(self.h, addr, n)
@@ -526,16 +534,56 @@ class StateNames:
         raw = self._read(addr, 4)
         return struct.unpack('<I', raw)[0] if len(raw) == 4 else 0
 
-    def _via_vector(self, ptr):
+    def _name_at_vector(self, data, idx):
+        """The 0x53440 shape: entry i at [data+i*8], name text inline at
+        entry+0. One read of the entry slot, one of its text."""
+        entry = self._dword(data + idx * 8)
+        if not (0x10000 < entry < 0x800000):
+            return ''
+        return name_token(self._read(entry, 0x20))
+
+    def _via_owner(self, rec, idx):
+        """PR-516 run-h measurement: the record at state+0 ends in two
+        heap pointers ([rec+0x38], [rec+0x3c]); the engine's name lookup
+        (0x53440) walks a [edi]=data,[edi+8]=count vector. Probe each
+        pointer as that vector's data - or as a struct holding it - and
+        read entry idx's text. Bounded: a handful of reads per key."""
+        for off in (0x38, 0x3c, 0x8, 0xc, 0x1c):
+            s = self._dword(rec + off)
+            if not (0x10000 < s < 0x800000):
+                continue
+            n = self._name_at_vector(s, idx)
+            if n:
+                return n, s, 'owner-record-vector-at-rec+0x%x' % off
+            block = self._read(s, 0x10)
+            if len(block) == 0x10:
+                data, cnt = struct.unpack_from('<II', block, 0)
+                if 0 < cnt < 256 and 0x10000 < data < 0x800000:
+                    n = self._name_at_vector(data, idx)
+                    if n:
+                        return n, data, 'owner-record-struct-at-rec+0x%x' % off
+        return '', 0, ''
+
+    def _via_heap(self, ptr, idx):
+        """Last cheap route: a dword equal to the state object pointer,
+        with the name inline before it or pointed to from just before it
+        (the 0x53440 shape around the object). CAPPED and blob-local: the
+        run-h lesson is that per-match QMP reads over the whole heap
+        cost a whole trace. Context comes from the cached window."""
         lo, blob = self._heap()
         want = struct.pack('<I', ptr)
-        for i in range(0, len(blob) - 4, 4):
-            j = blob.find(want, i)
+        hits, pos = 0, 0
+        while hits < 4:
+            j = blob.find(want, pos)
             if j < 0:
                 break
-            i = j
+            pos = j + 4
+            hits += 1
             a = lo + j                       # [a] == the state object
-            before = self._read(a - 0x28, 0x28)
+            if j >= 0x28:                    # context inside the blob
+                before = blob[j - 0x28:j]
+            else:
+                before = self._read(a - 0x28, 0x28)
             n = last_name_before(before, 0x28)
             if n:
                 return n, a, 'name-inline-before-state-pointer'
@@ -560,15 +608,19 @@ class StateNames:
             if name:
                 how, aux = 'state-record-name', rec
             else:
-                name, aux, how = self._via_vector(ptr)
+                name, aux, how = self._via_owner(rec, idx)
+                if not name:
+                    name, aux, how = self._via_heap(ptr, idx)
                 if not name:
                     how = 'unresolved'
-                    self.note('state object layout (name unresolved)',
-                              array=hex(key[0]), index=idx, entry=hex(a),
-                              state=hex(ptr),
-                              state_hex=self._read(ptr, 0x48).hex(),
-                              record=hex(rec),
-                              record_hex=self._read(rec, 0x40).hex())
+                    if not self.dumped:      # one layout dump per run
+                        self.dumped = True
+                        self.note('state object layout (name unresolved)',
+                                  array=hex(key[0]), index=idx, entry=hex(a),
+                                  state=hex(ptr),
+                                  state_hex=self._read(ptr, 0x48).hex(),
+                                  record=hex(rec),
+                                  record_hex=self._read(rec, 0x40).hex())
         self.cache[key] = (name, ptr, how, aux)
         return self.cache[key]
 

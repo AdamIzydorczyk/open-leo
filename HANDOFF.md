@@ -3288,6 +3288,29 @@ record.
   target, not an impulse, which is exactly the port's one-shot
   gap (OI-124).
 
+  PR-517 STATUS (names on every window, and the clock answered).
+  The state-name resolver hit: the name vector hangs off the state
+  object's record at [rec+0x3c] (0x53440 shape), and every lion
+  sample of the next run resolved - 1=A_DEAD, 2=A_DRAP, 3=A_DOSTAL,
+  4=A_JUMP_S, 5=A_JUMP, 14=A_WSP, 18=A_TO_BOR, 19=A_BOR_END, all
+  real ZARIA.01 LEW.MOV states, behaviour-checked (A_JUMP ends
+  through the authored A_DRAP(1) exit; gameplay idle runs A_TO_BOR).
+  The runtime index is NOT declaration order, and the earlier
+  "walk-like" windows are the level's scripted wrappers, not A_WALK.
+  The clock law is measured: the row accumulator runs at a native
+  20.99/s (A_DRAP window), but POSITION and BOTH velocity registers
+  change ONLY at row admits (A_JUMP: x drags by the first T field
+  (20) of the authored `T=20,1`, y by the second (1) plus the
+  authored `G=0,55` - predicted steps match 10/10; position steps at
+  ~5 admits/s) -
+  px/s = register//100 x admit rate, so the port's one-step-per-
+  iteration model is wrong at the root, not in its constants
+  (OI-015). The flight carry, named at last: ONE I-row impulse then
+  a register carried down by admits (+66..82 px/window), not a held
+  re-pull (OI-124 corrected). OI-130 CLOSED. Next: a port leg that
+  steps physics at admits, not at iterations (OI-015's open half:
+  the per-state feed gate).
+
 
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`

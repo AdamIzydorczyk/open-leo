@@ -67429,3 +67429,115 @@ MEASURED: (a) register censuses through /tmp/opencode/
 
 GATE: make 0 warnings; verify-all fixtures rc=0 73 (ok);
 GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+
+## PR-517 - EVERY LIVE WINDOW IS NOW NAMED: THE NAME VECTOR IS AT
+## [[STATE+0]+0x3C], THE RUNTIME STATE INDEX IS NOT DECLARATION ORDER,
+## AND THE NAMED WINDOWS SAY THE ROW ADMIT IS THE PHYSICS STEP - THE
+## ACCUMULATOR RUNS 20 Hz WHILE REGISTERS AND POSITION MOVE ONLY AT
+## ADMITS
+
+```
+KIND: read
+SUBSYSTEM: the live state identity (OI-130, closed) and the clock law
+  (OI-015, measured), through tools/golden_level_trace.py's state-name
+  resolver - and a trace-tool bug the same run caught. (1) THE NAME
+  VECTOR, FOUND. Run h's layout dump (the resolver's route d, forced
+  when nothing hit) showed the runtime state object's +0 record ends
+  in two heap pointers, [rec+0x38] and [rec+0x3c] (0x46c2bc and
+  0x464804 there; the state object 0x464820 = the second +0x1c).
+  Probing those as the 0x53440 vector (entry i at [data+i*8], name
+  text inline at entry+0, the 0x76a69 case-folded strcmp's table)
+  HIT: route owner-record-vector-at-rec+0x3c resolved EVERY lion
+  sample of the next run - 14,571/14,571. The runtime map it gives:
+  1=A_DEAD, 2=A_DRAP, 3=A_DOSTAL, 4=A_JUMP_S, 5=A_JUMP, 14=A_WSP,
+  18=A_TO_BOR, 19=A_BOR_END - all eight are real LEW.MOV blocks of
+  ZARIA.01, and behaviour agrees: the measured A_JUMP windows end by
+  entering st 2 = A_DRAP exactly through the authored
+  `A_DRAP(1)=AC_BREAK_NEXT`, and every gameplay-idle window runs
+  st 18 = A_TO_BOR, whose authored `seq=idle` matches. (2) THE
+  RUNTIME INDEX IS NOT DECLARATION ORDER, CONFIRMED: declaration 1 is
+  A_JUMP_S, runtime 1 is A_DEAD; PR-515's st map is dead, PR-516's
+  correction stands, and the earlier "sustained walk" windows are now
+  seen to be the level's scripted wrappers (A_TO_BOR = idle-seq
+  standing, A_DOSTAL = the authored hit state, seq=hit), not A_WALK.
+  One anomaly, kept visible: st 1 = A_DEAD runs as a moving +20
+  window, which its authored one-row block does not describe - it
+  lives in the engine's unclamped-cursor region (exits carrying row
+  33 and `(x)` on a one-row list, PR-323). (3) THE CLOCK LAW, NAMED.
+  The row accumulator is fed EXACTLY +100 at 20.99/s in a named
+  A_DRAP window (212 feeds / 10.1 s) - the guest loop IS native
+  20/s, so PR-516's 5-9/s windows are per-state FEED rates, not TCG
+  distortion. And inside a named A_JUMP window (380.31-384.5 s) the
+  position and BOTH velocity registers change ONLY at row admits:
+  y steps 681->636->626->616->607 at ~5/s exactly when accum_a1
+  wraps and [obj+0x95] flips, v_raw_x decays 120,96,77,62,50,40,32,26
+  (x0.8 = the idiv drag with the FIRST T field of the authored
+  `T=20,1`) and v_raw_y -1145,-1079,-1014,-949,-885,-822 - which is
+  NOT a ratio: it is idiv(|v|*T2,100) toward zero with the SECOND T
+  field (1) PLUS the authored `G=0,55` constant +55, predicted steps
+  +66,+65,+65,+64,+63,... matching observed 10/10 - the two-axis
+  T=first,1 and G=0,55 reading, ONLY at those
+  admits, and sits EXACTLY constant between them while the
+  accumulator runs. A one-row A_DEAD-labelled window moves at
+  10.0-11.2 steps/s = the 20 Hz feed against its authored `0,100`
+  with PR-116's strict-past carry. px/s = (register//100) x admit
+  rate. (4) THE FLIGHT, CORRECTED. A named A_JUMP window is ONE
+  I-row SET to the authored pair (x 150, y -1200; the same step
+  drags x to 120 by the T1=20 law and raises y to -1145 by G_y=55
+  + the T2=1 law) plus a register carried down by admits: +66..82 px
+  per window; no I re-fire inside a flight (exactly one SET per
+  window in all four) - PR-516's
+  "re-admitted I target" for the CARRY is corrected in OI-124 (the
+  AC_DUP restarts re-fire a NEW pass, not a hold). (5) THE TOOL BUG
+  THIS RUN PAID FOR: the first resolver's route b did an uncapped
+  heap scan with a QMP read per match - ONE state key consumed run
+  h's whole 300 s trace and zero samples. Fixed: the owner-record
+  probe (bounded reads per key), a heap scan capped at 4 matches with
+  context from the cached window, one layout dump per run. Run h is
+  kept as the layout evidence; run i is the first named physics run.
+ADDRESSES: 0x53440, 0x76a69, 0x543a0, 0x54380, 0x4ffb0, 0x534c0
+NAMES: A_TO_BOR, A_DOSTAL, A_BOR_END, A_DRAP, A_DEAD, A_JUMP,
+  A_JUMP_S, A_WSP, AC_BREAK_NEXT, AC_DUP, state_name, state_how,
+  owner-record-vector-at-rec+0x3c, [rec+0x38], [rec+0x3c]
+CODE: yes: tools/golden_level_trace.py - StateNames.resolve now tries
+  the record-pointer name, then the owner-record name vector
+  (_via_owner: [rec+0x38/0x3c/0x8/0xc/0x1c] as data or as the
+  [data,count] struct), then the CAPPED heap scan (4 matches, blob-
+  local context), then one layout dump per run; state_name/
+  state_ptr/state_how/state_src on every sample as PR-516 describes.
+  No physics, no leg, no pin moves.
+HOOKS: none - field keys unchanged, all new output appended.
+OPENS: OI-015 (the per-state FEED gate: +100 at 7-9/s in DOSTAL/
+    JUMP/TO_BOR windows vs 21/s in DRAP), OI-011 (the moving
+    A_DEAD-labelled window's register 623-638 - now attributed to a
+    named state, still not modelled)
+CLOSES: OI-130 (the name vector: [rec+0x3c], all eight observed
+    states named, behaviour-checked against the authored transitions)
+CORRECTS: PR-516 (OI-124 note d) "the flight carry is the I target
+    RE-ADMITTED": inside one NAMED flight the I row fires ONCE and
+    the carry is the decaying register truncated at row admits; the
+    list's AC_DUP restart re-fires a new pass, not a hold.
+MEASURED: (a) run h's state/record hex dump (the layout, in OI-130);
+    (b) pr516i.jsonl, 174,852 samples at 50 Hz, 14,571 of the lion
+    0x524400, every one named with route+pointer recorded; (c) the
+    state-transition sequence through the level intro (A_WSP ->
+    A_DOSTAL <-> A_DEAD scripted beats -> A_JUMP_S -> ... -> A_JUMP
+    -> A_DRAP -> A_DOSTAL -> A_BOR_END -> A_TO_BOR idle); (d) the
+    per-named-window census (feed rates, pos-step rates, register
+    ranges in OI-015); (e) the A_JUMP flight trace at 380.31-381.59
+    s sample-by-sample in OI-124/OI-015.
+```
+
+- WHY. Every physics number PR-515/516 measured was about an
+  unnamed window, and the naming question was worth one broken run:
+  the layout dump it left gave the pointer chain, and one probe
+  later the whole run speaks the game's own state names. That
+  settles the clock argument the last two records opened: the loop
+  is native 20 Hz, but the row admit IS the physics step - which
+  refutes the port's one-step-per-50ms model at its root, not in
+  its constants, and tells PR-518 what to build. And the flight
+  answer for OI-124 is simpler than either side claimed: one
+  impulse, then a register carried down by admits.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 73 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
