@@ -3342,6 +3342,27 @@ record.
   gate-on legs on the authored F/T/G and the live numbers, answer the
   cold-start feed, then flip the constant and the default together.
 
+  PR-520 STATUS (the walk law is closed, and a name is caught out).
+  A live walk captured at 394.16-395.68 s starts from a standstill
+  and every step of it answers to three authored numbers: v +=
+  idiv(F*s,20) + G_x - idiv(v*T_x,100) at each ROW ADMIT, position
+  += v//100 at the same admit - 18/18 register predictions, 18/18
+  position steps, each register held exactly one admit (80 ms). F,
+  T_x and G_x come from ZARIA.01's authored A_WALK (`F=100,0`,
+  `T=20,5`, `G=30,350`): the G pair's FIRST number is a constant x
+  force, exactly as its second was the flight's +55. The equilibrium
+  is 650 at s=20, which closes OI-011's 623-638 "anomaly" as a ramp
+  still climbing, and s=20 is the only value the data allows (no
+  sample carries 10; 946 carry 20). The same window is named A_DEAD
+  by PR-517's runtime vector - and cannot be: A_DEAD is F=0,0 /
+  T=100,100 / seq=death - so OI-130 is PARTIAL again and every
+  remaining name must be earned by fitting measured F/T/G to an
+  authored block. What is still missing is one term: the feed rate
+  (~11.2 admits/s observed against ~16.7/s from threshold 6). T3 is
+  PR-521: implement the x law as written, re-derive the red legs on
+  this arithmetic, move LL_PLAY_INTENT_FULL to 20 and the gate
+  default with it, and audit the name map.
+
 **T2. The lion's attack and enemy energy.**
 Goal: kill the first LICHA. Where: `LEW.MOV` states `A_FIGHT*`, `A_FG_PACKA*`
 (conditions `K_FIRE`+`K_F1`/`K_F2`, `K_ALT`); enemy `.MOV` death states;

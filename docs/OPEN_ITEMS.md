@@ -186,6 +186,23 @@ OI-011: shipped discrepancy: the port drives the player walk to
     10 in this PR: moving it alone turns 69 selftest checks red, and
     it goes in WITH PR-519's re-pinned legs, not ahead of them.
 
+  PR-520 CLOSES THE ARITHMETIC AND THE ANOMALY. The x law is
+  v += idiv(F*s,20) + G_x - idiv(v*T_x,100) at each ADMIT, with the
+  authored A_WALK of ZARIA.01 supplying F=100, T_x=20 (`T=20,5`) and
+  G_x=30 (`G=30,350`) - the G pair's FIRST number is a constant x
+  force, read exactly as its second number was the flight's +55 y
+  force. Predicting the next register from the last: 18/18 exact
+  across a 1.5 s walk that starts from a standstill (1, 131, 235,
+  318, 385, 438, 481, 515, 542, 564, 582, 596, 607, 616, 623, 629,
+  634, 638), including the key-release step, which shows G_x is not
+  gated by the key. The equilibrium is (F*s + 20*G_x)/T_x = 650 at
+  s=20, so the "register 623-638" window is a ramp toward 650, not
+  an unexplained level. And s=20 is the only value the data allows:
+  at s=10 the same state ramps 1, 70, 129 to 350, and no sample
+  anywhere carries intent_x = 10 (946 carry 20). The port's
+  LL_PLAY_INTENT_FULL is still 10; PR-521 moves it with the legs
+  re-derived on this arithmetic.
+
 OI-012: does the PLAYER object go through the 0x54250 step at all?
   PR-135 applies the law to both actors as the model; the three
   call sites do not check class
@@ -399,6 +416,17 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     the literal reading, and the live walk entries all carry a
     non-zero x register, so this capture cannot say), the entry's
     accumulator HOLD and y-clear, and the 90 gate-on red checks.
+
+    PR-520 WRITES THE x LAW IN CLOSED FORM and only the feed rate is
+    missing. In a live walk from a standstill the registers change
+    only at admits (each value held exactly 4 samples = 80 ms) and
+    every position step is v//100 (or twice it when two admits share
+    a 20 ms sample): 18/18 steps, no exceptions, and the register
+    update v += idiv(F*s,20) + G_x - idiv(v*T_x,100) predicts 18/18.
+    Against that the admit rate here is ~11.2/s while the authored
+    walk rows (threshold 6) fed by v//100 would give ~16.7/s at the
+    same register - the feed gate is now the ONLY term between the
+    port and the measured walk.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178
@@ -8597,7 +8625,8 @@ OI-129: the shipped landing step is ~31 px for the lion's standing
 OI-130: the live state array is NOT in .MOV declaration order, and
   the table the engine uses to name states is not reachable from the
   state object - so no measured window in any 50 Hz run is yet named
-  status: CLOSED BY PR-517
+  status: PARTIAL (CLOSED by PR-517, RE-OPENED by PR-520: the
+    map carries at least one wrong entry)
   origin: PR-516 (the run-12/13 state windows; PR-515's st_index map
     was declaration order and is corrected in that record)
   notes: WHAT THE OBJECT KEEPS, READ. `[obj+0x50] + [obj+0x5c]*4`
@@ -8658,3 +8687,16 @@ OI-130: the live state array is NOT in .MOV declaration order, and
     clamps the written cursor"), so the name at that index may sit
     beside a misaligned entry. The physics claims of OI-011/OI-015
     are now quoted against these names with that caveat.
+
+  PR-520 CAUGHT A WRONG ENTRY. The window at 394.16-395.68 s
+  resolves through the same [rec+0x3c] vector to A_DEAD, yet its
+  behaviour answers to the authored A_WALK of ZARIA.01 exactly
+  (F=100, T_x=20, G_x=30 - see OI-011), while A_DEAD is
+  `F=0,0, T=100,100, G=0,0, seq=death`: with F=0 there is no force
+  term and T=100 halves a register in five steps, so a ramp from 1
+  to 638 is impossible in it. So the vector is not the level's state
+  order at every index, and a name is only evidence when the state's
+  measured F/T/G answer to an authored block. The entries that do
+  survive the fit (A_JUMP's I pair and thresholds; A_TO_BOR's F=0,0
+  against 189 s with no movement and no intent) stay; the rest need
+  the same audit.

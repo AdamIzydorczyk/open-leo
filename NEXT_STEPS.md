@@ -67748,3 +67748,93 @@ MEASURED: the four A_JUMP entry windows above, printed sample by
   settle the cold case.
 
 GATE: light: verify-index verify-docs rc=0 (ok);
+
+## PR-520 - THE x-SIDE PHYSICS LAW IS CLOSED EXACTLY - v += idiv(F*s,20)
+## + G_x - idiv(v*T_x,100) AT EACH ADMIT, position += v//100 AT THE SAME
+## ADMIT, 18/18 AND 18/18 IN A LIVE WALK - AND THE SAME WINDOW SHOWS THE
+## RUNTIME NAME MAP CARRIES A WRONG ENTRY
+
+```
+KIND: read
+SUBSYSTEM: pr516i's walk window at 394.16-395.68 s read against
+  ZARIA.01's authored A_WALK block, and what that says about the
+  index-to-name map PR-517 published. (1) THE CAPTURE. Four windows
+  carry intent_x = +20 and move the lion (25, 29, 69, 75 samples);
+  the largest is 394.16-395.68 s. It starts from a STANDSTILL - the
+  register is 1 - and ramps 1, 131, 235, 318, 385, 438, 481, 515,
+  542, 564, 582, 596, 607, 616, 623, 629, 634, 638. Every value is
+  held for 4 samples (80 ms) - one admit, ~11.2 admits a second - and
+  the position steps are 1,1,1,2,3,3,4,4,5,5,5,5,5,6,6,6,6,6, exactly
+  v//100. (2) THE LAW, CLOSED. v += idiv(F*s,20) + G_x -
+  idiv(v*T_x,100) with F=100, T_x=20, G_x=30 predicts the NEXT
+  register exactly, 18/18 - including the step where the key was let
+  go, which proves G_x is NOT gated by the key (dropping it predicts
+  511 against the observed 541). The three constants are the authored
+  A_WALK pair read the way PR-517 read A_JUMP's y side: `T=20,5` is
+  T_x=20 (the x drag) and `G=30,350` is G_x=30 - the G pair's FIRST
+  number is a constant x force exactly as its second was the +55 y
+  force of the flight. The equilibrium is (F*s + 20*G_x)/T_x = 650,
+  which closes OI-011's "register 623-638" anomaly: that window is a
+  ramp toward 650, not an unexplained level. (3) s IS 20. 946 samples
+  carry intent_x = 20 and none carry 10; with s=20 the arithmetic
+  above is exact, with s=10 the same state would ramp 1, 70, 129,
+  ... to an equilibrium of 350 - not one value in the samples. (4)
+  THE NAME MAP IS WRONG HERE. That window resolves through the
+  [rec+0x3c] vector to A_DEAD - but ZARIA.01's authored A_DEAD is
+  `control=BY_TIME|FRAME_REV, F=0,0, T=100,100, G=0,0, seq=death`:
+  with F=0 there is no force term at all and T=100 halves the
+  register in five steps, so no ramp to 638 can happen there, while
+  every parameter the samples answer to is A_WALK's (`BY_X, F=100,0,
+  T=20,5, G=30,350`, rows at threshold 6, seq=walk). So the runtime
+  vector is NOT the level's state order at that index. PR-517's map
+  holds where behaviour agreed - A_JUMP's I pair and row thresholds,
+  A_TO_BOR's F=0,0/T=60,15 against 189 s of zero movement and zero
+  intent - and fails here. Every entry needs the same audit this one
+  got: fit the measured F/T/G against the authored block and let the
+  numbers name the state. Nothing measured in this record depends on
+  the names; it depends on the authored parameters answering to the
+  samples. (5) WHAT IS STILL OPEN. The admit rate: ~11.2/s here,
+  while a mode-0 feed of v//100 against the authored threshold 6
+  would give ~16.7/s at this register - the per-state feed gate is
+  the last term missing. And whether a row's own M delta rides the
+  same step is not separable in this window (no position step
+  deviated from v//100 or its double, which is two admits inside one
+  20 ms sample gap).
+ADDRESSES: 0xba (intent_x, the +/-20 word), 0xc2 and 0xc6 (the two
+    velocity registers), 0xa1 (accum_a1), 0x95 (gate_95), 0x3c (the
+    name vector slot), 0x5427c and 0x542a7 (the drag), 0x5434f (the
+    force), 0x53440 (the vector shape the resolver reads).
+NAMES: A_WALK, A_DEAD, A_TO_BOR, A_JUMP, pr516i.jsonl,
+    pr520_walk.py, LEW.MOV, OI-011, OI-015, OI-130.
+CODE: no: an analysis over the existing capture
+    (/tmp/opencode/pr520_walk.py prints the 18 steps side by side
+    with the prediction); no port file is touched, and PR-519's
+    reverted state is unchanged.
+HOOKS: none.
+OPENS: OI-015 (the admit-rate/feed gate, the last missing term),
+    OI-130 (RE-OPENED: the map's A_DEAD entry is wrong - every entry
+    needs the parameter-fit audit), OI-011 (the port's constant is
+    still 10; the decision now rests on a live walk, not on the band)
+CLOSES: none
+CORRECTS: PR-517 - the runtime map's A_DEAD entry is A_WALK's window
+    and "all eight behaviour-checked" was stronger than the evidence:
+    only some entries survive the parameter fit. And OI-011's
+    "register 623-638, not modelled" - it is a ramp to the authored
+    equilibrium 650.
+MEASURED: the four intent_x=+20 windows and the full ramp above;
+    18/18 register predictions and 18/18 position steps (v//100, or
+    twice it when two admits share a sample); the intent histogram
+    {0: 13518, 20: 946, garbage-before-entry: 107}; the authored
+    A_WALK/A_DEAD/A_TO_BOR/A_WSP blocks of ZARIA.01 read out of
+    /tmp/opencode/mov.
+```
+
+- WHY. The port's model of the walk is the thing ZARIA.01 playability
+  turns on, and for the first time it is not a model: three authored
+  numbers plus the keyboard's 20 predict the live register exactly,
+  step for step, from a standstill. The same window also caught the
+  naming shortcut - a state named from a runtime vector that is not
+  the level's order - which is why the parameter fit, not the name,
+  is now the standard. PR-521 can implement the x law as written.
+
+GATE: light: verify-index verify-docs rc=0 (ok);
