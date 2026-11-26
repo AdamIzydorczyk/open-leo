@@ -569,6 +569,38 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     from this flip: the ground query, and with it AC_ONAIR, lives
     INSIDE the pass, so it runs only at an admitting pass - the
     question is named at OI-018.
+    PR-529 WIDENS THE WORD AND CHANGES NOTHING ELSE. On the
+    row-admit path the x intent [obj+0xba] is now the KEY'S word in
+    EVERY state, not a BY_X-only one. The read is pr516i's named
+    A_JUMP window - BY_TIME, `F=180,0 T=20,1`, no BY_X bit - which
+    carries intent 20 through an airborne state and answers
+    idiv(F*s,20)=180 at the register it holds: 26->201, 201->341,
+    341->453, 363->471, 377->482, 386->489, 392->494, 396->497,
+    398->499, nine pairs nine exact; the instant the key lets go the
+    SAME register decays pure-drag, 400, 320, 256, 205, 164, 132,
+    106, 85, 68, 55, 44, 36, 29, 24, 20, 16, 13. Both ladders are
+    pinned hermetically (ll_play.c, the A_JUMPX/A_AIRX legs), and
+    the level legs re-derive from the same arithmetic (Makefile
+    ly_cjump_fwd, ly_pool). THE WINDOW STILL DOES NOT SAY HOW OFTEN
+    THE PULL RUNS: after 341->453 the capture pulls every OTHER step
+    - its own arithmetic v -> (v*0.8+180)*0.8 plateaus near 400 -
+    while the pass PR-520 closed for the walk is unconditional, so
+    the port plateaus at idiv(F*s,20)*100/T_x = 900. That is THIS
+    ROW's cadence half and it now decides a level question, measured
+    not fitted: ZARIA.01's leap across 408..624 covers 320 px in 38
+    admitted steps (7/8/9 px each, the register at its 900 fixed
+    point); at the alternating plateau's idiv(400,100)=4 px those
+    same 38 admits carry 152 px and the far bank, 239 px off the
+    takeoff, stays out of reach. Which gate runs is still unread.
+    The restart arm is re-keyed too, from "a zero register" to "a
+    zero FEED WORD" - the persisted [obj+0xca] step word a BY_X
+    state feeds - which is PR-522's measured entry shape (register
+    carried, accumulator 0/1, feed 0, the engine still steps once)
+    and keeps PR-523's RAN.01 reversal identical; its effective
+    scope is UNCHANGED, the old arm being reachable only through a
+    BY_X s. auto_walk keeps the BY_X scope: it is the port's
+    stand-in for a scripted K_GENn walker, not a keyboard word, and
+    no capture reads an airborne scripted walker.
     ONE WINDOW THIS RE-DERIVATION TURNED UP, NOT RESOLVED, AND IT
     BEARS ON THE CLOCK ITEM IN THIS ROW'S HEADER. pr516i, lion
     0x524400, t=339.46-339.77 (named A_WSP by the rec+0x3c vector,
@@ -780,6 +812,13 @@ OI-018: raisers and semantics of AC_ONAIR, AC_DUP, AC_DRECT,
     recorded counter-case yet, and where the original's rows park
     (a refused `Wait`, PR-333) the body demonstrably keeps moving.
     This stays counted, not fitted.
+    PR-529 EXERCISES THE AC_DRECT RAISER IN A LEVEL RUN for the
+    first time: ly_pool's run prints `DRECT box 988,645;1340,750
+    answered the player at (991,655): 0x80000` at tick 506 and the
+    authored `A_FALL_DOWN -> A_WPAD` on the next iteration - the
+    whole chain from the level's own keys, no test injection. The
+    row's open half (the semantics of the five bits, AC_ONAIR's
+    cadence question above) is untouched.
 
 OI-019: what the object-side AC_ENEMY consumers do (A_DEAD(1)/
   A_AWAY/A_SHOW class conditions)
@@ -6060,6 +6099,22 @@ OI-124: ZARIA.01's first chasm has no measured carrier
     carrier. What carries the crossing is still this row's
     named gap: the row-admit air-carry cadence above as a port
     leg, and the KATAPULT/PALMA seat leg.
+    PR-529 CARRIES IT, IN THE PORT, AND NAMES WHAT IS STILL
+    MISSING: with the x intent word widened to the key (OI-015),
+    ZARIA.01's own [A_JUMP] `F=180,0` rides every admitted step of
+    a held-key leap, and the level runs end to end under keys -
+    ly_pool takes off at (385,651), apex y 551 (exactly 100 px,
+    PR-253's closed form), and lands GROUNDED on the east bank at
+    (705,617), then walks the bank, steps off the pier and dives
+    into the pool. So the crossing needs no seat handle after all:
+    the lion's own jump spans it in 38 admitted steps, 320 px.
+    WHAT THAT DOES NOT DECIDE is whether the ORIGINAL crosses this
+    way: the port's leap runs at its every-admit fixed point 900
+    (9 px a step) while the capture's alternating pull plateaus at
+    ~400 (4 px a step) - the same 38 admits would carry 152 px and
+    the lion would land in the pit. The seat chain stays the
+    authored mechanism the shipped game places at that gap, and
+    this row stays open on the cadence and on the seat leg.
 
 OI-125: the element half of the object class +0xa4 verb - the five
   row-index table jumps of the catapult dispatcher and the two fields that

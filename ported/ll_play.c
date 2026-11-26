@@ -2462,7 +2462,33 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * walkers: GO_TO_BALON_*, EXIT, CHANGE_LEVEL) walk with s at
      * full intent and no key. */
     int key_walk = p->walkdir > 0 ? keys->k_fwd : keys->k_bkwd;
-    int s = ((st->ctrl & LL_CTRL_BY_X) && (key_walk || p->auto_walk))
+    /* PR-529: on the row-admit path the x word [obj+0xba] is the
+     * KEY'S word, not the state's: pr516i's named A_JUMP window
+     * (BY_TIME, F=180,0) shows intent_x 0 -> 20 at 381.50 and the
+     * SAME register pulled by exactly idiv(180*20,20) = +180 at
+     * nine later steps (26->201, 201->341, 341->453, 363->471,
+     * 377->482, 386->489, 392->494, 396->497, 398->499 - nine
+     * pairs, nine exact), while with the key released at 383.01 the SAME
+     * register decays pure-drag (400,320,256,205,164,132,106,85,
+     * 68,55,44,36,29,24,20,16,13 - all x0.8 idiv, byte-exact).
+     * The word is therefore keyed, not mode-gated, and the old
+     * BY_X-only s was PR-135's walk-window scope, the only window
+     * closed at that time. What the window does NOT settle is the
+     * pull's CADENCE in this state - the capture pulls on
+     * alternating steps after 341->453 (fixed point ~400), and
+     * the port's pass is the unconditional stretch PR-520 closed
+     * for the walk, pulling EVERY step (fixed point 900). That
+     * difference is named at OI-015, not guessed away here: the
+     * magnitude, the drag law and the release law are shipped,
+     * the alternating gate stays open. What stays BY_X-scoped is
+     * auto_walk: that word is the port's stand-in for a scripted
+     * cutscene walker, NOT the keyboard's word, and no capture ever
+     * reads an airborne scripted walker. With the comparison gate
+     * (LEO_PLAY_ROW_PHYSICS=0) the old BY_X-scoped s is restored
+     * byte-for-byte. */
+    int s = ((key_walk && (ll_play_row_physics() ||
+                           (st->ctrl & LL_CTRL_BY_X)))
+             || ((st->ctrl & LL_CTRL_BY_X) && p->auto_walk))
                 ? (p->walkdir < 0 ? -LL_PLAY_INTENT_FULL
                                   : LL_PLAY_INTENT_FULL)
                 : 0;                       /* no key held: the engine's
@@ -2500,7 +2526,11 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * consumed by the seed, and the engine's 0.06-0.16 s hold before
      * the step is NOT reproduced - the seed runs on the edge iteration,
      * the hold's writer being the unread half of OI-013.
-     * THE REGISTER-ZERO RESTART, the same seed on its other edge. A
+     * THE REGISTER-ZERO RESTART, the same seed on its other edge
+     * (PR-529 re-keyed the trigger below onto the feed word; what
+     * this paragraph records - the sign-cross zeroing the register
+     * and so feeding nothing - is unchanged and still the reason
+     * the arm exists). A
      * reversal taken at full speed zeroes the register on the engine's
      * OWN sign-cross rule (RAN.01's authored pair, F=400 against T=90:
      * 445 - idiv(400*20,20) - idiv(445*90,100) crosses zero, and
@@ -2515,7 +2545,38 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
      * This is the same one-pass seed, not an extra pass: the capture
      * names the register step, not the row admit, at those frames. */
     int intent_edge = s != 0 && !p->intent_on;
-    int zero_restart = s != 0 && ll_play_v_raw(p->vx) == 0;
+    /* PR-529: the restart arm is keyed on the FEED WORD, not on a
+     * zero register. The literal row-admit feed of a BY_X state is
+     * the persisted step word [obj+0xca] = p->row_dx (PR-518), and
+     * PR-522's 7/7 measured entries are exactly this: the register
+     * is carried (1, 2, -12, 1 - NOT zero), the accumulator sits at
+     * 0/1 under the authored threshold, the feed answers 0, nothing
+     * admits - and the engine STILL runs one register step before
+     * the new v//100 resumes feeding. With the intent word widened
+     * to every state the word can be held THROUGH a turn/hub state
+     * into the walk, so the rising edge no longer marks the walk's
+     * entry; the zero-word test is the same physical case from the
+     * side the capture measured, and it keeps PR-523's RAN.01
+     * reversal byte-identically: the sign-cross zeroes the register,
+     * and a zero register leaves a zero word.
+     * The arm keeps the BY_X scope of the word it reads - which is
+     * also HEAD's effective scope, since the register-zero arm it
+     * replaces could only be reached through a BY_X s. A BY_TY or
+     * BY_TIME state never runs the step-word feed, so its [obj+0xca]
+     * is 0 by construction: read unscoped, the arm answers on EVERY
+     * iteration of such a state while a direction key is held, and
+     * that is not what PR-518 measured. ZARIA.01's climb chain shows
+     * the cost (the ly_climb leg): at the A_TURN_BACK -> A_WSP
+     * hand-off an unscoped arm runs a pass at the entry iteration,
+     * its ground query answers NO for the climb shape, and the
+     * contact-line invariance that keeps a grounded actor's feet on
+     * the surface across a state change (ll_level.c play_advance,
+     * PR-97) is then skipped - the lion drops 4 px off the ground he
+     * was standing on. The authored [A_WSP] list (`1,300 2,200`)
+     * admits on its own time feed, and PR-518's law is that the pass
+     * runs AT an admit. */
+    int zero_restart = s != 0 && (st->ctrl & LL_CTRL_BY_X) &&
+                       p->row_dx == 0;
     p->intent_on = s != 0;
     if (ll_play_row_physics() && !(row_admit || row_park ||
                                    st->nfr == 0 ||
@@ -3206,6 +3267,7 @@ static int player_iterate(ll_player *p, const ll_plt *ground,
     else if (!was_att)
         p->sig |= 1ull << LL_SIG_AC_DUP;
 physics_skipped:
+    
     /* PR-518: this is where an iteration that did NOT admit an empty-
      * handed row resumes: the state's transitions, signals and row
      * clock still ran (they are per frame), the physics pass did not.
@@ -4961,34 +5023,39 @@ int ll_play_selftest(void)
         ll_player_step(&s, &zp, &sk, 0, 2000, LL_ITER_MS);
         CHECK(s.sti == 1);                             /* A_WALK, walking  */
         CHECK(s.walkdir == -1 && s.face == -1);        /* LEFT, drawn LEFT */
-        /* The walk LEFT starts from the register the hub's own drag
-         * left, -40 (see the pull note), with the sign of s reversed
-         * (facing left). The call that ENTERS A_WALK is the intent
-         * edge: one pass, no admit needed - and that pass IS the
-         * entry's physics (a transition runs before it). In the
-         * register's unit the pass is v_step(-40, 20, idiv(100*-20,
-         * 20)): drag idiv(-40*20,100) = -8 off the OLD value, add
-         * -100: -40 - 100 - (-8) = -132. The step is idiv(-132,100)
-         * = -1 px - the walk STARTS, where PR-523's first model
-         * would have frozen it: the walk-left deadlocks only when
-         * the flip lands under a whole px (idiv |v| < 100), and
-         * here -132 clears it.
-         * From there a pass is a row admit again, the feed |step|
-         * an iteration against the 6-unit rows: 1 unit an iteration
-         * until the register passes 200 in magnitude, then 2, then
-         * 3, and the register walks
-         *   -132, -206, -265, -312, -350, -380, -404, -424, -440,
-         *   -452, -462, ... -> -500 = F*s/T
-         * - the same fixed point as the RIGHT walk, mirrored, and
-         * the same 5 px per 1.2 iterations at the steady state
-         * (OI-013 note above). */
+        /* The walk LEFT starts from a register the HUB pulled.
+         * PR-529 widened the x intent word to every state, and this
+         * leg's key is HELD through A_TURN into the hub, so the
+         * hub's authored F=100,0 rides at its own entry admit:
+         * v_step(-99, 60, idiv(100*-20,20)) =
+         * -99 - 100 - idiv(-99*60,100) = -99 - 100 + 59 = -140,
+         * and its step word idiv(-140,100) = -1 moves the body one
+         * px BEFORE the walk exists. The A_WALK entry call runs NO
+         * pass: the word was already held (no rising edge), the
+         * persisted word is -1 (no zero-restart arm), and the entry
+         * feed answers 1 under the 6-unit list. PR-523's entry pass
+         * -132 is REPLACED: with a held key through a non-BY_X
+         * state the engine's word never crossed, so no entry seed
+         * is due - the hub's own admit carries the feet, exactly
+         * as the widened word says.
+         * From there a pass is a row admit, the feed |step| an
+         * iteration against the 6-unit rows - the accumulator
+         * arrives holding 1 (the entry call feeds the persisted
+         * word once), so the first close is at loop index 4, then
+         * 7, 10, 12, 14, 16, 18, 19, 21, 22, 24 - and the
+         * register walks
+         *   -140, -212, -270, -316, -353, -383, -407, -426, -441,
+         *   -453, -463, -471, ... -> -500 = F*s/T
+         * - the same fixed point as the RIGHT walk, mirrored, now
+         * reached from a deeper seed. */
         double xw = s.x;
-        long long vl = -132, dl = 0;       /* the entry call's -1 px is
+        long long vl = -140, dl = 0;       /* the hub admit's -1 px is
                                              * already in xw; its register
                                              * is what the loop below
                                              * continues from */
-        long long lfac = 0;                /* the BY_X feed: the entry
-                                             * pass left row_dx = -1 */
+        long long lfac = 1;                /* the BY_X feed: the entry
+                                             * call fed the persisted
+                                             * word -1 once already */
         int ldx = -1, lclose = 0;
         if (ll_play_v_raw(s.vx) != vl)
             badlaw = 1;
@@ -5008,22 +5075,22 @@ int ll_play_selftest(void)
             if (ll_play_v_raw(s.vx) != vl || s.x != xw + (double)dl)
                 badlaw = 1;
             if (s.fi != lclose % 12)
-                badlaw = 1;                 /* closes at loop indices 5, 8,
-                                             * 11, 13, 15, 17, 19, 20, 22,
-                                             * 23 - the feed's ladder, not
-                                             * a fitted row */
+                badlaw = 1;                 /* closes at loop indices 4, 7,
+                                             * 10, 12, 14, 16, 18, 19, 21,
+                                             * 22, 24 - the feed's ladder,
+                                             * not a fitted row */
         }
         CHECK(!badlaw);
-        CHECK(dl == -33 && s.x == xw - 33.0);      /* the 25 calls after the
-                                                     * entry; the entry's own
+        CHECK(dl == -37 && s.x == xw - 37.0);      /* the 25 calls after the
+                                                     * entry; the hub's own
                                                      * 1 px is in xw */
-        CHECK(s.fi == 10);                           /* ten of the twelve
+        CHECK(s.fi == 11);                           /* eleven of the twelve
                                                       * rows: the feed's
                                                       * ladder closing 6-unit
                                                       * rows while the body
-                                                      * travels 33 whole px,
-                                                      * the entry iteration's
-                                                      * 1 px included */
+                                                      * travels 37 whole px,
+                                                      * the hub admit's 1 px
+                                                      * in xw */
         ll_plt_free(&zp);
         free(zm);
     }
@@ -6146,6 +6213,137 @@ long long pv = 100, pd = 0;          /* A_PULL's own arithmetic,
         CHECK(rel_gx == 541);       /* the value that window shows */
         CHECK(rel_no == 511);       /* what dropping G_x predicts - wrong */
         CHECK(rel_gx != rel_no);
+    }
+    {   /* PR-529: THE x INTENT WORD IS THE KEY'S, NOT THE STATE'S.
+         * pr516i's NAMED A_JUMP window (PR-517's reader; the state's own
+         * words `F=180,0 T=20,1 G=0,55`, its control line carrying no
+         * BY_X bit) reads [obj+0xba] directly in a state where this port
+         * used to answer s = 0, and it is byte-exact in both directions:
+         *  - with the word at 20 the register gains idiv(F*s,20) = 180
+         *    at the step, past its own T=20 drag: 26->201, 201->341,
+         *    341->453, 363->471, 377->482, 386->489, 392->494,
+         *    396->497, 398->499 - nine pairs, nine exact.
+         *  - the moment the key lets go the SAME register decays on the
+         *    drag alone: 400, 320, 256, 205, 164, 132, 106, 85, 68, 55,
+         *    44, 36, 29, 24, 20, 16, 13 - seventeen values, each
+         *    idiv(v*20,100) off the one before it.
+         * WHAT THE WINDOW DOES NOT SETTLE is the CADENCE after 341->453:
+         * the capture pulls every OTHER step and plateaus near 400, while
+         * the pass PR-520 closed for the walk is unconditional, so the
+         * port pulls EVERY admit and plateaus at idiv(F*s,20)*100/T_x =
+         * 900. Which gate picks is OI-015's and stays open; the
+         * magnitude, the drag law and the release law are what this leg
+         * pins, and the level legs re-pin their numbers by the same
+         * arithmetic (Makefile ly_cjump_fwd, ly_pool).
+         * The third half is the SCOPE: A_JUMP's F/T/control words in a
+         * BY_TIME state, run through the iteration loop with the key
+         * held, G_y dropped so only the x column moves. Hand-derived:
+         * rows of 100 on the iteration feed admit once a step, each
+         * admit is one pass, so the register walks
+         *   180, 324, 440, 532, 606, 665, 712, 750, 780, 804
+         * (v + 180 - idiv(v*20,100), toward the 900 fixed point) and the
+         * body steps idiv(v,100): 1, 3, 4, 5, 6, 6, 7, 7, 7, 8 px = 54
+         * px in ten admits. Releasing the key at step 11 answers the
+         * decay above - 644, 516, 413, 331, 265, steps 6, 5, 4, 3, 2 -
+         * because the force term is idiv(F*s,20) with s = 0, not a
+         * state test. MUTATION, run: put PR-135's BY_X test back on the
+         * key term (`key_walk && (st->ctrl & LL_CTRL_BY_X) &&`) and
+         * exactly five checks fail - this leg's two halves (the register
+         * answers s = 0, frozen, x never moves) and the PR-529
+         * re-derivation of the walk-LEFT leg above it (the hub admit
+         * that seeds the walk: !badlaw, dl == -37, s.fi == 11) - and
+         * in the level legs the same script stops making the crossing:
+         * the pool run never lands at 705,617 and never reaches the
+         * exit. Nothing else in either suite moves. */
+        static const char JX[] =
+            "A_JUMPX\n\n[A_JUMPX]\ncontrol=BY_TIME\nF=180,0\nT=20,1\n"
+            "G=0,55\nseq=a\n1,100\n";
+        ll_mov_t jx;
+        CHECK(ll_mov_parse(JX, &jx) == 1);
+        const ll_mov_st *js = &jx.st[0];
+        CHECK(!(js->ctrl & LL_CTRL_BY_X));     /* the state is NO walk: the
+                                                 * old scope answered s = 0
+                                                 * here and that is the
+                                                 * whole question */
+        CHECK(js->fx == 180 && js->tx == 20 && js->gx == 0);
+        ll_player pj = { 0 };
+        pj.dirword = 1;
+        long long addj = ll_play_x_force(&pj, js, 20, 1);
+        CHECK(addj == 180);                    /* idiv(180*20,20), G_x = 0 */
+        static const long long jpull_a[] = { 26, 201, 341, 363, 377, 386,
+                                             392, 396, 398 };
+        static const long long jpull_b[] = { 201, 341, 453, 471, 482, 489,
+                                             494, 497, 499 };
+        int bad = 0;
+        for (size_t k = 0; k < sizeof jpull_a / sizeof jpull_a[0]; k++) {
+            long long w = ll_play_v_step(jpull_a[k], js->tx, addj);
+            if (w != jpull_b[k])
+                bad = 1;
+        }
+        CHECK(!bad);
+        CHECK(ll_play_x_force(&pj, js, 0, 1) == 0);  /* the release: no key,
+                                                      * no force term, and
+                                                      * A_JUMP authors G_x
+                                                      * = 0 to add */
+        static const long long jdecay[] = { 400, 320, 256, 205, 164, 132,
+                                            106, 85, 68, 55, 44, 36, 29,
+                                            24, 20, 16, 13 };
+        long long v = jdecay[0];
+        bad = 0;
+        for (size_t k = 1; k < sizeof jdecay / sizeof jdecay[0]; k++) {
+            v = ll_play_v_step(v, js->tx, 0);
+            if (v != jdecay[k])
+                bad = 1;
+        }
+        CHECK(!bad);
+        CHECK(v == 13);                        /* the last value the window
+                                                 * names, seventeen steps of
+                                                 * pure drag */
+        /* The scope, through the machine: same F/T/control, G=0,0 so only
+         * the x column moves, one row of 100 = one admit an iteration. */
+        static const char JB[] =
+            "A_AIRX\n\n[A_AIRX]\ncontrol=BY_TIME\nF=180,0\nT=20,1\n"
+            "G=0,0\nseq=a\n1,100\n";
+        ll_mov_t *jbm = calloc(1, sizeof *jbm);
+        ll_player pb;
+        ll_play_keys kb = { 0 };
+        CHECK(jbm && ll_mov_parse(JB, jbm) == 1);
+        ll_player_start(&pb, jbm, 500, 100, 1);
+        CHECK(pb.sti == 0 && pb.walkdir == 1 && pb.vx == 0.0);
+        kb.k_fwd = 1;                          /* the KEY, in a state that
+                                                * is not a walk */
+        static const long long braw[] = { 180, 324, 440, 532, 606, 665,
+                                          712, 750, 780, 804 };
+        static const double bxwant[] = { 501, 504, 508, 513, 519, 525,
+                                         532, 539, 546, 554 };
+        bad = 0;
+        for (int t = 1; t <= 10; t++) {
+            ll_player_step(&pb, NULL, &kb, 0, 2000, LL_ITER_MS);
+            if (pb.sti != 0 || pb.fi != 0 || pb.row_t != 0u)
+                bad = 1;                       /* one admit a step, and it
+                                                * wraps the one-row list */
+            if (ll_play_v_raw(pb.vx) != braw[t - 1])
+                bad = 1;
+            if (pb.x < bxwant[t - 1] - 1e-9 || pb.x > bxwant[t - 1] + 1e-9)
+                bad = 1;
+        }
+        CHECK(!bad);
+        CHECK(pb.y == 100 && pb.vy == 0.0);    /* G=0,0 and no BY_TY door:
+                                                 * the y column never opens
+                                                 * in this fixture */
+        kb.k_fwd = 0;
+        static const long long brel[] = { 644, 516, 413, 331, 265 };
+        static const double bxrel[] = { 560, 565, 569, 572, 574 };
+        bad = 0;
+        for (int t = 0; t < 5; t++) {
+            ll_player_step(&pb, NULL, &kb, 0, 2000, LL_ITER_MS);
+            if (ll_play_v_raw(pb.vx) != brel[t])
+                bad = 1;
+            if (pb.x < bxrel[t] - 1e-9 || pb.x > bxrel[t] + 1e-9)
+                bad = 1;
+        }
+        CHECK(!bad);
+        free(jbm);
     }
     {   /* PR-115: PR-110 open items 1 and 8 - how many ROWS ONE STEP may
          * close. The engine admits exactly one. 0x52320-0x5232b, the

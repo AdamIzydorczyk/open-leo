@@ -68968,3 +68968,173 @@ GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
       kind-1 mutation of MEASURED (e) and the RED of the
       L1 w=3 row were taken between those logs, and the
       final tree re-ran both halves clean.)
+
+## PR-529 - THE x INTENT WORD IS THE KEY'S, NOT THE STATE'S: [obj+0xba]
+## RIDES EVERY ADMIT IN ANY STATE, THE RESTART ARM MOVES TO THE FEED
+## WORD, AND ZARIA.01 RUNS END TO END UNDER KEYS
+
+```
+KIND: port
+SUBSYSTEM: the lion's physics pass (ll_play.c player_iterate) - the
+  scope of the x intent word and of the register-restart arm - plus
+  the level legs that re-derive from both, and ll_level.c's
+  play_force_state note.
+ADDRESSES: none new: the read is a NAMED capture window (pr516i,
+  381.50-383.10 s) against the shipped ZARIA.01 LEW.MOV state
+  words, and the pass's own addresses (0x54250, 0x542ab-0x542c7,
+  0x54358-0x54372) are PR-132/256's, unchanged and still current.
+NAMES: [obj+0xba], [obj+0xca], control=BY_X, F=, T=, G=, A_JUMP,
+  A_PRE_JUMP, A_FALL_DOWN, A_WSP, A_WSP_LIN, A_PODCIAG, A_LOOKUP,
+  A_WYJSCIE, K_FWD, LEO_PLAY_ROW_PHYSICS, ly_pool, ly_cjump_fwd.
+CODE: yes: `s` on the row-admit path answers the KEY'S word in
+  every state (auto_walk keeps the BY_X scope); `zero_restart`
+  keys on the persisted FEED WORD [obj+0xca], scoped to BY_X, not
+  on a zero register; three Makefile legs re-pinned, two added
+  (ly_pool, ly_cjump_fwd), two hermetic legs added (A_JUMPX,
+  A_AIRX); ll_level.c comment corrected.
+HOOKS: none
+MEASURED: (a) THE WINDOW IS BYTE-EXACT IN BOTH DIRECTIONS. pr516i's
+  named A_JUMP window - [A_JUMP] is BY_TIME, `F=180,0 T=20,1
+  G=0,55`, no BY_X bit anywhere - holds intent 20 through an
+  airborne state and the register answers idiv(F*s,20) = 180 at the
+  value it carries: 26->201, 201->341, 341->453, 363->471,
+  377->482, 386->489, 392->494, 396->497, 398->499, nine pairs
+  nine exact; the instant the key lets go the SAME register decays
+  on the drag alone - 400, 320, 256, 205, 164, 132, 106, 85, 68,
+  55, 44, 36, 29, 24, 20, 16, 13, seventeen values. Both ladders
+  are pinned hermetically through ll_play_v_step/ll_play_x_force.
+  (b) WHAT THE WINDOW DOES NOT SETTLE IS THE CADENCE. After
+  341->453 the capture pulls every OTHER step - its own arithmetic
+  v -> (v*0.8+180)*0.8 plateaus near 400 - while the pass PR-520
+  closed for the walk is unconditional, so the port plateaus at
+  idiv(F*s,20)*100/T_x = 900. That gap now decides a level
+  question, and both sides are counted, not fitted: the measured
+  leap covers 320 px in 38 admitted steps (7/8/9 px each); at the
+  alternating plateau's idiv(400,100) = 4 px the same 38 admits
+  carry 152 px, and the far bank is 239 px off the takeoff.
+  (c) THE RESTART ARM, RE-KEYED AND COUNTED. PR-522's 7/7 cold
+  entries carry a NON-zero register (1, 2, -12, 1) with the
+  accumulator at 0/1 under the threshold and the feed answering 0,
+  and the engine still runs one register step - the trigger is the
+  zero feed word, not a zero register. Causality, selftest: HEAD
+  0 FAILED; the widened s alone 25; the widened s with the
+  feed-word arm exactly 3, all in ONE leg (the walk-LEFT leg -
+  its hub state authors F=100,0, so with the key held the hub
+  pulls at its own admit); re-derived by hand and green: hub
+  admit v_step(-99, 60, idiv(100*-20,20)) = -140 with a -1 px
+  hub step, NO entry pass at the walk (the word was already held
+  and [obj+0xca] is -1, so neither seed arm answers), the entry
+  feed answering 1, first close at loop index 4, register ladder
+  -140, -212, -270, -316, -353, -383, -407, -426, -441, -453,
+  -463, -471, dl = -37 and eleven rows closed - matched against
+  the instrumented run byte for byte. The arm's BY_X scope came
+  from a LEVEL symptom, not the selftest: read unscoped, a state
+  that never runs the step-word feed has [obj+0xca] = 0 by
+  construction, so the arm answers at EVERY iteration a direction
+  key is held - at the A_TURN_BACK -> A_WSP hand-off (ly_climb)
+  that runs a pass where the authored `1,300 2,200` list admits on
+  its time feed, its ground query answers NO, and the PR-97
+  contact-line invariance that keeps the feet on the surface is
+  skipped: the lion drops 4 px off ground he was standing on.
+  (d) THE SCOPE PROVEN AS A SCOPE. A BY_TIME fixture with
+  A_JUMP's F/T words and one row of 100, FWD held: the register
+  walks 180, 324, 440, 532, 606, 665, 712, 750, 780, 804 and the
+  body steps 1, 3, 4, 5, 6, 6, 7, 7, 7, 8 px = 54 px; release at
+  step 11 and it decays 644, 516, 413, 331, 265 with steps 6, 5,
+  4, 3, 2. MUTATION, run: putting PR-135's BY_X test back on the
+  key term fails exactly five checks - this leg's two halves and
+  the walk-LEFT leg's derivation above - and the pool run stops
+  reaching the far bank; nothing else moves. (e) THE LEVEL, END
+  TO END (ly_pool, NEW): hold FWD, JUMP at 377. The takeoff is
+  (385,651) at 377; the apex is y 551 at 406, exactly 100 px
+  above the line the leap left (PR-253's closed form, untouched
+  here); the landing is GROUNDED on the east bank at (705,617)
+  at 426 - the 408..624 chasm crossed in 38 admitted steps; the
+  walk continues to the pier and off it at (986,655) at 503;
+  inside the authored DRECT box 988,645;1340,750 with vy > 0 the
+  answer prints at 506 (`0x80000`) and `A_FALL_DOWN -> A_WPAD`
+  runs at 507; A_WPAD's own list ends at 526 and `A_WYJSCIE`
+  takes the dry state at 527, where PR-526's class verb 0x1e250
+  reads state index 9 with AC_BREAK_NEXT and the stage driver
+  exits with loop code 3. No test injection anywhere in that run.
+  (f) THE KEY WORD IS THE WHOLE DIFFERENCE BETWEEN TWO JOURNEYS
+  (ly_cjump, re-keyed, and ly_cjump_fwd, NEW): the same
+  mid-climb JUMP pressed `UP,JUMP` reproduces PR-333's ladder
+  re-catch chain for all 318 ticks, every position and frame
+  index identical to the run before this PR; pressed `FWD,UP,JUMP`
+  it flies 241 -> 550 (9 px an admit), the LINA rope answers
+  (`set 600000`) at 230, its climb rows and A_PODCIAG's lift
+  rows set the lion down GROUNDED on the canopy at (547,506) at
+  309. No run before this PR could reach the rope from the
+  ladder. (g) THE RE-PINNED LEGS, and what did NOT move: ly_trv
+  - the fall drifts now that [A_FALL_DOWN]'s `F=120,0` rides the
+  key (415 at 91, the descent cycle 10 ticks wide, the second
+  pass steps OVER the authored end 405 at 236 / 411 grounded 0 at
+  237, deaths at (454,1010) 159 and (455,1010) 308, the SEMI
+  push count 126 -> 63); ly_revwalk - the walk to the branch end
+  stands pin for pin, the AIRBORNE half is carried to
+  (647,1023) at 471, so the tick budget goes 430 -> 480 and the
+  respawn at 472 is pinned; ly_zwalk - UNCHANGED, because
+  A_TURN/A_DRAP author F=0,0: their G words move the carried
+  register (-720 -> -760 at 62) and idiv(v,100) answers the same
+  step word, so no position or frame index moves.
+OPENS: OI-015 (which gate runs the pull: the capture's alternating
+  cadence or the port's every-admit pass - it now decides whether
+  the ORIGINAL's lion can cross 408..624 at all); OI-124 (the
+  seat chain stays the mechanism the shipped game PLACES at that
+  gap; the port's own leap is measured, the original's carrier is
+  not).
+CLOSES: none as a row. "The chasm cannot be crossed under keys"
+  is spent as a statement about the port: ly_pool runs spawn ->
+  crossing -> pool -> A_WYJSCIE -> exit 3, and the ladder leap
+  with the key held reaches the rope.
+CORRECTS: PR-523, twice: (i) the seed arm's trigger "a zero
+  register met by a held intent" - it is the zero FEED WORD
+  [obj+0xca], and the effective scope is unchanged since the old
+  arm was only reachable through a BY_X s; (ii) the ly_cjump
+  note's "A_PRE_JUMP's OWN `F=180,0` header - the state's
+  authored x force, idiv(180*20,20) = 180 a pass, the raw
+  register 300, 540, 732" - that ladder is the state's `G=300,55`
+  word, which rides every admitted pass with no key held at all;
+  the F word is a KEYED term, and this PR's window is what
+  separates the two.
+```
+
+- WHY. The session objective is ZARIA.01 playable end to end,
+  and PR-527/528 had narrowed the level to exactly one gap - the
+  408..624 chasm - with two authored candidates, of which the
+  rope had been measured OUT as a carrier. What was left standing
+  was a question about the port's own law, not about a class:
+  PR-517's capture carries the intent word [obj+0xba] in an
+  AIRBORNE, non-BY_X state, while the port had kept PR-135's
+  BY_X-only scope because the walk was the only window closed at
+  the time. That is a bounded read - one named window, nine pull
+  pairs and a release ladder - and shipping it either closes the
+  level's last gap under keys or measures exactly how far the
+  remaining cadence question is from closing it. It did both: the
+  level now runs end to end, and the same numbers say the
+  original's lion, pulling every other step, would land in the
+  pit. The restart arm had to move with the word, because a word
+  that is held THROUGH a turn state no longer has a rising edge
+  at the walk's entry - and the honest trigger turned out to be
+  the one PR-522 measured, the feed word, not the register.
+GATE: make 0 warnings; verify-all fixtures rc=0 76 (ok);
+GATE-FIXTURE-FREE: rc=0 14 (ok) + 21 named verify-SKIPs
+      (the pair of this record's final tree:
+      /tmp/opencode/pr529_gate7.log and pr529_gate8.log, run
+      after the docs and the regenerated index; an earlier pair
+      on the same code, pr529_gate1/2.log, gave the same
+      counts. Two (ok) more than PR-528's 74: the two new level
+      legs ly_pool and ly_cjump_fwd. The fixture-free counts
+      are PR-526/527/528's, coverage unchanged. One flake is
+      counted, not hidden: the middle pair's fixture half came
+      home rc=2 on verify-golden alone under -j32 load (76 (ok)
+      everywhere else); `make verify-golden` on its own returned
+      rc=0 with 30 pose hashes matching, which is the
+      wall-clock sensitivity OI-126 already carries, and the
+      final pair passed it. The MUTATION of MEASURED (d) -
+      PR-135's BY_X scope restored on the key term - was taken
+      between those runs: five checks red, exactly the two new
+      hermetic halves plus the walk-LEFT leg's re-derivation,
+      and the pool run losing its crossing; the final tree
+      re-ran both halves clean.)

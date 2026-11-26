@@ -5337,9 +5337,12 @@ typedef struct {
  * 131/219) all ask AC_ONAIR,AC_DRECT. The port DOES raise AC_DRECT -
  * ZARIA.01 authors the one DRECT box in the shipped placement text,
  * 988,645;1340,750, and rect_class_answer answers it for a falling
- * player inside it (OI-018) - but that is the far east end of the
- * level and no leg walks there yet, while the state's END, the
- * stage-complete leg of PR-526, is what the level is measured on.
+ * player inside it (OI-018) - and PR-529's ly_pool leg now walks the
+ * level far enough to reach it under keys: the answer at 506 and the
+ * authored `A_FALL_DOWN -> A_WPAD` at 507 are that run's own lines.
+ * The injection stays for the states a leg still cannot drive from the
+ * keys (the PR-526 stage-complete leg enters A_WPAD at tick 5), and
+ * for the ones whose entry the port has no path into at all.
  * Nothing is printed and no byte changes unless the variable names a
  * state. */
 static void play_force_state(play_ctx *pl, const char *spec, int tk)
