@@ -423,10 +423,18 @@ OI-015: the PR-135 non-modelled list: vertical constants not
     every position step is v//100 (or twice it when two admits share
     a 20 ms sample): 18/18 steps, no exceptions, and the register
     update v += idiv(F*s,20) + G_x - idiv(v*T_x,100) predicts 18/18.
-    Against that the admit rate here is ~11.2/s while the authored
-    walk rows (threshold 6) fed by v//100 would give ~16.7/s at the
-    same register - the feed gate is now the ONLY term between the
-    port and the measured walk.
+    THE FEED HALF IS CLOSED IN THE SAME PASS. accum_a1 is in the
+    capture: over this window it walks 0, 1, 3, 6 (hit, subtract),
+    3, 1, 5... - one increment per iteration of exactly v//100 (1 at
+    v=131, 2 at v=235, 3 at v=318), against the authored threshold 6
+    at the same ~20 Hz the time-mode states showed. A walking state
+    is therefore NOT behind an extra feed gate: its admit rate is the
+    mode-0 feed over the threshold and it climbs with the register,
+    ~2/s at v=131 to ~16/s at v=600; summing the observed feed over
+    the window's 30.4 iterations predicts 21.8 admits where the
+    sampler resolves 17 step samples with at least four of them
+    carrying two admits, and 78 px of travel at the mean v//100 of
+    4.32 is 18 admits - closed within the sampling resolution.
 
 OI-016: the BY_TY vertical feed law
   status: CLOSED BY PR-147/PR-148/PR-168/PR-178

@@ -67800,6 +67800,22 @@ SUBSYSTEM: pr516i's walk window at 394.16-395.68 s read against
   same step is not separable in this window (no position step
   deviated from v//100 or its double, which is two admits inside one
   20 ms sample gap).
+  (5b) THE SAME PASS CLOSES THE FEED HALF OF THAT QUESTION. The
+  accumulator is in the capture: over this window accum_a1 walks
+  0, 1, 3, 6 (hit, subtract) 3, 1, 5... - one increment per game
+  iteration of exactly v//100 (at v=131 it adds 1, at v=235 it adds
+  2, at v=318 it adds 3), against the authored row threshold 6, at
+  the same ~20 Hz the time-mode states showed. So a walking state's
+  admit rate is not gated by anything else: it is the mode-0 feed
+  divided by the threshold, and it climbs with the register - from
+  ~2/s at v=131 to ~16/s at v=600. Summing the observed feed over
+  the window's 30.4 iterations gives 21.8 admits; the trace resolves
+  17 position-step samples but at least four of them carry two
+  admits inside one 20 ms sample (one step is exactly 2 x v//100),
+  and 78 px of travel at the window's mean v//100 of 4.32 is 18
+  admits. Within the sampler's resolution, the walk cadence closes.
+  The paragraph above, written before this was computed, named the
+  feed gate as missing - it is not missing for a walking state.
 ADDRESSES: 0xba (intent_x, the +/-20 word), 0xc2 and 0xc6 (the two
     velocity registers), 0xa1 (accum_a1), 0x95 (gate_95), 0x3c (the
     name vector slot), 0x5427c and 0x542a7 (the drag), 0x5434f (the

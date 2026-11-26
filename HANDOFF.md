@@ -3357,8 +3357,12 @@ record.
   by PR-517's runtime vector - and cannot be: A_DEAD is F=0,0 /
   T=100,100 / seq=death - so OI-130 is PARTIAL again and every
   remaining name must be earned by fitting measured F/T/G to an
-  authored block. What is still missing is one term: the feed rate
-  (~11.2 admits/s observed against ~16.7/s from threshold 6). T3 is
+  authored block. The feed half closed in the same pass: accum_a1
+  shows the mode-0 feed is exactly v//100 per iteration at ~20 Hz
+  against the authored threshold 6, so a walk's admit rate simply
+  climbs with its register (~2/s at v=131 to ~16/s at v=600), and
+  the window's 78 px against 21.8 predicted admits matches within
+  the sampler's resolution - no extra feed gate for a walk. T3 is
   PR-521: implement the x law as written, re-derive the red legs on
   this arithmetic, move LL_PLAY_INTENT_FULL to 20 and the gate
   default with it, and audit the name map.
