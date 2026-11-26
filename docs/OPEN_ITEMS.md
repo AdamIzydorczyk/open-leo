@@ -9298,13 +9298,15 @@ OI-131: the object class's +0x90 verb is a STATE-REQUEST FILTER, and
     and the dive's real entry route is one of them (OI-053's
     message half).
 
-OI-132: the death LINE is a camera-row measure plus 500, not the
-  authored lew_rect bottom; the port's stand-in NOW spends a life and
-  ends the run (PR-531) - the LINE and the engine's exact trigger are
-  what stays open
+OI-132: the death LINE is the main_back LAYER'S OWN HEIGHT WORD
+  ([desc+0x2], the tlo controller's descriptor array) plus 0x1f4 -
+  READ in full (PR-532), a per-level table settled; the port still
+  tests the authored lew_rect bottom, which matches NO shipped level
   status: PARTIAL (PR-531 SHIPPED the cost, the zero exit at loop
-    code 2 and the 0x5d2f0 reset-and-stop consumer; the LINE itself
-    and the engine's own state-2 + wrap trigger stay open)
+    code 2 and the 0x5d2f0 reset-and-stop consumer; PR-532 READ the
+    LINE end to end; PR-533 owes the port - ydead := desc height +
+    500 with a named fallback for the NULL desc (JUNCTION) - and the
+    engine's own state-2 + wrap trigger stays open)
   origin: PR-530
   notes: WHAT IS READ (PR-530, all bytes). The lion family's class
     verb at +0x90 (0x54450, held at +0x90 by 37 of the 189 class
@@ -9349,6 +9351,32 @@ OI-132: the death LINE is a camera-row measure plus 500, not the
     else. The level loop's zero exit (0x4ae82 -> code 2) and its
     consumer (0x5d3f3 -> 0x5d3e3 -> 0x5d2f0) are read, and the port
     has no code-2 path at all.
+    PR-532 READS THE LINE ITSELF and re-titles this row (the
+    "camera-row" guess is dead): 0x54452-0x5446e is
+    sx16(WORD [[[0xcef40+0x390]+0x44] + main_back*4 + 0x2]) + 0x1f4.
+    The object at +0x390 is the tlo controller (PR-208's name),
+    built by FUN_00057250 ([P+0x18]=N layers, [P+0x44]=N DESCRIPTOR
+    POINTERS - NULL kept at the tlo index when the .PCM is absent,
+    0x572f5-0x57302); each descriptor is 0x16 bytes (0x5c320) whose
+    +0x2 word the constructor 0x56d40 copies from the loaded .PCM -
+    the layer HEIGHT: 0x57460, the very law PR-57/66 capture-
+    verified, uses the same word at -200. cfg: main_back= (0x4d099
+    -> 0x574f0 -> [P+0x1c], default N-1 at 0x57265); back_rect=
+    (0x4d0e0 -> 0x57570 -> the clamp rect 0x57590). MEASURED PER
+    LEVEL with the port's readers (/tmp/opencode/pr532_line_census.
+    log): line = 900 RAN.01, 1200 ZARIA.01/.02, 3500 SADES.06,
+    1200 KADMAR.07, 2300 KADMAR2, 1074 ENA.03, 1700 ENA2, 1100
+    LONA.05, 1500 KARA.07, 1100 TUNGA.11, 1300 TUNGA2.12; NULL
+    desc at JUNCTION (a .pcx-only tlo: the read is WORD [2], the
+    DOS4GW low page). On all 8 levels where back_rect AND the
+    main_back art exist, art height == back_rect height byte for
+    byte, so the line is back_rect-height + 500 there and the
+    reference art's height + 500 on the 4 CD-hole levels (PR-65's
+    "the reference layer IS the world" is the same data). NO
+    shipped lew_rect y1 equals the engine line; ZARIA_A.PLT line
+    45 at 1500 is NOT the catcher either (1200 is). main_back
+    default divergence (engine N-1, port 0) is unreachable on
+    shipped data. PORT: PR-533.
     PR-531 PORTED THE HALVES THAT NEED NO NUMBER and flipped this
     row. SHIPPED: below the line the step writes ONLY energy -1
     (0x54478); the consumer spends one life with energy 100 and the

@@ -5322,7 +5322,19 @@ typedef struct {
                                              * class carries the         *
                                              * end-of-stage rule read at *
                                              * 0x1e250                    */
-    double xmin, xmax, ydead;               /* lew_rect bounds            */
+    double xmin, xmax, ydead;               /* lew_rect bounds. PR-532    *
+                                             * READ the engine's real      *
+                                             * death LINE: 0x54458-0x5446e *
+                                             * is sx16(WORD [desc+0x2])    *
+                                             * + 0x1f4, desc =              *
+                                             * [[tlo ctrl 0xcef40+0x390]   *
+                                             * +0x44] + main_back*4 - the  *
+                                             * main_back .PCM descriptor,  *
+                                             * +0x2 = its height (0x57460  *
+                                             * uses the same word - 200).  *
+                                             * The lew_rect bottom stays   *
+                                             * the stand-in until PR-533   *
+                                             * ports it. */
     double sx, sy;                          /* pozycja spawn              */
     ll_play_keys keys;                      /* held arrows (live path)    */
     int layer;                              /* the lion's layer = main_back */
@@ -14041,7 +14053,17 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
         }
 
         /* bounds: lew_rect=x0,y0;x1,y1 (feet clamp + world-bottom death);
-         * fall back to back_rect, else no clamp */
+         * fall back to back_rect, else no clamp. PR-532 READ: the
+         * engine's own death line is NOT lew_rect: 0x54464-0x5446e takes
+         * the main_back .PCM descriptor ([[tlo-ctrl+0x44]+main_back*4),
+         * sx16(WORD [desc+0x2]) - the layer's height, the same word the
+         * verified PR-57 parallax law reads at 0x5747f (minus 200) - and
+         * adds 0x1f4. Measured per level (census /tmp/opencode/
+         * pr532_line_census.log): ZARIA.01/.02 1200, RAN.01 900, ...;
+         * it equals back_rect-height + 500 on all 9 levels that author
+         * a back_rect, and the height of the reference art on the 4
+         * CD-hole levels. lew_rect y1 stays the stand-in until PR-533
+         * ports the real line. */
         const char *lr = des_get(kvs, nk, "lew_rect");
         int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
         if (lr && sscanf(lr, "%d,%d;%d,%d", &x0, &y0, &x1, &y1) == 4 &&

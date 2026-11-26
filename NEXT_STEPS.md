@@ -69467,3 +69467,157 @@ GATE-FIXTURE-FREE: rc=0 15 (ok) + 21 named verify-SKIPs
       the consumer's energy-100 write breaks it at the consumer
       leg. All three restored, rebuilt, and the hermetic legs
       re-green before the cited pair.)
+
+
+## PR-532 - THE DEATH LINE, READ: IT IS THE MAIN_BACK LAYER'S OWN
+## HEIGHT WORD ([desc+0x2], THE SAME WORD THE VERIFIED PARALLAX LAW
+## READS AT -200) PLUS 0x1f4 - A PER-LEVEL TABLE, AND lew_rect IS ON
+## NONE OF THE 13 LEVELS
+
+```
+KIND: read
+SUBSYSTEM: the source of the line 0x54450 tests (PR-530/531's
+  below-line leg): the verb head 0x54452-0x5446e; the object it
+  reads - the tlo controller at [0xcef40+0x390], the same object
+  PR-208 named ("'T' drives the tlo controller [level+0x390]") and
+  PR-179 F1 mis-named a pool - through its two .des keys read here
+  (main_back= 0x4d099-0x4d0d6 -> 0x574f0 -> [P+0x1c]; back_rect=
+  0x4d0e0-0x4d145 -> 0x57570 -> the bounds [P+0x00..0x0c] that
+  0x57590 clamps the scroll against); its build FUN_00057250 (the
+  layer count [P+0x18], the default index, the four arrays, the
+  per-tlo descriptor creation through the '.pcm' name search
+  0x57c60, the 0x16-byte descriptor and its constructor 0x56d40);
+  the SAME word in the capture-verified PR-57 parallax recompute
+  0x57460 and in the PCM tile samplers 0x57710/0x57780; and the
+  port's ydead (two comment sites in ported/ll_level.c).
+ADDRESSES: 0x54452, 0x54458, 0x5445e, 0x54461, 0x54464, 0x54467,
+  0x5446b, 0x5446e, 0x4d099, 0x4d0b2, 0x4d0c2, 0x4d0ca, 0x4d0d0,
+  0x4d0d6, 0x4d0e0, 0x4d0f9, 0x4d11e, 0x4d145, 0x574f0, 0x57570,
+  0x57590, 0x57595, 0x575a8, 0x575c2, 0x575d6, 0x5725f, 0x57265,
+  0x57272, 0x57277, 0x57284, 0x57296, 0x572ad, 0x572b5, 0x572f0,
+  0x572f5, 0x572fa, 0x57302, 0x5730d, 0x5731b, 0x57320, 0x5732d,
+  0x57341, 0x5734e, 0x57355, 0x57365, 0x57c60, 0x49aa0, 0x56d40,
+  0x56d5f, 0x56d63, 0x56d6c, 0x56d7a, 0x56d8e, 0x57473, 0x57479,
+  0x5747f, 0x57486, 0x5749b, 0x5749e, 0x574a8, 0x574ad, 0x57710,
+  0x5774a, 0x5774d, 0x57750, 0x5776a, 0x57780, 0x76a64, 0x5c320,
+  0x49920, 0x76d20, 0x68ce6, 0x76ea6, 0xa277c, 0xa27a4.
+NAMES: main_back, back_rect, tlo=, .pcm, 0x91e5d, 0x91e67,
+  0x91e6b, 0x91e75, 0x92302, 0x961fc, PLAN1.PCM, MASKA2.PCM,
+  tlo controller, layer descriptor, OI-132, PR-57, PR-65, PR-179
+  F1, PR-189 F4, PR-208, PR-530, PR-531, ydead, lew_rect.
+CODE: no: comment-only corrections at the two ported/ll_level.c
+  sites that OWN the stand-in (the play_ctx.ydead field, the
+  lew_rect bounds block of the run route). Both now state the read
+  law and name PR-533 as the port. No output bytes change, so the
+  full pair still runs against an untouched binary.
+HOOKS: none.
+MEASURED: (a) THE CHAIN, VERBATIM. 0x54452 mov ecx,ds:0xcef40;
+  0x54458 mov ecx,[ecx+0x390] (the tlo controller P - PR-208's
+  object); 0x5445e esi=[P+0x1c]; 0x54461 ecx=[P+0x44]; 0x54464
+  ecx=[ecx+esi*4]; 0x54467 movsx ecx,WORD PTR [ecx+0x2]; 0x5446b
+  esi=[obj+0x4] (the object's y, PR-530); 0x5446e add ecx,0x1f4;
+  0x54474 cmp ecx,esi. THE LINE = sx16([desc+0x2]) + 500, where
+  desc = [[P+0x44] + main_back*4]. (b) main_back=: 0x4d099
+  strcmps 'main_back' (0x91e5d) through 0x76d20; the body parses
+  ONE int with ' %d' (0x49920, format 0x91e67), takes
+  edx=[ebp+0xf2], eax=[esi+0x390] and calls 0x574f0 - `mov
+  [eax+0x1c],edx` + the 0x57460 recompute. The build default is
+  [P+0x1c] = N-1 (0x57265): the port's default is ref 0 - a DIVERGENCE
+  only for N>1 with no main_back=, which NO shipped level has
+  (JUNCTION and KADMAR2 omit the key but are N=1, where N-1 == 0).
+  (c) back_rect=: 0x4d0e0/0x4d0f9-0x4d145 parses ' %d,%d,%d,%d'
+  (0x91e75) into 0x57570 - [P+0x0]=x0, [P+0x4]=x1, [P+0x8]=y0,
+  [P+0xc]=y1 - the exact rectangle 0x57590 clamps scroll [P+0x10]
+  into [[P+0x0], [P+0x4]-0x140] and [P+0x14] into [[P+0x8],
+  [P+0xc]-0xc8]: PR-66's 320x200 view and PR-65's world extent,
+  confirmed. (d) THE DESCRIPTOR. FUN_00057250: [P+0x18]=N; arrays
+  of N dwords from 0x76a64 at 0x57272 -> [P+0x44] (the desc
+  POINTERS), 0x57284 -> [P+0x20], 0x57296 -> [P+0x24] (the
+  percent pair), 0x572ad -> [P+0x28] (the computed offsets); per
+  tlo entry i, [P+0x44][i] is ZEROED FIRST (0x572f5, so absent
+  art keeps a NULL at its tlo index - PR-57's "tlo indices count
+  absent layers too", now at the bytes), then 0x57c60 (edx=".pcm"
+  0x92302, wrapper over 0x76ea6) searches the name: miss (eax =
+  -1, 0x57302) leaves NULL; hit allocates 0x16 bytes (0x5c320),
+  zeroes word+0x0/word+0x2/dword+0x4/word+0xc/dword+0xe/dword+
+  0x12, installs vtable 0xa27a4 then 0xa277c at +0x8, calls the
+  vtable head 0x56d40 - which loads the object (0x49aa0 over the
+  slot finder 0x68ce6) and copies its dimensions into desc+0x2
+  and desc+0x0 through the loaded object's verb +0x1c with arg
+  2 (0x56d6c-0x56d7a, 0x56d85-0x56d90). (e) WHICH WORD IS THE
+  HEIGHT. Threefold: (i) 0x57460 - the exact law PR-57/66 shipped
+  and capture-verified - uses sx16([desc_i+0x2]) - 0xc8 and
+  sx16([desc_R+0x2]) - 0xc8 as the y terms where the port uses
+  the decoded .PCM heights; (ii) 0x57710/0x57780 index THE SAME
+  [P+0x44] array by layer and call the descriptor's verb +0x8
+  with the 0x50-tile strip math of the .PCM format; (iii) the
+  census (f). (f) THE PER-LEVEL TABLE, measured with the port's
+  own .des/.PCM readers (/tmp/opencode/pr532_line_census.log):
+  main_back -> art -> LINE = height+500, against the port's
+  current ydead (lew_rect y1): RAN.01 plan1.pcm 400 -> 900
+  (port 400); JUNCTION no .pcm at index 0 -> NULL desc, the read
+  is WORD [2] in the DOS4GW low page (port 300); ZARIA.01 and
+  ZARIA.02 plan1.pcm 700 -> 1200 (port 1000); SADES.06 plan1_.
+  pcm 3000 -> 3500 (port 10000); KADMAR.07 plan1_.pcm 700 ->
+  1200 (port 5000); KADMAR2 plan_.pcm 1800 -> 2300 (port 1595);
+  ENA.03 main_back=1, plan2a.pcm 574 -> 1074 (port 2000); ENA2
+  plan1a_.pcm 1200 -> 1700 (port 1300); LONA.05 plan12.pcm 600
+  -> 1100 (port 10000); KARA.07 main_back=2 = MASKA2.PCM 1000 ->
+  1500 (port 10000); TUNGA.11 plan1.pcm 600 -> 1100 (port 700);
+  TUNGA2.12 plan1_.pcm 800 -> 1300 (port 10000). NO shipped
+  lew_rect y1 equals the engine's line. And on all 9 levels that
+  author a back_rect WITH main_back art present, the art height
+  equals the back_rect height byte for byte (400, 700, 1800, 574,
+  1200, 600, 1000, 600 - all 8 levels where both a back_rect and
+  the main_back art exist; JUNCTION has a back_rect but no
+  descriptor) - so the
+  line is back_rect-height + 500 wherever back_rect exists, and
+  the reference art's height + 500 on the 4 CD-hole levels; PR-65
+  ("the reference layer's own art is the world") is the same data.
+  (g) THE PLT QUESTION, ANSWERED: ZARIA_A.PLT's line 45 at y
+  1500 (OI-132 asked whether it is the engine's catcher) is NOT
+  - ZARIA's line is 1200; that polyline row sits 300 below it.
+OPENS: OI-132 stays PARTIAL, now RE-TITLED by the read: what
+  remains is PORTING (PR-533: ydead := desc height + 500, with a
+  chosen fallback where the desc is NULL - JUNCTION - or the art
+  is absent) and the engine's exact life trigger (the state-2 +
+  wrap pulse and the request-2 arm, PR-531). The main_back
+  default divergence (N-1 vs 0) is recorded, unreachable in
+  shipped data.
+CLOSES: none as a row; the OI-132 question about ZARIA_A.PLT
+  line 45 is answered (not the line).
+CORRECTS: PR-179 F1's FINDING 1 - "THE POOL OBJECT LAYOUT", its
+  members as name records, and the test as "a class-RANGE rule
+  keyed on a word in the pool's current name-record ... compare
+  with [obj+0x4] (the class id)": the object at +0x390 is the
+  tlo controller (its own keys are read here), [P+0x44] is its
+  LAYER-DESCRIPTOR array, the word is the layer HEIGHT, and the
+  comparison is against the object's Y (PR-530). PR-189 F4's
+  "row arrays" and this thread's own PR-531 wording ("the camera
+  record's word at [rec+0x2], the [cam+0x44] row arrays never
+  walked", "a camera-row measure plus 500") - the array IS now
+  walked and it is not rows of a camera: it is the layer stack,
+  and the measure is the main_back layer's height.
+```
+
+- WHY. ZARIA.01's last playable gap is the pit: PR-531 gave the
+  fall a cost, but the fall is measured against the wrong line.
+  PR-530 guessed a camera row; PR-532 walks the array and finds
+  the authoring data behind every level's death line - one word
+  the engine already uses, -200, in the parallax law this repo
+  verified against captures. The table settles the number per
+  level (ZARIA: 1200, not the authored 1000 and not the PLT's
+  1500), so PR-533 can port ONE named value instead of a
+  stand-in, and every pinned leg can be re-derived against the
+  engine's real line.
+
+GATE: make 0 warnings; verify-all fixtures rc=0 78 (ok);
+GATE-FIXTURE-FREE: rc=0 15 (ok) + 21 named verify-SKIPs
+      (the pair of the final tree, after this record and the
+      index rows were written: /tmp/opencode/pr532_gate1.log and
+      pr532_gate2.log. No C shipped - the comment-only diff
+      recompiles byte-equivalent, but the full pair ran anyway,
+      which is what PR-530's precedent asks of a read that
+      touches ported/. The census itself is
+      /tmp/opencode/pr532_line_census.log, produced by the
+      UNCHANGED viewer over the 13 chapters.)
