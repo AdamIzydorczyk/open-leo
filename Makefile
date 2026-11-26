@@ -3984,7 +3984,12 @@ ifeq ($(PX_DATA),1)
 # line. And the wall is measured, not assumed: ly_pal_walk is never
 # grounded past x 406 (the chasm's west lip) nor above pos 648,
 # while ly_pal_top reaches the 509 terrace by air and misses the
-# 380 seat by 53 px of x. See the PR-537 record.
+# 380 seat - in x, PR-537 read, but that x was the port's OWN
+# lew_rect clamp: PR-541 shows the engine never applies those x
+# values, re-pins this leg for the free-x truth (the miss is
+# HEIGHT: apex feet 473 vs the 380 line), and adds ly_east_walk
+# for the walk the fake wall used to stop. See the PR-537 and
+# PR-541 records.
 	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=8 LEO_PLAY_DANGER=0 \
 	  LEO_PLAY_SEAT=0 LEO_PLAY_SCRIPT="1:FWD" \
@@ -4035,13 +4040,20 @@ ifeq ($(PX_DATA),1)
 # (ll_play.c: the landing test is p->vy >= 0 together with
 # ground_y >= (double)hit.y - 1.0): the
 # next tick's line reads pos 927,477 grounded 1, the authored terrace
-# `1 922,509;968,508`. The 630 jump then peaks ABOVE the 380 seat
+# `1 922,509;968,508`. The 630 jump then peaked ABOVE the 380 seat
 # line at exactly one x - 1000 - and the seat's own x-bracket is
 # 885..947, so no line meets him there: zero rows at pos 348 (= 380
 # - the WALK contact) or 443. The seat is reachable in height and
-# missed in x, and the missed width is 53 px. A JUMP pressed in
+# missed in x, and the missed width is 53 px. [PR-541 CORRECTS this
+# half: x 1000 was the port's OWN lew_rect clamp - the engine writes
+# those four integers and reads them nowhere (0x4d3ba -> 0x49f90 ->
+# [level+0x8..0x14]; zero readers over all 257 loads of the level
+# global). With x free the 630 jump takes off at the terrace's east
+# end (972,480), crosses the 280-line seat's bracket 930..992, and
+# its apex 1092,441 = feet 473 stays 93 px BELOW the 380 line: the
+# seat is MISSED IN HEIGHT, not in x. A JUMP pressed in
 # A_DRAP is not that jump at all: the port gives A_JUMP_S, a smaller
-# pull (ly_pal10's later presses peak at pos 375 at x 1000), and
+# pull, and
 # A_JUMP comes only out of A_WALK/A_RUN. (3) THE CENSUS, re-derived
 # with the box window the port actually tests (`by0 <= p.y <= by0+h`
 # with the WALK box spanning line-32 .. line, PR-97): a balloon point
@@ -4083,14 +4095,95 @@ ifeq ($(PX_DATA),1)
 	    cat /tmp/opencode/ly_pal_top.log; exit 1; fi
 	@grep -q 'play tick 615: state A_JUMP seq jump frame 8 pos 855,470' /tmp/opencode/ly_pal_top.log \
 	  && grep -q 'play tick 624: state A_JUMP seq jump frame 8 pos 927,477 grounded 1' /tmp/opencode/ly_pal_top.log \
+	  && grep -q 'play tick 630: state A_JUMP seq jump frame 2 pos 972,480' /tmp/opencode/ly_pal_top.log \
+	  && grep -q 'play tick 656: state A_JUMP seq jump frame 8 pos 1092,441' /tmp/opencode/ly_pal_top.log \
 	  && test "$$(grep -cE 'pos [0-9]+,443 grounded 1' /tmp/opencode/ly_pal_top.log)" -eq 0 \
 	  && test "$$(grep -cE 'pos [0-9]+,348 grounded 1' /tmp/opencode/ly_pal_top.log)" -eq 0 \
 	  && test "$$(grep -E 'pos [0-9]+,[0-9]+ grounded' /tmp/opencode/ly_pal_top.log \
 	       | awk -F'pos ' '{split($$2,a,","); split(a[2],b," "); if (b[1]+0 < 380) print a[1]}' \
-	       | sort -n | uniq | tr '\n' ' ')" = '1000 ' \
-	  && echo "play palms window (PR-537): the air route reaches the authored terrace 922,509;968,508 at 927,477 grounded 1, and the SAME jump crosses the 475-height inside the seat's x-bracket (855,470 / 879,472) WITHOUT a catch - the landing test needs the descent (ll_play.c: p->vy >= 0 together with ground_y >= hit.y - 1.0) - while the next jump peaks above the 380 seat line at exactly one x, 1000, six ticks wide and 53 px outside the seat's own bracket 885..947: zero rows at pos 348 or 443. The PALMA seat is unreachable in x, not in height, and only A_JUMP (from A_WALK/A_RUN) has the reach - a JUMP pressed in A_DRAP gives the smaller A_JUMP_S pull" \
+	       | sort -n | uniq | tr '\n' ' ')" = '1338 1347 1356 1365 1374 ' \
+	  && echo "play palms window (PR-537; PR-541 RE-PIN of the x half): the air route reaches the authored terrace 922,509;968,508 at 927,477 grounded 1, and the SAME jump crosses the 475-height inside the seat's x-bracket (855,470 / 879,472) WITHOUT a catch - the landing test needs the descent (ll_play.c: p->vy >= 0 together with ground_y >= hit.y - 1.0). What PR-537 read from THIS leg as 'the next jump peaks above the 380 seat line at exactly one x, 1000' was the port's OWN lew_rect x clamp, not the game: the engine writes those four integers and reads them nowhere (PR-541), and with x free the 630 jump takes off at the terrace's east end (972,480), crosses the 280-line seat's own bracket 930..992 in the air, and its apex - 1092,441, feet 473 at the jump art's 32 px contact - stays 93 px BELOW the 380 line; still zero rows at pos 348 or 443, and the only above-380 pass in 700 ticks is x 1338..1374 over the SECOND ground, nowhere near a seat (and there the engine's authored 1299,341+118 wall stands in the corridor - a blockade the port does not yet apply to the player, 0x4b430 -> 0x45620, named at OI-134). The PALMA seat is now MISSED IN HEIGHT, not in x, and only A_JUMP (from A_WALK/A_RUN) has the reach - a JUMP pressed in A_DRAP gives the smaller A_JUMP_S pull" \
 	  && echo " (ok)" \
 	  || { echo "play palms window grep FAILED"; cat /tmp/opencode/ly_pal_top.log; exit 1; }
+# PR-541 (the fruit clause's FIRST gap, the question OI-134 named):
+# IS THE STOP AT x 1000 AUTHORED? NO - IT IS THE PORT'S. lew_rect=
+# x0,y0;x1,y1 is read by the engine's own level parser (0x4d3ba
+# strcmps 'lew_rect' (0x91ed2) and 0x49f90 parses '%d,%d;%d,%d ,'
+# (0x91d00) into [level+0x8..0x14]) and then read by NOTHING: over
+# all 257 loads of the level global at 0xcef40 in the shipped text,
+# strict register tracking finds ZERO reads of +0x8/+0xc/+0x10/
+# +0x14 (the neighbours it does read are +0x388 the row feed,
+# +0x390 the tlo controller, +0x394 the blockades object). The x
+# limits the engine OBEYS are the .BLK WALL records: the physics
+# pass sweeps the body box by the step word ([obj+0xca], 0x4b479-
+# 0x4b48c), walks the [obj+0x70] array (0x4b4a3/0x4b4a8, count
+# [obj+0x7c] at 0x4b494) into 0x45620 at 0x4b4aa,
+# and telescopes the STEP on a hit (0x45688) - ZAR.BLK authors
+# exactly six `x,top_y,height` records (catb, counted): the world
+# edges 0,0,700 and 2240,0,700 - 700 px from y=0, so they cover
+# the whole playable band - and four stone-corridor walls
+# 1299,341,118 / 1462,244,28 / 1540,194,27 / 1620,0,200. NONE
+# of them stands on the east bank's ground line (feet 645..691
+# there), which is why this walk is not blocked anywhere near
+# x 1000 in the shipped game. So the PR-43 x clamp is a stand-in, and this
+# leg measures the walk it was faking: the same rhino route (walk,
+# two jumps over the 408..624 chasm, east along the mid-water
+# stones) now CROSSES x 1000 (672: 1002,613), climbs the authored
+# east shelf `3 953,654;...;1051,633` line-following to the foot
+# (691: 1038,605, feet 637 = the line at that x), steps off its
+# END at 1051 (695: A_FALL_DOWN at 1055,602), and lands in the
+# authored POOL DRECT,988,645;1340,750 - A_WPAD wet at 1073,676
+# at 719. The pool is the level's own stage end (the PR-526 dive:
+# A_WPAD -> A_WYJSCIE -> the class 0x1e250 arm -> re-entry), so
+# the cycle repeats; the highest x any pass is GROUNDED at is the
+# shelf's own end, 1049. THE CONTROL RUNS THE SAME SCRIPT WITH
+# LEO_PLAY_LRCLAMP=1: x pinned at 1000,613 with the register zeroed
+# by the clamp at every pass (v 0,0), max grounded x 1000, ZERO
+# A_WPAD lines - the named before-behaviour. WHAT THIS DOES NOT
+# PORT, and OI-134 now names as the next half: the blockade pass
+# ITSELF on the player (sweep + 0x45620 + the 0x45688 telescope) -
+# without it this walk would also step off the world edges at
+# x=-50/2240, which the engine's two full-height walls forbid (the
+# ly_east walk ends in the pool at 760 ticks, before that edge
+# matters; the 1299 wall in the stone corridor is already visible
+# as missing in the re-pinned ly_pal_top above).
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=30 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD 533:JUMP 600:FWD" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_east_walk.ppm LEO_LEVEL_PPM_TICK=760 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_east_walk.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play east bank walk FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_east_walk.log; exit 1; fi
+	@grep -q 'bounds 0..1000 (x clamp OFF' /tmp/opencode/ly_east_walk.log \
+	  && grep -q 'play tick 672: state A_WALK seq walk frame 10 pos 1002,613 grounded 1' /tmp/opencode/ly_east_walk.log \
+	  && grep -q 'play tick 691: state A_WALK seq walk frame 7 pos 1038,605 grounded 1' /tmp/opencode/ly_east_walk.log \
+	  && grep -q 'play tick 695: state A_FALL_DOWN seq fall_dn frame 1 pos 1055,602 grounded 0' /tmp/opencode/ly_east_walk.log \
+	  && grep -q 'play tick 719: state A_WPAD seq wet frame 3 pos 1073,676 grounded 0' /tmp/opencode/ly_east_walk.log \
+	  && grep -q 'play tick 735: state A_WYJSCIE seq dry frame 0 pos 1073,673' /tmp/opencode/ly_east_walk.log \
+	  && test "$$(grep -E 'grounded 1' /tmp/opencode/ly_east_walk.log \
+	       | awk -F'pos ' '{split($$2,a,","); print a[1]}' \
+	       | sort -n | tail -1)" -eq 1049 \
+	  || { echo "play east bank walk grep FAILED"; \
+	         tail -8 /tmp/opencode/ly_east_walk.log; exit 1; }
+	@env -u DISPLAY SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+	  LEO_HD_DIR=$(HD) LEO_HELP_SECS=0 LEO_LEVEL_SECS=30 LEO_PLAY_DANGER=0 \
+	  LEO_PLAY_LRCLAMP=1 \
+	  LEO_PLAY_SCRIPT="1:FWD 478:FWD,JUMP 529:FWD 533:JUMP 600:FWD" \
+	  LEO_LEVEL_PPM=/tmp/opencode/ly_east_clamp.ppm LEO_LEVEL_PPM_TICK=760 \
+	  ./ll_level $(DATA) ZARIA.01 --play --no-audio \
+	  > /tmp/opencode/ly_east_clamp.log 2>&1; rc=$$?; \
+	  if [ $$rc -ne 0 ]; then echo "play east bank clamp control FAILED (rc=$$rc)"; \
+	    cat /tmp/opencode/ly_east_clamp.log; exit 1; fi
+	@grep -q 'bounds 0..1000 (x clamp ON, LEO_PLAY_LRCLAMP=1)' /tmp/opencode/ly_east_clamp.log \
+	  && grep -q 'play tick 672: state A_WALK seq walk frame 10 pos 1000,613 grounded 1 v 0,0' /tmp/opencode/ly_east_clamp.log \
+	  && test "$$(grep -E 'grounded 1' /tmp/opencode/ly_east_clamp.log \
+	       | awk -F'pos ' '{split($$2,a,","); print a[1]}' \
+	       | sort -n | tail -1)" -eq 1000 \
+	  && test "$$(grep -c 'state A_WPAD' /tmp/opencode/ly_east_clamp.log)" -eq 0 \
+	  && echo "play east bank walk (PR-541): the stop at x 1000 is the PORT, not the level - with the lew_rect x stand-in off (the default; the engine writes those four integers at 0x4d3ba and reads them nowhere) the walk CROSSES x 1000 at 1002,613, follows the authored east shelf `3 953,654;...;1051,633` line-for-line to the foot (1038,605 = feet 637 on the line), steps off its END at x 1051 into the water and arrives in the same pool PR-529's dive reached from x 990 - this time under its own feet, walking: A_WPAD wet at 1073,676 inside DRECT,988,645;1340,750, its A_WYJSCIE line and the stage re-entry (the PR-526 dive end) at 735; max grounded x is the shelf's own end, 1049. LEO_PLAY_LRCLAMP=1 is the named control: the same script stays at 1000,613 with v 0,0, ZERO A_WPAD (ok)" \
+	  || { echo "play east bank walk grep FAILED"; \
+	         tail -8 /tmp/opencode/ly_east_walk.log /tmp/opencode/ly_east_clamp.log; exit 1; }
 # PR-539 (owner goal 2026-11-26, the "collecting fruits and throwing"
 # clause): the lion's OWN throw chain, measured end to end. No code
 # changed - what these two legs add is that the throw was never once

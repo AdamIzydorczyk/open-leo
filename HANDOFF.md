@@ -6429,6 +6429,29 @@ state-header G - 17 object-side F/I rows and 24 ground-bound
 object states with a G header in this one level, which is why
 that channel and a CHECK_LN ground support must be ONE port.
 
+PR-541 (same owner goal) took out the port's own lew_rect x
+clamp - it was the wall the east bank never had - and corrects
+two claims just above. (a) "the seat is missed in x": x 1000
+was THIS PORT's clamp, not the level. The engine's parser
+WRITES those integers (0x4cbb3 makes `lea eax,[esi+0x8]` the
+target, 0x4d3dc calls 0x49f90, whose 0x49fa4 sscanf takes the
+format `%d,%d;%d,%d , ` with only THREE int pointers) and
+READS them nowhere - zero of the 257 loads of the level
+global at 0xcef40 touch +0x8..+0x14. Re-measured with x free,
+the terrace's east-end jump crosses the 280-line seat's own
+bracket 930..992 and peaks at feet 473 against the 380 line:
+the PALMA seat is missed IN HEIGHT, and ly_pal_top is re-pinned
+to say so. (b) "the PALMA spans are not yet reached from the
+east bank": with x free the rhino route walks past 1000
+(1002,613), follows the authored shelf to its END at 1051 and
+drops into the level's own pool (A_WPAD at 1073,676, the PR-526
+stage end), and ONE extra JUMP on the shelf clears that water -
+grounded again at 1349,629, max grounded x 2076, past the
+KILOF_PL box. The route question OI-134 (4) asked is closed;
+what the port now lacks on that route is the walls themselves -
+new OI-135: ZAR.BLK's 0,0,700 and 2240,0,700 are the real
+edges, and the same probe runs to x 2422 and dies there.
+
 **T6. Level flow.** `end_level` directive, `AC_LEAVE`, the vulture ride of
 ZARIA I, the map -> level -> map loop, TUNGA I <-> II exchange
 (`AC_XCHG_LEVEL`), lives/energy persistence, game over. STATUS.LEO progress is

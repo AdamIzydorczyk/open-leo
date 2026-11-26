@@ -296,6 +296,16 @@ the same one-way, feet-on-line law as the `platformy=` `.PLT` polylines.
 The default is ON; `=0` restores the seat-free ground every earlier leg
 derived against. Being CARRIED by a moving seat is not modelled yet
 (OI-128).
+`LEO_PLAY_LRCLAMP=0|1` (play mode; PR-541) applies the level's
+`lew_rect=` x pair as the lion's feet clamp - the PR-43 stand-in. The
+default is OFF: the engine's own level parser WRITES those four integers
+(0x4d3ba -> 0x49f90 -> `[level+0x8..0x14]`) and nothing READS them
+(counted over all 257 loads of the level global), and the x limits the
+engine OBEYS are the `.BLK` wall records, swept by the step word and
+resolved at 0x4b430 -> 0x45620 -> the 0x45688 step telescope; that
+query is modelled for asking (PR-97/PR-395) but not yet applied to the
+player, the named half left at OI-134. `=1` restores the old clamp as
+the named comparison control (verify-play `ly_east_walk` runs both).
 `LEO_PLAY_ROW_PHYSICS=0` (play mode; the hook is PR-518's, its default
 is PR-523's) is the physics-cadence switch. Default — unset, or any value
 without a leading `0` — is the engine's own cadence, measured off the live

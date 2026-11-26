@@ -5336,6 +5336,25 @@ typedef struct {
                                              * The lew_rect bottom stays   *
                                              * the stand-in until PR-533   *
                                              * ports it. */
+    int lrclamp;                            /* PR-541: LEO_PLAY_LRCLAMP -    *
+                                             * 1 applies the lew_rect x     *
+                                             * pair as the PR-43 stand-in   *
+                                             * clamp; 0 (the DEFAULT) does  *
+                                             * not: the engine's level      *
+                                             * parser WRITES those four     *
+                                             * integers (0x4d3ba ->         *
+                                             * 0x49f90 -> [level+0x8..      *
+                                             * 0x14]) and NO code reads     *
+                                             * them (census PR-541). The x  *
+                                             * limits the engine OBEYS are  *
+                                             * the .BLK wall records, swept *
+                                             * by the step word and         *
+                                             * resolved at 0x4b430 ->       *
+                                             * 0x45620 -> 0x45688; that     *
+                                             * query is modelled (PR-97 /   *
+                                             * PR-395) but NOT yet applied  *
+                                             * to the player - the named    *
+                                             * half left open at OI-134. */
     double sx, sy;                          /* pozycja spawn              */
     ll_play_keys keys;                      /* held arrows (live path)    */
     int layer;                              /* the lion's layer = main_back */
@@ -8255,7 +8274,10 @@ static void play_advance(play_ctx *pl, const ll_play_keys *keys,
     if (pl->gline)
         play_ground(pl, objs, nobj);        /* PR-535: seats ride along */
     int ev = ll_player_step(&pl->p, pl->gline ? &pl->gplt : &pl->plt,
-                            keys, pl->xmin, pl->xmax, dt_ms);
+                            keys,
+                            pl->lrclamp ? pl->xmin : -1e30,   /* PR-541: the */
+                            pl->lrclamp ? pl->xmax : 1e30,    /* stand-in x  */
+                            dt_ms);                           /* clamp, off  */
     /* PR-97: re-read the contact AFTER the step, because ll_player_step is
      * where the state transitions happen, and keep the actor's contact LINE
      * invariant across a state change: a grounded actor stands on the same
@@ -13928,6 +13950,14 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
          * against. */
         pl.seat = getenv("LEO_PLAY_SEAT")
                       ? atoi(getenv("LEO_PLAY_SEAT")) != 0 : 1;
+        /* PR-541: the lew_rect x pair is NOT applied by default any
+         * more - the engine writes those four integers into its level
+         * record and reads them nowhere (counted over all 257 loads of
+         * the level global at 0xcef40); its real x limits are the
+         * .BLK walls. LEO_PLAY_LRCLAMP=1 restores the PR-43 clamp as
+         * the named comparison switch (the PR-523/PR-534 pattern). */
+        pl.lrclamp = getenv("LEO_PLAY_LRCLAMP")
+                         ? atoi(getenv("LEO_PLAY_LRCLAMP")) != 0 : 0;
     }
     pl.cam_ox = CAM_LEAD_R;
     /* PR-84: the follow-cam-y state (play_ctx camy_v/camy_set) starts
@@ -14349,10 +14379,15 @@ int ll_level_show(const char *dir, const char *level, double secs, int audio)
                        " onto the .PLT (CHECK_LN start state)\n", moved);
             }
             printf("ll_level: play: %s %d state(s) on %d polyline(s):"
-                   " spawn feet (%d,%d) grounded=%d bounds %d..%d"                   /* lew_rect */
+                   " spawn feet (%d,%d) grounded=%d bounds %d..%d%s"      /* lew_rect */
                    " death below %d\n", pl.leaf, pl.mov->nst, pl.plt.n,
                    (int)pl.p.x, (int)pl.p.y, pl.p.grounded,
-                   (int)pl.xmin, (int)pl.xmax, (int)pl.ydead);
+                   (int)pl.xmin, (int)pl.xmax,
+                   pl.lrclamp ? " (x clamp ON, LEO_PLAY_LRCLAMP=1)"
+                              : " (x clamp OFF: the engine writes those"
+                                " four integers (0x4d3ba -> 0x49f90) and"
+                                " reads them nowhere - PR-541)",
+                   (int)pl.ydead);
             {   /* PR-60 census: placements whose script has a SOLID state,
                  * by the key that placed them (zwierzaki/animacje/ani_plat) */
                 int cnt[3][3] = { { 0 } };

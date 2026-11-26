@@ -9651,6 +9651,37 @@ OI-134: the fruit chain - no fruit object is ever placed in a
     to settle is therefore whether the stop at x 1000 is an
     authored wall or this port's step limit on the 13 px rise at
     x 1007..1051 - a question about the port, not the data.
+    PR-541 ANSWERED THAT, AND THE ANSWER IS "THE PORT". The
+    stop was this repo's own lew_rect x clamp (PR-43), which
+    the engine never applies: 0x4cbb3 makes `lea eax,[esi+0x8]`
+    the parse target inside the level-key parser FUN_0004c8a0,
+    0x4d3dc calls 0x49f90, and 0x49fa4 calls sscanf with the
+    format 0x91d00, `%d,%d;%d,%d , ` - FOUR conversions, THREE
+    int pointers (eax, eax+4, eax+8), so [level+0x8/+0xc/
+    +0x10] are written and the fourth conversion writes through
+    a pointer nothing ever set. Then nothing READS them: a
+    strict register trace over all 257 loads of the level
+    global at 0xcef40 finds ZERO reads of +0x8/+0xc/+0x10/
+    +0x14 (the neighbours it does read are +0x388 the row
+    feed, +0x390/+0x394 the controllers). verify-play's
+    ly_east_walk now walks the route with the clamp off (the
+    new default; LEO_PLAY_LRCLAMP=1 is the named control and
+    pins x 1000,613, v 0,0, zero A_WPAD): 1002,613 at tick
+    672, the authored shelf line-for-line to 1038,605 at 691,
+    off its END at 1051 into the authored pool - A_WPAD wet at
+    1073,676 inside DRECT,988,645;1340,750, its A_WYJSCIE line
+    at 735 and the stage re-entry PR-526 read. THE WAY TO THE
+    KILOF_PL BOX IS OPEN, MEASURED: the probe
+    /tmp/opencode/ly_poolx_686.log adds ONE JUMP at tick 686
+    on the shelf, clears the water (grounded again at
+    1349,629) and reaches max GROUNDED x 2076 - past the box
+    1760,590;1832,620. It passes that box AIRBORNE
+    (A_JUMP at 1708,432, v 18000,-8860), so the leg PR-540
+    sketched still needs a controlled landing inside it: that
+    is a script question (when to press JUMP, how far A_JUMP
+    carries), not a missing half of the engine. What IS missing
+    from the port is the walls themselves - see OI-135: the
+    same probe reaches x 2422, past the authored 2240 edge.
     WHAT WOULD CLOSE THIS ROW, in order: (a) read the GRABG /
     GRABOBJ family and the .grp members and place the two
     fruit; (b) read AC_KILOF/AC_STONE's raiser with its parent
@@ -9665,3 +9696,59 @@ OI-134: the fruit chain - no fruit object is ever placed in a
     animals do - 20/20/15/15/10/10/10/10), and PR-139 settled
     that an authored `damage=` is the only path to the lion, so
     the arc lands and the hit does not. Counted, not assumed.
+
+OI-135: the level's `blokady=` .BLK walls are never loaded and
+  never applied to anyone - they are the x limits the engine
+  actually obeys, and PR-541 removed the port's stand-in for them
+  status: OPEN
+  origin: PR-541 (the lew_rect x census, asked from the east-bank
+    route OI-134's fruit clause needs)
+  notes: WHAT IS ALREADY BUILT. PR-313 named the registry
+    ([world+0x70], count [world+0x7c], stride 0x14, built by
+    0x4db50), PR-394 read the query and PR-395 read the record
+    bytes: 0x455e0 + 0x4a0b0 scan `%d,%d` (0x91d0f) and `%d`
+    (0x9183d) into rec+0x4/+0x8/+0x10, so a record is a VERTICAL
+    WALL - face x, top y, how far down. ported/ll_play.c has
+    that parse (ll_blkreg_parse, 244-271), the hit test
+    (ll_block_hit, 280-325, a faithful port of 0x45620 including
+    the 0x45688 telescope: the near edge is pushed to the face
+    -1 px, and a move of <=1 px is refused) and the sweep loop
+    (ll_block_walk, 327-345). play_selftest pins all three
+    against the shipped ZAR.BLK's six records.
+  WHAT IS MISSING, BOTH HALVES. (a) NOTHING LOADS THE FILE: the
+    level's `blokady=zar.blk` name is parsed into the key list
+    and never resolved against a container, and the only caller
+    of ll_blkreg_parse is the selftest's own string. (b) NOTHING
+    APPLIES IT: ll_player_step never asks a wall, and no scene
+    object does. The engine's shape, read in the PR-541 pass:
+    the terrain/step query 0x4b430 - called ONLY from 0x546f0
+    and 0x54732 inside 0x54560 - builds the body box through
+    0x534e0 (the provider table 0x98274), ADDS the step words
+    [obj+0xca]/[obj+0xce] to SWEEP that box (0x4b479-0x4b48c),
+    then runs the records through 0x45620 and takes the nearest
+    hit. That query is the same object the object-side velocity
+    channel needs (OI-134 item 3), so the two are one port.
+  THE COST, MEASURED, IN BOTH DIRECTIONS. ZAR.BLK authors six
+    walls: 0,0,700 and 2240,0,700 - the two world edges, 700 px
+    tall from y=0, so they cover the whole playable band - and
+    1299,341,118, 1462,244,28, 1540,194,27, 1620,0,200 in the
+    stone corridor. NONE stands on the east bank's ground line,
+    which is why no real wall stops anything near x 1000; the
+    PR-43 clamp was a stand-in for a wall the level never
+    authors. With it off, verify-play's ly_east_walk correctly
+    reaches the pool, and the probe /tmp/opencode/ly_poolx_686.log
+    (one extra JUMP at 686) crosses the water and walks to max
+    GROUNDED x 2076 and max x 2422 - PAST the authored 2240 edge
+    - then drops to the death line: two `below lew_rect at
+    (468,1223)` lines and `energy gone -> respawn, 3 live(s)
+    left`. The re-pinned ly_pal_top shows the same absence from
+    the other side: the only above-380 pass in 700 ticks runs
+    x 1338..1374 straight through the corridor wall at 1299.
+  WHAT WOULD CLOSE IT: resolve `blokady=` through the container
+    reader and keep one registry per owner as [obj+0x70] does;
+    call ll_block_walk from the player's step and from
+    obj_advance with the box SWEPT by the step word (the port's
+    own row_dx is that word - see the [obj+0xca] note in
+    ll_play.c); then pin the edges - an east walk from the spawn
+    stops one pixel off x 2240, not at 2422 - and pin the
+    corridor wall against the re-pinned ly_pal_top pass.

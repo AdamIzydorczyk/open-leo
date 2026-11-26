@@ -70523,3 +70523,177 @@ GATE: light: verify-index verify-docs rc=0 (ok);
   into A_DRAP and throws; the GRABG family stays the second step
   (it is what would make the coconut an OBJECT rather than a
   state), and the object-side F/G channel the third.
+
+## PR-541 - THE STOP AT x 1000 WAS THIS PORT'S: the engine writes
+## the lew_rect x pair and reads it nowhere, so the east-bank walk
+## now runs into ZARIA.01's own pool
+KIND: port
+SUBSYSTEM: the player's x bounds in play mode - the PR-43
+  lew_rect clamp this repo has used as the lion's feet limit
+  since PR-43 - plus the new verify-play legs ly_east_walk /
+  ly_east_clamp and the re-pin of ly_pal_top's x half.
+ADDRESSES: 0x49f90, 0x49fa4, 0x4b430, 0x4b45d, 0x4b479, 0x4b48c,
+  0x4b494, 0x4b4a3, 0x4b4aa, 0x4c8a4, 0x4cbb3, 0x4d3ba, 0x4d3dc,
+  0x4db50, 0x45620, 0x45688, 0x534e0, 0x54560, 0x546f0, 0x54732,
+  0x91d00, 0x91ed2, 0x98274.
+NAMES: lew_rect, LEO_PLAY_LRCLAMP, lrclamp, ll_player_step,
+  blokady=, ZAR.BLK, DRECT, ll_blkreg_parse, ll_block_hit,
+  ll_block_walk, find_lewrect_reads4.py, ly_east_walk,
+  ly_east_clamp, ly_pal_top, OI-134, OI-135.
+CODE: yes: ported/ll_level.c only. The play-model struct gains
+  `lrclamp` (after the lew_rect bounds fields, 5339); the env
+  read that defaults it to OFF sits with the PR-534/PR-535
+  switches at 13953-13960; the two bounds arguments of
+  ll_player_step are the clamp or an open pair at 8276-8280;
+  and the startup line at 14381-14390 prints which mode is in
+  force, because every leg now depends on it.
+HOOKS: LEO_PLAY_LRCLAMP=0|1 (play mode, documented in
+  README.md): 1 restores the PR-43 clamp as the named control,
+  0 (the DEFAULT) does not bound x by lew_rect. The y half is
+  untouched - `ydead` and the `below lew_rect` death stay
+  exactly as PR-532 left them, and the `.plt`/seat ground the
+  legs use is unchanged.
+OPENS: OI-135 (the `blokady=` .BLK walls are never loaded and
+  never applied - the x limits the engine really obeys).
+CLOSES: none. OI-134 item (4)'s question is ANSWERED inside
+  that row and the row stays open: its other three gaps (no
+  fruit object, no POCISK children, no object-side F/G channel)
+  are what stand between this goal and a coconut.
+CORRECTS: PR-537's "the PALMA seat is missed in x" and
+  PR-540's "the route is blocked at x 1000" - both were
+  measurements OF THIS PORT'S CLAMP, taken as if they were the
+  game. ly_pal_top is re-pinned for the free-x truth.
+GATE: make 0 warnings; verify-all fixtures rc=0 87 (ok);
+GATE-FIXTURE-FREE: rc=0 16 (ok) + 22 named verify-SKIP
+      lines
+      (/tmp/opencode/pr541_build.log BUILD_EXIT=0 and zero
+      warnings; pr541_ga1/2/3/4.log - four runs, all
+      EXIT=0 at 87 (ok) with zero FAILED, against PR-539's
+      86: ly_east_walk's control half is the one new leg;
+      pr541_gnf.log and pr541_gnf2.log EXIT=0 at 16 (ok)
+      and 22 `verify-...: SKIP` lines - the same 22 lines
+      PR-539's pr539_gatefreeA.log contains, the two id
+      lists diff empty, its record named 21;
+      pr541_vp1.log is the RED verify-play run that failed
+      on ly_pal_top alone before the re-pin, pr541_vp2.log
+      the GREEN one, 38 legs (ok). pr541_docs.log:
+      verify-docs verify-index rc=0 - records 533, the
+      width ratchet unchanged (HANDOFF 41/41, NEXT_STEPS
+      62/62, README 12/12), the register at 135 rows with
+      0 unresolved OI ids, RE_INDEX byte-identical. The
+      legs' own logs are ly_east_walk.log,
+      ly_east_clamp.log, ly_pal_top.log, and the probes are
+      ly_east_a.log, ly_east_b.log, ly_poolx_686.log /
+      _690 / _694.)
+
+- THE QUESTION OI-134 NAMED, ANSWERED. PR-540 closed with a
+  coin-flip about the east bank: a walk there stops at pos
+  1000,613 and stays there forever, and either ZARIA.01 authors
+  a wall at 1000 or this port cannot climb the 13 px rise at
+  x 1007..1051. It is neither. The stop is the lew_rect pair
+  this port has used as the lion's x bounds since PR-43
+  (`git log -S` finds the origin there), and the shipped engine
+  never applies that pair to anything.
+- THE PARSE, AT INSTRUCTION LEVEL. FUN_0004c8a0 is the level
+  key parser: it takes the level record in eax (0x4c8b3
+  `mov esi,eax`) and sets the row feed [level+0x388]=100 at
+  0x4c8b7 - the field PR-522 proved drives the walk rate. Its
+  `lew_rect` arm is 0x4d3ba: `mov edx,0x91ed2` ("lew_rect",
+  verified byte-for-byte in build/leo/leo.img), strcmp through
+  0x76d20, then 0x4d3dc calls 0x49f90 with the target from
+  [ebp+0x11e] - and that local was set at 0x4cbb3 by
+  `lea eax,[esi+0x8]`, so the record's fields ARE +0x8 and up.
+  0x49f90 itself is a fixed four-number scanner: 0x49fa4 calls
+  sscanf with the format at 0x91d00, `%d,%d;%d,%d , ` - FOUR
+  conversions - and pushes only THREE int pointers, eax,
+  eax+4, eax+8 (0x49f95-0x49f9d). So the parse writes
+  [level+0x8], [level+0xc], [level+0x10] and lets the fourth
+  `%d` write through a pointer nothing ever set. A level that
+  authors `lew_rect=0,0;1000,1000` puts 0, 0 and 1000 in those
+  slots.
+- AND NOTHING READS THEM. Counted, not grepped: re-run of the
+  strict trace /tmp/opencode/find_lewrect_reads4.py over the
+  shipped text - 257 loads of the level global at 0xcef40,
+  tracking the register through each one, looking for any
+  displacement of +8/+c/+10/+14 - TOTAL STRICT HITS: 0. (The
+  loose greps PR-540's pass rejected are false positives of the
+  form `[level+0x394]+0x8`; PR-532 had already shown that no
+  level's lew_rect y1 equals the engine's death line.) The
+  fields of that record that the engine DOES read are the
+  neighbours: +0x388 the row feed, +0x390 the layer controller,
+  +0x394 the blockades object, +0x39c.
+- WHAT THE ENGINE OBEYS INSTEAD, AND IT IS NOT lew_rect. The
+  physics step's terrain/step query is 0x4b430, and it is
+  called from exactly two places, 0x546f0 and 0x54732, both
+  inside 0x54560. It builds the actor's body box through
+  0x534e0 with the provider table 0x98274 (0x4b441-0x4b45d),
+  then ADDS [obj+0xca] to both x edges and [obj+0xce] to both
+  y edges (0x4b479-0x4b48c) - the box SWEPT by the per-step
+  pixel words PR-540 mapped - and walks the record array
+  [obj+0x70] (count [obj+0x7c] at 0x4b494, index added at
+  0x4b4a8) into the test at 0x4b4aa -> 0x45620, whose hit path
+  telescopes the step at 0x45688 so the near edge ends up one
+  pixel off the face and a move of 1 px or less is refused.
+  That is the wall machinery PR-313/PR-394/PR-395 read and
+  PR-97 modelled as ll_block_hit / ll_block_walk - used only
+  inside --play-selftest, never on an actor.
+- THE WALLS THIS LEVEL ACTUALLY AUTHORS, counted with catb over
+  the shipped container: ZAR.BLK is `6` then `0,0,700`,
+  `2240,0,700`, `1299,341,118`, `1462,244,28`, `1540,194,27`,
+  `1620,0,200` - `x,top_y,height`. The two world edges are 700
+  px tall from y=0 and so do cover the playable band. NONE of
+  the six stands on the east bank's ground line (feet 645..691
+  out there), so the shipped game has nothing at x 1000 and
+  never did: the lion walks onto the east shelf, along it, and
+  off its end.
+- THE NEW LEGS, BOTH SIDES. ly_east_walk runs the rhino route
+  (walk, two timed jumps over the 408..624 chasm, east along
+  the mid-water stones) with the clamp off. It crosses x 1000:
+  tick 672 `A_WALK pos 1002,613 grounded 1`, and the walk
+  follows the authored shelf `3 953,654;...;1051,633`
+  line-for-line up to the foot - 681: 1007,614; 691:
+  1038,605 (feet 637 on that line). It then steps off the
+  polyline's END at x 1051 (695: A_FALL_DOWN at 1055,602) and
+  arrives in the same pool PR-529's dive reached from x 990,
+  this time walking off the shelf: A_WPAD wet at 1073,676
+  inside `DRECT,988,645; 1340,750`, its A_WYJSCIE line at 735,
+  and the stage re-entry PR-526 read at 737. The highest x ANY
+  pass is grounded at is 1049 - the shelf's own end, not a
+  wall. ly_east_clamp is the control, the same script with
+  LEO_PLAY_LRCLAMP=1: x pinned at 1000,613 with the register
+  zeroed by the clamp (`v 0,0`), max grounded x 1000, ZERO
+  A_WPAD lines in 760 ticks. Two runs of the leg's script
+  (ly_east_a.log, ly_east_b.log) differ only in their own
+  file names.
+- ly_pal_top RE-PINNED, BECAUSE PR-537 READ THE CLAMP AS THE
+  GAME. That leg pinned "the only pass above y 380 is at
+  x 1000" - which was the clamp, and the same false wall made
+  PR-537 conclude the PALMA seat is missed 53 px in x. With x
+  free the leg's 630 jump lifts off at the terrace's east end
+  (972,480), crosses the 280-line seat's own bracket 930..992
+  in the air, and its apex is 1092,441 - feet 473, 93 px BELOW
+  the 380 line. So the seat is MISSED IN HEIGHT, and the pins
+  now say that: 630 take-off and 656 apex pinned, still zero
+  rows at pos 348 or 443, and the above-380 x set is
+  1338..1374 - over the second ground, nowhere near a seat,
+  and straight through the corridor wall ZAR.BLK puts at 1299
+  (y 341..459), which the port does not apply.
+- WHAT THIS UNBLOCKS, AND WHAT IT NOW COSTS. A probe on the
+  same route, /tmp/opencode/ly_poolx_686.log, adds ONE JUMP at
+  tick 686 on the shelf: the lion clears the whole pool
+  (grounded again at 1349,629) and walks on to max GROUNDED x
+  2076 - past the KILOF_PL box 1760,590;1832,620, the only
+  AC_KILOF raiser this level has. He crosses that box AIRBORNE
+  (806: A_JUMP at 1708,432, v 18000,-8860), so OI-134's fruit
+  leg still needs a controlled landing in it - a script
+  question, not a missing engine half. The cost is symmetric
+  and OI-135 names it: that same probe reaches x 2422, past
+  the authored 2240 edge, then falls to the death line and
+  spends a life (`below lew_rect at (468,1223)`, `energy gone
+  -> respawn, 3 live(s) left`). The port has replaced one wall
+  it invented with no wall at all, which is the truth of the
+  data but not the end of the work: loading `blokady=` and
+  asking 0x4b430's swept-box query from the player's step is
+  the next half, and it is the same query the seat-carry
+  (OI-128) and the object velocity channel (OI-134 item 3)
+  need.
